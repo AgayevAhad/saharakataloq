@@ -58,80 +58,86 @@ export const Header: React.FC<HeaderProps> = ({
   const isQueryActive = searchQuery.trim().length > 0;
 
   return (
-    <header
-      className="catalog-header"
-      style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 1000,
-        backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.94)' : 'rgba(255, 255, 255, 0.94)',
-        borderColor: theme.border,
-      }}
-    >
-      <div className="header-top-row">
-        <a href="/" className="brand-lockup" aria-label="Sahara Electronics kataloqu">
-          <SaharaLogo className="header-sahara-logo" isDark={isDarkMode} />
-          <span className="brand-caption" style={{ color: theme.textMuted }}>{settings?.headerCaption || 'Rəsmi məhsul kataloqu'}</span>
-        </a>
+    <div className="catalog-header-wrapper">
+      {/* 1. YALNIZ Yuxarı sətir (Logo, sosial ikonlar, paylaş və tema dəyişdirici) ekranda STICKY qalır */}
+      <header
+        className="catalog-header"
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 1000,
+          backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.96)' : 'rgba(255, 255, 255, 0.96)',
+          borderColor: theme.border,
+        }}
+      >
+        <div className="header-top-row">
+          <a href="/" className="brand-lockup" aria-label="Sahara Electronics kataloqu">
+            <SaharaLogo className="header-sahara-logo" isDark={isDarkMode} />
+            <span className="brand-caption" style={{ color: theme.textMuted }}>{settings?.headerCaption || 'Rəsmi məhsul kataloqu'}</span>
+          </a>
 
-        <div className="compact-brand-dock" aria-label="Brendlər">
-          {brands.map((brand) => <button key={brand.id} disabled={brand.comingSoon} className={selectedBrand === brand.id ? 'active' : ''} onClick={() => onSelectBrand(brand.id)} title={brand.comingSoon ? `${brand.name} — tezliklə` : brand.name}><BrandMark brand={brand} compact /></button>)}
-        </div>
-
-        <div className="header-actions">
-          {settings?.instagramUrl && (
-            <SocialPopoverButton
-              platform="instagram"
-              url={settings.instagramUrl}
-              username={settings.instagramUsername}
-              theme={theme}
-              position="bottom"
-            />
-          )}
-          {settings?.facebookUrl && (
-            <SocialPopoverButton
-              platform="facebook"
-              url={settings.facebookUrl}
-              username={settings.facebookUsername}
-              theme={theme}
-              position="bottom"
-            />
-          )}
-          <button className="icon-action" onClick={onOpenInverterInfo} style={{ color: theme.primary, borderColor: theme.border, background: theme.bgSecondary }} title="Texnologiyalar və bələdçi haqqında"><Info size={17} /></button>
-          <button className="share-action" onClick={onOpenCatalogShare} style={{ background: theme.primary }}><Share2 size={16} /><span>{settings?.shareButtonText || 'Paylaş'}</span></button>
-          <button className="icon-action" onClick={onToggleTheme} style={{ color: isDarkMode ? '#f59e0b' : '#475569', borderColor: theme.border, background: theme.bgSecondary }} title="Görünüşü dəyiş">{isDarkMode ? <Sun size={17} /> : <Moon size={17} />}</button>
-        </div>
-      </div>
-
-      <div className="catalog-controls">
-        <div className="search-and-menu">
-          <div className={`catalog-search ${searchFocused ? 'is-focused' : ''} ${searchQuery ? 'has-query' : ''}`} style={{ background: theme.bgSecondary, borderColor: theme.border }} onFocus={() => setSearchFocused(true)} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setSearchFocused(false); }}>
-            <Search className="catalog-search-icon" size={16} color={isQueryActive ? theme.primary : theme.textMuted} style={{ transition: 'color 0.2s ease' }} />
-            <input aria-label="Məhsul axtarışı" value={searchQuery} onChange={(event) => onSearchChange(event.target.value)} placeholder="Məhsul, model, brend və ya xüsusiyyət axtar..." style={{ color: theme.text }} />
-            {searchQuery && <><span className="search-spinner" aria-hidden="true" /><button aria-label="Axtarışı təmizlə" onClick={() => onSearchChange('')}><X size={15} /></button></>}
-            <span className="result-count" style={{ color: theme.textMuted }}><b style={{ color: theme.primary }}>{filteredCount}</b>/{totalCount}</span>
-            {searchFocused && suggestions.length > 0 && <div className="search-suggestions" style={{ background: theme.bgCard, borderColor: theme.border }} role="listbox" aria-label="Axtarış təklifləri">
-              {suggestions.map((item) => <button key={item.id} role="option" onMouseDown={(event) => event.preventDefault()} onClick={() => { onSearchChange(item.value); setSearchFocused(false); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', width: '100%', padding: '8px 12px', textAlign: 'left' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '9px', flex: 1, minWidth: 0 }}>
-                  <Search size={14} color={theme.textMuted} style={{ flexShrink: 0 }} />
-                  <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
-                    <b style={{ color: theme.text, fontSize: '13px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.title}</b>
-                    <small style={{ color: theme.textMuted, fontSize: '11px' }}>{item.code}{item.categoryName ? ` · ${item.categoryName}` : ''}</small>
-                  </span>
-                </div>
-                {item.image ? <img src={item.image} alt="" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'contain', backgroundColor: theme.bgSecondary, border: `1px solid ${theme.border}`, flexShrink: 0 }} /> : null}
-              </button>)}
-            </div>}
+          <div className="compact-brand-dock" aria-label="Brendlər">
+            {brands.map((brand) => <button key={brand.id} disabled={brand.comingSoon} className={selectedBrand === brand.id ? 'active' : ''} onClick={() => onSelectBrand(brand.id)} title={brand.comingSoon ? `${brand.name} — tezliklə` : brand.name}><BrandMark brand={brand} compact /></button>)}
           </div>
-          <div className="compact-category-menu">
-            <button aria-label="Kateqoriyalar" aria-expanded={categoryMenuOpen} onClick={() => setCategoryMenuOpen((value) => !value)} style={{ borderColor: theme.border, color: theme.text }}><Ellipsis /></button>
-            {categoryMenuOpen && <div className="category-popover" style={{ background: theme.bgCard, borderColor: theme.border }}><button className={selectedCategory === 'all' ? 'active' : ''} onClick={() => selectCategory('all')}>Bütün məhsullar</button>{categories.map((category) => <button key={category.id} className={selectedCategory === category.id ? 'active' : ''} onClick={() => selectCategory(category.id)}>{category.name}</button>)}</div>}
+
+          <div className="header-actions">
+            {settings?.instagramUrl && (
+              <SocialPopoverButton
+                platform="instagram"
+                url={settings.instagramUrl}
+                username={settings.instagramUsername}
+                theme={theme}
+                position="bottom"
+              />
+            )}
+            {settings?.facebookUrl && (
+              <SocialPopoverButton
+                platform="facebook"
+                url={settings.facebookUrl}
+                username={settings.facebookUsername}
+                theme={theme}
+                position="bottom"
+              />
+            )}
+            <button className="icon-action" onClick={onOpenInverterInfo} style={{ color: theme.primary, borderColor: theme.border, background: theme.bgSecondary }} title="Texnologiyalar və bələdçi haqqında"><Info size={17} /></button>
+            <button className="share-action" onClick={onOpenCatalogShare} style={{ background: theme.primary }}><Share2 size={16} /><span>{settings?.shareButtonText || 'Paylaş'}</span></button>
+            <button className="icon-action" onClick={onToggleTheme} style={{ color: isDarkMode ? '#f59e0b' : '#475569', borderColor: theme.border, background: theme.bgSecondary }} title="Görünüşü dəyiş">{isDarkMode ? <Sun size={17} /> : <Moon size={17} />}</button>
           </div>
         </div>
+      </header>
 
-        {brands.filter((brand) => !brand.comingSoon).length > 1 && <div className="filter-row brand-filter-row no-scrollbar" aria-label="Brend filtri"><button className={selectedBrand === 'all' ? 'filter-pill active' : 'filter-pill'} onClick={() => onSelectBrand('all')} style={pillStyle(theme)}>Bütün brendlər</button>{brands.filter((brand) => !brand.comingSoon).map((brand) => <button key={brand.id} className={selectedBrand === brand.id ? 'filter-pill active' : 'filter-pill'} onClick={() => onSelectBrand(brand.id)} style={pillStyle(theme)}>{brand.name}</button>)}</div>}
-        <div className="filter-row category-filter-row no-scrollbar" aria-label="Kateqoriya filtri"><button className={selectedCategory === 'all' ? 'filter-pill active' : 'filter-pill'} onClick={() => onSelectCategory('all')} style={pillStyle(theme)}>Bütün məhsullar</button>{categories.map((category) => <button key={category.id} className={selectedCategory === category.id ? 'filter-pill active' : 'filter-pill'} onClick={() => onSelectCategory(category.id)} style={pillStyle(theme)}>{category.name}</button>)}</div>
+      {/* 2. Axtarış və kateqoriya filtrləri səhifə axınında yerləşir (sürüşdürəndə yuxarı hərəkət edir) */}
+      <div className="catalog-controls-bar" style={{ backgroundColor: theme.bg }}>
+        <div className="catalog-controls">
+          <div className="search-and-menu">
+            <div className={`catalog-search ${searchFocused ? 'is-focused' : ''} ${searchQuery ? 'has-query' : ''}`} style={{ background: theme.bgSecondary, borderColor: theme.border }} onFocus={() => setSearchFocused(true)} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setSearchFocused(false); }}>
+              <Search className="catalog-search-icon" size={16} color={isQueryActive ? theme.primary : theme.textMuted} style={{ transition: 'color 0.2s ease' }} />
+              <input aria-label="Məhsul axtarışı" value={searchQuery} onChange={(event) => onSearchChange(event.target.value)} placeholder="Məhsul, model, brend və ya xüsusiyyət axtar..." style={{ color: theme.text }} />
+              {searchQuery && <><span className="search-spinner" aria-hidden="true" /><button aria-label="Axtarışı təmizlə" onClick={() => onSearchChange('')}><X size={15} /></button></>}
+              <span className="result-count" style={{ color: theme.textMuted }}><b style={{ color: theme.primary }}>{filteredCount}</b>/{totalCount}</span>
+              {searchFocused && suggestions.length > 0 && <div className="search-suggestions" style={{ background: theme.bgCard, borderColor: theme.border }} role="listbox" aria-label="Axtarış təklifləri">
+                {suggestions.map((item) => <button key={item.id} role="option" onMouseDown={(event) => event.preventDefault()} onClick={() => { onSearchChange(item.value); setSearchFocused(false); }} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '10px', width: '100%', padding: '8px 12px', textAlign: 'left' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '9px', flex: 1, minWidth: 0 }}>
+                    <Search size={14} color={theme.textMuted} style={{ flexShrink: 0 }} />
+                    <span style={{ display: 'flex', flexDirection: 'column', minWidth: 0, overflow: 'hidden' }}>
+                      <b style={{ color: theme.text, fontSize: '13px', fontWeight: 700, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{item.title}</b>
+                      <small style={{ color: theme.textMuted, fontSize: '11px' }}>{item.code}{item.categoryName ? ` · ${item.categoryName}` : ''}</small>
+                    </span>
+                  </div>
+                  {item.image ? <img src={item.image} alt="" style={{ width: '32px', height: '32px', borderRadius: '50%', objectFit: 'contain', backgroundColor: theme.bgSecondary, border: `1px solid ${theme.border}`, flexShrink: 0 }} /> : null}
+                </button>)}
+              </div>}
+            </div>
+            <div className="compact-category-menu">
+              <button aria-label="Kateqoriyalar" aria-expanded={categoryMenuOpen} onClick={() => setCategoryMenuOpen((value) => !value)} style={{ borderColor: theme.border, color: theme.text }}><Ellipsis /></button>
+              {categoryMenuOpen && <div className="category-popover" style={{ background: theme.bgCard, borderColor: theme.border }}><button className={selectedCategory === 'all' ? 'active' : ''} onClick={() => selectCategory('all')}>Bütün məhsullar</button>{categories.map((category) => <button key={category.id} className={selectedCategory === category.id ? 'active' : ''} onClick={() => selectCategory(category.id)}>{category.name}</button>)}</div>}
+            </div>
+          </div>
+
+          {brands.filter((brand) => !brand.comingSoon).length > 1 && <div className="filter-row brand-filter-row no-scrollbar" aria-label="Brend filtri"><button className={selectedBrand === 'all' ? 'filter-pill active' : 'filter-pill'} onClick={() => onSelectBrand('all')} style={pillStyle(theme)}>Bütün brendlər</button>{brands.filter((brand) => !brand.comingSoon).map((brand) => <button key={brand.id} className={selectedBrand === brand.id ? 'filter-pill active' : 'filter-pill'} onClick={() => onSelectBrand(brand.id)} style={pillStyle(theme)}>{brand.name}</button>)}</div>}
+          <div className="filter-row category-filter-row no-scrollbar" aria-label="Kateqoriya filtri"><button className={selectedCategory === 'all' ? 'filter-pill active' : 'filter-pill'} onClick={() => onSelectCategory('all')} style={pillStyle(theme)}>Bütün məhsullar</button>{categories.map((category) => <button key={category.id} className={selectedCategory === category.id ? 'filter-pill active' : 'filter-pill'} onClick={() => onSelectCategory(category.id)} style={pillStyle(theme)}>{category.name}</button>)}</div>
+        </div>
       </div>
-    </header>
+    </div>
   );
 };
