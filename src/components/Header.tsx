@@ -1,9 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { Ellipsis, Info, Moon, Search, Share2, Sun, X } from 'lucide-react';
+import { Info, Moon, Search, Share2, Sun, X } from 'lucide-react';
 import { Brand, CatalogCategory, CatalogSettings, Product, ProductCategory } from '../types/product';
 import { ThemeColors } from '../types/theme';
 import { SaharaLogo } from './SaharaLogo';
-import { BrandMark } from './BrandMark';
 import { SocialPopoverButton } from './SocialIcons';
 
 interface HeaderProps {
@@ -36,7 +35,6 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenInverterInfo, onOpenCatalogShare, totalCount, filteredCount,
 }) => {
   const [searchFocused, setSearchFocused] = useState(false);
-  const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
 
   const suggestions = useMemo(() => {
     const needle = searchQuery.trim().toLocaleLowerCase('az');
@@ -54,7 +52,7 @@ export const Header: React.FC<HeaderProps> = ({
     return productOptions;
   }, [products, searchQuery]);
 
-  const selectCategory = (id: string) => { onSelectCategory(id); setCategoryMenuOpen(false); };
+  const selectCategory = (id: string) => { onSelectCategory(id); };
   const isQueryActive = searchQuery.trim().length > 0;
 
   return (
@@ -75,10 +73,6 @@ export const Header: React.FC<HeaderProps> = ({
             <SaharaLogo className="header-sahara-logo" isDark={isDarkMode} />
             <span className="brand-caption" style={{ color: theme.textMuted }}>{settings?.headerCaption || 'Rəsmi məhsul kataloqu'}</span>
           </a>
-
-          <div className="compact-brand-dock" aria-label="Brendlər">
-            {brands.map((brand) => <button key={brand.id} disabled={brand.comingSoon} className={selectedBrand === brand.id ? 'active' : ''} onClick={() => onSelectBrand(brand.id)} title={brand.comingSoon ? `${brand.name} — tezliklə` : brand.name}><BrandMark brand={brand} compact /></button>)}
-          </div>
 
           <div className="header-actions">
             {settings?.instagramUrl && (
@@ -109,7 +103,6 @@ export const Header: React.FC<HeaderProps> = ({
       {/* 2. Axtarış və kateqoriya filtrləri səhifə axınında yerləşir (sürüşdürəndə yuxarı hərəkət edir) */}
       <div className="catalog-controls-bar" style={{ backgroundColor: theme.bg }}>
         <div className="catalog-controls">
-          <div className="search-and-menu">
             <div className={`catalog-search ${searchFocused ? 'is-focused' : ''} ${searchQuery ? 'has-query' : ''}`} style={{ background: theme.bgSecondary, borderColor: theme.border }} onFocus={() => setSearchFocused(true)} onBlur={(event) => { if (!event.currentTarget.contains(event.relatedTarget)) setSearchFocused(false); }}>
               <Search className="catalog-search-icon" size={16} color={isQueryActive ? theme.primary : theme.textMuted} style={{ transition: 'color 0.2s ease' }} />
               <input aria-label="Məhsul axtarışı" value={searchQuery} onChange={(event) => onSearchChange(event.target.value)} placeholder="Məhsul, model, brend və ya xüsusiyyət axtar..." style={{ color: theme.text }} />
@@ -128,11 +121,6 @@ export const Header: React.FC<HeaderProps> = ({
                 </button>)}
               </div>}
             </div>
-            <div className="compact-category-menu">
-              <button aria-label="Kateqoriyalar" aria-expanded={categoryMenuOpen} onClick={() => setCategoryMenuOpen((value) => !value)} style={{ borderColor: theme.border, color: theme.text }}><Ellipsis /></button>
-              {categoryMenuOpen && <div className="category-popover" style={{ background: theme.bgCard, borderColor: theme.border }}><button className={selectedCategory === 'all' ? 'active' : ''} onClick={() => selectCategory('all')}>Bütün məhsullar</button>{categories.map((category) => <button key={category.id} className={selectedCategory === category.id ? 'active' : ''} onClick={() => selectCategory(category.id)}>{category.name}</button>)}</div>}
-            </div>
-          </div>
 
           {brands.filter((brand) => !brand.comingSoon).length > 1 && <div className="filter-row brand-filter-row no-scrollbar" aria-label="Brend filtri"><button className={selectedBrand === 'all' ? 'filter-pill active' : 'filter-pill'} onClick={() => onSelectBrand('all')} style={pillStyle(theme)}>Bütün brendlər</button>{brands.filter((brand) => !brand.comingSoon).map((brand) => <button key={brand.id} className={selectedBrand === brand.id ? 'filter-pill active' : 'filter-pill'} onClick={() => onSelectBrand(brand.id)} style={pillStyle(theme)}>{brand.name}</button>)}</div>}
           <div className="filter-row category-filter-row no-scrollbar" aria-label="Kateqoriya filtri"><button className={selectedCategory === 'all' ? 'filter-pill active' : 'filter-pill'} onClick={() => onSelectCategory('all')} style={pillStyle(theme)}>Bütün məhsullar</button>{categories.map((category) => <button key={category.id} className={selectedCategory === category.id ? 'filter-pill active' : 'filter-pill'} onClick={() => onSelectCategory(category.id)} style={pillStyle(theme)}>{category.name}</button>)}</div>
