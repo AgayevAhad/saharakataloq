@@ -82,4 +82,44 @@ describe('Admin iş axınları', () => {
     
     expect(screen.getByDisplayValue('Yeni Texnologiya Başlığı')).toBeDefined();
   });
+
+  it('Məhsullar bölməsində redaktə (Pencil) düyməsinə basdıqda ProductEditor modalı açılır', async () => {
+    render(<CatalogAdmin initial={adminData()} theme={lightTheme} onSave={vi.fn()} onPublish={vi.fn()} onUpload={vi.fn()} onLogout={vi.fn()} showToast={vi.fn()} />);
+    
+    // Məhsullar tabına keç
+    fireEvent.click(screen.getByRole('button', { name: /Məhsullar/ }));
+    
+    // Excel və CSV düymələrinin mövcudluğunu yoxla
+    expect(screen.getByText(/Excel \(\.xlsx\) İxrac/i)).toBeDefined();
+    expect(screen.getByText(/Excel \/ CSV İdxal/i)).toBeDefined();
+    expect(screen.getByText(/Excel Şablonu/i)).toBeDefined();
+
+    // Redaktə (Pencil) düyməsinə bas
+    const editButtons = screen.getAllByTitle('Redaktə et');
+    expect(editButtons.length).toBeGreaterThan(0);
+    fireEvent.click(editButtons[0]);
+
+    // ProductEditor modalının açılmasını yoxla
+    expect(screen.getByText(/3000 redaktəsi/i)).toBeDefined();
+    expect(screen.getByDisplayValue(TEST_PRODUCT.code)).toBeDefined();
+    expect(screen.getByDisplayValue(TEST_PRODUCT.title)).toBeDefined();
+    expect(screen.getByText('Texniki göstəricilər (Parametrlər)')).toBeDefined();
+
+    // İmtina ilə bağla
+    fireEvent.click(screen.getByRole('button', { name: 'İmtina' }));
+    expect(screen.queryByText('Texniki göstəricilər (Parametrlər)')).toBeNull();
+  });
+
+  it('Sidebar aktiv tab rəngini parlaq mövzu fonu ilə təyin edir', async () => {
+    render(<CatalogAdmin initial={adminData()} theme={lightTheme} onSave={vi.fn()} onPublish={vi.fn()} onUpload={vi.fn()} onLogout={vi.fn()} showToast={vi.fn()} />);
+    
+    const dashboardBtn = screen.getByRole('button', { name: /Statistika/ });
+    expect(dashboardBtn.classList.contains('active')).toBe(true);
+    expect(dashboardBtn.getAttribute('style')).toContain('color: #ffffff');
+
+    const brandsBtn = screen.getByRole('button', { name: /Brendlər/ });
+    fireEvent.click(brandsBtn);
+    expect(brandsBtn.classList.contains('active')).toBe(true);
+    expect(brandsBtn.getAttribute('style')).toContain('color: #ffffff');
+  });
 });

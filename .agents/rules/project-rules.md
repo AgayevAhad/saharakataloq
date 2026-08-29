@@ -10,4 +10,10 @@
 
 ## 3. UI/UX Standards
 - **Desktop Sticky Header**: The header (containing Sahara logo, brand dock, actions, and search bar) must stay sticky at the top of the viewport during scrolling with a smooth backdrop blur, allowing catalog content to pass smoothly underneath it.
-- **Multiple Addresses**: Support adding, editing, and deleting multiple showroom/store addresses in the admin panel and rendering them in the footer and contact sections.
+
+### 4. Multiple Store/Showroom Addresses
+- Full support for multiple store/showroom addresses in admin panel, database, and customer-facing components.
+
+### 5. Admin Panel Synchronization & UX Quality
+- Any new catalog feature, field, setting, brand, address, or model change MUST be fully supported and synchronized in the Admin Panel with intuitive UI, proper contrast, and end-to-end functionality.
+- Admin Panel components must maintain strong color contrasts, reliable modal dialogs, and support both CSV and Excel (.xlsx) data exchanges.

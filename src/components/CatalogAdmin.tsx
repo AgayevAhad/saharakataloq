@@ -51,6 +51,12 @@ import {
   generateCsvTemplate,
   importProductsFromCsv,
 } from '../utils/csv';
+import {
+  downloadExcelFile,
+  exportProductsToExcel,
+  generateExcelTemplate,
+  importProductsFromExcel,
+} from '../utils/excel';
 
 interface Props {
   initial: AdminPayload;
@@ -243,35 +249,70 @@ export const CatalogAdmin: React.FC<Props> = ({
         csvContent,
         `sahara-kataloq-mehsullar-${new Date().toISOString().slice(0, 10)}.csv`
       );
-      showToast('Bütün məhsullar CSV/Excel formatında endirildi.');
+      showToast('Bütün məhsullar CSV formatında endirildi.');
+    } catch (e) {
+      showToast(`İxrac xətası: ${e instanceof Error ? e.message : 'Uğursuz oldu'}`);
+    }
+  };
+
+  // Excel Export (.xlsx)
+  const handleExportExcel = () => {
+    try {
+      const buffer = exportProductsToExcel(catalog.products, catalog.categories, catalog.brands);
+      downloadExcelFile(
+        buffer,
+        `sahara-kataloq-mehsullar-${new Date().toISOString().slice(0, 10)}.xlsx`
+      );
+      showToast('Bütün məhsullar Excel (.xlsx) formatında endirildi.');
     } catch (e) {
       showToast(`İxrac xətası: ${e instanceof Error ? e.message : 'Uğursuz oldu'}`);
     }
   };
 
   // CSV Template Download
-  const handleDownloadTemplate = () => {
+  const handleDownloadCsvTemplate = () => {
     const templateContent = generateCsvTemplate();
     downloadFile(templateContent, 'sahara-kataloq-sablon.csv');
     showToast('Nümunə CSV şablonu endirildi.');
   };
 
-  // CSV Import
-  const handleImportCsv = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  // Excel Template Download (.xlsx)
+  const handleDownloadExcelTemplate = () => {
+    try {
+      const buffer = generateExcelTemplate();
+      downloadExcelFile(buffer, 'sahara-kataloq-sablon.xlsx');
+      showToast('Nümunə Excel (.xlsx) şablonu endirildi.');
+    } catch (e) {
+      showToast(`Şablon xətası: ${e instanceof Error ? e.message : 'Uğursuz oldu'}`);
+    }
+  };
+
+  // File Import (Supports .xlsx, .xls, and .csv)
+  const handleImportFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
     try {
-      const text = await file.text();
-      const { products: imported, errors } = importProductsFromCsv(
-        text,
-        catalog.categories,
-        catalog.brands
-      );
+      const isExcel = file.name.toLowerCase().endsWith('.xlsx') || file.name.toLowerCase().endsWith('.xls');
+      let imported: Product[] = [];
+      let errors: string[] = [];
+
+      if (isExcel) {
+        const buffer = await file.arrayBuffer();
+        const result = importProductsFromExcel(buffer, catalog.categories, catalog.brands);
+        imported = result.products;
+        errors = result.errors;
+      } else {
+        const text = await file.text();
+        const result = importProductsFromCsv(text, catalog.categories, catalog.brands);
+        imported = result.products;
+        errors = result.errors;
+      }
+
       if (errors.length > 0) {
-        alert(`Bəzi xətalar baş verdi:\n${errors.slice(0, 5).join('\n')}`);
+        alert(`Bəzi xətalar baş verdi:\n${errors.slice(0, 6).join('\n')}`);
       }
       if (imported.length === 0) {
-        showToast('CSV faylından heç bir məhsul oxuna bilmədi.');
+        showToast('Fayldan heç bir məhsul oxuna bilmədi.');
         return;
       }
 
@@ -284,7 +325,7 @@ export const CatalogAdmin: React.FC<Props> = ({
         return { ...prev, products: Array.from(existingMap.values()) };
       });
 
-      showToast(`${imported.length} məhsul uğurla idxal edildi və qaralamaya əlavə olundu.`);
+      showToast(`${imported.length} məhsul (${isExcel ? 'Excel' : 'CSV'}) uğurla idxal edildi və qaralamaya əlavə olundu.`);
     } catch (err) {
       showToast(`İdxal xətası: ${err instanceof Error ? err.message : 'Fayl oxunmadı'}`);
     } finally {
@@ -333,17 +374,24 @@ export const CatalogAdmin: React.FC<Props> = ({
           <SaharaLogo className="admin-login-logo" isDark={theme.mode === 'dark'} />
         </a>
         <nav>
-          {tabs.map(([id, label, icon]) => (
-            <button
-              key={id}
-              className={tab === id ? 'active' : ''}
-              onClick={() => setTab(id)}
-              style={{ color: tab === id ? '#ffffff' : theme.text }}
-            >
-              {icon}
-              <span>{label}</span>
-            </button>
-          ))}
+          {tabs.map(([id, label, icon]) => {
+            const isActive = tab === id;
+            return (
+              <button
+                key={id}
+                className={isActive ? 'active' : ''}
+                onClick={() => setTab(id)}
+                style={{
+                  backgroundColor: isActive ? (theme.primary || '#dc2626') : 'transparent',
+                  color: isActive ? '#ffffff' : theme.text,
+                  fontWeight: isActive ? 750 : 600,
+                }}
+              >
+                {icon}
+                <span>{label}</span>
+              </button>
+            );
+          })}
         </nav>
         <button
           className="admin-logout"
@@ -468,7 +516,29 @@ export const CatalogAdmin: React.FC<Props> = ({
                   <option value="missing-specs">Texniki göstəricisi boş olanlar</option>
                 </select>
 
-                {/* Bulk CSV Buttons */}
+                {/* Bulk Excel & CSV Buttons */}
+                <button
+                  type="button"
+                  onClick={handleExportExcel}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    backgroundColor: '#1e293b',
+                    color: '#38bdf8',
+                    border: `1px solid rgba(56, 189, 248, 0.4)`,
+                    padding: '8px 12px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: 750,
+                    fontSize: '12px',
+                  }}
+                  title="Bütün məhsulları Excel (.xlsx) cədvəli kimi endir"
+                >
+                  <FileSpreadsheet size={14} />
+                  <span>Excel (.xlsx) İxrac</span>
+                </button>
+
                 <button
                   type="button"
                   onClick={handleExportCsv}
@@ -485,7 +555,7 @@ export const CatalogAdmin: React.FC<Props> = ({
                     fontWeight: 700,
                     fontSize: '12px',
                   }}
-                  title="Məhsulları Excel/CSV kimi endir"
+                  title="Məhsulları CSV faylı kimi endir"
                 >
                   <Download size={14} />
                   <span>CSV İxrac</span>
@@ -498,28 +568,51 @@ export const CatalogAdmin: React.FC<Props> = ({
                     gap: '6px',
                     backgroundColor: '#16a34a',
                     color: '#ffffff',
-                    padding: '8px 12px',
+                    padding: '8px 13px',
                     borderRadius: '8px',
                     cursor: 'pointer',
-                    fontWeight: 700,
+                    fontWeight: 750,
                     fontSize: '12px',
+                    boxShadow: '0 2px 8px rgba(22, 163, 74, 0.28)',
                   }}
-                  title="CSV faylı ilə məhsulları toplu yüklə"
+                  title="Excel (.xlsx / .xls) və ya CSV faylı ilə məhsulları toplu yüklə"
                 >
                   <Upload size={14} />
-                  <span>CSV İdxal</span>
+                  <span>Excel / CSV İdxal</span>
                   <input
                     ref={csvFileInputRef}
                     type="file"
-                    accept=".csv"
-                    onChange={handleImportCsv}
+                    accept=".xlsx,.xls,.csv"
+                    onChange={handleImportFile}
                     style={{ display: 'none' }}
                   />
                 </label>
 
                 <button
                   type="button"
-                  onClick={handleDownloadTemplate}
+                  onClick={handleDownloadExcelTemplate}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    backgroundColor: 'transparent',
+                    color: '#16a34a',
+                    border: `1px dashed #16a34a`,
+                    padding: '8px 10px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontSize: '11px',
+                    fontWeight: 650,
+                  }}
+                  title="Nümunə Excel (.xlsx) şablon faylını endir"
+                >
+                  <FileSpreadsheet size={13} />
+                  <span>Excel Şablonu</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleDownloadCsvTemplate}
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -535,7 +628,7 @@ export const CatalogAdmin: React.FC<Props> = ({
                   title="Nümunə CSV şablon faylını endir"
                 >
                   <FileSpreadsheet size={13} />
-                  <span>Şablon Endir</span>
+                  <span>CSV Şablonu</span>
                 </button>
 
                 <button
