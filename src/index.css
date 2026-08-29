@@ -31,7 +31,6 @@ body {
   min-height: 100%;
   min-height: 100dvh;
   width: 100%;
-  overflow-x: clip;
 }
 
 #root {
@@ -1045,12 +1044,12 @@ button, input, textarea, select { font: inherit; }
 
 /* Interactive compact catalog header */
 .catalog-header {
-  position: -webkit-sticky;
-  position: sticky;
-  top: 0;
-  left: 0;
-  right: 0;
-  z-index: 1000;
+  position: -webkit-sticky !important;
+  position: sticky !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 1000 !important;
   width: 100%;
   transition: padding .28s ease, box-shadow .28s ease;
   backdrop-filter: blur(16px);
