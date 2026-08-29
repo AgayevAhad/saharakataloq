@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { Ellipsis, Info, Moon, Search, Share2, Sun, X } from 'lucide-react';
 import { Brand, CatalogCategory, CatalogSettings, Product, ProductCategory } from '../types/product';
 import { ThemeColors } from '../types/theme';
@@ -38,6 +38,8 @@ export const Header: React.FC<HeaderProps> = ({
   const [compact, setCompact] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const [categoryMenuOpen, setCategoryMenuOpen] = useState(false);
+  const headerRef = useRef<HTMLElement>(null);
+  const [headerHeight, setHeaderHeight] = useState<number>(0);
 
   useEffect(() => {
     let scheduled = false;
@@ -50,6 +52,23 @@ export const Header: React.FC<HeaderProps> = ({
     window.addEventListener('scroll', update, { passive: true });
     return () => window.removeEventListener('scroll', update);
   }, []);
+
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    setHeaderHeight(el.offsetHeight);
+    if (typeof ResizeObserver !== 'undefined') {
+      const observer = new ResizeObserver((entries) => {
+        for (const entry of entries) {
+          if (entry.target === el) {
+            setHeaderHeight(el.offsetHeight);
+          }
+        }
+      });
+      observer.observe(el);
+      return () => observer.disconnect();
+    }
+  }, [compact, selectedCategory, selectedBrand, brands, categories]);
 
   const suggestions = useMemo(() => {
     const needle = searchQuery.trim().toLocaleLowerCase('az');
@@ -71,23 +90,28 @@ export const Header: React.FC<HeaderProps> = ({
   const isQueryActive = searchQuery.trim().length > 0;
 
   return (
-    <header
-      className={`catalog-header ${compact ? 'is-compact' : ''}`}
-      style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: 1000,
-        backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.94)' : 'rgba(255, 255, 255, 0.94)',
-        borderColor: theme.border,
-      }}
-    >
-    <div className="header-top-row">
-      <a href="/" className="brand-lockup" aria-label="Sahara Electronics kataloqu">
-        <SaharaLogo className="header-sahara-logo" isDark={isDarkMode} />
-        <span className="brand-caption" style={{ color: theme.textMuted }}>{settings?.headerCaption || 'Rəsmi məhsul kataloqu'}</span>
-      </a>
+    <>
+      <header
+        ref={headerRef}
+        className={`catalog-header ${compact ? 'is-compact' : ''}`}
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          width: '100%',
+          zIndex: 1000,
+          backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.94)' : 'rgba(255, 255, 255, 0.94)',
+          borderColor: theme.border,
+        }}
+      >
+      <div className="header-top-row">
+        <a href="/" className="brand-lockup" aria-label="Sahara Electronics kataloqu">
+          <SaharaLogo className="header-sahara-logo" isDark={isDarkMode} />
+          <span className="brand-caption" style={{ color: theme.textMuted }}>{settings?.headerCaption || 'Rəsmi məhsul kataloqu'}</span>
+        </a>
 
-      <div className="compact-brand-dock" aria-label="Brendlər">
+        <div className="compact-brand-dock" aria-label="Brendlər">
         {brands.map((brand) => <button key={brand.id} disabled={brand.comingSoon} className={selectedBrand === brand.id ? 'active' : ''} onClick={() => onSelectBrand(brand.id)} title={brand.comingSoon ? `${brand.name} — tezliklə` : brand.name}><BrandMark brand={brand} compact /></button>)}
       </div>
 
@@ -146,5 +170,11 @@ export const Header: React.FC<HeaderProps> = ({
       <div className="filter-row category-filter-row no-scrollbar" aria-label="Kateqoriya filtri"><button className={selectedCategory === 'all' ? 'filter-pill active' : 'filter-pill'} onClick={() => onSelectCategory('all')} style={pillStyle(theme)}>Bütün məhsullar</button>{categories.map((category) => <button key={category.id} className={selectedCategory === category.id ? 'filter-pill active' : 'filter-pill'} onClick={() => onSelectCategory(category.id)} style={pillStyle(theme)}>{category.name}</button>)}</div>
     </div>
   </header>
+  <div
+    className="catalog-header-spacer"
+    style={{ height: headerHeight > 0 ? `${headerHeight}px` : '150px', width: '100%', flexShrink: 0 }}
+    aria-hidden="true"
+  />
+  </>
   );
 };
