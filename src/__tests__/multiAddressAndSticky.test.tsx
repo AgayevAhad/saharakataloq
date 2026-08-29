@@ -97,7 +97,7 @@ describe('Çoxsaylı Ünvanlar (Multiple Addresses) və Sticky Header Testləri'
     expect(screen.getByText('Bakı şəhəri, Nizami küçəsi 45')).toBeDefined();
   });
 
-  it('Header komponenti sabit (fixed) pozisiya, top: 0, z-index: 1000 və spacer xüsusiyyətlərinə malikdir', () => {
+  it('Header komponenti sabit (sticky) pozisiya, top: 0 və z-index: 1000 xüsusiyyətlərinə malikdir', () => {
     const { container } = render(
       <Header
         theme={lightTheme}
@@ -121,11 +121,8 @@ describe('Çoxsaylı Ünvanlar (Multiple Addresses) və Sticky Header Testləri'
 
     const header = container.querySelector('.catalog-header');
     expect(header).toBeDefined();
-    expect(header?.getAttribute('style')).toContain('position: fixed');
+    expect(header?.getAttribute('style')).toContain('position: sticky');
     expect(header?.getAttribute('style')).toContain('top: 0');
     expect(header?.getAttribute('style')).toContain('z-index: 1000');
-
-    const spacer = container.querySelector('.catalog-header-spacer');
-    expect(spacer).toBeDefined();
   });
 });

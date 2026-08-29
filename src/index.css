@@ -1055,39 +1055,9 @@ button, input, textarea, select { font: inherit; }
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 }
-.catalog-header.is-compact {
-  box-shadow: 0 10px 30px rgba(0,0,0,.14);
-}
-
-@media (max-width: 767px) {
-  .catalog-header.is-compact {
-    padding-top: 7px;
-    padding-bottom: 7px;
-  }
-  .catalog-header.is-compact .header-sahara-logo {
-    width: 148px;
-    height: 43px;
-  }
-  .catalog-header.is-compact .brand-caption,
-  .catalog-header.is-compact .brand-filter-row,
-  .catalog-header.is-compact .category-filter-row {
-    display: none;
-  }
-  .compact-category-menu, .compact-brand-dock {
-    display: none;
-  }
-  .catalog-header.is-compact .compact-category-menu,
-  .catalog-header.is-compact .compact-brand-dock {
-    display: flex;
-  }
-}
-
 @media (min-width: 768px) {
   .catalog-header {
     padding: 14px clamp(18px, 3vw, 36px);
-  }
-  .catalog-header.is-compact {
-    padding: 12px clamp(18px, 3vw, 36px);
   }
   .catalog-header .brand-filter-row,
   .catalog-header .category-filter-row {
@@ -1098,7 +1068,14 @@ button, input, textarea, select { font: inherit; }
   }
 }
 
-.catalog-header.is-compact .catalog-controls { margin-top: 6px; }
+@media (max-width: 767px) {
+  .catalog-header {
+    padding: 8px clamp(8px, 2vw, 14px);
+  }
+  .compact-category-menu, .compact-brand-dock {
+    display: none !important;
+  }
+}
 .search-and-menu { display: flex; align-items: center; gap: 8px; position: relative; }
 .catalog-search { flex: 1; position: relative; transition: border-color .18s ease, box-shadow .18s ease; }
 .catalog-search.is-focused { border-color: #dc2626 !important; box-shadow: 0 0 0 3px rgba(220,38,38,.11); }

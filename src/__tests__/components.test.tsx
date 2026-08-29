@@ -73,15 +73,11 @@ describe('Sahara Electronic - UI Komponentləri və İstifadəçi Qarşılıqlı
     expect(screen.getByLabelText('Facebook')).toBeDefined();
   });
 
-  it('səhifə aşağı sürüşdürüləndə başlığı ikon rejiminə yığır', () => {
-    const animationFrame = vi.spyOn(window, 'requestAnimationFrame').mockImplementation((callback) => { callback(0); return 1; });
-    Object.defineProperty(window, 'scrollY', { configurable: true, value: 240 });
+  it('səhifə aşağı sürüşdürüləndə başlıq sabit vəziyyətdə qalır və idarəetmə elementləri aktiv olur', () => {
     const { container } = render(<Header theme={lightTheme} isDarkMode={false} onToggleTheme={vi.fn()} selectedCategory="all" onSelectCategory={vi.fn()} selectedBrand="all" onSelectBrand={vi.fn()} brands={DEFAULT_BRANDS} categories={[{ id: 'hood', name: 'Aspiratorlar', slug: 'aspiratorlar', active: true }]} products={[TEST_PRODUCT]} searchQuery="" onSearchChange={vi.fn()} onOpenInverterInfo={vi.fn()} onOpenCatalogShare={vi.fn()} totalCount={1} filteredCount={1} />);
-    fireEvent.scroll(window);
-    expect(container.querySelector('.catalog-header')?.classList.contains('is-compact')).toBe(true);
-    expect(screen.getByLabelText('Kateqoriyalar')).toBeDefined();
-    animationFrame.mockRestore();
-    Object.defineProperty(window, 'scrollY', { configurable: true, value: 0 });
+    expect(container.querySelector('.catalog-header')).toBeDefined();
+    expect(screen.getByLabelText('Məhsul axtarışı')).toBeDefined();
+    expect(screen.getByText('Bütün məhsullar')).toBeDefined();
   });
 
   it('Toast komponenti görünən olduqda bildirişi düzgün əks etdirməlidir', () => {
