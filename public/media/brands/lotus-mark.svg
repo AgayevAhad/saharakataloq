@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 96 96" role="img" aria-labelledby="title">
+  <title id="title">Lotus nişanı</title>
+  <defs><linearGradient id="petal" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#d946ef"/><stop offset="1" stop-color="#7c3aed"/></linearGradient></defs>
+  <path fill="url(#petal)" d="M48 10c11 13 15 25 0 42C33 35 37 23 48 10Z"/>
+  <path fill="#a855f7" d="M22 25c17 3 27 10 26 27-20-3-27-12-26-27Zm52 0c1 15-6 24-26 27-1-17 9-24 26-27Z"/>
+  <path fill="#7c3aed" d="M8 46c17-4 30-1 40 13C27 66 15 60 8 46Zm80 0c-7 14-19 20-40 13 10-14 23-17 40-13Z"/>
+  <path fill="none" stroke="#7c3aed" stroke-linecap="round" stroke-width="5" d="M17 72c19 9 43 9 62 0"/>
+</svg>
