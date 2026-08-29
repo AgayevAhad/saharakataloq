@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import React from 'react';
 import { Footer } from '../components/Footer';
+import { Header } from '../components/Header';
 import { DEFAULT_CATEGORIES, normalizeCatalog } from '../data/catalog';
 import { lightTheme } from '../types/theme';
 import { StoreAddress } from '../types/product';
@@ -94,5 +95,33 @@ describe('Çoxsaylı Ünvanlar (Multiple Addresses) və Sticky Header Testləri'
 
     expect(screen.getByText('Ünvan və Lokasiya')).toBeDefined();
     expect(screen.getByText('Bakı şəhəri, Nizami küçəsi 45')).toBeDefined();
+  });
+
+  it('Header komponenti sticky pozisiya və top: 0 xüsusiyyətlərinə malikdir', () => {
+    const { container } = render(
+      <Header
+        theme={lightTheme}
+        isDarkMode={false}
+        onToggleTheme={() => {}}
+        selectedCategory="all"
+        onSelectCategory={() => {}}
+        selectedBrand="all"
+        onSelectBrand={() => {}}
+        brands={[]}
+        categories={DEFAULT_CATEGORIES}
+        products={[]}
+        searchQuery=""
+        onSearchChange={() => {}}
+        onOpenInverterInfo={() => {}}
+        onOpenCatalogShare={() => {}}
+        totalCount={0}
+        filteredCount={0}
+      />
+    );
+
+    const header = container.querySelector('.catalog-header');
+    expect(header).toBeDefined();
+    expect(header?.getAttribute('style')).toContain('position: sticky');
+    expect(header?.getAttribute('style')).toContain('top: 0');
   });
 });

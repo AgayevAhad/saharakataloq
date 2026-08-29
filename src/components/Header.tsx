@@ -74,6 +74,9 @@ export const Header: React.FC<HeaderProps> = ({
     <header
       className={`catalog-header ${compact ? 'is-compact' : ''}`}
       style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: 1000,
         backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.94)' : 'rgba(255, 255, 255, 0.94)',
         borderColor: theme.border,
       }}
