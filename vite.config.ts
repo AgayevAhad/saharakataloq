@@ -15,7 +15,14 @@ export default defineConfig({
     port: 5173,
     cors: true,
     proxy: {
-      '/api': 'http://127.0.0.1:3000',
+      '/api': {
+        target: process.env.BACKEND_URL || 'http://127.0.0.1:3002',
+        changeOrigin: true,
+      },
+      '/uploads': {
+        target: process.env.BACKEND_URL || 'http://127.0.0.1:3002',
+        changeOrigin: true,
+      },
     },
   },
   // @ts-ignore

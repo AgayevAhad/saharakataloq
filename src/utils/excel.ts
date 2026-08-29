@@ -2,6 +2,88 @@ import * as XLSX from 'xlsx';
 import { Brand, CatalogCategory, Product, ProductSpecItem } from '../types/product';
 
 /**
+ * Parses multiline spec text (e.g. from "Ardo xüsusiyyətlər_yoxlanılıb.xlsx") into structured specs.
+ */
+export const parseMultilineSpecs = (text: string, prefixId = 'spec'): ProductSpecItem[] => {
+  if (!text) return [];
+  const specs: ProductSpecItem[] = [];
+  const lines = String(text).split(/\r?\n/);
+  lines.forEach((line, idx) => {
+    const trimmed = line.trim();
+    if (!trimmed) return;
+    const match = trimmed.match(/^([^–—:-]+)\s*[–—:-]\s*(.*)$/);
+    if (match) {
+      const name = match[1].trim();
+      const value = match[2].trim();
+      if (name && value) {
+        specs.push({
+          id: `${prefixId}-${idx + 1}`,
+          name,
+          value,
+          group: 'Əsas',
+        });
+      }
+    } else if (trimmed.includes(':')) {
+      const idxColon = trimmed.indexOf(':');
+      const name = trimmed.slice(0, idxColon).trim();
+      const value = trimmed.slice(idxColon + 1).trim();
+      if (name && value) {
+        specs.push({
+          id: `${prefixId}-${idx + 1}`,
+          name,
+          value,
+          group: 'Əsas',
+        });
+      }
+    }
+  });
+  return specs;
+};
+
+/**
+ * Auto-detects product category from title.
+ */
+export const inferCategoryFromName = (
+  title: string,
+  categories: CatalogCategory[]
+): { categoryId: string; categoryName: string } => {
+  const lower = (title || '').toLowerCase();
+  if (lower.includes('qabyuyan')) {
+    const found = categories.find((c) => c.id === 'dishwasher' || c.id === 'qabyuyan' || c.name.toLowerCase().includes('qabyuyan'));
+    if (found) return { categoryId: found.id, categoryName: found.name };
+  }
+  if (lower.includes('paltaryuyan')) {
+    const found = categories.find((c) => c.id === 'washing_machine' || c.id === 'paltaryuyan' || c.name.toLowerCase().includes('paltaryuyan'));
+    if (found) return { categoryId: found.id, categoryName: found.name };
+  }
+  if (lower.includes('aspirator')) {
+    const found = categories.find((c) => c.id === 'hood' || c.id === 'aspirator' || c.name.toLowerCase().includes('aspirator'));
+    if (found) return { categoryId: found.id, categoryName: found.name };
+  }
+  if (lower.includes('kondisioner')) {
+    const found = categories.find((c) => c.id === 'air_conditioner' || c.name.toLowerCase().includes('kondisioner'));
+    if (found) return { categoryId: found.id, categoryName: found.name };
+  }
+  if (lower.includes('mikro')) {
+    const found = categories.find((c) => c.id === 'microwave' || c.name.toLowerCase().includes('mikro'));
+    if (found) return { categoryId: found.id, categoryName: found.name };
+  }
+  if (lower.includes('plite') || lower.includes('piltə') || lower.includes('plitə') || lower.includes('panel')) {
+    const found = categories.find((c) => c.id === 'cooktop' || c.id === 'plite' || c.name.toLowerCase().includes('bişirmə') || c.name.toLowerCase().includes('plitə') || c.name.toLowerCase().includes('panel'));
+    if (found) return { categoryId: found.id, categoryName: found.name };
+  }
+  if (lower.includes('soba')) {
+    const found = categories.find((c) => c.id === 'oven' || c.id === 'soba' || c.name.toLowerCase().includes('soba'));
+    if (found) return { categoryId: found.id, categoryName: found.name };
+  }
+  if (lower.includes('soyuducu')) {
+    const found = categories.find((c) => c.id === 'refrigerator' || c.id === 'soyuducu' || c.name.toLowerCase().includes('soyuducu'));
+    if (found) return { categoryId: found.id, categoryName: found.name };
+  }
+  return { categoryId: categories[0]?.id || 'hood', categoryName: categories[0]?.name || 'Məhsul' };
+};
+
+/**
  * Generates an Excel Worksheet 2D array representation from products.
  */
 export const buildProductsSheetData = (
@@ -169,6 +251,7 @@ export const generateExcelTemplate = (): Uint8Array => {
 
 /**
  * Parses imported Excel workbook (.xlsx / .xls) buffer into structured Product objects.
+ * Automatically supports both standard templates and "Ardo xüsusiyyətlər_yoxlanılıb.xlsx" style sheets.
  */
 export const importProductsFromExcel = (
   buffer: ArrayBuffer | Uint8Array,
@@ -189,34 +272,129 @@ export const importProductsFromExcel = (
       return { products: [], errors: ['Excel faylında başlıq və ya məlumat tapılmadı.'] };
     }
 
+    // Find the header row (it could be at row 0, 1, 2, or 3)
+    let headerRowIndex = -1;
+    let isArdoSpecFormat = false;
+
+    for (let i = 0; i < Math.min(rows.length, 10); i++) {
+      const row = rows[i];
+      if (!row || row.length === 0) continue;
+      const joined = row.map((c) => String(c || '').toLowerCase()).join(' ');
+
+      if (joined.includes('model kodu') || joined.includes('model_kodu') || joined.includes('model kod')) {
+        headerRowIndex = i;
+        isArdoSpecFormat = false;
+        break;
+      }
+      if (joined.includes('xüsusiyyətlər') || joined.includes('xususiyyetler') || (joined.includes('məhsul adı') && (joined.includes('satış qiyməti') || joined.includes('satis qiymeti')))) {
+        headerRowIndex = i;
+        isArdoSpecFormat = true;
+        break;
+      }
+    }
+
+    if (headerRowIndex === -1) {
+      headerRowIndex = 0; // Default to first row
+    }
+
     const products: Product[] = [];
     const errors: string[] = [];
 
-    for (let rowIndex = 1; rowIndex < rows.length; rowIndex++) {
+    // Identify column indices
+    const headerRow = rows[headerRowIndex] || [];
+    const colIndex = (keyword: string) =>
+      headerRow.findIndex((c) => String(c || '').toLowerCase().includes(keyword.toLowerCase()));
+
+    const idxCode = colIndex('model kodu');
+    const idxTitle = colIndex('məhsul adı') !== -1 ? colIndex('məhsul adı') : colIndex('mehsul adi') !== -1 ? colIndex('mehsul adi') : colIndex('ad');
+    const idxBrand = colIndex('brend');
+    const idxCategory = colIndex('kateqoriya');
+    const idxPrice = colIndex('qiymət') !== -1 ? colIndex('qiymət') : colIndex('satış qiyməti');
+    const idxOldPrice = colIndex('köhnə qiymət');
+    const idxSpecs = colIndex('xüsusiyyətlər') !== -1 ? colIndex('xüsusiyyətlər') : colIndex('xususiyyetler');
+    const idxImage = colIndex('şəkil') !== -1 ? colIndex('şəkil') : colIndex('foto') !== -1 ? colIndex('foto') : colIndex('image');
+    const idxDesc = colIndex('təsvir') !== -1 ? colIndex('təsvir') : colIndex('qısa');
+    const idxHighlights = colIndex('üstünlüklər') !== -1 ? colIndex('üstünlüklər') : colIndex('ustunlukler');
+    const idxGallery = colIndex('qalereya');
+    const idxBadge = colIndex('nişan') !== -1 ? colIndex('nişan') : colIndex('nisan');
+    const idxCountry = colIndex('ölkə') !== -1 ? colIndex('ölkə') : colIndex('olke');
+
+    for (let rowIndex = headerRowIndex + 1; rowIndex < rows.length; rowIndex++) {
       const row = rows[rowIndex];
-      if (!row || row.length < 2 || !row[0]) continue;
+      if (!row || row.length === 0) continue;
 
-      const code = String(row[0] || '').trim();
-      const title = String(row[1] || '').trim();
-      const brandRaw = String(row[2] || '').trim();
-      const categoryRaw = String(row[3] || '').trim();
-      const priceRaw = row[4];
-      const oldPriceRaw = row[5];
-      const currencyRaw = String(row[6] || '₼').trim();
-      const badgeRaw = String(row[7] || '').trim();
-      const badgeColorRaw = String(row[8] || 'red').trim();
-      const stockStatusRaw = String(row[9] || 'in_stock').trim();
-      const statusRaw = String(row[10] || 'published').trim();
-      const countryRaw = String(row[11] || '').trim();
-      const descRaw = String(row[12] || '').trim();
-      const highlightsRaw = String(row[13] || '').trim();
-      const imageRaw = String(row[14] || '').trim();
-      const galleryRaw = String(row[15] || '').trim();
-      const specsRaw = String(row[16] || '').trim();
+      // Extract fields based on identified column positions or default indices
+      let code = '';
+      let title = '';
+      let brandRaw = '';
+      let categoryRaw = '';
+      let priceRaw: string | number | undefined = undefined;
+      let oldPriceRaw: string | number | undefined = undefined;
+      let currencyRaw = '₼';
+      let badgeRaw = '';
+      let badgeColorRaw = 'red';
+      let stockStatusRaw = 'in_stock';
+      let statusRaw = 'published';
+      let countryRaw = '';
+      let descRaw = '';
+      let highlightsRaw = '';
+      let imageRaw = '';
+      let galleryRaw = '';
+      let specsRaw = '';
 
-      if (!code || !title) {
-        errors.push(`Sətir ${rowIndex + 1}: Model kodu və ya Məhsul adı boşdur.`);
+      if (isArdoSpecFormat) {
+        // "Ardo xüsusiyyətlər_yoxlanılıb.xlsx" format:
+        // [0: №, 1: Şəkil, 2: Məhsul adı, 3: Xüsusiyyətlər, 4: Satış qiyməti, 5: Qeyd]
+        const rawTitle = String((idxTitle !== -1 ? row[idxTitle] : row[2]) || '').trim();
+        if (!rawTitle) continue;
+
+        title = rawTitle;
+        // Generate a clean model code e.g. "Ardo 3000" -> "3000" or "6018 Sensor"
+        const ardoMatch = rawTitle.match(/ardo\s+(.+)$/i);
+        code = ardoMatch ? ardoMatch[1].trim() : rawTitle;
+
+        brandRaw = 'ARDO';
+        const inferred = inferCategoryFromName(title, categories);
+        categoryRaw = inferred.categoryName;
+
+        specsRaw = String((idxSpecs !== -1 ? row[idxSpecs] : row[3]) || '').trim();
+        priceRaw = idxPrice !== -1 ? row[idxPrice] : row[4];
+        imageRaw = String((idxImage !== -1 ? row[idxImage] : row[1]) || '').trim();
+
+        const noteRaw = String(row[5] || '').toLowerCase();
+        if (noteRaw.includes('yoxdu') || noteRaw.includes('yoxdur')) {
+          stockStatusRaw = 'out_of_stock';
+        }
+      } else {
+        // Standard template format
+        code = String((idxCode !== -1 ? row[idxCode] : row[0]) || '').trim();
+        title = String((idxTitle !== -1 ? row[idxTitle] : row[1]) || '').trim();
+        brandRaw = String((idxBrand !== -1 ? row[idxBrand] : row[2]) || '').trim();
+        categoryRaw = String((idxCategory !== -1 ? row[idxCategory] : row[3]) || '').trim();
+        priceRaw = idxPrice !== -1 ? row[idxPrice] : row[4];
+        oldPriceRaw = idxOldPrice !== -1 ? row[idxOldPrice] : row[5];
+        currencyRaw = String(row[6] || '₼').trim();
+        badgeRaw = String((idxBadge !== -1 ? row[idxBadge] : row[7]) || '').trim();
+        badgeColorRaw = String(row[8] || 'red').trim();
+        stockStatusRaw = String(row[9] || 'in_stock').trim();
+        statusRaw = String(row[10] || 'published').trim();
+        countryRaw = String((idxCountry !== -1 ? row[idxCountry] : row[11]) || '').trim();
+        descRaw = String((idxDesc !== -1 ? row[idxDesc] : row[12]) || '').trim();
+        highlightsRaw = String((idxHighlights !== -1 ? row[idxHighlights] : row[13]) || '').trim();
+        imageRaw = String((idxImage !== -1 ? row[idxImage] : row[14]) || '').trim();
+        galleryRaw = String((idxGallery !== -1 ? row[idxGallery] : row[15]) || '').trim();
+        specsRaw = String((idxSpecs !== -1 ? row[idxSpecs] : row[16]) || '').trim();
+      }
+
+      if (!title && !code) {
         continue;
+      }
+
+      if (!code) {
+        code = title;
+      }
+      if (!title) {
+        title = code;
       }
 
       // Match brand
@@ -225,46 +403,57 @@ export const importProductsFromExcel = (
           b.name.toLowerCase() === brandRaw.toLowerCase() ||
           b.id.toLowerCase() === brandRaw.toLowerCase()
       );
-      const brandId = matchedBrand?.id || 'ardo';
+      const brandId = matchedBrand?.id || (brandRaw ? brandRaw.toLowerCase().replace(/[^a-z0-9]/g, '-') : 'ardo');
 
-      // Match category
-      const matchedCat = categories.find(
+      // Match or infer category
+      let matchedCat = categories.find(
         (c) =>
           c.name.toLowerCase() === categoryRaw.toLowerCase() ||
           c.id.toLowerCase() === categoryRaw.toLowerCase()
       );
-      const categoryId = matchedCat?.id || categories[0]?.id || 'hood';
-      const categoryName = matchedCat?.name || categories[0]?.name || 'Məhsul';
+      if (!matchedCat) {
+        const inferred = inferCategoryFromName(title, categories);
+        matchedCat = categories.find((c) => c.id === inferred.categoryId) || categories[0];
+      }
+
+      const categoryId = matchedCat?.id || 'hood';
+      const categoryName = matchedCat?.name || 'Aspiratorlar';
 
       // Parse highlights
       const highlights = highlightsRaw
-        ? highlightsRaw.split(';').map((h) => h.trim()).filter(Boolean)
+        ? highlightsRaw.split(/[;,\n]/).map((h) => h.trim()).filter(Boolean)
         : [];
 
       // Parse gallery
       const gallery = galleryRaw
-        ? galleryRaw.split(';').map((g) => g.trim()).filter(Boolean)
+        ? galleryRaw.split(/[;,\n]/).map((g) => g.trim()).filter(Boolean)
         : [];
 
-      // Parse specs
-      const specs: ProductSpecItem[] = [];
+      // Parse specs (Supports multiline newline, semicolon, or colon formats)
+      let specs: ProductSpecItem[] = [];
       if (specsRaw) {
-        const parts = specsRaw.split(';');
-        parts.forEach((part, sIdx) => {
-          const colonIdx = part.indexOf(':');
-          if (colonIdx !== -1) {
-            const name = part.slice(0, colonIdx).trim();
-            const value = part.slice(colonIdx + 1).trim();
-            if (name && value) {
-              specs.push({
-                id: `spec-xls-${rowIndex}-${sIdx + 1}`,
-                name,
-                value,
-                group: 'Əsas',
-              });
+        if (specsRaw.includes('\n')) {
+          specs = parseMultilineSpecs(specsRaw, `spec-xls-${rowIndex}`);
+        } else if (specsRaw.includes(';')) {
+          const parts = specsRaw.split(';');
+          parts.forEach((part, sIdx) => {
+            const colonIdx = part.indexOf(':');
+            if (colonIdx !== -1) {
+              const name = part.slice(0, colonIdx).trim();
+              const value = part.slice(colonIdx + 1).trim();
+              if (name && value) {
+                specs.push({
+                  id: `spec-xls-${rowIndex}-${sIdx + 1}`,
+                  name,
+                  value,
+                  group: 'Əsas',
+                });
+              }
             }
-          }
-        });
+          });
+        } else if (specsRaw.includes(':') || specsRaw.includes('-')) {
+          specs = parseMultilineSpecs(specsRaw, `spec-xls-${rowIndex}`);
+        }
       }
 
       const price = priceRaw !== undefined && priceRaw !== '' && !isNaN(Number(priceRaw))
@@ -299,11 +488,11 @@ export const importProductsFromExcel = (
         badgeColor,
         stockStatus,
         status,
-        manufacturingCountry: countryRaw,
+        manufacturingCountry: countryRaw || 'İtaliya',
         shortDesc: descRaw,
         highlights,
         specs,
-        image: imageRaw,
+        image: imageRaw || '/media/brands/ardo-logo.png',
         gallery,
         media: [
           ...(imageRaw ? [{ id: `med-main-${rowIndex}`, type: 'image' as const, url: imageRaw }] : []),

@@ -3,27 +3,35 @@ import {
   BarChart3,
   Boxes,
   Building2,
+  ChevronLeft,
+  ChevronRight,
   Copy,
   Download,
   Eye,
   FileSpreadsheet,
   FolderPlus,
   Globe,
+  GripVertical,
   KeyRound,
+  Layers,
   Lock,
   LogOut,
   Mail,
   MapPin,
+  Maximize2,
   MessageCircle,
   Palette,
   Pencil,
   Phone,
+  PhoneCall,
   Plus,
   Rocket,
   Save,
   Search,
+  Sparkles,
   Tag,
   Trash2,
+  TrendingUp,
   Upload,
   UploadCloud,
   X,
@@ -152,6 +160,28 @@ export const CatalogAdmin: React.FC<Props> = ({
   const [confirmPassword, setConfirmPassword] = useState('');
   const [passwordUpdating, setPasswordUpdating] = useState(false);
 
+  // Drag & Drop reorder state
+  const [draggedIndex, setDraggedIndex] = useState<number | null>(null);
+  const [dropTargetIndex, setDropTargetIndex] = useState<number | null>(null);
+  const [dropPosition, setDropPosition] = useState<'above' | 'below' | null>(null);
+
+  // Lightbox zoom & media viewer state
+  const [lightbox, setLightbox] = useState<{
+    productTitle: string;
+    productCode: string;
+    media: Array<{ url: string; type?: 'image' | 'video'; alt?: string }>;
+    currentIndex: number;
+  } | null>(null);
+
+  // On-the-fly Category & Brand creation modal
+  const [quickModal, setQuickModal] = useState<{
+    type: 'category' | 'brand';
+    targetProductId?: string;
+  } | null>(null);
+  const [quickName, setQuickName] = useState('');
+  const [quickSlug, setQuickSlug] = useState('');
+  const [quickOriginCountry, setQuickOriginCountry] = useState('İtaliya');
+
   const stats = initial.analytics;
 
   const availableCountries = useMemo(() => {
@@ -177,13 +207,217 @@ export const CatalogAdmin: React.FC<Props> = ({
     });
   }, [adminCategory, catalog.products, completeness, query]);
 
-  const topProducts = useMemo(
-    () =>
-      Object.entries(stats.productViews || {})
-        .sort(([, a], [, b]) => b - a)
-        .slice(0, 5),
+  // Executive Dashboard Stats
+  const totalCatalogViews = stats.catalogViews || 0;
+  const totalProductViews = useMemo(
+    () => Object.values(stats.productViews || {}).reduce((a, b) => a + b, 0),
     [stats.productViews]
   );
+  const totalWhatsApp = stats.contactActions?.whatsapp || 0;
+  const totalCalls = stats.contactActions?.call || 0;
+  const totalInquiries = totalWhatsApp + totalCalls;
+  const conversionRate = totalCatalogViews > 0 ? ((totalInquiries / totalCatalogViews) * 100).toFixed(1) : '0.0';
+
+  const categoryDistribution = useMemo(() => {
+    const total = catalog.products.length || 1;
+    return catalog.categories.map((c) => {
+      const count = catalog.products.filter((p) => p.category === c.id).length;
+      const percent = Math.round((count / total) * 100);
+      return { id: c.id, name: c.name, count, percent };
+    }).sort((a, b) => b.count - a.count);
+  }, [catalog.categories, catalog.products]);
+
+  const brandDistribution = useMemo(() => {
+    const total = catalog.products.length || 1;
+    return catalog.brands.map((b) => {
+      const count = catalog.products.filter((p) => p.brandId === b.id).length;
+      const percent = Math.round((count / total) * 100);
+      return { id: b.id, name: b.name, count, percent };
+    }).sort((a, b) => b.count - a.count);
+  }, [catalog.brands, catalog.products]);
+
+  const topRankedProducts = useMemo(() => {
+    return [...catalog.products]
+      .map((p) => {
+        const views = stats.productViews?.[p.id] || 0;
+        const wa = stats.contactActionsByProduct?.[p.id]?.whatsapp || 0;
+        const call = stats.contactActionsByProduct?.[p.id]?.call || 0;
+        const inq = wa + call;
+        const ctr = views > 0 ? ((inq / views) * 100).toFixed(1) : '0.0';
+        return { product: p, views, wa, call, inq, ctr };
+      })
+      .sort((a, b) => b.views - a.views || b.inq - a.inq)
+      .slice(0, 10);
+  }, [catalog.products, stats.productViews, stats.contactActionsByProduct]);
+
+  // Reordering & Drag-Drop Methods
+  const moveProductToPosition = (fromIndex: number, targetPos1Based: number) => {
+    if (isNaN(targetPos1Based) || targetPos1Based < 1) return;
+    const targetIdx = Math.max(0, Math.min(catalog.products.length - 1, targetPos1Based - 1));
+    if (fromIndex === targetIdx) return;
+
+    setCatalog((prev) => {
+      const list = [...prev.products];
+      const [item] = list.splice(fromIndex, 1);
+      list.splice(targetIdx, 0, item);
+      return { ...prev, products: list };
+    });
+    showToast(`Məhsul #${targetIdx + 1} sırasına keçirildi.`);
+  };
+
+  const handleDragStart = (index: number, e: React.DragEvent) => {
+    setDraggedIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', String(index));
+  };
+
+  const handleDragOver = (index: number, e: React.DragEvent) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const midY = rect.top + rect.height / 2;
+    const pos = e.clientY < midY ? 'above' : 'below';
+    setDropTargetIndex(index);
+    setDropPosition(pos);
+  };
+
+  const handleDrop = (index: number, e: React.DragEvent) => {
+    e.preventDefault();
+    if (draggedIndex === null || draggedIndex === index) {
+      setDraggedIndex(null);
+      setDropTargetIndex(null);
+      setDropPosition(null);
+      return;
+    }
+
+    setCatalog((prev) => {
+      const list = [...prev.products];
+      const [item] = list.splice(draggedIndex, 1);
+      const insertAt = dropPosition === 'below' ? (draggedIndex < index ? index : index + 1) : (draggedIndex < index ? index - 1 : index);
+      const safeInsert = Math.max(0, Math.min(list.length, insertAt));
+      list.splice(safeInsert, 0, item);
+      return { ...prev, products: list };
+    });
+
+    showToast('Məhsulların sırası yeniləndi.');
+    setDraggedIndex(null);
+    setDropTargetIndex(null);
+    setDropPosition(null);
+  };
+
+  const handleDragEnd = () => {
+    setDraggedIndex(null);
+    setDropTargetIndex(null);
+    setDropPosition(null);
+  };
+
+  // Inline fast update
+  const updateProductInline = (id: string, patch: Partial<Product>) => {
+    setCatalog((prev) => ({
+      ...prev,
+      products: prev.products.map((p) => {
+        if (p.id !== id) return p;
+        const updated = { ...p, ...patch, updatedAt: new Date().toISOString() };
+        if (patch.category) {
+          const cat = prev.categories.find((c) => c.id === patch.category);
+          if (cat) updated.categoryName = cat.name;
+        }
+        return updated;
+      }),
+    }));
+    showToast('Məhsul məlumatı yeniləndi.');
+  };
+
+  // Open Lightbox
+  const openProductLightbox = (product: Product, initialMediaIndex = 0) => {
+    const mediaItems: Array<{ url: string; type?: 'image' | 'video'; alt?: string }> = [];
+    if (product.image) {
+      mediaItems.push({ url: product.image, type: 'image', alt: product.title });
+    }
+    if (product.media && product.media.length) {
+      product.media.forEach((m) => {
+        if (m.url && !mediaItems.some((item) => item.url === m.url)) {
+          mediaItems.push({ url: m.url, type: m.type, alt: m.alt || product.title });
+        }
+      });
+    }
+    if (product.gallery && product.gallery.length) {
+      product.gallery.forEach((g) => {
+        if (g && !mediaItems.some((item) => item.url === g)) {
+          mediaItems.push({ url: g, type: 'image', alt: product.title });
+        }
+      });
+    }
+
+    if (!mediaItems.length) {
+      mediaItems.push({ url: '/media/brands/ardo-logo.png', type: 'image', alt: product.title });
+    }
+
+    setLightbox({
+      productTitle: product.title,
+      productCode: product.code,
+      media: mediaItems,
+      currentIndex: Math.max(0, Math.min(mediaItems.length - 1, initialMediaIndex)),
+    });
+  };
+
+  // On-the-fly Category & Brand creation
+  const handleCreateQuickItem = () => {
+    if (!quickModal || !quickName.trim()) return;
+    const name = quickName.trim();
+    const slug = quickSlug.trim() || slugify(name);
+    const id = slug || newId(quickModal.type);
+
+    if (quickModal.type === 'category') {
+      const exists = catalog.categories.some((c) => c.id === id || c.name.toLowerCase() === name.toLowerCase());
+      if (exists) {
+        alert('Bu adda kateqoriya artıq mövcuddur.');
+        return;
+      }
+      const newCat: CatalogCategory = { id, name, slug, active: true };
+      setCatalog((prev) => ({
+        ...prev,
+        categories: [...prev.categories, newCat],
+        products: quickModal.targetProductId
+          ? prev.products.map((p) => (p.id === quickModal.targetProductId ? { ...p, category: id, categoryName: name } : p))
+          : prev.products,
+      }));
+      if (editing && editing.id === quickModal.targetProductId) {
+        setEditing((prev) => prev ? { ...prev, category: id, categoryName: name } : null);
+      }
+      showToast(`"${name}" kateqoriyası yaradıldı.`);
+    } else {
+      const exists = catalog.brands.some((b) => b.id === id || b.name.toLowerCase() === name.toLowerCase());
+      if (exists) {
+        alert('Bu adda brend artıq mövcuddur.');
+        return;
+      }
+      const newBrand: Brand = {
+        id,
+        name,
+        slug,
+        originCountry: quickOriginCountry || 'İtaliya',
+        manufacturingCountries: [quickOriginCountry || 'İtaliya'],
+        active: true,
+        logo: '/media/brands/ardo-logo.png',
+      };
+      setCatalog((prev) => ({
+        ...prev,
+        brands: [...prev.brands, newBrand],
+        products: quickModal.targetProductId
+          ? prev.products.map((p) => (p.id === quickModal.targetProductId ? { ...p, brandId: id } : p))
+          : prev.products,
+      }));
+      if (editing && editing.id === quickModal.targetProductId) {
+        setEditing((prev) => prev ? { ...prev, brandId: id } : null);
+      }
+      showToast(`"${name}" brendi yaradıldı.`);
+    }
+
+    setQuickModal(null);
+    setQuickName('');
+    setQuickSlug('');
+  };
 
   const persist = async () => {
     setSaving(true);
@@ -440,40 +674,270 @@ export const CatalogAdmin: React.FC<Props> = ({
           </div>
         </header>
 
-        {/* TAB 1: DASHBOARD */}
+        {/* TAB 1: EXECUTIVE DASHBOARD */}
         {tab === 'dashboard' && (
-          <div className="dashboard-grid">
-            <article className="stat-card" style={{ background: theme.bgCard, borderColor: theme.border }}>
-              <span>Ümumi Kataloq Baxışları</span>
-              <strong style={{ color: theme.primary }}>{stats.catalogViews}</strong>
-            </article>
-            <article className="stat-card" style={{ background: theme.bgCard, borderColor: theme.border }}>
-              <span>Məhsul Baxışları Sayı</span>
-              <strong>{Object.values(stats.productViews || {}).reduce((a, b) => a + b, 0)}</strong>
-            </article>
-            <article className="stat-card" style={{ background: theme.bgCard, borderColor: theme.border }}>
-              <span>WhatsApp Klikləri</span>
-              <strong style={{ color: '#16a34a' }}>{stats.contactActions.whatsapp}</strong>
-            </article>
-            <article className="stat-card" style={{ background: theme.bgCard, borderColor: theme.border }}>
-              <span>Zəng Klikləri</span>
-              <strong style={{ color: '#2563eb' }}>{stats.contactActions.call}</strong>
-            </article>
-            <article className="top-products-card" style={{ background: theme.bgCard, borderColor: theme.border }}>
-              <h2>Ən çox baxılan məhsullar</h2>
-              {topProducts.length ? (
-                topProducts.map(([id, count], index) => (
-                  <div key={id} style={{ borderColor: theme.border }}>
-                    <span>
-                      {index + 1}. {catalog.products.find((p) => p.id === id)?.title || id}
-                    </span>
-                    <b>{count} baxış</b>
+          <div>
+            {/* KPI Cards Grid */}
+            <div className="dash-kpi-grid">
+              <article className="dash-kpi-card" style={{ background: theme.bgCard, borderColor: theme.border }}>
+                <div className="dash-kpi-header">
+                  <span className="dash-kpi-title" style={{ color: theme.textMuted }}>Kataloq Baxışları</span>
+                  <div className="dash-kpi-icon-pill" style={{ background: 'rgba(220, 38, 38, 0.12)', color: '#dc2626' }}>
+                    <Eye size={18} />
                   </div>
-                ))
-              ) : (
-                <p style={{ color: theme.textMuted }}>Məlumat toplanır...</p>
-              )}
-            </article>
+                </div>
+                <div className="dash-kpi-main">
+                  <span className="dash-kpi-value" style={{ color: theme.primary }}>{totalCatalogViews}</span>
+                  <span className="dash-kpi-badge" style={{ background: 'rgba(220, 38, 38, 0.15)', color: '#dc2626' }}>
+                    <TrendingUp size={12} /> Canlı
+                  </span>
+                </div>
+                <div className="dash-kpi-footer" style={{ color: theme.textMuted }}>
+                  <span>Ümumi səhifə açılmaları</span>
+                  <span>100% aktiv</span>
+                </div>
+              </article>
+
+              <article className="dash-kpi-card" style={{ background: theme.bgCard, borderColor: theme.border }}>
+                <div className="dash-kpi-header">
+                  <span className="dash-kpi-title" style={{ color: theme.textMuted }}>Məhsul Baxışları</span>
+                  <div className="dash-kpi-icon-pill" style={{ background: 'rgba(37, 99, 235, 0.12)', color: '#2563eb' }}>
+                    <Boxes size={18} />
+                  </div>
+                </div>
+                <div className="dash-kpi-main">
+                  <span className="dash-kpi-value" style={{ color: '#2563eb' }}>{totalProductViews}</span>
+                  <span className="dash-kpi-badge" style={{ background: 'rgba(37, 99, 235, 0.15)', color: '#2563eb' }}>
+                    Model baxışı
+                  </span>
+                </div>
+                <div className="dash-kpi-footer" style={{ color: theme.textMuted }}>
+                  <span>Ətraflı baxılan kartlar</span>
+                  <span>{catalog.products.length} məhsul üzrə</span>
+                </div>
+              </article>
+
+              <article className="dash-kpi-card" style={{ background: theme.bgCard, borderColor: theme.border }}>
+                <div className="dash-kpi-header">
+                  <span className="dash-kpi-title" style={{ color: theme.textMuted }}>WhatsApp Müraciəti</span>
+                  <div className="dash-kpi-icon-pill" style={{ background: 'rgba(16, 163, 74, 0.12)', color: '#16a34a' }}>
+                    <MessageCircle size={18} />
+                  </div>
+                </div>
+                <div className="dash-kpi-main">
+                  <span className="dash-kpi-value" style={{ color: '#16a34a' }}>{totalWhatsApp}</span>
+                  <span className="dash-kpi-badge" style={{ background: 'rgba(16, 163, 74, 0.15)', color: '#16a34a' }}>
+                    Sifariş / Sual
+                  </span>
+                </div>
+                <div className="dash-kpi-footer" style={{ color: theme.textMuted }}>
+                  <span>WhatsApp ilə birbaşa əlaqə</span>
+                  <span>Konversiya</span>
+                </div>
+              </article>
+
+              <article className="dash-kpi-card" style={{ background: theme.bgCard, borderColor: theme.border }}>
+                <div className="dash-kpi-header">
+                  <span className="dash-kpi-title" style={{ color: theme.textMuted }}>Birbaşa Zənglər</span>
+                  <div className="dash-kpi-icon-pill" style={{ background: 'rgba(217, 119, 6, 0.12)', color: '#d97706' }}>
+                    <PhoneCall size={18} />
+                  </div>
+                </div>
+                <div className="dash-kpi-main">
+                  <span className="dash-kpi-value" style={{ color: '#d97706' }}>{totalCalls}</span>
+                  <span className="dash-kpi-badge" style={{ background: 'rgba(217, 119, 6, 0.15)', color: '#d97706' }}>
+                    Telefon
+                  </span>
+                </div>
+                <div className="dash-kpi-footer" style={{ color: theme.textMuted }}>
+                  <span>Zəng et düyməsi klikləri</span>
+                  <span>Sürətli əlaqə</span>
+                </div>
+              </article>
+
+              <article className="dash-kpi-card" style={{ background: theme.bgCard, borderColor: theme.border }}>
+                <div className="dash-kpi-header">
+                  <span className="dash-kpi-title" style={{ color: theme.textMuted }}>Kataloq Məhsulları</span>
+                  <div className="dash-kpi-icon-pill" style={{ background: 'rgba(124, 58, 237, 0.12)', color: '#7c3aed' }}>
+                    <Sparkles size={18} />
+                  </div>
+                </div>
+                <div className="dash-kpi-main">
+                  <span className="dash-kpi-value" style={{ color: '#7c3aed' }}>{catalog.products.length}</span>
+                  <span className="dash-kpi-badge" style={{ background: 'rgba(124, 58, 237, 0.15)', color: '#7c3aed' }}>
+                    {catalog.categories.length} kateqoriya
+                  </span>
+                </div>
+                <div className="dash-kpi-footer" style={{ color: theme.textMuted }}>
+                  <span>{catalog.brands.length} brend | {catalog.products.filter(p => p.status === 'published').length} yayımda</span>
+                  <span>Status</span>
+                </div>
+              </article>
+
+              <article className="dash-kpi-card" style={{ background: theme.bgCard, borderColor: theme.border }}>
+                <div className="dash-kpi-header">
+                  <span className="dash-kpi-title" style={{ color: theme.textMuted }}>Müraciət Konversiyası</span>
+                  <div className="dash-kpi-icon-pill" style={{ background: 'rgba(14, 165, 233, 0.12)', color: '#0ea5e9' }}>
+                    <TrendingUp size={18} />
+                  </div>
+                </div>
+                <div className="dash-kpi-main">
+                  <span className="dash-kpi-value" style={{ color: '#0ea5e9' }}>{conversionRate}%</span>
+                  <span className="dash-kpi-badge" style={{ background: 'rgba(14, 165, 233, 0.15)', color: '#0ea5e9' }}>
+                    CTR
+                  </span>
+                </div>
+                <div className="dash-kpi-footer" style={{ color: theme.textMuted }}>
+                  <span>Baxışdan müraciətə nisbət</span>
+                  <span>{totalInquiries} ümumi əlaqə</span>
+                </div>
+              </article>
+            </div>
+
+            {/* Visual Charts Grid */}
+            <div className="dash-charts-grid">
+              {/* Category Breakdown */}
+              <div className="dash-chart-card" style={{ background: theme.bgCard, borderColor: theme.border }}>
+                <div className="dash-chart-header">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <FolderPlus size={18} color={theme.primary} />
+                    <h3>Kateqoriyalar üzrə Paylanma</h3>
+                  </div>
+                  <span style={{ fontSize: '11px', color: theme.textMuted }}>{catalog.categories.length} kateqoriya</span>
+                </div>
+                <div className="dash-bar-list">
+                  {categoryDistribution.map((cat, idx) => {
+                    const colors = ['#dc2626', '#2563eb', '#16a34a', '#d97706', '#7c3aed', '#0ea5e9'];
+                    const color = colors[idx % colors.length];
+                    return (
+                      <div key={cat.id} className="dash-bar-item">
+                        <div className="dash-bar-label-row">
+                          <span>{cat.name}</span>
+                          <span style={{ color: theme.textMuted }}>{cat.count} model ({cat.percent}%)</span>
+                        </div>
+                        <div className="dash-bar-track">
+                          <div className="dash-bar-fill" style={{ width: `${cat.percent}%`, background: color }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Brand Breakdown & Channels */}
+              <div className="dash-chart-card" style={{ background: theme.bgCard, borderColor: theme.border }}>
+                <div className="dash-chart-header">
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Building2 size={18} color="#2563eb" />
+                    <h3>Brendlər və Əlaqə Kanalları</h3>
+                  </div>
+                  <span style={{ fontSize: '11px', color: theme.textMuted }}>{catalog.brands.length} brend</span>
+                </div>
+                <div className="dash-bar-list">
+                  {brandDistribution.map((brand, idx) => {
+                    const colors = ['#dc2626', '#2563eb', '#16a34a', '#d97706'];
+                    const color = colors[idx % colors.length];
+                    return (
+                      <div key={brand.id} className="dash-bar-item">
+                        <div className="dash-bar-label-row">
+                          <span>{brand.name}</span>
+                          <span style={{ color: theme.textMuted }}>{brand.count} model ({brand.percent}%)</span>
+                        </div>
+                        <div className="dash-bar-track">
+                          <div className="dash-bar-fill" style={{ width: `${brand.percent}%`, background: color }} />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div style={{ marginTop: '10px', paddingTop: '14px', borderTop: `1px solid ${theme.border}` }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: 700, marginBottom: '8px' }}>
+                    <span style={{ color: '#16a34a', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <MessageCircle size={14} /> WhatsApp ({totalInquiries ? Math.round((totalWhatsApp / totalInquiries) * 100) : 50}%)
+                    </span>
+                    <span style={{ color: '#d97706', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                      <PhoneCall size={14} /> Zəng ({totalInquiries ? Math.round((totalCalls / totalInquiries) * 100) : 50}%)
+                    </span>
+                  </div>
+                  <div className="dash-bar-track" style={{ display: 'flex' }}>
+                    <div style={{ width: `${totalInquiries ? (totalWhatsApp / totalInquiries) * 100 : 50}%`, background: '#16a34a', height: '100%' }} />
+                    <div style={{ width: `${totalInquiries ? (totalCalls / totalInquiries) * 100 : 50}%`, background: '#d97706', height: '100%' }} />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Top Ranked Products Performance Table */}
+            <div className="dash-top-products-wrap" style={{ background: theme.bgCard, borderColor: theme.border }}>
+              <div className="dash-top-products-header" style={{ borderColor: theme.border }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Sparkles size={18} color={theme.primary} />
+                  <h3>Ən Populyar və Sifariş Lideri Məhsullar (Top 10)</h3>
+                </div>
+                <span style={{ fontSize: '11px', color: theme.textMuted }}>Kataloq statistikası üzrə sıralanma</span>
+              </div>
+              <div className="admin-table-wrap" style={{ border: 0, borderRadius: 0 }}>
+                <table>
+                  <thead>
+                    <tr style={{ borderBottomColor: theme.border }}>
+                      <th style={{ width: '40px' }}>Reytinq</th>
+                      <th style={{ width: '56px' }}>Foto</th>
+                      <th>Model Kodu</th>
+                      <th>Məhsul Adı</th>
+                      <th>Kateqoriya</th>
+                      <th>Baxış Sayı</th>
+                      <th>WhatsApp Sifariş</th>
+                      <th>Zəng Müraciəti</th>
+                      <th style={{ textAlign: 'right' }}>Konversiya</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {topRankedProducts.length ? (
+                      topRankedProducts.map(({ product: p, views, wa, call, ctr }, index) => {
+                        const rankClass = index === 0 ? 'dash-rank-1' : index === 1 ? 'dash-rank-2' : index === 2 ? 'dash-rank-3' : 'dash-rank-other';
+                        return (
+                          <tr key={p.id} style={{ borderBottomColor: theme.border }}>
+                            <td>
+                              <span className={`dash-rank-badge ${rankClass}`}>
+                                #{index + 1}
+                              </span>
+                            </td>
+                            <td>
+                              <div
+                                className="admin-prod-thumb"
+                                onClick={() => openProductLightbox(p)}
+                                title="Böyütmək və baxmaq üçün klikləyin"
+                                style={{ cursor: 'pointer' }}
+                              >
+                                {p.image ? <img src={p.image} alt="" /> : '🖼'}
+                              </div>
+                            </td>
+                            <td><strong>{p.code}</strong></td>
+                            <td>{p.title}</td>
+                            <td>{p.categoryName}</td>
+                            <td><b>{views}</b></td>
+                            <td><span style={{ color: '#16a34a', fontWeight: 700 }}>{wa}</span></td>
+                            <td><span style={{ color: '#d97706', fontWeight: 700 }}>{call}</span></td>
+                            <td style={{ textAlign: 'right' }}>
+                              <span className="dash-ctr-badge">
+                                {ctr}% CTR
+                              </span>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    ) : (
+                      <tr>
+                        <td colSpan={9} style={{ textAlign: 'center', padding: '24px', color: theme.textMuted }}>
+                          Məlumat toplanır...
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </div>
           </div>
         )}
 
@@ -645,114 +1109,255 @@ export const CatalogAdmin: React.FC<Props> = ({
               <table>
                 <thead>
                   <tr style={{ borderBottomColor: theme.border }}>
-                    <th>Foto</th>
+                    <th style={{ width: '80px' }}>Sıra (№)</th>
+                    <th style={{ width: '56px' }}>Foto</th>
                     <th>Model Kodu</th>
                     <th>Məhsul Adı</th>
-                    <th>Qiymət</th>
-                    <th>Nişan (Badge)</th>
                     <th>Kateqoriya</th>
                     <th>Brend</th>
-                    <th>Status</th>
+                    <th>Qiymət</th>
+                    <th>Nişan (Badge)</th>
+                    <th>Status & Stok</th>
                     <th style={{ textAlign: 'right' }}>Əməliyyatlar</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {filtered.map((product) => (
-                    <tr key={product.id} style={{ borderBottomColor: theme.border }}>
-                      <td>
-                        <div className="admin-prod-thumb">
-                          {product.image ? <img src={product.image} alt="" /> : '🖼'}
-                        </div>
-                      </td>
-                      <td>
-                        <strong>{product.code}</strong>
-                      </td>
-                      <td>{product.title}</td>
-                      <td>
-                        {product.price ? (
-                          <span>
-                            <b>{product.price} {product.currency || '₼'}</b>
-                            {product.oldPrice && (
-                              <del style={{ color: theme.textMuted, marginLeft: '4px', fontSize: '11px' }}>
-                                {product.oldPrice}
-                              </del>
-                            )}
-                          </span>
-                        ) : (
-                          <span style={{ color: theme.textMuted }}>—</span>
-                        )}
-                      </td>
-                      <td>
-                        {product.badgeText ? (
-                          <span
-                            style={{
-                              padding: '2px 8px',
-                              borderRadius: '6px',
-                              fontSize: '11px',
-                              fontWeight: 800,
-                              backgroundColor:
-                                product.badgeColor === 'green'
-                                  ? '#16a34a'
-                                  : product.badgeColor === 'blue'
-                                  ? '#2563eb'
-                                  : product.badgeColor === 'amber'
-                                  ? '#d97706'
-                                  : product.badgeColor === 'purple'
-                                  ? '#7c3aed'
-                                  : theme.primary,
-                              color: '#ffffff',
+                  {filtered.map((product) => {
+                    const catalogIndex = catalog.products.findIndex((p) => p.id === product.id);
+                    const isDragging = draggedIndex === catalogIndex;
+                    const isDropTarget = dropTargetIndex === catalogIndex;
+                    const dropClass = isDropTarget && dropPosition ? `drop-${dropPosition}` : '';
+
+                    return (
+                      <tr
+                        key={product.id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(catalogIndex, e)}
+                        onDragOver={(e) => handleDragOver(catalogIndex, e)}
+                        onDrop={(e) => handleDrop(catalogIndex, e)}
+                        onDragEnd={handleDragEnd}
+                        className={`drag-row ${isDragging ? 'dragging' : ''} ${dropClass}`}
+                        style={{ borderBottomColor: theme.border }}
+                      >
+                        {/* Drag Handle & Sequence input */}
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <span className="drag-handle" title="Mouse ilə tutub sıranı dəyişmək üçün sürüşdürün">
+                              <GripVertical size={16} />
+                            </span>
+                            <input
+                              type="number"
+                              min={1}
+                              max={catalog.products.length}
+                              defaultValue={catalogIndex + 1}
+                              key={`seq-${catalogIndex}-${catalog.products.length}`}
+                              onBlur={(e) => {
+                                const val = parseInt(e.target.value, 10);
+                                if (!isNaN(val)) moveProductToPosition(catalogIndex, val);
+                              }}
+                              onKeyDown={(e) => {
+                                if (e.key === 'Enter') {
+                                  const val = parseInt((e.target as HTMLInputElement).value, 10);
+                                  if (!isNaN(val)) moveProductToPosition(catalogIndex, val);
+                                }
+                              }}
+                              className="seq-badge-input"
+                              title="Sıra nömrəsini daxil edib Enter basın"
+                            />
+                          </div>
+                        </td>
+
+                        {/* Thumbnail with Lightbox click */}
+                        <td>
+                          <div
+                            className="admin-prod-thumb"
+                            onClick={() => openProductLightbox(product)}
+                            title="Böyütmək və baxmaq üçün klikləyin"
+                            style={{ cursor: 'pointer' }}
+                          >
+                            {product.image ? <img src={product.image} alt="" /> : '🖼'}
+                          </div>
+                        </td>
+
+                        <td>
+                          <strong>{product.code}</strong>
+                        </td>
+
+                        <td>{product.title}</td>
+
+                        {/* Inline Category Select + On the fly create */}
+                        <td>
+                          <select
+                            value={product.category}
+                            onChange={(e) => {
+                              if (e.target.value === '__new_category__') {
+                                setQuickModal({ type: 'category', targetProductId: product.id });
+                              } else {
+                                updateProductInline(product.id, { category: e.target.value });
+                              }
                             }}
+                            className="inline-table-select"
+                            style={{ background: theme.bgSecondary, borderColor: theme.border }}
                           >
-                            {product.badgeText}
-                          </span>
-                        ) : (
-                          <span style={{ color: theme.textMuted }}>—</span>
-                        )}
-                      </td>
-                      <td>{product.categoryName}</td>
-                      <td>
-                        {catalog.brands.find((b) => b.id === product.brandId)?.name ||
-                          product.brandId}
-                      </td>
-                      <td>
-                        <span
-                          className={`status-pill ${
-                            product.status === 'published' ? 'published' : 'draft'
-                          }`}
-                        >
-                          {product.status === 'published' ? 'Yayımda' : 'Qaralama'}
-                        </span>
-                      </td>
-                      <td style={{ textAlign: 'right' }}>
-                        <div className="row-actions" style={{ justifyContent: 'flex-end' }}>
-                          <button
-                            onClick={() => duplicateProduct(product)}
-                            title="Nüsxəsini çıxar"
-                            style={{ background: 'transparent', color: theme.textMuted, border: 'none', cursor: 'pointer' }}
+                            {catalog.categories.map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.name}
+                              </option>
+                            ))}
+                            <option value="__new_category__">+ Yeni Kateqoriya Yarat...</option>
+                          </select>
+                        </td>
+
+                        {/* Inline Brand Select + On the fly create */}
+                        <td>
+                          <select
+                            value={product.brandId}
+                            onChange={(e) => {
+                              if (e.target.value === '__new_brand__') {
+                                setQuickModal({ type: 'brand', targetProductId: product.id });
+                              } else {
+                                updateProductInline(product.id, { brandId: e.target.value });
+                              }
+                            }}
+                            className="inline-table-select"
+                            style={{ background: theme.bgSecondary, borderColor: theme.border }}
                           >
-                            <Copy size={15} />
-                          </button>
-                          <button
-                            onClick={() => setEditing(product)}
-                            title="Redaktə et"
-                            style={{ background: 'transparent', color: theme.primary, border: 'none', cursor: 'pointer' }}
-                          >
-                            <Pencil size={15} />
-                          </button>
-                          <button
-                            onClick={() => removeProduct(product.id)}
-                            title="Sil"
-                            style={{ background: 'transparent', color: '#ef4444', border: 'none', cursor: 'pointer' }}
-                          >
-                            <Trash2 size={15} />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
+                            {catalog.brands.map((b) => (
+                              <option key={b.id} value={b.id}>
+                                {b.name}
+                              </option>
+                            ))}
+                            <option value="__new_brand__">+ Yeni Brend Yarat...</option>
+                          </select>
+                        </td>
+
+                        {/* Price */}
+                        <td>
+                          {product.price ? (
+                            <span>
+                              <b>{product.price} {product.currency || '₼'}</b>
+                              {product.oldPrice && (
+                                <del style={{ color: theme.textMuted, marginLeft: '4px', fontSize: '11px' }}>
+                                  {product.oldPrice}
+                                </del>
+                              )}
+                            </span>
+                          ) : (
+                            <span style={{ color: theme.textMuted }}>—</span>
+                          )}
+                        </td>
+
+                        {/* Badge */}
+                        <td>
+                          {product.badgeText ? (
+                            <span
+                              style={{
+                                padding: '2px 8px',
+                                borderRadius: '6px',
+                                fontSize: '11px',
+                                fontWeight: 800,
+                                backgroundColor:
+                                  product.badgeColor === 'green'
+                                    ? '#16a34a'
+                                    : product.badgeColor === 'blue'
+                                    ? '#2563eb'
+                                    : product.badgeColor === 'amber'
+                                    ? '#d97706'
+                                    : product.badgeColor === 'purple'
+                                    ? '#7c3aed'
+                                    : theme.primary,
+                                color: '#ffffff',
+                              }}
+                            >
+                              {product.badgeText}
+                            </span>
+                          ) : (
+                            <span style={{ color: theme.textMuted }}>—</span>
+                          )}
+                        </td>
+
+                        {/* Inline Status & Stock Fast Edit */}
+                        <td>
+                          <div style={{ display: 'grid', gap: '4px' }}>
+                            <select
+                              value={product.status || 'published'}
+                              onChange={(e) => updateProductInline(product.id, { status: e.target.value as 'published' | 'draft' })}
+                              className="inline-table-select"
+                              style={{
+                                background: product.status === 'published' ? 'rgba(37, 99, 235, 0.12)' : 'rgba(127,127,127,0.12)',
+                                color: product.status === 'published' ? '#2563eb' : theme.textMuted,
+                                fontWeight: 750,
+                              }}
+                            >
+                              <option value="published">Yayımda</option>
+                              <option value="draft">Qaralama</option>
+                            </select>
+                            <select
+                              value={product.stockStatus || 'in_stock'}
+                              onChange={(e) => updateProductInline(product.id, { stockStatus: e.target.value as Product['stockStatus'] })}
+                              className="inline-table-select"
+                              style={{
+                                background:
+                                  product.stockStatus === 'in_stock'
+                                    ? 'rgba(22, 163, 74, 0.12)'
+                                    : product.stockStatus === 'out_of_stock'
+                                    ? 'rgba(239, 68, 68, 0.12)'
+                                    : 'rgba(217, 119, 6, 0.12)',
+                                color:
+                                  product.stockStatus === 'in_stock'
+                                    ? '#16a34a'
+                                    : product.stockStatus === 'out_of_stock'
+                                    ? '#ef4444'
+                                    : '#d97706',
+                                fontWeight: 700,
+                              }}
+                            >
+                              <option value="in_stock">Stokda var</option>
+                              <option value="out_of_stock">Bitib (Yoxdur)</option>
+                              <option value="preorder">Ön sifariş</option>
+                            </select>
+                          </div>
+                        </td>
+
+                        {/* Actions */}
+                        <td style={{ textAlign: 'right' }}>
+                          <div className="row-actions" style={{ justifyContent: 'flex-end' }}>
+                            <button
+                              onClick={() => openProductLightbox(product)}
+                              title="Şəkilləri və videoları böyüdüb izlə"
+                              style={{ background: 'transparent', color: '#0ea5e9', border: 'none', cursor: 'pointer' }}
+                            >
+                              <Maximize2 size={15} />
+                            </button>
+                            <button
+                              onClick={() => duplicateProduct(product)}
+                              title="Nüsxəsini çıxar"
+                              style={{ background: 'transparent', color: theme.textMuted, border: 'none', cursor: 'pointer' }}
+                            >
+                              <Copy size={15} />
+                            </button>
+                            <button
+                              onClick={() => setEditing(product)}
+                              title="Redaktə et"
+                              style={{ background: 'transparent', color: theme.primary, border: 'none', cursor: 'pointer' }}
+                            >
+                              <Pencil size={15} />
+                            </button>
+                            <button
+                              onClick={() => removeProduct(product.id)}
+                              title="Sil"
+                              style={{ background: 'transparent', color: '#ef4444', border: 'none', cursor: 'pointer' }}
+                            >
+                              <Trash2 size={15} />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
                   {!filtered.length && (
                     <tr>
-                      <td colSpan={9} style={{ textAlign: 'center', padding: '30px', color: theme.textMuted }}>
+                      <td colSpan={10} style={{ textAlign: 'center', padding: '30px', color: theme.textMuted }}>
                         Axtarışa uyğun məhsul tapılmadı.
                       </td>
                     </tr>
@@ -895,6 +1500,9 @@ export const CatalogAdmin: React.FC<Props> = ({
           onUpload={onUpload}
           onClose={() => setEditing(null)}
           onSave={upsertProduct}
+          onQuickCreateCategory={(prodId) => setQuickModal({ type: 'category', targetProductId: prodId })}
+          onQuickCreateBrand={(prodId) => setQuickModal({ type: 'brand', targetProductId: prodId })}
+          onOpenLightbox={(prod, idx) => openProductLightbox(prod, idx)}
         />
       )}
 
@@ -905,6 +1513,151 @@ export const CatalogAdmin: React.FC<Props> = ({
           theme={theme}
           onClose={() => setPreviewOpen(false)}
         />
+      )}
+
+      {/* LIGHTBOX ZOOM & MULTI-MEDIA VIEWER */}
+      {lightbox && (
+        <div className="admin-lightbox-backdrop" onClick={() => setLightbox(null)}>
+          <div className="admin-lightbox-modal" onClick={(e) => e.stopPropagation()}>
+            <header className="admin-lightbox-header">
+              <div>
+                <h3>{lightbox.productTitle}</h3>
+                <span>Model: <b>{lightbox.productCode}</b> | Media: {lightbox.currentIndex + 1} / {lightbox.media.length}</span>
+              </div>
+              <button className="admin-lightbox-close-btn" onClick={() => setLightbox(null)} title="Bağla">
+                <X size={20} />
+              </button>
+            </header>
+
+            <div className="admin-lightbox-viewer-box">
+              {lightbox.media[lightbox.currentIndex]?.type === 'video' ? (
+                <video
+                  src={lightbox.media[lightbox.currentIndex]?.url}
+                  controls
+                  autoPlay
+                  className="admin-lightbox-video"
+                />
+              ) : (
+                <img
+                  src={lightbox.media[lightbox.currentIndex]?.url}
+                  alt={lightbox.media[lightbox.currentIndex]?.alt || lightbox.productTitle}
+                  className="admin-lightbox-img"
+                />
+              )}
+
+              {lightbox.media.length > 1 && (
+                <>
+                  <button
+                    className="admin-lightbox-nav-btn admin-lightbox-nav-prev"
+                    onClick={() => setLightbox((prev) => prev ? {
+                      ...prev,
+                      currentIndex: (prev.currentIndex - 1 + prev.media.length) % prev.media.length,
+                    } : null)}
+                    title="Əvvəlki media"
+                  >
+                    <ChevronLeft size={24} />
+                  </button>
+                  <button
+                    className="admin-lightbox-nav-btn admin-lightbox-nav-next"
+                    onClick={() => setLightbox((prev) => prev ? {
+                      ...prev,
+                      currentIndex: (prev.currentIndex + 1) % prev.media.length,
+                    } : null)}
+                    title="Növbəti media"
+                  >
+                    <ChevronRight size={24} />
+                  </button>
+                </>
+              )}
+            </div>
+
+            {lightbox.media.length > 1 && (
+              <div className="admin-lightbox-thumbs">
+                {lightbox.media.map((m, idx) => (
+                  <button
+                    key={idx}
+                    className={`admin-lightbox-thumb-btn ${idx === lightbox.currentIndex ? 'active' : ''}`}
+                    onClick={() => setLightbox((prev) => prev ? { ...prev, currentIndex: idx } : null)}
+                  >
+                    {m.type === 'video' ? <span>🎬</span> : <img src={m.url} alt="" />}
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* QUICK CATEGORY / BRAND CREATION MODAL */}
+      {quickModal && (
+        <div className="quick-create-backdrop" onClick={() => setQuickModal(null)}>
+          <div
+            className="quick-create-card"
+            style={{ background: theme.bgCard, borderColor: theme.border, color: theme.text }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <h3>{quickModal.type === 'category' ? 'Yeni Kateqoriya Yarat' : 'Yeni Brend Yarat'}</h3>
+            <p style={{ color: theme.textMuted }}>
+              Məhsul redaktəsindən çıxmadan yeni {quickModal.type === 'category' ? 'kateqoriyanı' : 'brendi'} dərhal yaradın.
+            </p>
+
+            <label style={{ display: 'grid', gap: '5px', fontSize: '12px', fontWeight: 700 }}>
+              <span>{quickModal.type === 'category' ? 'Kateqoriya Adı *' : 'Brend Adı *'}</span>
+              <input
+                value={quickName}
+                onChange={(e) => {
+                  setQuickName(e.target.value);
+                  if (!quickSlug || quickSlug === slugify(quickName)) {
+                    setQuickSlug(slugify(e.target.value));
+                  }
+                }}
+                placeholder={quickModal.type === 'category' ? 'Məs: Qabyuyan Maşınlar' : 'Məs: ARDO, Bosch...'}
+                autoFocus
+                style={{ background: theme.bgSecondary, color: theme.text, border: `1px solid ${theme.border}`, padding: '9px 12px', borderRadius: '8px' }}
+              />
+            </label>
+
+            <label style={{ display: 'grid', gap: '5px', fontSize: '12px', fontWeight: 700 }}>
+              <span>URL / Slug</span>
+              <input
+                value={quickSlug}
+                onChange={(e) => setQuickSlug(e.target.value)}
+                placeholder="qabyuyan-masinlar"
+                style={{ background: theme.bgSecondary, color: theme.text, border: `1px solid ${theme.border}`, padding: '9px 12px', borderRadius: '8px' }}
+              />
+            </label>
+
+            {quickModal.type === 'brand' && (
+              <label style={{ display: 'grid', gap: '5px', fontSize: '12px', fontWeight: 700 }}>
+                <span>Mənşə Ölkəsi</span>
+                <input
+                  value={quickOriginCountry}
+                  onChange={(e) => setQuickOriginCountry(e.target.value)}
+                  placeholder="İtaliya, Türkiyə..."
+                  style={{ background: theme.bgSecondary, color: theme.text, border: `1px solid ${theme.border}`, padding: '9px 12px', borderRadius: '8px' }}
+                />
+              </label>
+            )}
+
+            <div className="quick-create-actions">
+              <button
+                type="button"
+                onClick={() => setQuickModal(null)}
+                style={{ background: theme.bgSecondary, color: theme.text, padding: '8px 14px', borderRadius: '8px', border: `1px solid ${theme.border}`, cursor: 'pointer' }}
+              >
+                İmtina
+              </button>
+              <button
+                type="button"
+                onClick={handleCreateQuickItem}
+                disabled={!quickName.trim()}
+                style={{ background: theme.primary, color: '#ffffff', padding: '8px 14px', borderRadius: '8px', border: 'none', cursor: 'pointer', fontWeight: 750 }}
+              >
+                Yarat və Təyin et
+              </button>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
@@ -1895,6 +2648,26 @@ const CategoryManager = ({
   );
 };
 
+const COMMON_SPEC_SUGGESTIONS = [
+  'Növ',
+  'İş rejimi',
+  'Məhsuldarlıq',
+  'İdarəetmə növü',
+  'Sürət sayı',
+  'Korpusun materialı',
+  'En',
+  'Hava kanalının diametri',
+  'Səs səviyyəsi',
+  'Ölçülər (H × E × D)',
+  'Rəng',
+  'Qaz nəzarəti',
+  'SABAF forsunkalar',
+  'Enerji sinfi',
+  'Həcm',
+  'Qril',
+  'Taymer',
+];
+
 // PRODUCT EDITOR MODAL
 const ProductEditor = ({
   product: initial,
@@ -1905,6 +2678,9 @@ const ProductEditor = ({
   onUpload,
   onClose,
   onSave,
+  onQuickCreateCategory,
+  onQuickCreateBrand,
+  onOpenLightbox,
 }: {
   product: Product;
   brands: Brand[];
@@ -1914,6 +2690,9 @@ const ProductEditor = ({
   onUpload: (file: File) => Promise<ProductMedia>;
   onClose: () => void;
   onSave: (value: Product) => void;
+  onQuickCreateCategory?: (prodId: string) => void;
+  onQuickCreateBrand?: (prodId: string) => void;
+  onOpenLightbox?: (prod: Product, mediaIndex: number) => void;
 }) => {
   const [product, setProduct] = useState(initial);
   const [uploading, setUploading] = useState(false);
@@ -1961,7 +2740,7 @@ const ProductEditor = ({
     <div className="product-modal-backdrop" onClick={onClose}>
       <div
         className="product-modal-card"
-        style={{ background: theme.bgCard, borderColor: theme.border, maxWidth: '900px' }}
+        style={{ background: theme.bgCard, borderColor: theme.border, maxWidth: '920px' }}
         onClick={(e) => e.stopPropagation()}
       >
         <header className="product-modal-header" style={{ borderColor: theme.border }}>
@@ -1994,23 +2773,43 @@ const ProductEditor = ({
             </label>
             <label>
               <span>Brend *</span>
-              <select value={product.brandId || ''} onChange={(e) => change('brandId', e.target.value)}>
-                {brands.map((b) => (
-                  <option key={b.id} value={b.id}>
-                    {b.name}
-                  </option>
-                ))}
-              </select>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <select value={product.brandId || ''} onChange={(e) => change('brandId', e.target.value)} style={{ flex: 1 }}>
+                  {brands.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => onQuickCreateBrand?.(product.id)}
+                  style={{ background: theme.bgSecondary, border: `1px solid ${theme.border}`, color: theme.text, padding: '0 10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 700, fontSize: '11px' }}
+                  title="Yeni Brend Yarat"
+                >
+                  + Yeni
+                </button>
+              </div>
             </label>
             <label>
               <span>Kateqoriya *</span>
-              <select value={product.category} onChange={(e) => change('category', e.target.value)}>
-                {categories.map((c) => (
-                  <option key={c.id} value={c.id}>
-                    {c.name}
-                  </option>
-                ))}
-              </select>
+              <div style={{ display: 'flex', gap: '6px' }}>
+                <select value={product.category} onChange={(e) => change('category', e.target.value)} style={{ flex: 1 }}>
+                  {categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  type="button"
+                  onClick={() => onQuickCreateCategory?.(product.id)}
+                  style={{ background: theme.bgSecondary, border: `1px solid ${theme.border}`, color: theme.text, padding: '0 10px', borderRadius: '8px', cursor: 'pointer', fontWeight: 700, fontSize: '11px' }}
+                  title="Yeni Kateqoriya Yarat"
+                >
+                  + Yeni
+                </button>
+              </div>
             </label>
 
             {/* Price & Discount Fields */}
@@ -2188,7 +2987,12 @@ const ProductEditor = ({
             <div className="media-list-grid">
               {(product.media || []).map((m, i) => (
                 <div key={m.id || i} className="media-row-card">
-                  <div className="admin-thumb">
+                  <div
+                    className="admin-thumb"
+                    onClick={() => onOpenLightbox?.(product, i)}
+                    title="Böyüdüb baxmaq üçün klikləyin"
+                    style={{ cursor: 'pointer' }}
+                  >
                     {m.type === 'video' ? '🎬' : m.url ? <img src={m.url} alt="" /> : '🖼'}
                   </div>
                   <input
@@ -2216,35 +3020,74 @@ const ProductEditor = ({
             </div>
           </div>
 
-          {/* Specs Manager */}
+          {/* Specs Manager with Quick Suggestion Chips */}
           <div className="editor-section" style={{ marginTop: '16px' }}>
             <div className="editor-section-head">
-              <h3>Texniki göstəricilər (Parametrlər)</h3>
+              <div>
+                <h3>Texniki göstəricilər (Parametrlər)</h3>
+                <p style={{ margin: 0, fontSize: '11px', color: theme.textMuted }}>
+                  "Ardo xüsusiyyətlər_yoxlanılıb" şablonuna uyğun parametr açarları
+                </p>
+              </div>
               <button type="button" onClick={addSpec}>
                 <Plus size={14} /> Yeni parametr
               </button>
             </div>
+
+            {/* Quick Spec Chips */}
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', margin: '10px 0' }}>
+              <span style={{ fontSize: '11px', color: theme.textMuted, alignSelf: 'center' }}>Sürətli əlavə:</span>
+              {COMMON_SPEC_SUGGESTIONS.map((specName) => {
+                const isAdded = product.specs.some((s) => s.name.trim().toLowerCase() === specName.toLowerCase());
+                return (
+                  <button
+                    key={specName}
+                    type="button"
+                    onClick={() => {
+                      if (!isAdded) {
+                        change('specs', [...product.specs, { id: newId('spec'), name: specName, value: '', group: 'Əsas' }]);
+                      }
+                    }}
+                    style={{
+                      fontSize: '11px',
+                      padding: '3px 8px',
+                      borderRadius: '6px',
+                      background: isAdded ? 'rgba(37, 99, 235, 0.15)' : theme.bgSecondary,
+                      color: isAdded ? '#2563eb' : theme.text,
+                      border: `1px solid ${theme.border}`,
+                      cursor: 'pointer',
+                      fontWeight: isAdded ? 700 : 500,
+                    }}
+                  >
+                    {isAdded ? '✓ ' : '+ '} {specName}
+                  </button>
+                );
+              })}
+            </div>
+
             <div className="specs-list-grid">
               {product.specs.map((spec, i) => (
                 <div key={spec.id || i} className="spec-row-card">
                   <input
                     value={spec.name}
                     onChange={(e) => updateSpec(i, { name: e.target.value })}
-                    placeholder="Parametr adı"
+                    placeholder="Parametr adı (Məs: Növ, İş rejimi, Güc...)"
+                    style={{ fontWeight: 650 }}
                   />
                   <input
                     value={spec.value}
                     onChange={(e) => updateSpec(i, { value: e.target.value })}
-                    placeholder="Dəyəri"
+                    placeholder="Dəyəri (Məs: Skoruslu, 1200 m³/saat, 52x27 sm...)"
                   />
                   <input
                     value={spec.description || ''}
                     onChange={(e) => updateSpec(i, { description: e.target.value })}
-                    placeholder="Əlavə izah"
+                    placeholder="Əlavə izah (istəyə görə)"
                   />
                   <button
                     type="button"
                     onClick={() => change('specs', product.specs.filter((_, idx) => idx !== i))}
+                    title="Sil"
                   >
                     <Trash2 size={14} />
                   </button>
