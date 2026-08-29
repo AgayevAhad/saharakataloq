@@ -68,10 +68,16 @@ export const Header: React.FC<HeaderProps> = ({
   }, [products, searchQuery]);
 
   const selectCategory = (id: string) => { onSelectCategory(id); setCategoryMenuOpen(false); };
-
   const isQueryActive = searchQuery.trim().length > 0;
 
-  return <header className={`catalog-header ${compact ? 'is-compact' : ''}`} style={{ backgroundColor: theme.bgCard, borderColor: theme.border }}>
+  return (
+    <header
+      className={`catalog-header ${compact ? 'is-compact' : ''}`}
+      style={{
+        backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.94)' : 'rgba(255, 255, 255, 0.94)',
+        borderColor: theme.border,
+      }}
+    >
     <div className="header-top-row">
       <a href="/" className="brand-lockup" aria-label="Sahara Electronics kataloqu">
         <SaharaLogo className="header-sahara-logo" isDark={isDarkMode} />
@@ -136,5 +142,6 @@ export const Header: React.FC<HeaderProps> = ({
       {brands.filter((brand) => !brand.comingSoon).length > 1 && <div className="filter-row brand-filter-row no-scrollbar" aria-label="Brend filtri"><button className={selectedBrand === 'all' ? 'filter-pill active' : 'filter-pill'} onClick={() => onSelectBrand('all')} style={pillStyle(theme)}>Bütün brendlər</button>{brands.filter((brand) => !brand.comingSoon).map((brand) => <button key={brand.id} className={selectedBrand === brand.id ? 'filter-pill active' : 'filter-pill'} onClick={() => onSelectBrand(brand.id)} style={pillStyle(theme)}>{brand.name}</button>)}</div>}
       <div className="filter-row category-filter-row no-scrollbar" aria-label="Kateqoriya filtri"><button className={selectedCategory === 'all' ? 'filter-pill active' : 'filter-pill'} onClick={() => onSelectCategory('all')} style={pillStyle(theme)}>Bütün məhsullar</button>{categories.map((category) => <button key={category.id} className={selectedCategory === category.id ? 'filter-pill active' : 'filter-pill'} onClick={() => onSelectCategory(category.id)} style={pillStyle(theme)}>{category.name}</button>)}</div>
     </div>
-  </header>;
+  </header>
+  );
 };

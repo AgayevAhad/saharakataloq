@@ -21,6 +21,10 @@ const sampleCatalog = () => ({
     phoneNumbers: ['994121234567', '994509998877'],
     companyName: 'Sahara Electronics',
     address: 'Bakı şəhəri, Sədərək Ticarət Mərkəzi, Sıra 12',
+    addresses: [
+      { id: 'addr-1', title: '1-ci Filial (Sədərək)', address: 'Bakı şəhəri, Sədərək Ticarət Mərkəzi, Sıra 12', mapUrl: 'https://maps.google.com/test' },
+      { id: 'addr-2', title: '2-ci Filial (Dərnəgül)', address: 'Ziya Bünyadov pr. 1965', mapUrl: 'https://maps.google.com/test2' },
+    ],
     email: 'contact@saharaelectronics.az',
     workingHours: '09:00 - 19:00',
     mapUrl: 'https://maps.google.com/test',
@@ -60,6 +64,8 @@ test('SQLite kataloqu əlaqəli cədvəllərdə saxlayır və geri oxuyur', () =
     assert.deepEqual(catalog.settings.phoneNumbers, ['994121234567', '994509998877']);
     assert.equal(catalog.settings.companyName, 'Sahara Electronics');
     assert.equal(catalog.settings.address, 'Bakı şəhəri, Sədərək Ticarət Mərkəzi, Sıra 12');
+    assert.equal(catalog.settings.addresses.length, 2);
+    assert.equal(catalog.settings.addresses[1].title, '2-ci Filial (Dərnəgül)');
     assert.equal(catalog.settings.email, 'contact@saharaelectronics.az');
     assert.equal(catalog.settings.instagramUsername, '@sahara.electronics.az');
     assert.equal(catalog.settings.facebookUsername, 'Sahara Electronics Official');

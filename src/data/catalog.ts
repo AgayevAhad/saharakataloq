@@ -1,4 +1,4 @@
-import { Brand, CatalogCategory, CatalogData, CatalogSettings, Product, TechnologyArticle } from '../types/product';
+import { Brand, CatalogCategory, CatalogData, CatalogSettings, Product, StoreAddress, TechnologyArticle } from '../types/product';
 
 export const DEFAULT_COUNTRIES: string[] = [
   'Türkiyə',
@@ -81,12 +81,24 @@ export const DEFAULT_ARTICLES: TechnologyArticle[] = [
   },
 ];
 
+export const DEFAULT_ADDRESSES: StoreAddress[] = [
+  {
+    id: 'addr-1',
+    title: 'Sədərək Ticarət Mərkəzi (Əsas Satış Mərkəzi)',
+    address: 'Bakı şəhəri, Sədərək Ticarət Mərkəzi, Məişət texnikası sırası',
+    mapUrl: '',
+    note: 'Məişət texnikası satışı və rəsmi zəmanət xidməti',
+    workingHours: 'Bazar ertəsi - Bazar: 09:00 - 18:00',
+  },
+];
+
 export const DEFAULT_SETTINGS: CatalogSettings = {
   whatsappNumber: '',
   phoneNumber: '',
   phoneNumbers: [],
   companyName: 'Sahara Electronics',
   address: 'Bakı şəhəri, Sədərək Ticarət Mərkəzi',
+  addresses: DEFAULT_ADDRESSES,
   email: 'info@saharaelectronics.az',
   workingHours: 'Bazar ertəsi - Bazar: 09:00 - 18:00',
   mapUrl: '',
@@ -166,6 +178,24 @@ export const normalizeCatalog = (data?: Partial<CatalogData> | null): CatalogDat
     ? data.articles
     : DEFAULT_ARTICLES;
 
+  let addresses: StoreAddress[] = DEFAULT_ADDRESSES;
+  if (Array.isArray(data?.settings?.addresses) && data.settings.addresses.length) {
+    addresses = data.settings.addresses.filter((a) => a && a.address);
+  } else if (data?.settings?.address) {
+    addresses = [
+      {
+        id: 'addr-1',
+        title: 'Əsas Mağaza',
+        address: data.settings.address,
+        mapUrl: data.settings.mapUrl || '',
+        note: data.settings.locationNote || '',
+        workingHours: data.settings.workingHours || DEFAULT_SETTINGS.workingHours,
+      },
+    ];
+  }
+
+  const primaryAddress = addresses[0]?.address || data?.settings?.address || DEFAULT_SETTINGS.address;
+
   return {
     brands: Array.isArray(data?.brands) && data.brands.length ? data.brands : DEFAULT_BRANDS,
     categories:
@@ -177,11 +207,12 @@ export const normalizeCatalog = (data?: Partial<CatalogData> | null): CatalogDat
       phoneNumber: data?.settings?.phoneNumber || phoneNumbers[0] || '',
       phoneNumbers,
       companyName: data?.settings?.companyName || DEFAULT_SETTINGS.companyName,
-      address: data?.settings?.address || DEFAULT_SETTINGS.address,
+      address: primaryAddress,
+      addresses,
       email: data?.settings?.email || DEFAULT_SETTINGS.email,
       workingHours: data?.settings?.workingHours || DEFAULT_SETTINGS.workingHours,
-      mapUrl: data?.settings?.mapUrl || '',
-      locationNote: data?.settings?.locationNote || DEFAULT_SETTINGS.locationNote,
+      mapUrl: data?.settings?.mapUrl || addresses[0]?.mapUrl || '',
+      locationNote: data?.settings?.locationNote || addresses[0]?.note || DEFAULT_SETTINGS.locationNote,
       countries,
       instagramUsername: data?.settings?.instagramUsername ?? DEFAULT_SETTINGS.instagramUsername,
       instagramUrl: data?.settings?.instagramUrl ?? DEFAULT_SETTINGS.instagramUrl,

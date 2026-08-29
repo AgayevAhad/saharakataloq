@@ -274,6 +274,16 @@ const validateCatalog = (body) => {
         phoneNumbers: cleanPhoneNumbers,
         companyName: safeText(body.settings?.companyName, 200) || 'Sahara Electronics',
         address: safeText(body.settings?.address, 500) || 'Bakı şəhəri, Sədərək Ticarət Mərkəzi',
+        addresses: Array.isArray(body.settings?.addresses)
+          ? body.settings.addresses.slice(0, 30).map((a, i) => ({
+              id: safeText(a?.id, 50) || `addr-${i + 1}`,
+              title: safeText(a?.title, 200) || `Filial ${i + 1}`,
+              address: safeText(a?.address, 500),
+              mapUrl: safeText(a?.mapUrl, 2000),
+              workingHours: safeText(a?.workingHours, 300),
+              note: safeText(a?.note, 1000),
+            })).filter((a) => a.address)
+          : [],
         email: safeText(body.settings?.email, 200) || 'info@saharaelectronics.az',
         workingHours: safeText(body.settings?.workingHours, 300) || 'Bazar ertəsi - Bazar: 09:00 - 18:00',
         mapUrl: safeText(body.settings?.mapUrl, 2000),

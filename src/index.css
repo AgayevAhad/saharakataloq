@@ -274,8 +274,17 @@ h1, h2, h3, h4, .font-heading {
 
 /* Public catalog shell */
 button, input, textarea, select { font: inherit; }
-button, a { -webkit-tap-highlight-color: transparent; }
-.catalog-header { position: sticky; top: 0; z-index: 200; width: 100%; padding: 12px clamp(14px, 3vw, 32px); border-bottom: 1px solid; box-shadow: 0 8px 30px rgba(0,0,0,.08); }
+.catalog-header {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  width: 100%;
+  padding: 12px clamp(14px, 3vw, 32px);
+  border-bottom: 1px solid;
+  box-shadow: 0 8px 30px rgba(0,0,0,.08);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+}
 .header-top-row, .header-actions, .brand-lockup, .catalog-search, .filter-row { display: flex; align-items: center; }
 .header-top-row { justify-content: space-between; gap: 16px; max-width: 1440px; margin: auto; }
 .brand-lockup { gap: 10px; text-decoration: none; min-width: 0; }

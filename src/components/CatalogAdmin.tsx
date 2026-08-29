@@ -38,9 +38,10 @@ import {
   Product,
   ProductMedia,
   ProductSpecItem,
+  StoreAddress,
   TechnologyArticle,
 } from '../types/product';
-import { DEFAULT_COUNTRIES, DEFAULT_SETTINGS } from '../data/catalog';
+import { DEFAULT_ADDRESSES, DEFAULT_COUNTRIES, DEFAULT_SETTINGS } from '../data/catalog';
 import { ThemeColors } from '../types/theme';
 import { SaharaLogo } from './SaharaLogo';
 import { AdminCatalogPreview } from './AdminCatalogPreview';
@@ -1030,8 +1031,97 @@ const ContactManager = ({
   const currentPhones = settings.phoneNumbers || (settings.phoneNumber ? [settings.phoneNumber] : []);
   const currentCountries = settings.countries && settings.countries.length ? settings.countries : DEFAULT_COUNTRIES;
 
+  const currentAddresses: StoreAddress[] = settings.addresses && settings.addresses.length
+    ? settings.addresses
+    : settings.address
+      ? [{ id: 'addr-1', title: 'Əsas Mağaza', address: settings.address, mapUrl: settings.mapUrl || '', workingHours: settings.workingHours || '', note: settings.locationNote || '' }]
+      : DEFAULT_ADDRESSES;
+
+  const [newAddrTitle, setNewAddrTitle] = useState('');
+  const [newAddrText, setNewAddrText] = useState('');
+  const [newAddrMapUrl, setNewAddrMapUrl] = useState('');
+  const [newAddrHours, setNewAddrHours] = useState('');
+  const [newAddrNote, setNewAddrNote] = useState('');
+  const [editingAddrId, setEditingAddrId] = useState<string | null>(null);
+
   const update = (patch: Partial<CatalogSettings>) => {
     onChange({ ...settings, ...patch });
+  };
+
+  const addOrUpdateAddress = () => {
+    const trimmed = newAddrText.trim();
+    if (!trimmed) return;
+    const title = newAddrTitle.trim() || `Filial ${currentAddresses.length + 1}`;
+    let updated: StoreAddress[];
+    if (editingAddrId) {
+      updated = currentAddresses.map((a) =>
+        a.id === editingAddrId
+          ? {
+              ...a,
+              title,
+              address: trimmed,
+              mapUrl: newAddrMapUrl.trim(),
+              workingHours: newAddrHours.trim(),
+              note: newAddrNote.trim(),
+            }
+          : a
+      );
+      setEditingAddrId(null);
+    } else {
+      updated = [
+        ...currentAddresses,
+        {
+          id: newId('addr'),
+          title,
+          address: trimmed,
+          mapUrl: newAddrMapUrl.trim(),
+          workingHours: newAddrHours.trim(),
+          note: newAddrNote.trim(),
+        },
+      ];
+    }
+    update({
+      addresses: updated,
+      address: updated[0]?.address || '',
+      mapUrl: updated[0]?.mapUrl || '',
+      workingHours: updated[0]?.workingHours || settings.workingHours,
+      locationNote: updated[0]?.note || settings.locationNote,
+    });
+    setNewAddrTitle('');
+    setNewAddrText('');
+    setNewAddrMapUrl('');
+    setNewAddrHours('');
+    setNewAddrNote('');
+  };
+
+  const startEditAddress = (addr: StoreAddress) => {
+    setEditingAddrId(addr.id);
+    setNewAddrTitle(addr.title || '');
+    setNewAddrText(addr.address || '');
+    setNewAddrMapUrl(addr.mapUrl || '');
+    setNewAddrHours(addr.workingHours || '');
+    setNewAddrNote(addr.note || '');
+  };
+
+  const cancelEditAddress = () => {
+    setEditingAddrId(null);
+    setNewAddrTitle('');
+    setNewAddrText('');
+    setNewAddrMapUrl('');
+    setNewAddrHours('');
+    setNewAddrNote('');
+  };
+
+  const removeAddress = (id: string) => {
+    const updated = currentAddresses.filter((a) => a.id !== id);
+    update({
+      addresses: updated,
+      address: updated[0]?.address || '',
+      mapUrl: updated[0]?.mapUrl || '',
+      workingHours: updated[0]?.workingHours || settings.workingHours,
+      locationNote: updated[0]?.note || settings.locationNote,
+    });
+    if (editingAddrId === id) cancelEditAddress();
   };
 
   const addPhone = () => {
@@ -1074,8 +1164,18 @@ const ContactManager = ({
             <input inputMode="tel" value={settings.whatsappNumber || ''} onChange={(e) => update({ whatsappNumber: e.target.value })} placeholder="994501234567" />
           </label>
           <label>
-            <span>Rəsmi Ünvan</span>
-            <input value={settings.address || ''} onChange={(e) => update({ address: e.target.value })} placeholder="Bakı şəhəri, Sədərək Ticarət Mərkəzi" />
+            <span>Əsas Rəsmi Ünvan (1-ci Ünvan)</span>
+            <input
+              value={settings.address || ''}
+              onChange={(e) => {
+                const val = e.target.value;
+                const updatedAddrs = currentAddresses.length
+                  ? currentAddresses.map((a, i) => i === 0 ? { ...a, address: val } : a)
+                  : [{ id: 'addr-1', title: 'Əsas Mağaza', address: val, mapUrl: settings.mapUrl || '' }];
+                update({ address: val, addresses: updatedAddrs });
+              }}
+              placeholder="Bakı şəhəri, Sədərək Ticarət Mərkəzi"
+            />
           </label>
           <label>
             <span>Email Ünvanı</span>
@@ -1117,6 +1217,178 @@ const ContactManager = ({
               </div>
             ))}
           </div>
+        </div>
+      </article>
+
+      {/* MULTIPLE ADDRESSES / SHOWROOMS MANAGER */}
+      <article className="manager-card" style={{ background: theme.bgCard, borderColor: theme.border, marginBottom: '20px' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+          <div>
+            <h2 style={{ display: 'flex', alignItems: 'center', gap: '8px', margin: 0 }}>
+              <MapPin size={18} color={theme.primary} />
+              <span>Mağaza və Filial Ünvanları (Çoxsaylı Ünvanlar)</span>
+            </h2>
+            <p style={{ color: theme.textMuted, fontSize: '13px', margin: '4px 0 0 0' }}>
+              Saytın footer və əlaqə hissəsində görünəcək bütün 1-ci, 2-ci və digər filial/mağaza ünvanlarını idarə edin.
+            </p>
+          </div>
+        </div>
+
+        {/* Add / Edit Address Form */}
+        <div style={{ background: theme.bgSecondary, padding: '14px', borderRadius: '10px', border: `1px solid ${theme.border}`, marginBottom: '16px' }}>
+          <h4 style={{ margin: '0 0 10px 0', fontSize: '13px', color: theme.text, fontWeight: 750 }}>
+            {editingAddrId ? '✏️ Ünvanı Redaktə Et' : '➕ Yeni Filial / Ünvan Əlavə Et'}
+          </h4>
+          <div className="form-grid" style={{ gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px' }}>
+            <label>
+              <span>Filial / Mağaza Adı</span>
+              <input
+                value={newAddrTitle}
+                onChange={(e) => setNewAddrTitle(e.target.value)}
+                placeholder="Məs: 2-ci Filial (Dərnəgül Şourumu)"
+              />
+            </label>
+            <label>
+              <span>Dəqiq Ünvan</span>
+              <input
+                value={newAddrText}
+                onChange={(e) => setNewAddrText(e.target.value)}
+                placeholder="Məs: Ziya Bünyadov pr. 1965, Şourum 3"
+              />
+            </label>
+            <label>
+              <span>Google Maps Linki</span>
+              <input
+                value={newAddrMapUrl}
+                onChange={(e) => setNewAddrMapUrl(e.target.value)}
+                placeholder="https://maps.google.com/..."
+              />
+            </label>
+            <label>
+              <span>İş Saatları</span>
+              <input
+                value={newAddrHours}
+                onChange={(e) => setNewAddrHours(e.target.value)}
+                placeholder="Məs: 10:00 - 20:00"
+              />
+            </label>
+            <label style={{ gridColumn: '1 / -1' }}>
+              <span>Qeyd / Xüsusi Məlumat</span>
+              <input
+                value={newAddrNote}
+                onChange={(e) => setNewAddrNote(e.target.value)}
+                placeholder="Məs: Şourum və anbar satışı, parkinq mövcuddur"
+              />
+            </label>
+          </div>
+          <div style={{ display: 'flex', gap: '8px', marginTop: '12px' }}>
+            <button
+              type="button"
+              onClick={addOrUpdateAddress}
+              style={{
+                background: theme.primary,
+                color: '#fff',
+                padding: '8px 16px',
+                borderRadius: '8px',
+                border: 'none',
+                cursor: 'pointer',
+                fontWeight: 700,
+                fontSize: '13px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+              }}
+            >
+              {editingAddrId ? 'Yenilə və Saxla' : 'Ünvanı Əlavə Et'}
+            </button>
+            {editingAddrId && (
+              <button
+                type="button"
+                onClick={cancelEditAddress}
+                style={{
+                  background: 'transparent',
+                  color: theme.textMuted,
+                  border: `1px solid ${theme.border}`,
+                  padding: '8px 14px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                }}
+              >
+                İmtina
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Existing Addresses List */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          {currentAddresses.map((addr, idx) => (
+            <div
+              key={addr.id || idx}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                backgroundColor: theme.bgSecondary,
+                border: `1px solid ${theme.border}`,
+                padding: '12px 16px',
+                borderRadius: '10px',
+                gap: '12px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', minWidth: 0, flex: 1 }}>
+                <MapPin size={18} color={theme.primary} style={{ flexShrink: 0, marginTop: '2px' }} />
+                <div style={{ minWidth: 0 }}>
+                  <div style={{ fontWeight: 800, fontSize: '14px', color: theme.text }}>
+                    {addr.title || `Filial ${idx + 1}`} {idx === 0 && <span style={{ fontSize: '11px', color: theme.primary, fontWeight: 700 }}>(Əsas)</span>}
+                  </div>
+                  <div style={{ fontSize: '13px', color: theme.textSecondary, marginTop: '2px' }}>
+                    {addr.address}
+                  </div>
+                  {(addr.workingHours || addr.note) && (
+                    <div style={{ fontSize: '11px', color: theme.textMuted, marginTop: '2px' }}>
+                      {addr.workingHours && `🕒 ${addr.workingHours}`} {addr.note && `• ${addr.note}`}
+                    </div>
+                  )}
+                </div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <button
+                  type="button"
+                  onClick={() => startEditAddress(addr)}
+                  title="Redaktə et"
+                  style={{
+                    background: 'transparent',
+                    color: theme.primary,
+                    border: 'none',
+                    cursor: 'pointer',
+                    padding: '6px',
+                    borderRadius: '6px',
+                  }}
+                >
+                  <Pencil size={15} />
+                </button>
+                {currentAddresses.length > 1 && (
+                  <button
+                    type="button"
+                    onClick={() => removeAddress(addr.id)}
+                    title="Sil"
+                    style={{
+                      background: 'transparent',
+                      color: '#ef4444',
+                      border: 'none',
+                      cursor: 'pointer',
+                      padding: '6px',
+                      borderRadius: '6px',
+                    }}
+                  >
+                    <Trash2 size={15} />
+                  </button>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       </article>
 

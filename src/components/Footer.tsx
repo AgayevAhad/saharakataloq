@@ -35,6 +35,26 @@ export const Footer: React.FC<FooterProps> = ({
       ? [settings.phoneNumber]
       : [];
 
+  const addressList = React.useMemo(() => {
+    if (settings.addresses && settings.addresses.length > 1) {
+      return settings.addresses;
+    }
+    if (settings.addresses && settings.addresses.length === 1) {
+      return [{
+        ...settings.addresses[0],
+        address: settings.address || settings.addresses[0].address,
+      }];
+    }
+    return [{
+      id: 'single',
+      title: 'Əsas Mağaza',
+      address: settings.address || address,
+      mapUrl: settings.mapUrl,
+      workingHours: settings.workingHours || workingHours,
+      note: settings.locationNote || locationNote,
+    }];
+  }, [settings.addresses, settings.address, settings.mapUrl, settings.workingHours, settings.locationNote, address, workingHours, locationNote]);
+
   return (
     <footer
       className="catalog-footer-enhanced"
@@ -85,8 +105,8 @@ export const Footer: React.FC<FooterProps> = ({
           </div>
         </div>
 
-        {/* Column 2: Address & Location (Clickable to open map) */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        {/* Column 2: Address & Location (Supports Multiple Showrooms / Stores) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
           <h3
             style={{
               fontFamily: 'Outfit, sans-serif',
@@ -96,52 +116,71 @@ export const Footer: React.FC<FooterProps> = ({
               letterSpacing: '0.5px',
             }}
           >
-            Ünvan və Lokasiya
+            {addressList.length > 1 ? 'Mağaza və Filiallarımız' : 'Ünvan və Lokasiya'}
           </h3>
 
-          <a
-            href={mapHref || '#'}
-            target="_blank"
-            rel="noopener noreferrer"
-            title="Xəritədə açmaq üçün toxunun"
-            style={{
-              display: 'flex',
-              alignItems: 'flex-start',
-              gap: '10px',
-              textDecoration: 'none',
-              color: 'inherit',
-              cursor: 'pointer',
-              borderRadius: '8px',
-              padding: '4px 0',
-              transition: 'opacity 0.2s ease',
-            }}
-          >
-            <MapPin size={18} color={theme.primary} style={{ flexShrink: 0, marginTop: '2px' }} />
-            <div>
-              <div style={{ fontSize: '13px', fontWeight: 600, color: theme.text, lineHeight: '20px' }}>
-                {address}
-              </div>
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  color: theme.primary,
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  marginTop: '5px',
-                }}
-              >
-                <span>Xəritədə aç</span>
-                <ExternalLink size={12} />
-              </div>
-            </div>
-          </a>
+          {addressList.map((addr, idx) => {
+            const currentMapHref = addr.mapUrl || (addr.address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr.address)}` : undefined);
+            return (
+              <div key={addr.id || idx} style={{ display: 'flex', flexDirection: 'column', gap: '4px', paddingBottom: idx < addressList.length - 1 ? '10px' : '0', borderBottom: idx < addressList.length - 1 ? `1px dashed ${theme.border}` : 'none' }}>
+                {addr.title && addressList.length > 1 && (
+                  <strong style={{ fontSize: '13px', color: theme.primary, fontWeight: 750 }}>
+                    {addr.title}
+                  </strong>
+                )}
+                <a
+                  href={currentMapHref || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Xəritədə açmaq üçün toxunun"
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '8px',
+                    textDecoration: 'none',
+                    color: 'inherit',
+                    cursor: 'pointer',
+                    borderRadius: '8px',
+                    padding: '2px 0',
+                    transition: 'opacity 0.2s ease',
+                  }}
+                >
+                  <MapPin size={16} color={theme.primary} style={{ flexShrink: 0, marginTop: '2px' }} />
+                  <div>
+                    <div style={{ fontSize: '13px', fontWeight: 600, color: theme.text, lineHeight: '18px' }}>
+                      {addr.address}
+                    </div>
+                    {addr.note && (
+                      <div style={{ fontSize: '11px', color: theme.textMuted, marginTop: '2px' }}>
+                        {addr.note}
+                      </div>
+                    )}
+                    <div
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        color: theme.primary,
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        marginTop: '4px',
+                      }}
+                    >
+                      <span>Xəritədə aç</span>
+                      <ExternalLink size={11} />
+                    </div>
+                  </div>
+                </a>
 
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginTop: '4px' }}>
-            <Clock size={18} color={theme.primary} style={{ flexShrink: 0 }} />
-            <span style={{ fontSize: '12px', color: theme.textSecondary }}>{workingHours}</span>
-          </div>
+                {addr.workingHours && (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
+                    <Clock size={14} color={theme.primary} style={{ flexShrink: 0 }} />
+                    <span style={{ fontSize: '11px', color: theme.textSecondary }}>{addr.workingHours}</span>
+                  </div>
+                )}
+              </div>
+            );
+          })}
         </div>
 
         {/* Column 3: Contact Channels & Social Media */}

@@ -246,6 +246,7 @@ export const createCatalogDatabase = (databasePath) => {
     ['facebook_username', "TEXT NOT NULL DEFAULT 'Sahara Electronics'"],
     ['facebook_url', "TEXT NOT NULL DEFAULT 'https://facebook.com/saharaelectronics'"],
     ['phone_numbers', "TEXT NOT NULL DEFAULT '[]'"],
+    ['addresses', "TEXT NOT NULL DEFAULT '[]'"],
     ['articles', "TEXT NOT NULL DEFAULT '[]'"],
     ['site_title', "TEXT NOT NULL DEFAULT 'Sahara Electronic – Məhsul Kataloqu'"],
     ['site_subtitle', "TEXT NOT NULL DEFAULT 'Məişət texnikası modelləri və zəmanətli satış mərkəzi'"],
@@ -372,12 +373,35 @@ export const createCatalogDatabase = (databasePath) => {
       } catch {}
     }
 
+    let addresses = [
+      {
+        id: 'addr-1',
+        title: 'Sədərək Ticarət Mərkəzi (Əsas Satış Mərkəzi)',
+        address: settingsRow?.address || 'Bakı şəhəri, Sədərək Ticarət Mərkəzi',
+        mapUrl: settingsRow?.map_url || '',
+        note: settingsRow?.location_note || 'Məişət texnikası satışı və rəsmi zəmanət xidməti',
+        workingHours: settingsRow?.working_hours || 'Bazar ertəsi - Bazar: 09:00 - 18:00',
+      },
+    ];
+    if (settingsRow?.addresses) {
+      try {
+        const parsed = JSON.parse(settingsRow.addresses);
+        if (Array.isArray(parsed) && parsed.length) {
+          addresses = parsed;
+          if (settingsRow?.address && addresses.length === 1) {
+            addresses[0].address = settingsRow.address;
+          }
+        }
+      } catch {}
+    }
+
     const settings = {
       whatsappNumber: settingsRow?.whatsapp_number || '',
       phoneNumber: settingsRow?.phone_number || phoneNumbers[0] || '',
       phoneNumbers,
       companyName: settingsRow?.company_name || 'Sahara Electronics',
-      address: settingsRow?.address || 'Bakı şəhəri, Sədərək Ticarət Mərkəzi',
+      address: settingsRow?.address || addresses[0]?.address || 'Bakı şəhəri, Sədərək Ticarət Mərkəzi',
+      addresses,
       email: settingsRow?.email || 'info@saharaelectronics.az',
       workingHours: settingsRow?.working_hours || 'Bazar ertəsi - Bazar: 09:00 - 18:00',
       mapUrl: settingsRow?.map_url || '',
@@ -474,19 +498,41 @@ export const createCatalogDatabase = (databasePath) => {
       if (catalog.settings) {
         const countriesJson = JSON.stringify(catalog.settings.countries || catalog.countries || defaultCountriesList);
         const phoneNumbersJson = JSON.stringify(catalog.settings.phoneNumbers || (catalog.settings.phoneNumber ? [catalog.settings.phoneNumber] : []));
+        const primaryAddress = catalog.settings.address || (catalog.settings.addresses && catalog.settings.addresses[0]?.address) || 'Bakı şəhəri, Sədərək Ticarət Mərkəzi';
+        let addressesToSave = catalog.settings.addresses;
+        if (Array.isArray(addressesToSave) && addressesToSave.length) {
+          if (catalog.settings.address && addressesToSave.length === 1 && addressesToSave[0].address !== catalog.settings.address) {
+            addressesToSave = [{ ...addressesToSave[0], address: catalog.settings.address }];
+          }
+        } else if (catalog.settings.address) {
+          addressesToSave = [
+            {
+              id: 'addr-1',
+              title: 'Əsas Mağaza',
+              address: catalog.settings.address,
+              mapUrl: catalog.settings.mapUrl || '',
+              note: catalog.settings.locationNote || '',
+              workingHours: catalog.settings.workingHours || '',
+            },
+          ];
+        } else {
+          addressesToSave = [];
+        }
+        const addressesJson = JSON.stringify(addressesToSave);
         const articlesJson = JSON.stringify(catalog.articles || defaultArticlesList);
         const primaryPhone = catalog.settings.phoneNumber || (catalog.settings.phoneNumbers && catalog.settings.phoneNumbers[0]) || '';
 
         db.prepare(`
           UPDATE catalog_settings
-          SET whatsapp_number = ?, phone_number = ?, phone_numbers = ?, company_name = ?, address = ?, email = ?, working_hours = ?, map_url = ?, location_note = ?, countries = ?, instagram_username = ?, instagram_url = ?, facebook_username = ?, facebook_url = ?, articles = ?, site_title = ?, site_subtitle = ?, header_caption = ?, catalog_heading = ?, catalog_subheading = ?, hero_banner_title = ?, hero_banner_subtitle = ?, footer_about = ?, footer_copyright = ?, primary_color = ?, font_family = ?, whatsapp_button_text = ?, call_button_text = ?, share_button_text = ?, scroll_top_button_text = ?, updated_at = ?
+          SET whatsapp_number = ?, phone_number = ?, phone_numbers = ?, company_name = ?, address = ?, addresses = ?, email = ?, working_hours = ?, map_url = ?, location_note = ?, countries = ?, instagram_username = ?, instagram_url = ?, facebook_username = ?, facebook_url = ?, articles = ?, site_title = ?, site_subtitle = ?, header_caption = ?, catalog_heading = ?, catalog_subheading = ?, hero_banner_title = ?, hero_banner_subtitle = ?, footer_about = ?, footer_copyright = ?, primary_color = ?, font_family = ?, whatsapp_button_text = ?, call_button_text = ?, share_button_text = ?, scroll_top_button_text = ?, updated_at = ?
           WHERE id = 1
         `).run(
           catalog.settings.whatsappNumber || '',
           primaryPhone,
           phoneNumbersJson,
           catalog.settings.companyName || 'Sahara Electronics',
-          catalog.settings.address || 'Bakı şəhəri, Sədərək Ticarət Mərkəzi',
+          primaryAddress,
+          addressesJson,
           catalog.settings.email || 'info@saharaelectronics.az',
           catalog.settings.workingHours || 'Bazar ertəsi - Bazar: 09:00 - 18:00',
           catalog.settings.mapUrl || '',

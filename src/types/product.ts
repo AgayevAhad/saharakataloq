@@ -80,12 +80,23 @@ export interface TechnologyArticle {
   active?: boolean;
 }
 
+export interface StoreAddress {
+  id: string;
+  title: string;
+  address: string;
+  mapUrl?: string;
+  phone?: string;
+  workingHours?: string;
+  note?: string;
+}
+
 export interface CatalogSettings {
   whatsappNumber: string;
   phoneNumber: string;
   phoneNumbers?: string[];
   companyName?: string;
   address?: string;
+  addresses?: StoreAddress[];
   email?: string;
   workingHours?: string;
   mapUrl?: string;

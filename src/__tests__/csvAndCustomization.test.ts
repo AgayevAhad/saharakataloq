@@ -88,6 +88,8 @@ describe('Məhsul və Kataloq Dinamik Tənzimləmələri', () => {
       categories: DEFAULT_CATEGORIES,
       products: [sampleTestProduct],
       settings: {
+        whatsappNumber: '',
+        phoneNumber: '',
         companyName: 'Sahara Electronics',
         siteTitle: 'Sahara Premium Məişət Texnikası',
         primaryColor: '#2563eb',
