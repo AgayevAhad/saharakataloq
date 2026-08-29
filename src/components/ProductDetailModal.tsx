@@ -17,6 +17,8 @@ interface ProductDetailModalProps {
   onWhatsApp: (product: Product) => void;
   onCall: (product: Product) => void;
   onCopyLink: (product: Product) => void;
+  whatsappButtonText?: string;
+  callButtonText?: string;
 }
 
 export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(({
@@ -29,6 +31,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
   onWhatsApp,
   onCall,
   onCopyLink,
+  whatsappButtonText = 'WhatsApp ilə məlumat al',
+  callButtonText = 'Zəng et',
 }) => {
   const [activeTab, setActiveTab] = useState<'specs' | 'tech'>('specs');
   const [isFullscreenImage, setIsFullscreenImage] = useState(false);
@@ -345,6 +349,25 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                     {product.shortDesc}
                   </p>
 
+                  {/* Price & Discount in Modal */}
+                  {product.price !== undefined && (
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '12px' }}>
+                      <span style={{ fontSize: '22px', fontWeight: 900, color: theme.text }}>
+                        {product.price} {product.currency || '₼'}
+                      </span>
+                      {product.oldPrice && product.oldPrice > product.price && (
+                        <span style={{ fontSize: '14px', color: theme.textMuted, textDecoration: 'line-through' }}>
+                          {product.oldPrice} {product.currency || '₼'}
+                        </span>
+                      )}
+                      {product.oldPrice && product.oldPrice > product.price && (
+                        <span style={{ backgroundColor: '#16a34a', color: '#ffffff', fontSize: '12px', fontWeight: 800, padding: '2px 8px', borderRadius: '6px' }}>
+                          -{Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)}%
+                        </span>
+                      )}
+                    </div>
+                  )}
+
                   {/* Selling Highlights */}
                   <div
                     style={{
@@ -388,7 +411,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                     }}
                   >
                     <WhatsAppIcon size={19} color="#ffffff" />
-                    <span>WhatsApp ilə məlumat al</span>
+                    <span>{whatsappButtonText}</span>
                   </button>
 
                   <button
@@ -397,7 +420,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                     style={{ backgroundColor: theme.primary }}
                   >
                     <Phone size={18} />
-                    <span>Zəng et</span>
+                    <span>{callButtonText}</span>
                   </button>
 
                   <button

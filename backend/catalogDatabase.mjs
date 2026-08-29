@@ -2,10 +2,23 @@ import { DatabaseSync } from 'node:sqlite';
 import { chmodSync, mkdirSync } from 'node:fs';
 import { dirname } from 'node:path';
 
-const bool = (value) => value ? 1 : 0;
+const bool = (value) => (value ? 1 : 0);
 const placeholders = (items) => items.map(() => '?').join(',');
-const defaultBrandLogos = { ardo: '/media/brands/ardo-logo.png', artel: '/media/brands/artel-logo.svg', lotus: '/media/brands/lotus-mark.svg' };
-const defaultCountriesList = ['Türkiyə', 'Çin', 'İtaliya', 'Almaniya', 'Polşa', 'Özbəkistan', 'Rusiya', 'Belarus'];
+const defaultBrandLogos = {
+  ardo: '/media/brands/ardo-logo.png',
+  artel: '/media/brands/artel-logo.svg',
+  lotus: '/media/brands/lotus-mark.svg',
+};
+const defaultCountriesList = [
+  'Türkiyə',
+  'Çin',
+  'İtaliya',
+  'Almaniya',
+  'Polşa',
+  'Özbəkistan',
+  'Rusiya',
+  'Belarus',
+];
 
 const defaultArticlesList = [
   {
@@ -82,6 +95,21 @@ export const createCatalogDatabase = (databasePath) => {
       facebook_username TEXT NOT NULL DEFAULT 'Sahara Electronics',
       facebook_url TEXT NOT NULL DEFAULT 'https://facebook.com/saharaelectronics',
       articles TEXT NOT NULL DEFAULT '[]',
+      site_title TEXT NOT NULL DEFAULT 'Sahara Electronic – Məhsul Kataloqu',
+      site_subtitle TEXT NOT NULL DEFAULT 'Məişət texnikası modelləri və zəmanətli satış mərkəzi',
+      header_caption TEXT NOT NULL DEFAULT 'Rəsmi məhsul kataloqu',
+      catalog_heading TEXT NOT NULL DEFAULT 'Bütün məhsullar',
+      catalog_subheading TEXT NOT NULL DEFAULT 'Modellərə və texniki xüsusiyyət sahələrinə baxın',
+      hero_banner_title TEXT NOT NULL DEFAULT 'Premium İtalyan ARDO & Məişət Texnikası',
+      hero_banner_subtitle TEXT NOT NULL DEFAULT 'Eleqant dizayn, yüksək enerji səmərəliliyi və 3 ilə qədər rəsmi zəmanət',
+      footer_about TEXT NOT NULL DEFAULT 'Sahara Electronics rəsmi ARDO, Lotus və Artel məhsullarının zəmanətli satış mərkəzidir.',
+      footer_copyright TEXT NOT NULL DEFAULT 'Bütün hüquqlar qorunur.',
+      primary_color TEXT NOT NULL DEFAULT '#dc2626',
+      font_family TEXT NOT NULL DEFAULT 'Inter',
+      whatsapp_button_text TEXT NOT NULL DEFAULT 'WhatsApp',
+      call_button_text TEXT NOT NULL DEFAULT 'Zəng et',
+      share_button_text TEXT NOT NULL DEFAULT 'Paylaş',
+      scroll_top_button_text TEXT NOT NULL DEFAULT 'Yuxarı',
       updated_at TEXT NOT NULL
     );
     CREATE TABLE IF NOT EXISTS brands (
@@ -118,6 +146,11 @@ export const createCatalogDatabase = (databasePath) => {
       is_featured INTEGER NOT NULL DEFAULT 0 CHECK(is_featured IN (0, 1)),
       is_new INTEGER NOT NULL DEFAULT 0 CHECK(is_new IN (0, 1)),
       badge_text TEXT NOT NULL DEFAULT '',
+      badge_color TEXT NOT NULL DEFAULT 'red',
+      price REAL DEFAULT NULL,
+      old_price REAL DEFAULT NULL,
+      currency TEXT NOT NULL DEFAULT '₼',
+      stock_status TEXT NOT NULL DEFAULT 'in_stock',
       short_description TEXT NOT NULL DEFAULT '',
       manufacturing_country TEXT NOT NULL DEFAULT '',
       status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('published', 'draft')),
@@ -175,96 +208,143 @@ export const createCatalogDatabase = (databasePath) => {
     INSERT OR IGNORE INTO catalog_analytics(id, catalog_views) VALUES (1, 0);
     INSERT OR IGNORE INTO catalog_settings(id, whatsapp_number, phone_number, updated_at) VALUES (1, '', '', datetime('now'));
   `);
+
+  // Column migrations for dynamic extensions
   const brandColumns = db.prepare('PRAGMA table_info(brands)').all().map((row) => row.name);
   if (!brandColumns.includes('coming_soon')) {
     db.exec('ALTER TABLE brands ADD COLUMN coming_soon INTEGER NOT NULL DEFAULT 0 CHECK(coming_soon IN (0, 1));');
-    db.prepare('INSERT OR IGNORE INTO schema_migrations(version, applied_at) VALUES (2, ?)').run(new Date().toISOString());
   }
-  const productColumns = db.prepare('PRAGMA table_info(products)').all().map((row) => row.name);
-  if (productColumns.includes('price')) db.exec('ALTER TABLE products DROP COLUMN price;');
-  if (productColumns.includes('old_price')) db.exec('ALTER TABLE products DROP COLUMN old_price;');
-  if (productColumns.includes('price') || productColumns.includes('old_price')) {
-    db.prepare('INSERT OR IGNORE INTO schema_migrations(version, applied_at) VALUES (3, ?)').run(new Date().toISOString());
-  }
-  db.prepare('INSERT OR IGNORE INTO schema_migrations(version, applied_at) VALUES (4, ?)').run(new Date().toISOString());
 
-  // Migration 5, 6, 7: Settings columns
+  const productColumns = db.prepare('PRAGMA table_info(products)').all().map((row) => row.name);
+  if (!productColumns.includes('badge_color')) {
+    db.exec("ALTER TABLE products ADD COLUMN badge_color TEXT NOT NULL DEFAULT 'red';");
+  }
+  if (!productColumns.includes('price')) {
+    db.exec('ALTER TABLE products ADD COLUMN price REAL DEFAULT NULL;');
+  }
+  if (!productColumns.includes('old_price')) {
+    db.exec('ALTER TABLE products ADD COLUMN old_price REAL DEFAULT NULL;');
+  }
+  if (!productColumns.includes('currency')) {
+    db.exec("ALTER TABLE products ADD COLUMN currency TEXT NOT NULL DEFAULT '₼';");
+  }
+  if (!productColumns.includes('stock_status')) {
+    db.exec("ALTER TABLE products ADD COLUMN stock_status TEXT NOT NULL DEFAULT 'in_stock';");
+  }
+
   const settingsColumns = db.prepare('PRAGMA table_info(catalog_settings)').all().map((row) => row.name);
-  if (!settingsColumns.includes('company_name')) {
-    db.exec("ALTER TABLE catalog_settings ADD COLUMN company_name TEXT NOT NULL DEFAULT 'Sahara Electronics';");
+  const newSettingCols = [
+    ['company_name', "TEXT NOT NULL DEFAULT 'Sahara Electronics'"],
+    ['address', "TEXT NOT NULL DEFAULT 'Bakı şəhəri, Sədərək Ticarət Mərkəzi'"],
+    ['email', "TEXT NOT NULL DEFAULT 'info@saharaelectronics.az'"],
+    ['working_hours', "TEXT NOT NULL DEFAULT 'Bazar ertəsi - Bazar: 09:00 - 18:00'"],
+    ['map_url', "TEXT NOT NULL DEFAULT ''"],
+    ['location_note', "TEXT NOT NULL DEFAULT 'Məişət texnikası satışı və rəsmi zəmanət xidməti'"],
+    ['countries', "TEXT NOT NULL DEFAULT '[\"Türkiyə\",\"Çin\",\"İtaliya\",\"Almaniya\",\"Polşa\",\"Özbəkistan\"]'"],
+    ['instagram_username', "TEXT NOT NULL DEFAULT '@sahara.electronics'"],
+    ['instagram_url', "TEXT NOT NULL DEFAULT 'https://instagram.com/sahara.electronics'"],
+    ['facebook_username', "TEXT NOT NULL DEFAULT 'Sahara Electronics'"],
+    ['facebook_url', "TEXT NOT NULL DEFAULT 'https://facebook.com/saharaelectronics'"],
+    ['phone_numbers', "TEXT NOT NULL DEFAULT '[]'"],
+    ['articles', "TEXT NOT NULL DEFAULT '[]'"],
+    ['site_title', "TEXT NOT NULL DEFAULT 'Sahara Electronic – Məhsul Kataloqu'"],
+    ['site_subtitle', "TEXT NOT NULL DEFAULT 'Məişət texnikası modelləri və zəmanətli satış mərkəzi'"],
+    ['header_caption', "TEXT NOT NULL DEFAULT 'Rəsmi məhsul kataloqu'"],
+    ['catalog_heading', "TEXT NOT NULL DEFAULT 'Bütün məhsullar'"],
+    ['catalog_subheading', "TEXT NOT NULL DEFAULT 'Modellərə və texniki xüsusiyyət sahələrinə baxın'"],
+    ['hero_banner_title', "TEXT NOT NULL DEFAULT 'Premium İtalyan ARDO & Məişət Texnikası'"],
+    ['hero_banner_subtitle', "TEXT NOT NULL DEFAULT 'Eleqant dizayn, yüksək enerji səmərəliliyi və 3 ilə qədər rəsmi zəmanət'"],
+    ['footer_about', "TEXT NOT NULL DEFAULT 'Sahara Electronics rəsmi ARDO, Lotus və Artel məhsullarının zəmanətli satış mərkəzidir.'"],
+    ['footer_copyright', "TEXT NOT NULL DEFAULT 'Bütün hüquqlar qorunur.'"],
+    ['primary_color', "TEXT NOT NULL DEFAULT '#dc2626'"],
+    ['font_family', "TEXT NOT NULL DEFAULT 'Inter'"],
+    ['whatsapp_button_text', "TEXT NOT NULL DEFAULT 'WhatsApp'"],
+    ['call_button_text', "TEXT NOT NULL DEFAULT 'Zəng et'"],
+    ['share_button_text', "TEXT NOT NULL DEFAULT 'Paylaş'"],
+    ['scroll_top_button_text', "TEXT NOT NULL DEFAULT 'Yuxarı'"],
+  ];
+
+  for (const [colName, colDef] of newSettingCols) {
+    if (!settingsColumns.includes(colName)) {
+      db.exec(`ALTER TABLE catalog_settings ADD COLUMN ${colName} ${colDef};`);
+    }
   }
-  if (!settingsColumns.includes('address')) {
-    db.exec("ALTER TABLE catalog_settings ADD COLUMN address TEXT NOT NULL DEFAULT 'Bakı şəhəri, Sədərək Ticarət Mərkəzi';");
-  }
-  if (!settingsColumns.includes('email')) {
-    db.exec("ALTER TABLE catalog_settings ADD COLUMN email TEXT NOT NULL DEFAULT 'info@saharaelectronics.az';");
-  }
-  if (!settingsColumns.includes('working_hours')) {
-    db.exec("ALTER TABLE catalog_settings ADD COLUMN working_hours TEXT NOT NULL DEFAULT 'Bazar ertəsi - Bazar: 09:00 - 18:00';");
-  }
-  if (!settingsColumns.includes('map_url')) {
-    db.exec("ALTER TABLE catalog_settings ADD COLUMN map_url TEXT NOT NULL DEFAULT '';");
-  }
-  if (!settingsColumns.includes('location_note')) {
-    db.exec("ALTER TABLE catalog_settings ADD COLUMN location_note TEXT NOT NULL DEFAULT 'Məişət texnikası satışı və rəsmi zəmanət xidməti';");
-  }
-  if (!settingsColumns.includes('countries')) {
-    db.exec("ALTER TABLE catalog_settings ADD COLUMN countries TEXT NOT NULL DEFAULT '[\"Türkiyə\",\"Çin\",\"İtaliya\",\"Almaniya\",\"Polşa\",\"Özbəkistan\"]';");
-  }
-  if (!settingsColumns.includes('instagram_username')) {
-    db.exec("ALTER TABLE catalog_settings ADD COLUMN instagram_username TEXT NOT NULL DEFAULT '@sahara.electronics';");
-  }
-  if (!settingsColumns.includes('instagram_url')) {
-    db.exec("ALTER TABLE catalog_settings ADD COLUMN instagram_url TEXT NOT NULL DEFAULT 'https://instagram.com/sahara.electronics';");
-  }
-  if (!settingsColumns.includes('facebook_username')) {
-    db.exec("ALTER TABLE catalog_settings ADD COLUMN facebook_username TEXT NOT NULL DEFAULT 'Sahara Electronics';");
-  }
-  if (!settingsColumns.includes('facebook_url')) {
-    db.exec("ALTER TABLE catalog_settings ADD COLUMN facebook_url TEXT NOT NULL DEFAULT 'https://facebook.com/saharaelectronics';");
-  }
-  if (!settingsColumns.includes('phone_numbers')) {
-    db.exec("ALTER TABLE catalog_settings ADD COLUMN phone_numbers TEXT NOT NULL DEFAULT '[]';");
-  }
-  if (!settingsColumns.includes('articles')) {
-    db.exec("ALTER TABLE catalog_settings ADD COLUMN articles TEXT NOT NULL DEFAULT '[]';");
-  }
-  db.prepare('INSERT OR IGNORE INTO schema_migrations(version, applied_at) VALUES (7, ?)').run(new Date().toISOString());
 
   if (databasePath !== ':memory:') chmodSync(databasePath, 0o600);
 
   const getCatalog = () => {
     const brands = db.prepare('SELECT * FROM brands ORDER BY name').all().map((row) => ({
-      id: row.id, name: row.name, slug: row.slug, originCountry: row.origin_country,
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      originCountry: row.origin_country,
       manufacturingCountries: db.prepare('SELECT country FROM brand_manufacturing_countries WHERE brand_id = ? ORDER BY sort_order').all(row.id).map((item) => item.country),
-      description: row.description || undefined, logo: row.logo || defaultBrandLogos[row.id] || undefined, active: Boolean(row.active), comingSoon: Boolean(row.coming_soon),
+      description: row.description || undefined,
+      logo: row.logo || defaultBrandLogos[row.id] || undefined,
+      active: Boolean(row.active),
+      comingSoon: Boolean(row.coming_soon),
     }));
+
     const categories = db.prepare('SELECT * FROM categories ORDER BY sort_order, name').all().map((row) => ({
-      id: row.id, name: row.name, slug: row.slug, icon: row.icon || undefined, active: Boolean(row.active), sortOrder: row.sort_order,
+      id: row.id,
+      name: row.name,
+      slug: row.slug,
+      icon: row.icon || undefined,
+      active: Boolean(row.active),
+      sortOrder: row.sort_order,
     }));
+
     const mediaStatement = db.prepare('SELECT * FROM product_media WHERE product_id = ? ORDER BY sort_order');
     const highlightStatement = db.prepare('SELECT value FROM product_highlights WHERE product_id = ? ORDER BY sort_order');
     const specStatement = db.prepare('SELECT * FROM product_specs WHERE product_id = ? ORDER BY sort_order');
+
     const products = db.prepare(`SELECT products.*, categories.name AS category_name FROM products JOIN categories ON categories.id = products.category_id ORDER BY products.created_at, products.id`).all().map((row) => {
-      const media = mediaStatement.all(row.id).map((item) => ({ id: item.id, type: item.media_type, url: item.url, alt: item.alt_text || undefined, poster: item.poster || undefined }));
+      const media = mediaStatement.all(row.id).map((item) => ({
+        id: item.id,
+        type: item.media_type,
+        url: item.url,
+        alt: item.alt_text || undefined,
+        poster: item.poster || undefined,
+      }));
+
       return {
-        id: row.id, code: row.code, title: row.title, brandId: row.brand_id,
-        category: row.category_id, categoryName: row.category_name, image: row.primary_image,
-        gallery: media.filter((item) => item.type === 'image').map((item) => item.url), media,
-        isFeatured: Boolean(row.is_featured), isNew: Boolean(row.is_new), badgeText: row.badge_text || undefined,
+        id: row.id,
+        code: row.code,
+        title: row.title,
+        brandId: row.brand_id,
+        category: row.category_id,
+        categoryName: row.category_name,
+        image: row.primary_image,
+        gallery: media.filter((item) => item.type === 'image').map((item) => item.url),
+        media,
+        isFeatured: Boolean(row.is_featured),
+        isNew: Boolean(row.is_new),
+        badgeText: row.badge_text || undefined,
+        badgeColor: row.badge_color || 'red',
+        price: row.price !== null && row.price !== undefined ? Number(row.price) : undefined,
+        oldPrice: row.old_price !== null && row.old_price !== undefined ? Number(row.old_price) : undefined,
+        currency: row.currency || '₼',
+        stockStatus: row.stock_status || 'in_stock',
         shortDesc: row.short_description,
-        manufacturingCountry: row.manufacturing_country, status: row.status,
-        createdAt: row.created_at, updatedAt: row.updated_at,
+        manufacturingCountry: row.manufacturing_country,
+        status: row.status,
+        createdAt: row.created_at,
+        updatedAt: row.updated_at,
         highlights: highlightStatement.all(row.id).map((item) => item.value),
         specs: specStatement.all(row.id).map((item) => ({
-          id: item.id, name: item.name, value: item.value, description: item.description || undefined,
-          icon: item.icon || undefined, group: item.spec_group,
+          id: item.id,
+          name: item.name,
+          value: item.value,
+          description: item.description || undefined,
+          icon: item.icon || undefined,
+          group: item.spec_group,
         })),
       };
     });
+
     const meta = db.prepare("SELECT value FROM catalog_meta WHERE key = 'updated_at'").get();
     const settingsRow = db.prepare('SELECT * FROM catalog_settings WHERE id = 1').get();
-    
+
     let countries = defaultCountriesList;
     if (settingsRow?.countries) {
       try {
@@ -307,7 +387,23 @@ export const createCatalogDatabase = (databasePath) => {
       instagramUrl: settingsRow?.instagram_url || 'https://instagram.com/sahara.electronics',
       facebookUsername: settingsRow?.facebook_username || 'Sahara Electronics',
       facebookUrl: settingsRow?.facebook_url || 'https://facebook.com/saharaelectronics',
+      siteTitle: settingsRow?.site_title || 'Sahara Electronic – Məhsul Kataloqu',
+      siteSubtitle: settingsRow?.site_subtitle || 'Məişət texnikası modelləri və zəmanətli satış mərkəzi',
+      headerCaption: settingsRow?.header_caption || 'Rəsmi məhsul kataloqu',
+      catalogHeading: settingsRow?.catalog_heading || 'Bütün məhsullar',
+      catalogSubheading: settingsRow?.catalog_subheading || 'Modellərə və texniki xüsusiyyət sahələrinə baxın',
+      heroBannerTitle: settingsRow?.hero_banner_title || 'Premium İtalyan ARDO & Məişət Texnikası',
+      heroBannerSubtitle: settingsRow?.hero_banner_subtitle || 'Eleqant dizayn, yüksək enerji səmərəliliyi və 3 ilə qədər rəsmi zəmanət',
+      footerAbout: settingsRow?.footer_about || 'Sahara Electronics rəsmi ARDO, Lotus və Artel məhsullarının zəmanətli satış mərkəzidir.',
+      footerCopyright: settingsRow?.footer_copyright || 'Bütün hüquqlar qorunur.',
+      primaryColor: settingsRow?.primary_color || '#dc2626',
+      fontFamily: settingsRow?.font_family || 'Inter',
+      whatsappButtonText: settingsRow?.whatsapp_button_text || 'WhatsApp',
+      callButtonText: settingsRow?.call_button_text || 'Zəng et',
+      shareButtonText: settingsRow?.share_button_text || 'Paylaş',
+      scrollTopButtonText: settingsRow?.scroll_top_button_text || 'Yuxarı',
     };
+
     return { brands, categories, products, settings, countries, articles, updatedAt: meta?.value };
   };
 
@@ -315,40 +411,75 @@ export const createCatalogDatabase = (databasePath) => {
     const now = catalog.updatedAt || new Date().toISOString();
     const upsertBrand = db.prepare(`INSERT INTO brands(id,name,slug,origin_country,description,logo,coming_soon,active) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,slug=excluded.slug,origin_country=excluded.origin_country,description=excluded.description,logo=excluded.logo,coming_soon=excluded.coming_soon,active=excluded.active`);
     const upsertCategory = db.prepare(`INSERT INTO categories(id,name,slug,icon,active,sort_order) VALUES(?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,slug=excluded.slug,icon=excluded.icon,active=excluded.active,sort_order=excluded.sort_order`);
-    const upsertProduct = db.prepare(`INSERT INTO products(id,code,title,brand_id,category_id,primary_image,is_featured,is_new,badge_text,short_description,manufacturing_country,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET code=excluded.code,title=excluded.title,brand_id=excluded.brand_id,category_id=excluded.category_id,primary_image=excluded.primary_image,is_featured=excluded.is_featured,is_new=excluded.is_new,badge_text=excluded.badge_text,short_description=excluded.short_description,manufacturing_country=excluded.manufacturing_country,status=excluded.status,updated_at=excluded.updated_at`);
+    const upsertProduct = db.prepare(`INSERT INTO products(id,code,title,brand_id,category_id,primary_image,is_featured,is_new,badge_text,badge_color,price,old_price,currency,stock_status,short_description,manufacturing_country,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET code=excluded.code,title=excluded.title,brand_id=excluded.brand_id,category_id=excluded.category_id,primary_image=excluded.primary_image,is_featured=excluded.is_featured,is_new=excluded.is_new,badge_text=excluded.badge_text,badge_color=excluded.badge_color,price=excluded.price,old_price=excluded.old_price,currency=excluded.currency,stock_status=excluded.stock_status,short_description=excluded.short_description,manufacturing_country=excluded.manufacturing_country,status=excluded.status,updated_at=excluded.updated_at`);
+
     db.exec('BEGIN IMMEDIATE');
     try {
-      for (const brand of catalog.brands) {
+      for (const brand of catalog.brands || []) {
         upsertBrand.run(brand.id, brand.name, brand.slug, brand.originCountry || '', brand.description || '', brand.logo || '', bool(brand.comingSoon), bool(brand.active));
         db.prepare('DELETE FROM brand_manufacturing_countries WHERE brand_id = ?').run(brand.id);
         (brand.manufacturingCountries || []).forEach((country, index) => db.prepare('INSERT INTO brand_manufacturing_countries(brand_id,country,sort_order) VALUES(?,?,?)').run(brand.id, country, index));
       }
-      for (const category of catalog.categories) upsertCategory.run(category.id, category.name, category.slug, category.icon || '', bool(category.active), category.sortOrder || 0);
-      for (const product of catalog.products) {
+
+      for (const category of catalog.categories || []) {
+        upsertCategory.run(category.id, category.name, category.slug, category.icon || '', bool(category.active), category.sortOrder || 0);
+      }
+
+      for (const product of catalog.products || []) {
         const createdAt = product.createdAt || now;
-        upsertProduct.run(product.id, product.code, product.title, product.brandId, product.category, product.image || '', bool(product.isFeatured), bool(product.isNew), product.badgeText || '', product.shortDesc || '', product.manufacturingCountry || '', product.status === 'published' ? 'published' : 'draft', createdAt, now);
+        upsertProduct.run(
+          product.id,
+          product.code,
+          product.title,
+          product.brandId || 'ardo',
+          product.category,
+          product.image || '',
+          bool(product.isFeatured),
+          bool(product.isNew),
+          product.badgeText || '',
+          product.badgeColor || 'red',
+          product.price !== undefined ? Number(product.price) : null,
+          product.oldPrice !== undefined ? Number(product.oldPrice) : null,
+          product.currency || '₼',
+          product.stockStatus || 'in_stock',
+          product.shortDesc || '',
+          product.manufacturingCountry || '',
+          product.status === 'published' ? 'published' : 'draft',
+          createdAt,
+          now
+        );
+
         db.prepare('DELETE FROM product_media WHERE product_id = ?').run(product.id);
         db.prepare('DELETE FROM product_highlights WHERE product_id = ?').run(product.id);
         db.prepare('DELETE FROM product_specs WHERE product_id = ?').run(product.id);
+
         (product.media || []).forEach((item, index) => db.prepare('INSERT INTO product_media(id,product_id,media_type,url,alt_text,poster,sort_order) VALUES(?,?,?,?,?,?,?)').run(item.id, product.id, item.type, item.url, item.alt || '', item.poster || '', index));
         (product.highlights || []).forEach((value, index) => db.prepare('INSERT INTO product_highlights(product_id,value,sort_order) VALUES(?,?,?)').run(product.id, value, index));
         (product.specs || []).forEach((item, index) => db.prepare('INSERT INTO product_specs(id,product_id,name,value,description,icon,spec_group,sort_order) VALUES(?,?,?,?,?,?,?,?)').run(item.id, product.id, item.name, item.value || '', item.description || '', item.icon || '', item.group || 'Əsas', index));
       }
-      const productIds = catalog.products.map((item) => item.id);
-      const categoryIds = catalog.categories.map((item) => item.id);
-      const brandIds = catalog.brands.map((item) => item.id);
-      if (productIds.length) db.prepare(`DELETE FROM products WHERE id NOT IN (${placeholders(productIds)})`).run(...productIds); else db.exec('DELETE FROM products');
-      if (categoryIds.length) db.prepare(`DELETE FROM categories WHERE id NOT IN (${placeholders(categoryIds)})`).run(...categoryIds); else db.exec('DELETE FROM categories');
-      if (brandIds.length) db.prepare(`DELETE FROM brands WHERE id NOT IN (${placeholders(brandIds)})`).run(...brandIds); else db.exec('DELETE FROM brands');
+
+      const productIds = (catalog.products || []).map((item) => item.id);
+      const categoryIds = (catalog.categories || []).map((item) => item.id);
+      const brandIds = (catalog.brands || []).map((item) => item.id);
+
+      if (productIds.length) db.prepare(`DELETE FROM products WHERE id NOT IN (${placeholders(productIds)})`).run(...productIds);
+      else db.exec('DELETE FROM products');
+
+      if (categoryIds.length) db.prepare(`DELETE FROM categories WHERE id NOT IN (${placeholders(categoryIds)})`).run(...categoryIds);
+      else db.exec('DELETE FROM categories');
+
+      if (brandIds.length) db.prepare(`DELETE FROM brands WHERE id NOT IN (${placeholders(brandIds)})`).run(...brandIds);
+      else db.exec('DELETE FROM brands');
+
       if (catalog.settings) {
         const countriesJson = JSON.stringify(catalog.settings.countries || catalog.countries || defaultCountriesList);
         const phoneNumbersJson = JSON.stringify(catalog.settings.phoneNumbers || (catalog.settings.phoneNumber ? [catalog.settings.phoneNumber] : []));
         const articlesJson = JSON.stringify(catalog.articles || defaultArticlesList);
         const primaryPhone = catalog.settings.phoneNumber || (catalog.settings.phoneNumbers && catalog.settings.phoneNumbers[0]) || '';
-        
+
         db.prepare(`
           UPDATE catalog_settings
-          SET whatsapp_number = ?, phone_number = ?, phone_numbers = ?, company_name = ?, address = ?, email = ?, working_hours = ?, map_url = ?, location_note = ?, countries = ?, instagram_username = ?, instagram_url = ?, facebook_username = ?, facebook_url = ?, articles = ?, updated_at = ?
+          SET whatsapp_number = ?, phone_number = ?, phone_numbers = ?, company_name = ?, address = ?, email = ?, working_hours = ?, map_url = ?, location_note = ?, countries = ?, instagram_username = ?, instagram_url = ?, facebook_username = ?, facebook_url = ?, articles = ?, site_title = ?, site_subtitle = ?, header_caption = ?, catalog_heading = ?, catalog_subheading = ?, hero_banner_title = ?, hero_banner_subtitle = ?, footer_about = ?, footer_copyright = ?, primary_color = ?, font_family = ?, whatsapp_button_text = ?, call_button_text = ?, share_button_text = ?, scroll_top_button_text = ?, updated_at = ?
           WHERE id = 1
         `).run(
           catalog.settings.whatsappNumber || '',
@@ -366,6 +497,21 @@ export const createCatalogDatabase = (databasePath) => {
           catalog.settings.facebookUsername ?? 'Sahara Electronics',
           catalog.settings.facebookUrl ?? 'https://facebook.com/saharaelectronics',
           articlesJson,
+          catalog.settings.siteTitle || 'Sahara Electronic – Məhsul Kataloqu',
+          catalog.settings.siteSubtitle || 'Məişət texnikası modelləri və zəmanətli satış mərkəzi',
+          catalog.settings.headerCaption || 'Rəsmi məhsul kataloqu',
+          catalog.settings.catalogHeading || 'Bütün məhsullar',
+          catalog.settings.catalogSubheading || 'Modellərə və texniki xüsusiyyət sahələrinə baxın',
+          catalog.settings.heroBannerTitle || 'Premium İtalyan ARDO & Məişət Texnikası',
+          catalog.settings.heroBannerSubtitle || 'Eleqant dizayn, yüksək enerji səmərəliliyi və 3 ilə qədər rəsmi zəmanət',
+          catalog.settings.footerAbout || 'Sahara Electronics rəsmi ARDO, Lotus və Artel məhsullarının zəmanətli satış mərkəzidir.',
+          catalog.settings.footerCopyright || 'Bütün hüquqlar qorunur.',
+          catalog.settings.primaryColor || '#dc2626',
+          catalog.settings.fontFamily || 'Inter',
+          catalog.settings.whatsappButtonText || 'WhatsApp',
+          catalog.settings.callButtonText || 'Zəng et',
+          catalog.settings.shareButtonText || 'Paylaş',
+          catalog.settings.scrollTopButtonText || 'Yuxarı',
           now
         );
       }
@@ -378,46 +524,122 @@ export const createCatalogDatabase = (databasePath) => {
   };
 
   const getAnalytics = () => {
-    const catalog = db.prepare('SELECT catalog_views,last_viewed_at FROM catalog_analytics WHERE id = 1').get();
-    const productViews = Object.fromEntries(db.prepare('SELECT product_id,view_count FROM product_view_stats').all().map((row) => [row.product_id, row.view_count]));
+    const general = db.prepare('SELECT catalog_views, last_viewed_at FROM catalog_analytics WHERE id = 1').get();
+    const productRows = db.prepare('SELECT product_id, view_count FROM product_view_stats').all();
+    const contactRows = db.prepare('SELECT action_type, product_id, click_count FROM contact_action_stats').all();
+
+    const productViews = {};
+    for (const row of productRows) productViews[row.product_id] = row.view_count;
+
     const contactActions = { whatsapp: 0, call: 0 };
     const contactActionsByProduct = {};
-    for (const row of db.prepare('SELECT action_type,product_id,click_count FROM contact_action_stats').all()) {
-      contactActions[row.action_type] += row.click_count;
-      contactActionsByProduct[row.product_id] ||= { whatsapp: 0, call: 0 };
-      contactActionsByProduct[row.product_id][row.action_type] = row.click_count;
+
+    for (const row of contactRows) {
+      if (row.action_type === 'whatsapp' || row.action_type === 'call') {
+        contactActions[row.action_type] += row.click_count;
+        if (!contactActionsByProduct[row.product_id]) {
+          contactActionsByProduct[row.product_id] = { whatsapp: 0, call: 0 };
+        }
+        contactActionsByProduct[row.product_id][row.action_type] = row.click_count;
+      }
     }
-    return { catalogViews: catalog?.catalog_views || 0, productViews, contactActions, contactActionsByProduct, lastViewedAt: catalog?.last_viewed_at || undefined };
+
+    return {
+      catalogViews: general?.catalog_views || 0,
+      productViews,
+      contactActions,
+      contactActionsByProduct,
+      lastViewedAt: general?.last_viewed_at || undefined,
+    };
   };
 
-  const importAnalytics = (analytics) => {
+  const trackEvent = (type, productId) => {
+    const now = new Date().toISOString();
     db.exec('BEGIN IMMEDIATE');
     try {
-      db.prepare('UPDATE catalog_analytics SET catalog_views = ?, last_viewed_at = ? WHERE id = 1').run(Number(analytics?.catalogViews || 0), analytics?.lastViewedAt || null);
-      for (const [productId, views] of Object.entries(analytics?.productViews || {})) db.prepare('INSERT INTO product_view_stats(product_id,view_count,last_viewed_at) VALUES(?,?,?) ON CONFLICT(product_id) DO UPDATE SET view_count=excluded.view_count,last_viewed_at=excluded.last_viewed_at').run(productId, Number(views || 0), analytics?.lastViewedAt || null);
+      if (type === 'catalog_view') {
+        db.prepare('UPDATE catalog_analytics SET catalog_views = catalog_views + 1, last_viewed_at = ? WHERE id = 1').run(now);
+      } else if (type === 'product_view' && productId) {
+        db.prepare(`INSERT INTO product_view_stats(product_id, view_count, last_viewed_at) VALUES(?, 1, ?) ON CONFLICT(product_id) DO UPDATE SET view_count = view_count + 1, last_viewed_at = excluded.last_viewed_at`).run(productId, now);
+      } else if ((type === 'contact_whatsapp' || type === 'contact_call') && productId) {
+        const action = type === 'contact_whatsapp' ? 'whatsapp' : 'call';
+        db.prepare(`INSERT INTO contact_action_stats(action_type, product_id, click_count, last_clicked_at) VALUES(?, ?, 1, ?) ON CONFLICT(action_type, product_id) DO UPDATE SET click_count = click_count + 1, last_clicked_at = excluded.last_clicked_at`).run(action, productId, now);
+      }
       db.exec('COMMIT');
-    } catch (error) { db.exec('ROLLBACK'); throw error; }
+    } catch (error) {
+      db.exec('ROLLBACK');
+      throw error;
+    }
   };
 
-  const recordEvent = (event) => {
-    const now = new Date().toISOString();
-    if (event.type === 'catalog_view') db.prepare('UPDATE catalog_analytics SET catalog_views = catalog_views + 1, last_viewed_at = ? WHERE id = 1').run(now);
-    if (event.type === 'product_view' && event.productId) db.prepare('INSERT INTO product_view_stats(product_id,view_count,last_viewed_at) VALUES(?,1,?) ON CONFLICT(product_id) DO UPDATE SET view_count=view_count+1,last_viewed_at=excluded.last_viewed_at').run(event.productId, now);
-    if ((event.type === 'contact_whatsapp' || event.type === 'contact_call') && event.productId) {
-      const action = event.type === 'contact_whatsapp' ? 'whatsapp' : 'call';
-      db.prepare('INSERT INTO contact_action_stats(action_type,product_id,click_count,last_clicked_at) VALUES(?,?,1,?) ON CONFLICT(action_type,product_id) DO UPDATE SET click_count=click_count+1,last_clicked_at=excluded.last_clicked_at').run(action, event.productId, now);
+  const replaceWith = (sourceDatabase) => {
+    const sourceData = sourceDatabase.getCatalog();
+    saveCatalog(sourceData);
+  };
+
+  const isCatalogEmpty = () => {
+    const row = db.prepare('SELECT COUNT(*) as count FROM products').get();
+    return !row || row.count === 0;
+  };
+
+  const health = () => {
+    try {
+      db.prepare('SELECT 1').get();
+      return true;
+    } catch {
+      return false;
     }
+  };
+
+  const recordEvent = (event) => trackEvent(event.type, event.productId);
+
+  const importAnalytics = (data) => {
+    if (!data) return;
+    db.exec('BEGIN IMMEDIATE');
+    try {
+      if (typeof data.catalogViews === 'number') {
+        db.prepare('UPDATE catalog_analytics SET catalog_views = ?, last_viewed_at = ? WHERE id = 1').run(data.catalogViews, data.lastViewedAt || null);
+      }
+      if (data.productViews && typeof data.productViews === 'object') {
+        for (const [pId, count] of Object.entries(data.productViews)) {
+          db.prepare('INSERT INTO product_view_stats(product_id, view_count) VALUES(?, ?) ON CONFLICT(product_id) DO UPDATE SET view_count = ?').run(pId, count, count);
+        }
+      }
+      if (data.contactActions && typeof data.contactActions === 'object') {
+        for (const [action, count] of Object.entries(data.contactActions)) {
+          if (['whatsapp', 'call'].includes(action)) {
+            db.prepare('INSERT INTO contact_action_stats(action_type, product_id, click_count) VALUES(?, ?, ?) ON CONFLICT(action_type, product_id) DO UPDATE SET click_count = ?').run(action, 'global', count, count);
+          }
+        }
+      }
+      db.exec('COMMIT');
+    } catch (err) {
+      db.exec('ROLLBACK');
+      throw err;
+    }
+  };
+
+  const tableNames = () => {
+    return db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map((r) => r.name);
+  };
+
+  const close = () => {
+    try {
+      db.close();
+    } catch {}
   };
 
   return {
     getCatalog,
     saveCatalog,
     getAnalytics,
-    importAnalytics,
+    trackEvent,
     recordEvent,
-    isCatalogEmpty: () => Number(db.prepare('SELECT COUNT(*) AS count FROM products').get().count) === 0,
-    health: () => db.prepare('SELECT 1 AS ok').get().ok === 1,
-    tableNames: () => db.prepare("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name").all().map((row) => row.name),
-    close: () => db.close(),
+    isCatalogEmpty,
+    health,
+    importAnalytics,
+    replaceWith,
+    tableNames,
+    close,
   };
 };

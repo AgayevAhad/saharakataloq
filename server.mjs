@@ -38,7 +38,7 @@ const MAX_BODY = 8 * 1024 * 1024;
 const MAX_MEDIA_BODY = 100 * 1024 * 1024;
 const SESSION_TTL = 8 * 60 * 60 * 1000;
 const generatedPassword = randomBytes(12).toString('base64url');
-const adminPassword = process.env.ADMIN_PASSWORD || generatedPassword;
+let adminPassword = process.env.ADMIN_PASSWORD || generatedPassword;
 const sessions = new Map();
 const loginAttempts = new Map();
 const eventLimits = new Map();
@@ -283,6 +283,21 @@ const validateCatalog = (body) => {
         instagramUrl: safeText(body.settings?.instagramUrl, 1000) || 'https://instagram.com/sahara.electronics',
         facebookUsername: safeText(body.settings?.facebookUsername, 100) || 'Sahara Electronics',
         facebookUrl: safeText(body.settings?.facebookUrl, 1000) || 'https://facebook.com/saharaelectronics',
+        siteTitle: safeText(body.settings?.siteTitle, 200) || 'Sahara Electronic – Məhsul Kataloqu',
+        siteSubtitle: safeText(body.settings?.siteSubtitle, 300) || 'Məişət texnikası modelləri və zəmanətli satış mərkəzi',
+        headerCaption: safeText(body.settings?.headerCaption, 100) || 'Rəsmi məhsul kataloqu',
+        catalogHeading: safeText(body.settings?.catalogHeading, 150) || 'Bütün məhsullar',
+        catalogSubheading: safeText(body.settings?.catalogSubheading, 300) || 'Modellərə və texniki xüsusiyyət sahələrinə baxın',
+        heroBannerTitle: safeText(body.settings?.heroBannerTitle, 200) || 'Premium İtalyan ARDO & Məişət Texnikası',
+        heroBannerSubtitle: safeText(body.settings?.heroBannerSubtitle, 400) || 'Eleqant dizayn, yüksək enerji səmərəliliyi və 3 ilə qədər rəsmi zəmanət',
+        footerAbout: safeText(body.settings?.footerAbout, 1000) || 'Sahara Electronics rəsmi ARDO, Lotus və Artel məhsullarının zəmanətli satış mərkəzidir.',
+        footerCopyright: safeText(body.settings?.footerCopyright, 200) || 'Bütün hüquqlar qorunur.',
+        primaryColor: safeText(body.settings?.primaryColor, 30) || '#dc2626',
+        fontFamily: safeText(body.settings?.fontFamily, 50) || 'Inter',
+        whatsappButtonText: safeText(body.settings?.whatsappButtonText, 50) || 'WhatsApp',
+        callButtonText: safeText(body.settings?.callButtonText, 50) || 'Zəng et',
+        shareButtonText: safeText(body.settings?.shareButtonText, 50) || 'Paylaş',
+        scrollTopButtonText: safeText(body.settings?.scrollTopButtonText, 50) || 'Yuxarı',
       },
       countries,
       articles,
@@ -433,6 +448,33 @@ const server = http.createServer(async (req, res) => {
       const catalog = validateCatalog(draftDatabase.getCatalog());
       catalogDatabase.saveCatalog(catalog);
       return send(res, 200, { ok: true, updatedAt: catalog.updatedAt });
+    }
+    if (path === '/api/admin/change-password' && req.method === 'POST') {
+      const session = requireAdmin(req, res, true); if (!session) return;
+      const { oldPassword = '', newPassword = '' } = await readBody(req);
+      if (!newPassword || newPassword.length < 6) {
+        return send(res, 400, { error: 'Yeni şifrə ən azı 6 simvoldan ibarət olmalıdır' });
+      }
+      const actual = createHash('sha256').update(String(oldPassword)).digest();
+      const expected = createHash('sha256').update(adminPassword).digest();
+      if (!timingSafeEqual(actual, expected)) {
+        return send(res, 401, { error: 'Köhnə şifrə yanlışdır' });
+      }
+      adminPassword = String(newPassword);
+      process.env.ADMIN_PASSWORD = adminPassword;
+      try {
+        const envPath = join(ROOT, '.env');
+        let envText = existsSync(envPath) ? await readFile(envPath, 'utf8') : '';
+        if (envText.includes('ADMIN_PASSWORD=')) {
+          envText = envText.replace(/ADMIN_PASSWORD=.*(\r?\n|$)/, `ADMIN_PASSWORD=${adminPassword}$1`);
+        } else {
+          envText += `\nADMIN_PASSWORD=${adminPassword}\n`;
+        }
+        await writeFile(envPath, envText, { mode: 0o600 });
+      } catch (err) {
+        console.error('Failed to update .env password:', err);
+      }
+      return send(res, 200, { ok: true });
     }
     if (path === '/api/admin/logout' && req.method === 'POST') {
       const session = requireAdmin(req, res, true); if (!session) return;

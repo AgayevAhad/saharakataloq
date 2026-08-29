@@ -127,7 +127,7 @@ export const FloatingActions: React.FC<FloatingActionsProps> = ({
         <ArrowUp size={22} color="#ffffff" strokeWidth={2.8} />
         {isExpanded && (
           <span className="btn-label" style={{ whiteSpace: 'nowrap' }}>
-            Yuxarı
+            {settings.scrollTopButtonText || 'Yuxarı'}
           </span>
         )}
       </button>
@@ -166,7 +166,7 @@ export const FloatingActions: React.FC<FloatingActionsProps> = ({
         <WhatsAppIcon size={25} color="#ffffff" />
         {isExpanded && (
           <span className="btn-label" style={{ whiteSpace: 'nowrap' }}>
-            WhatsApp
+            {settings.whatsappButtonText || 'WhatsApp'}
           </span>
         )}
       </button>
@@ -205,7 +205,7 @@ export const FloatingActions: React.FC<FloatingActionsProps> = ({
         <Phone size={22} fill="#ffffff" color="#ffffff" strokeWidth={1} />
         {isExpanded && (
           <span className="btn-label" style={{ whiteSpace: 'nowrap' }}>
-            Zəng et
+            {settings.callButtonText || 'Zəng et'}
           </span>
         )}
       </button>

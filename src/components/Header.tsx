@@ -75,7 +75,7 @@ export const Header: React.FC<HeaderProps> = ({
     <div className="header-top-row">
       <a href="/" className="brand-lockup" aria-label="Sahara Electronics kataloqu">
         <SaharaLogo className="header-sahara-logo" isDark={isDarkMode} />
-        <span className="brand-caption" style={{ color: theme.textMuted }}>Rəsmi məhsul kataloqu</span>
+        <span className="brand-caption" style={{ color: theme.textMuted }}>{settings?.headerCaption || 'Rəsmi məhsul kataloqu'}</span>
       </a>
 
       <div className="compact-brand-dock" aria-label="Brendlər">
@@ -102,7 +102,7 @@ export const Header: React.FC<HeaderProps> = ({
           />
         )}
         <button className="icon-action" onClick={onOpenInverterInfo} style={{ color: theme.primary, borderColor: theme.border, background: theme.bgSecondary }} title="Texnologiyalar və bələdçi haqqında"><Info size={17} /></button>
-        <button className="share-action" onClick={onOpenCatalogShare} style={{ background: theme.primary }}><Share2 size={16} /><span>Paylaş</span></button>
+        <button className="share-action" onClick={onOpenCatalogShare} style={{ background: theme.primary }}><Share2 size={16} /><span>{settings?.shareButtonText || 'Paylaş'}</span></button>
         <button className="icon-action" onClick={onToggleTheme} style={{ color: isDarkMode ? '#f59e0b' : '#475569', borderColor: theme.border, background: theme.bgSecondary }} title="Görünüşü dəyiş">{isDarkMode ? <Sun size={17} /> : <Moon size={17} />}</button>
       </div>
     </div>

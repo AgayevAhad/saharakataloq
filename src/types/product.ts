@@ -49,6 +49,11 @@ export interface Product {
   isFeatured?: boolean;
   isNew?: boolean;
   badgeText?: string;
+  badgeColor?: 'red' | 'green' | 'amber' | 'blue' | 'purple';
+  price?: number;
+  oldPrice?: number;
+  currency?: string;
+  stockStatus?: 'in_stock' | 'out_of_stock' | 'preorder';
   shortDesc: string;
   specs: ProductSpecItem[];
   highlights: string[];
@@ -90,6 +95,23 @@ export interface CatalogSettings {
   instagramUrl?: string;
   facebookUsername?: string;
   facebookUrl?: string;
+  
+  // Universal Customization & Styling
+  siteTitle?: string;
+  siteSubtitle?: string;
+  headerCaption?: string;
+  catalogHeading?: string;
+  catalogSubheading?: string;
+  heroBannerTitle?: string;
+  heroBannerSubtitle?: string;
+  footerAbout?: string;
+  footerCopyright?: string;
+  primaryColor?: string;
+  fontFamily?: string;
+  whatsappButtonText?: string;
+  callButtonText?: string;
+  shareButtonText?: string;
+  scrollTopButtonText?: string;
 }
 
 export interface CatalogData {

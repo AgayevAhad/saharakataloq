@@ -369,7 +369,7 @@ export const Footer: React.FC<FooterProps> = ({
           color: theme.textMuted,
         }}
       >
-        <p>© {new Date().getFullYear()} {companyName}. Bütün hüquqlar qorunur.</p>
+        <p>© {new Date().getFullYear()} {companyName}. {settings.footerCopyright || 'Bütün hüquqlar qorunur.'}</p>
 
         <button
           type="button"
@@ -393,11 +393,11 @@ export const Footer: React.FC<FooterProps> = ({
             transition: 'all 0.2s ease',
           }}
         >
-          <span>Səhifənin Başına Qayıt</span>
+          <span>{settings.scrollTopButtonText || 'Səhifənin Başına Qayıt'}</span>
           <ArrowUp size={14} color={theme.primary} />
         </button>
 
-        <p>Rəsmi İtalyan ARDO məhsulları və zəmanətli satış mərkəzi.</p>
+        <p>{settings.footerAbout || 'Rəsmi İtalyan ARDO məhsulları və zəmanətli satış mərkəzi.'}</p>
       </div>
     </footer>
   );

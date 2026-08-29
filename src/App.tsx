@@ -151,22 +151,79 @@ export const App: React.FC = () => {
     setThemeMode(next); localStorage.setItem(THEME_KEY, next);
   };
 
+  const customPrimaryColor = catalog.settings?.primaryColor || theme.primary;
+  const activeTheme = useMemo(() => {
+    const base = themeMode === 'dark' ? darkTheme : lightTheme;
+    if (catalog.settings?.primaryColor) {
+      return { ...base, primary: catalog.settings.primaryColor };
+    }
+    return base;
+  }, [catalog.settings?.primaryColor, themeMode]);
+
+  useEffect(() => {
+    if (catalog.settings?.siteTitle) {
+      document.title = catalog.settings.siteTitle;
+    }
+    if (catalog.settings?.primaryColor) {
+      document.documentElement.style.setProperty('--primary-color', catalog.settings.primaryColor);
+    }
+  }, [catalog.settings?.primaryColor, catalog.settings?.siteTitle]);
+
   if (isAdminPath()) {
-    if (!adminChecked) return <div className="app-loading" style={{ background: theme.bg, color: theme.text }}>Admin panel hazırlanır...</div>;
-    if (!adminData) return <AdminLogin theme={theme} onLogin={async (password) => { await catalogApi.login(password); setAdminData(await catalogApi.getAdminData()); }} />;
-    return <><CatalogAdmin initial={adminData} theme={theme} showToast={showToast} onSave={async (data) => { await catalogApi.saveCatalog(data, adminData.csrfToken); }} onPublish={async (data) => { await catalogApi.saveCatalog(data, adminData.csrfToken); await catalogApi.publishCatalog(adminData.csrfToken); const updated = await catalogApi.getCatalog(); setCatalog(normalizeCatalog(updated)); }} onUpload={(file) => catalogApi.uploadMedia(file, adminData.csrfToken)} onLogout={async () => { await catalogApi.logout(adminData.csrfToken); setAdminData(null); }} /><Toast message={toast.message} visible={toast.visible} theme={theme} /></>;
+    if (!adminChecked) return <div className="app-loading" style={{ background: activeTheme.bg, color: activeTheme.text }}>Admin panel hazırlanır...</div>;
+    if (!adminData) return <AdminLogin theme={activeTheme} onLogin={async (password) => { await catalogApi.login(password); setAdminData(await catalogApi.getAdminData()); }} />;
+    return <><CatalogAdmin initial={adminData} theme={activeTheme} showToast={showToast} onSave={async (data) => { await catalogApi.saveCatalog(data, adminData.csrfToken); }} onPublish={async (data) => { await catalogApi.saveCatalog(data, adminData.csrfToken); await catalogApi.publishCatalog(adminData.csrfToken); const updated = await catalogApi.getCatalog(); setCatalog(normalizeCatalog(updated)); }} onUpload={(file) => catalogApi.uploadMedia(file, adminData.csrfToken)} onLogout={async () => { await catalogApi.logout(adminData.csrfToken); setAdminData(null); }} /><Toast message={toast.message} visible={toast.visible} theme={activeTheme} /></>;
   }
 
   const selectedBrandInfo = selectedProduct ? catalog.brands.find((brand) => brand.id === selectedProduct.brandId) : undefined;
   return (
-    <div id="catalog-top-anchor" style={{ backgroundColor: theme.bg, minHeight: '100vh' }}>
-      <Header theme={theme} isDarkMode={themeMode === 'dark'} onToggleTheme={toggleTheme} selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} selectedBrand={selectedBrand} onSelectBrand={setSelectedBrand} brands={catalog.brands} categories={catalog.categories} products={catalog.products} settings={catalog.settings} searchQuery={searchQuery} onSearchChange={setSearchQuery} onOpenInverterInfo={() => openArticle()} onOpenCatalogShare={() => openShare(null)} totalCount={catalog.products.length} filteredCount={filteredProducts.length} />
+    <div id="catalog-top-anchor" style={{ backgroundColor: activeTheme.bg, minHeight: '100vh' }}>
+      <Header theme={activeTheme} isDarkMode={themeMode === 'dark'} onToggleTheme={toggleTheme} selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} selectedBrand={selectedBrand} onSelectBrand={setSelectedBrand} brands={catalog.brands} categories={catalog.categories} products={catalog.products} settings={catalog.settings} searchQuery={searchQuery} onSearchChange={setSearchQuery} onOpenInverterInfo={() => openArticle()} onOpenCatalogShare={() => openShare(null)} totalCount={catalog.products.length} filteredCount={filteredProducts.length} />
       <main className="catalog-main">
-        <BrandShowcase brands={catalog.brands} products={catalog.products} theme={theme} onSelect={(brandId) => { setSelectedBrand(brandId); document.querySelector('.catalog-section')?.scrollIntoView({ behavior: 'smooth' }); }} />
-        <BannerHero theme={theme} articles={catalog.articles} onOpenArticle={openArticle} />
+        <BrandShowcase brands={catalog.brands} products={catalog.products} theme={activeTheme} onSelect={(brandId) => { setSelectedBrand(brandId); document.querySelector('.catalog-section')?.scrollIntoView({ behavior: 'smooth' }); }} />
+        <BannerHero theme={activeTheme} articles={catalog.articles} heroTitle={catalog.settings?.heroBannerTitle} heroSubtitle={catalog.settings?.heroBannerSubtitle} onOpenArticle={openArticle} />
         <section className="catalog-section">
-          <div className="catalog-section-heading"><div><h1 style={{ color: theme.text }}>{selectedCategory === 'all' ? 'Bütün məhsullar' : catalog.categories.find((item) => item.id === selectedCategory)?.name}</h1><p style={{ color: theme.textMuted }}>Modellərə və texniki xüsusiyyət sahələrinə baxın</p></div></div>
-          {!filteredProducts.length ? <div className="empty-catalog" style={{ color: theme.textMuted }}>Axtarışınıza uyğun məhsul tapılmadı.<button onClick={() => { setSearchQuery(''); setSelectedCategory('all'); setSelectedBrand('all'); }} style={{ background: theme.primary }}>Filtrləri sıfırla</button></div> : <div className="product-grid-container">{filteredProducts.map((product) => { const brand = catalog.brands.find((item) => item.id === product.brandId); return <ProductCard key={product.id} product={product} theme={theme} brandName={brand?.name} brandOrigin={brand?.originCountry ? `${brand.originCountry} brendi` : ''} onSelect={selectProduct} onShare={(item) => openShare(item)} onWhatsApp={openWhatsApp} onCall={openCall} onCopyLink={copyLink} />; })}</div>}
+          <div className="catalog-section-heading">
+            <div>
+              <h1 style={{ color: activeTheme.text }}>
+                {selectedCategory === 'all' ? (catalog.settings?.catalogHeading || 'Bütün məhsullar') : catalog.categories.find((item) => item.id === selectedCategory)?.name}
+              </h1>
+              <p style={{ color: activeTheme.textMuted }}>
+                {catalog.settings?.catalogSubheading || 'Modellərə və texniki xüsusiyyət sahələrinə baxın'}
+              </p>
+            </div>
+          </div>
+          {!filteredProducts.length ? (
+            <div className="empty-catalog" style={{ color: activeTheme.textMuted }}>
+              Axtarışınıza uyğun məhsul tapılmadı.
+              <button onClick={() => { setSearchQuery(''); setSelectedCategory('all'); setSelectedBrand('all'); }} style={{ background: activeTheme.primary }}>
+                Filtrləri sıfırla
+              </button>
+            </div>
+          ) : (
+            <div className="product-grid-container">
+              {filteredProducts.map((product) => {
+                const brand = catalog.brands.find((item) => item.id === product.brandId);
+                return (
+                  <ProductCard
+                    key={product.id}
+                    product={product}
+                    theme={activeTheme}
+                    brandName={brand?.name}
+                    brandOrigin={brand?.originCountry ? `${brand.originCountry} brendi` : ''}
+                    whatsappButtonText={catalog.settings?.whatsappButtonText}
+                    callButtonText={catalog.settings?.callButtonText}
+                    shareButtonText={catalog.settings?.shareButtonText}
+                    onSelect={selectProduct}
+                    onShare={(item) => openShare(item)}
+                    onWhatsApp={openWhatsApp}
+                    onCall={openCall}
+                    onCopyLink={copyLink}
+                  />
+                );
+              })}
+            </div>
+          )}
         </section>
       </main>
       
@@ -174,7 +231,7 @@ export const App: React.FC = () => {
       <Footer
         settings={catalog.settings}
         categories={catalog.categories}
-        theme={theme}
+        theme={activeTheme}
         onSelectCategory={(catId) => {
           setSelectedCategory(catId);
           setSelectedBrand('all');
@@ -185,15 +242,27 @@ export const App: React.FC = () => {
       {/* Floating Translucent Action Buttons on Mobile */}
       <FloatingActions
         settings={catalog.settings}
-        theme={theme}
+        theme={activeTheme}
         showToast={showToast}
         onTrack={(type) => catalogApi.track(type)}
       />
 
-      <ProductDetailModal product={selectedProduct} brand={selectedBrandInfo} theme={theme} visible={!!selectedProduct} onClose={closeProduct} onShare={(item) => openShare(item)} onWhatsApp={openWhatsApp} onCall={openCall} onCopyLink={copyLink} />
-      <InverterInfoModal theme={theme} visible={isInverterModalOpen} onClose={() => setIsInverterModalOpen(false)} articles={catalog.articles} initialArticleId={selectedArticleId} />
-      <ShareModal product={shareTargetProduct} theme={theme} visible={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} onCopyLink={copyLink} onWhatsAppShare={shareWhatsApp} onTelegramShare={shareTelegram} />
-      <Toast message={toast.message} visible={toast.visible} theme={theme} />
+      <ProductDetailModal
+        product={selectedProduct}
+        brand={selectedBrandInfo}
+        theme={activeTheme}
+        visible={!!selectedProduct}
+        whatsappButtonText={catalog.settings?.whatsappButtonText}
+        callButtonText={catalog.settings?.callButtonText}
+        onClose={closeProduct}
+        onShare={(item) => openShare(item)}
+        onWhatsApp={openWhatsApp}
+        onCall={openCall}
+        onCopyLink={copyLink}
+      />
+      <InverterInfoModal theme={activeTheme} visible={isInverterModalOpen} onClose={() => setIsInverterModalOpen(false)} articles={catalog.articles} initialArticleId={selectedArticleId} />
+      <ShareModal product={shareTargetProduct} theme={activeTheme} visible={isShareModalOpen} onClose={() => setIsShareModalOpen(false)} onCopyLink={copyLink} onWhatsAppShare={shareWhatsApp} onTelegramShare={shareTelegram} />
+      <Toast message={toast.message} visible={toast.visible} theme={activeTheme} />
     </div>
   );
 };

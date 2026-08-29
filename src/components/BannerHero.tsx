@@ -6,6 +6,8 @@ import { ThemeColors } from '../types/theme';
 interface BannerHeroProps {
   theme: ThemeColors;
   articles?: TechnologyArticle[];
+  heroTitle?: string;
+  heroSubtitle?: string;
   onOpenArticle: (article?: TechnologyArticle) => void;
 }
 
@@ -25,7 +27,13 @@ const getArticleIcon = (iconName?: string, color?: string, size = 20) => {
   }
 };
 
-export const BannerHero: React.FC<BannerHeroProps> = ({ theme, articles = [], onOpenArticle }) => {
+export const BannerHero: React.FC<BannerHeroProps> = ({
+  theme,
+  articles = [],
+  heroTitle,
+  heroSubtitle,
+  onOpenArticle,
+}) => {
   const activeArticles = articles.filter((a) => a.active !== false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
@@ -122,7 +130,11 @@ export const BannerHero: React.FC<BannerHeroProps> = ({ theme, articles = [], on
               lineHeight: 1.25,
             }}
           >
-            Eviniz üçün seçilmiş <span style={{ color: theme.primary }}>məişət texnikası</span>
+            {heroTitle ? (
+              <span>{heroTitle}</span>
+            ) : (
+              <>Eviniz üçün seçilmiş <span style={{ color: theme.primary }}>məişət texnikası</span></>
+            )}
           </h2>
           <p
             style={{
@@ -132,7 +144,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({ theme, articles = [], on
               lineHeight: '22px',
             }}
           >
-            Sahara Electronics — İtalyan ARDO məhsullarının və innovativ texnologiyaların rəsmi kataloqu.
+            {heroSubtitle || 'Sahara Electronics — İtalyan ARDO məhsullarının və innovativ texnologiyaların rəsmi kataloqu.'}
           </p>
         </div>
 

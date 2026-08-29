@@ -71,6 +71,14 @@ export const catalogApi = {
     return body as ProductMedia;
   },
 
+  changePassword(oldPassword: string, newPassword: string, csrfToken: string) {
+    return request<{ ok: true }>('/api/admin/change-password', {
+      method: 'POST',
+      headers: { ...jsonHeaders, 'X-CSRF-Token': csrfToken },
+      body: JSON.stringify({ oldPassword, newPassword }),
+    });
+  },
+
   logout(csrfToken: string) {
     return request<{ ok: true }>('/api/admin/logout', {
       method: 'POST',

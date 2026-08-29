@@ -1,6 +1,20 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { Share2, Eye, Check, Flame, Layers, Wind, Snowflake, Box, Refrigerator, Image as ImageIcon, PlayCircle, Phone } from 'lucide-react';
+import { View, Text, StyleSheet } from 'react-native';
+import {
+  Share2,
+  Check,
+  Flame,
+  Layers,
+  Wind,
+  Snowflake,
+  Box,
+  Refrigerator,
+  Image as ImageIcon,
+  PlayCircle,
+  Phone,
+  PackageCheck,
+  Clock,
+} from 'lucide-react';
 import { Product } from '../types/product';
 import { ThemeColors } from '../types/theme';
 import { WhatsAppIcon } from './WhatsAppIcon';
@@ -16,6 +30,9 @@ interface ProductCardProps {
   brandName?: string;
   brandOrigin?: string;
   rank?: number;
+  whatsappButtonText?: string;
+  callButtonText?: string;
+  shareButtonText?: string;
 }
 
 export const ProductCard: React.FC<ProductCardProps> = ({
@@ -25,10 +42,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onShare,
   onWhatsApp,
   onCall,
-  onCopyLink,
   brandName,
   brandOrigin,
   rank,
+  whatsappButtonText = 'WhatsApp',
+  callButtonText = 'Zəng et',
+  shareButtonText = 'Paylaş',
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isMobileInView, setIsMobileInView] = useState(false);
@@ -118,6 +137,27 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     }
   };
 
+  const getBadgeBgColor = () => {
+    switch (product.badgeColor) {
+      case 'green':
+        return '#16a34a';
+      case 'blue':
+        return '#2563eb';
+      case 'amber':
+        return '#d97706';
+      case 'purple':
+        return '#7c3aed';
+      case 'red':
+      default:
+        return theme.primary;
+    }
+  };
+
+  const discountPercent =
+    product.price && product.oldPrice && product.oldPrice > product.price
+      ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
+      : null;
+
   return (
     <div
       ref={cardRef}
@@ -134,10 +174,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
-        boxShadow: theme.mode === 'dark' ? '0 4px 16px rgba(0,0,0,0.35)' : '0 2px 10px rgba(0,0,0,0.06)',
+        boxShadow:
+          theme.mode === 'dark' ? '0 4px 16px rgba(0,0,0,0.35)' : '0 2px 10px rgba(0,0,0,0.06)',
       }}
     >
-      {/* Non-stretched, proportional Image container */}
+      {/* Proportional Image container */}
       <div
         className="product-card-img-wrap"
         style={{
@@ -274,7 +315,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
-              backgroundColor: theme.mode === 'dark' ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.95)',
+              backgroundColor:
+                theme.mode === 'dark' ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.95)',
               border: `1px solid ${theme.border}`,
               padding: '4px 8px',
               borderRadius: '6px',
@@ -288,11 +330,12 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             <span>{product.categoryName}</span>
           </div>
 
-          <div style={{ display: 'flex', gap: '4px' }}>
+          <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
             {product.manufacturingCountry && (
               <span
                 style={{
-                  backgroundColor: theme.mode === 'dark' ? 'rgba(30, 41, 59, 0.9)' : 'rgba(241, 245, 249, 0.95)',
+                  backgroundColor:
+                    theme.mode === 'dark' ? 'rgba(30, 41, 59, 0.9)' : 'rgba(241, 245, 249, 0.95)',
                   color: theme.textSecondary,
                   fontSize: '10px',
                   fontWeight: 700,
@@ -308,14 +351,15 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             {product.badgeText && (
               <span
                 style={{
-                  backgroundColor: theme.primary,
+                  backgroundColor: getBadgeBgColor(),
                   color: '#ffffff',
                   fontSize: '10px',
                   fontWeight: 800,
-                  padding: '3px 7px',
+                  padding: '3px 8px',
                   borderRadius: '6px',
                   textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
+                  letterSpacing: '0.4px',
+                  boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
                 }}
               >
                 {product.badgeText}
@@ -342,6 +386,69 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           >
             {product.title}
           </Text>
+
+          {/* Pricing Row if configured */}
+          {product.price !== undefined && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'baseline',
+                gap: '8px',
+                margin: '6px 0 8px 0',
+              }}
+            >
+              <span
+                style={{
+                  fontSize: '18px',
+                  fontWeight: 900,
+                  color: theme.text,
+                  letterSpacing: '-0.3px',
+                }}
+              >
+                {product.price} {product.currency || '₼'}
+              </span>
+
+              {product.oldPrice && product.oldPrice > product.price && (
+                <span
+                  style={{
+                    fontSize: '13px',
+                    color: theme.textMuted,
+                    textDecoration: 'line-through',
+                  }}
+                >
+                  {product.oldPrice} {product.currency || '₼'}
+                </span>
+              )}
+
+              {discountPercent && (
+                <span
+                  style={{
+                    backgroundColor: '#16a34a',
+                    color: '#ffffff',
+                    fontSize: '11px',
+                    fontWeight: 800,
+                    padding: '2px 6px',
+                    borderRadius: '4px',
+                  }}
+                >
+                  -{discountPercent}%
+                </span>
+              )}
+            </div>
+          )}
+
+          {/* Stock Availability indicator */}
+          {product.stockStatus === 'preorder' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '8px', color: '#d97706', fontSize: '11px', fontWeight: 700 }}>
+              <Clock size={12} />
+              <span>Sifarişlə çatdırılma</span>
+            </div>
+          )}
+          {product.stockStatus === 'out_of_stock' && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '8px', color: '#ef4444', fontSize: '11px', fontWeight: 700 }}>
+              <span>Müvəqqəti bitib</span>
+            </div>
+          )}
 
           {/* Highlights Checklist */}
           {product.highlights && product.highlights.length > 0 && (
@@ -385,7 +492,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             }}
           >
             <WhatsAppIcon size={16} color="#ffffff" />
-            <span style={{ whiteSpace: 'nowrap' }}>WhatsApp</span>
+            <span style={{ whiteSpace: 'nowrap' }}>{whatsappButtonText}</span>
           </button>
 
           <button
@@ -410,14 +517,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             }}
           >
             <Phone size={15} color="#ffffff" />
-            <span style={{ whiteSpace: 'nowrap' }}>Zəng et</span>
+            <span style={{ whiteSpace: 'nowrap' }}>{callButtonText}</span>
           </button>
 
           <button
             type="button"
             className="card-action-btn-share"
             onClick={() => onShare(product)}
-            title="Paylaş"
+            title={shareButtonText}
             style={{
               width: '40px',
               height: '40px',
@@ -452,7 +559,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 6,
+    marginBottom: 4,
   },
   modelCode: {
     fontSize: 13,
@@ -464,15 +571,15 @@ const styles = StyleSheet.create({
     fontWeight: '600',
   },
   productTitle: {
-    fontFamily: 'Outfit, sans-serif',
-    fontSize: 16,
+    fontSize: 15,
     fontWeight: '700',
-    lineHeight: 22,
-    marginBottom: 10,
+    lineHeight: 20,
+    marginBottom: 8,
+    cursor: 'pointer',
   },
   highlightsBox: {
     gap: 4,
-    marginBottom: 12,
+    marginVertical: 4,
   },
   highlightRow: {
     flexDirection: 'row',
@@ -482,48 +589,5 @@ const styles = StyleSheet.create({
   highlightText: {
     fontSize: 12,
     flex: 1,
-  },
-  actionButtonGroup: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  whatsappBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: 10,
-    paddingHorizontal: 6,
-    borderRadius: 8,
-  },
-  whatsappBtnText: {
-    color: '#ffffff',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  callBtn: {
-    flex: 1,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 5,
-    paddingVertical: 10,
-    paddingHorizontal: 6,
-    borderRadius: 8,
-  },
-  callBtnText: {
-    color: '#ffffff',
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  shareBtn: {
-    width: 40,
-    height: 40,
-    borderRadius: 8,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 });
