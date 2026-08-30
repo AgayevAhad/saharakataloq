@@ -100,35 +100,36 @@ describe('Image Positioning (Focal Point / Alignment) & Pan-Zoom & Visual Crop S
     fireEvent.click(cropStudioBtns[0]);
 
     // Studio modal header should appear
-    expect(screen.getByText(/Məhsul Şəkli Canlı Kart Duruşu & Kəsim Studiyası/i)).toBeTruthy();
-    expect(screen.getByText(/🎴 Kataloq Kartı/i)).toBeTruthy();
+    expect(screen.getByText(/Dəqiq Şəkil Kəsmə & Çərçivələmə Studiyası/i)).toBeTruthy();
+    expect(screen.getByText(/🪄 Ağ Sahələri Avtomatik Kəs/i)).toBeTruthy();
+    expect(screen.getByText(/✂️ Sərbəst Kəsim/i)).toBeTruthy();
   });
 
-  it('interactively applies custom position in ImageCropStudioModal', () => {
-    const handleSavePosition = vi.fn();
+  it('interactively applies aspect ratios and triggers crop save in ImageCropStudioModal', () => {
+    const handleSaveCropped = vi.fn();
     render(
       <ImageCropStudioModal
         isOpen={true}
         imageUrl="/media/products/ardo-ar6120-white.jpg"
         initialObjectPosition="50% 50%"
-        initialFitMode="cover"
+        initialFitMode="contain"
         productTitle="ARDO Aspirator"
         theme={lightTheme}
         onClose={vi.fn()}
-        onSavePosition={handleSavePosition}
-        onSaveCroppedImage={vi.fn()}
+        onSavePosition={vi.fn()}
+        onSaveCroppedImage={handleSaveCropped}
       />
     );
 
-    // Click on Quick Focal preset (e.g. "⬆ Üst")
-    const topPreset = screen.getByRole('button', { name: /⬆ Üst/i });
-    fireEvent.click(topPreset);
+    // Click on 1:1 Aspect Ratio button
+    const ratioBtn = screen.getByRole('button', { name: '1:1' });
+    fireEvent.click(ratioBtn);
 
-    // Apply Position button
-    const applyBtn = screen.getByRole('button', { name: /🎯 Mövqeni Yadda Saxla/i });
-    fireEvent.click(applyBtn);
+    // Click on Auto Trim button
+    const autoTrimBtn = screen.getByRole('button', { name: /🪄 Ağ Sahələri Avtomatik Kəs/i });
+    fireEvent.click(autoTrimBtn);
 
-    expect(handleSavePosition).toHaveBeenCalledWith('50% 0%', 'cover');
+    expect(screen.getByText(/✂️ Kəsilmiş Şəkli Saxla & Məhsula Tətbiq Et/i)).toBeTruthy();
   });
 
   it('renders ProductCard with custom objectPosition and fitMode styling', () => {
