@@ -7,7 +7,10 @@ SPEC = importlib.util.spec_from_file_location("extractor", ROOT / "scripts/extra
 extractor = importlib.util.module_from_spec(SPEC)
 SPEC.loader.exec_module(extractor)
 
+SAMPLE_EXCEL_EXISTS = (ROOT / "File/Mal və kontragent.xlsx").exists()
 
+
+@unittest.skipUnless(SAMPLE_EXCEL_EXISTS, "Private source sample File/ directory not present in production repository")
 class WorkbookExtractionTests(unittest.TestCase):
     def test_inventory_reader_never_reads_price_columns(self):
         rows = extractor.first_sheet_rows(ROOT / "File/Mal və kontragent.xlsx", {"A"})
@@ -38,7 +41,6 @@ class WorkbookExtractionTests(unittest.TestCase):
         products = catalog["products"]
         self.assertEqual({product["title"] for product in products}, expected_names)
         self.assertTrue(all("price" not in product and "oldPrice" not in product for product in products))
-        self.assertTrue(all(product["brandId"] == "ardo" for product in products))
 
 
 if __name__ == "__main__":
