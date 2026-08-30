@@ -65,6 +65,7 @@ import { DEFAULT_ADDRESSES, DEFAULT_COUNTRIES, DEFAULT_SETTINGS } from '../data/
 import { ThemeColors } from '../types/theme';
 import { SaharaLogo } from './SaharaLogo';
 import { AdminCatalogPreview } from './AdminCatalogPreview';
+import { ModernCalendarPicker } from './ModernCalendarPicker';
 import {
   downloadFile,
   exportProductsToCsv,
@@ -853,36 +854,21 @@ export const CatalogAdmin: React.FC<Props> = ({
               </div>
 
               {analyticsRange === 'custom' && (
-                <div className="dash-custom-date-box" style={{ borderColor: theme.border, background: theme.bgSecondary }}>
-                  <div className="dash-custom-inputs">
-                    <label>
-                      <span>Başlanğıc:</span>
-                      <input
-                        type="date"
-                        value={customStartDate}
-                        onChange={(e) => setCustomStartDate(e.target.value)}
-                        style={{ background: theme.bgCard, color: theme.text, borderColor: theme.border }}
-                      />
-                    </label>
-                    <label>
-                      <span>Son tarix:</span>
-                      <input
-                        type="date"
-                        value={customEndDate}
-                        onChange={(e) => setCustomEndDate(e.target.value)}
-                        style={{ background: theme.bgCard, color: theme.text, borderColor: theme.border }}
-                      />
-                    </label>
-                    <button
-                      type="button"
-                      className="dash-custom-apply-btn"
-                      onClick={handleApplyCustomDate}
-                      style={{ background: theme.primary, color: '#fff' }}
-                    >
-                      <Search size={14} />
-                      <span>Filtrlə</span>
-                    </button>
-                  </div>
+                <div style={{ marginTop: '16px' }}>
+                  <ModernCalendarPicker
+                    theme={theme}
+                    startDate={customStartDate}
+                    endDate={customEndDate}
+                    onApply={(start, end) => {
+                      setCustomStartDate(start);
+                      setCustomEndDate(end);
+                      loadFilteredAnalytics('custom', start, end);
+                    }}
+                    onClose={() => {
+                      setAnalyticsRange('all');
+                      loadFilteredAnalytics('all');
+                    }}
+                  />
                 </div>
               )}
             </div>

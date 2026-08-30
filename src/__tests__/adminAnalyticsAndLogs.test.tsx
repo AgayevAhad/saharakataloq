@@ -123,10 +123,20 @@ describe('Admin Analytics Period Filtering', () => {
       expect(filterSpy).toHaveBeenCalledWith('today', undefined, undefined);
     });
 
-    // Click '📅 Fərdi Aralıq / Gün' to show date inputs
+    // Click '📅 Fərdi Aralıq / Gün' to show direct modern interactive calendar
     fireEvent.click(screen.getByText('📅 Fərdi Aralıq / Gün'));
-    expect(screen.getByText('Başlanğıc:')).toBeTruthy();
-    expect(screen.getByText('Son tarix:')).toBeTruthy();
+    expect(screen.getByText('Təqvim ilə Aralıq Seçin')).toBeTruthy();
+    expect(screen.getByText('Sürətli Seçimlər')).toBeTruthy();
+    expect(screen.getByText('Son 7 gün')).toBeTruthy();
+    expect(screen.getByText('Son 14 gün')).toBeTruthy();
+    expect(screen.getByText('Tətbiq et və Göstər')).toBeTruthy();
+
+    // Click 'Son 7 gün' preset and apply
+    fireEvent.click(screen.getByText('Son 7 gün'));
+    fireEvent.click(screen.getByText('Tətbiq et və Göstər'));
+    await waitFor(() => {
+      expect(filterSpy).toHaveBeenCalledWith('custom', expect.any(String), expect.any(String));
+    });
   });
 });
 

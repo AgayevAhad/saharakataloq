@@ -1834,3 +1834,294 @@ button, input, textarea, select { font: inherit; }
   opacity: 1;
   color: var(--primary, #dc2626);
 }
+
+/* ==========================================================================
+   MODERN INTERACTIVE CALENDAR & DATE RANGE PICKER
+   ========================================================================== */
+.modern-calendar-root {
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+  animation: calendarPopIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes calendarPopIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.modern-calendar-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.modern-calendar-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.modern-calendar-close-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.modern-calendar-close-btn:hover {
+  background: rgba(239, 68, 68, 0.12);
+  color: #ef4444 !important;
+  border-color: #ef4444;
+}
+
+.modern-calendar-body-grid {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+}
+
+@media (max-width: 640px) {
+  .modern-calendar-body-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.modern-calendar-presets-col {
+  padding: 16px 14px;
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.015);
+}
+
+@media (max-width: 640px) {
+  .modern-calendar-presets-col {
+    border-right: none;
+    border-bottom: 1px solid var(--border);
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+}
+
+.presets-label {
+  font-size: 11px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 4px;
+}
+
+.preset-btn {
+  padding: 8px 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: inherit;
+  font-size: 12.5px;
+  font-weight: 650;
+  text-align: left;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.preset-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+  transform: translateX(2px);
+}
+
+.modern-calendar-main-col {
+  padding: 18px 22px;
+}
+
+.calendar-nav-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.calendar-month-year-label {
+  font-size: 15px;
+  font-weight: 850;
+  letter-spacing: -0.01em;
+}
+
+.calendar-nav-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s ease;
+}
+
+.calendar-nav-btn:hover {
+  background: rgba(0, 0, 0, 0.06);
+  transform: scale(1.05);
+}
+
+.calendar-weekdays-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.weekday-cell {
+  font-size: 12px;
+  font-weight: 750;
+  padding: 4px 0;
+}
+
+.weekday-cell.weekend {
+  color: #dc2626 !important;
+}
+
+.calendar-days-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  row-gap: 4px;
+}
+
+.calendar-day-cell {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2px 0;
+  cursor: pointer;
+  user-select: none;
+}
+
+.calendar-day-cell.empty-cell {
+  cursor: default;
+}
+
+.calendar-day-cell.in-range {
+  background: rgba(220, 38, 38, 0.08);
+}
+
+.calendar-day-cell.is-start {
+  background: linear-gradient(90deg, transparent 50%, rgba(220, 38, 38, 0.08) 50%);
+  border-top-left-radius: 999px;
+  border-bottom-left-radius: 999px;
+}
+
+.calendar-day-cell.is-end {
+  background: linear-gradient(90deg, rgba(220, 38, 38, 0.08) 50%, transparent 50%);
+  border-top-right-radius: 999px;
+  border-bottom-right-radius: 999px;
+}
+
+.calendar-day-cell.is-start.is-end {
+  background: transparent !important;
+}
+
+.day-number-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  font-size: 13px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+  z-index: 2;
+}
+
+.calendar-day-cell:hover .day-number-btn:not(.active-point) {
+  background: rgba(0, 0, 0, 0.06) !important;
+  transform: scale(1.08);
+}
+
+.day-number-btn.active-point {
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.35);
+  transform: scale(1.05);
+}
+
+.day-number-btn.is-today:not(.active-point)::after {
+  content: '';
+  position: absolute;
+  bottom: 4px;
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--primary, #dc2626);
+}
+
+.modern-calendar-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.015);
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.calendar-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.calendar-reset-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  font-weight: 650;
+  background: transparent;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.calendar-reset-btn:hover {
+  background: rgba(0, 0, 0, 0.05);
+}
+
+.calendar-apply-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 750;
+  border: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.calendar-apply-btn:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+}
