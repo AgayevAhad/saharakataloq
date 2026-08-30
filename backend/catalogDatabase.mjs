@@ -251,6 +251,20 @@ export const createCatalogDatabase = (databasePath) => {
   if (!productColumns.includes('stock_status')) {
     db.exec("ALTER TABLE products ADD COLUMN stock_status TEXT NOT NULL DEFAULT 'in_stock';");
   }
+  if (!productColumns.includes('image_position')) {
+    db.exec("ALTER TABLE products ADD COLUMN image_position TEXT NOT NULL DEFAULT 'center';");
+  }
+  if (!productColumns.includes('image_fit')) {
+    db.exec("ALTER TABLE products ADD COLUMN image_fit TEXT NOT NULL DEFAULT 'contain';");
+  }
+
+  const productMediaColumns = db.prepare('PRAGMA table_info(product_media)').all().map((row) => row.name);
+  if (!productMediaColumns.includes('object_position')) {
+    db.exec("ALTER TABLE product_media ADD COLUMN object_position TEXT NOT NULL DEFAULT 'center';");
+  }
+  if (!productMediaColumns.includes('fit_mode')) {
+    db.exec("ALTER TABLE product_media ADD COLUMN fit_mode TEXT NOT NULL DEFAULT 'contain';");
+  }
 
   const settingsColumns = db.prepare('PRAGMA table_info(catalog_settings)').all().map((row) => row.name);
   if (!settingsColumns.includes('catalog_active')) {
@@ -333,6 +347,8 @@ export const createCatalogDatabase = (databasePath) => {
         url: item.url,
         alt: item.alt_text || undefined,
         poster: item.poster || undefined,
+        objectPosition: item.object_position || 'center',
+        fitMode: item.fit_mode || 'contain',
       }));
 
       return {
@@ -343,6 +359,8 @@ export const createCatalogDatabase = (databasePath) => {
         category: row.category_id,
         categoryName: row.category_name,
         image: row.primary_image,
+        imagePosition: row.image_position || 'center',
+        imageFit: row.image_fit || 'contain',
         gallery: media.filter((item) => item.type === 'image').map((item) => item.url),
         media,
         isFeatured: Boolean(row.is_featured),
@@ -464,7 +482,7 @@ export const createCatalogDatabase = (databasePath) => {
     const now = catalog.updatedAt || new Date().toISOString();
     const upsertBrand = db.prepare(`INSERT INTO brands(id,name,slug,origin_country,description,logo,coming_soon,active) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,slug=excluded.slug,origin_country=excluded.origin_country,description=excluded.description,logo=excluded.logo,coming_soon=excluded.coming_soon,active=excluded.active`);
     const upsertCategory = db.prepare(`INSERT INTO categories(id,name,slug,icon,active,sort_order) VALUES(?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,slug=excluded.slug,icon=excluded.icon,active=excluded.active,sort_order=excluded.sort_order`);
-    const upsertProduct = db.prepare(`INSERT INTO products(id,code,title,brand_id,category_id,primary_image,is_featured,is_new,badge_text,badge_color,price,old_price,currency,stock_status,short_description,manufacturing_country,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET code=excluded.code,title=excluded.title,brand_id=excluded.brand_id,category_id=excluded.category_id,primary_image=excluded.primary_image,is_featured=excluded.is_featured,is_new=excluded.is_new,badge_text=excluded.badge_text,badge_color=excluded.badge_color,price=excluded.price,old_price=excluded.old_price,currency=excluded.currency,stock_status=excluded.stock_status,short_description=excluded.short_description,manufacturing_country=excluded.manufacturing_country,status=excluded.status,updated_at=excluded.updated_at`);
+    const upsertProduct = db.prepare(`INSERT INTO products(id,code,title,brand_id,category_id,primary_image,is_featured,is_new,badge_text,badge_color,price,old_price,currency,stock_status,short_description,manufacturing_country,status,image_position,image_fit,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET code=excluded.code,title=excluded.title,brand_id=excluded.brand_id,category_id=excluded.category_id,primary_image=excluded.primary_image,is_featured=excluded.is_featured,is_new=excluded.is_new,badge_text=excluded.badge_text,badge_color=excluded.badge_color,price=excluded.price,old_price=excluded.old_price,currency=excluded.currency,stock_status=excluded.stock_status,short_description=excluded.short_description,manufacturing_country=excluded.manufacturing_country,status=excluded.status,image_position=excluded.image_position,image_fit=excluded.image_fit,updated_at=excluded.updated_at`);
 
     db.exec('BEGIN IMMEDIATE');
     try {
@@ -498,6 +516,8 @@ export const createCatalogDatabase = (databasePath) => {
           product.shortDesc || '',
           product.manufacturingCountry || '',
           product.status === 'published' ? 'published' : 'draft',
+          product.imagePosition || 'center',
+          product.imageFit || 'contain',
           createdAt,
           now
         );
@@ -506,7 +526,7 @@ export const createCatalogDatabase = (databasePath) => {
         db.prepare('DELETE FROM product_highlights WHERE product_id = ?').run(product.id);
         db.prepare('DELETE FROM product_specs WHERE product_id = ?').run(product.id);
 
-        (product.media || []).forEach((item, index) => db.prepare('INSERT INTO product_media(id,product_id,media_type,url,alt_text,poster,sort_order) VALUES(?,?,?,?,?,?,?)').run(item.id, product.id, item.type, item.url, item.alt || '', item.poster || '', index));
+        (product.media || []).forEach((item, index) => db.prepare('INSERT INTO product_media(id,product_id,media_type,url,alt_text,poster,object_position,fit_mode,sort_order) VALUES(?,?,?,?,?,?,?,?,?)').run(item.id, product.id, item.type, item.url, item.alt || '', item.poster || '', item.objectPosition || 'center', item.fitMode || 'contain', index));
         (product.highlights || []).forEach((value, index) => db.prepare('INSERT INTO product_highlights(product_id,value,sort_order) VALUES(?,?,?)').run(product.id, value, index));
         (product.specs || []).forEach((item, index) => db.prepare('INSERT INTO product_specs(id,product_id,name,value,description,icon,spec_group,sort_order) VALUES(?,?,?,?,?,?,?,?)').run(item.id, product.id, item.name, item.value || '', item.description || '', item.icon || '', item.group || 'Əsas', index));
       }

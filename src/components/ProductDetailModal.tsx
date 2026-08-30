@@ -37,11 +37,17 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
   const [activeTab, setActiveTab] = useState<'specs' | 'tech'>('specs');
   const [isFullscreenImage, setIsFullscreenImage] = useState(false);
   const [zoomScale, setZoomScale] = useState(1);
+  const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
 
   useEffect(() => {
     setActiveMediaIndex(0);
     setIsFullscreenImage(false);
+    setZoomScale(1);
+    setPanPosition({ x: 0, y: 0 });
+    setIsDragging(false);
   }, [product?.id]);
 
   // Prevent background scroll when modal or fullscreen image is open
@@ -56,10 +62,12 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
     };
   }, [visible, isFullscreenImage]);
 
-  // Reset zoom on close
+  // Reset zoom and pan on close
   useEffect(() => {
     if (!isFullscreenImage) {
       setZoomScale(1);
+      setPanPosition({ x: 0, y: 0 });
+      setIsDragging(false);
     }
   }, [isFullscreenImage]);
 
@@ -84,14 +92,80 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
     : [{ id: `${product.id}-main`, type: 'image' as const, url: product.image, alt: product.title }];
   const activeMedia = mediaItems[Math.min(activeMediaIndex, mediaItems.length - 1)];
 
+  const activeObjectPosition = (activeMedia as any)?.objectPosition || (product as any).imagePosition || 'center';
+  const activeFitMode = (activeMedia as any)?.fitMode || (product as any).imageFit || 'contain';
+
   const handlePrint = () => {
     if (typeof window !== 'undefined') {
       window.print();
     }
   };
 
+  const zoomIn = () => {
+    setZoomScale((prev) => Math.min(4, Number((prev + 0.5).toFixed(1))));
+  };
+
+  const zoomOut = () => {
+    setZoomScale((prev) => {
+      const next = Math.max(1, Number((prev - 0.5).toFixed(1)));
+      if (next === 1) setPanPosition({ x: 0, y: 0 });
+      return next;
+    });
+  };
+
+  const resetZoom = () => {
+    setZoomScale(1);
+    setPanPosition({ x: 0, y: 0 });
+    setIsDragging(false);
+  };
+
   const toggleZoom = () => {
-    setZoomScale((prev) => (prev === 1 ? 2 : prev === 2 ? 2.8 : 1));
+    setZoomScale((prev) => {
+      if (prev === 1) return 2;
+      setPanPosition({ x: 0, y: 0 });
+      return 1;
+    });
+  };
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (zoomScale <= 1) return;
+    setIsDragging(true);
+    setDragStart({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || zoomScale <= 1) return;
+    const dx = e.clientX - dragStart.x;
+    const dy = e.clientY - dragStart.y;
+    setPanPosition((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
+    setDragStart({ x: e.clientX, y: e.clientY });
+  };
+
+  const handleMouseUp = () => setIsDragging(false);
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (zoomScale <= 1 || e.touches.length !== 1) return;
+    setIsDragging(true);
+    setDragStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging || zoomScale <= 1 || e.touches.length !== 1) return;
+    const dx = e.touches[0].clientX - dragStart.x;
+    const dy = e.touches[0].clientY - dragStart.y;
+    setPanPosition((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
+    setDragStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+  };
+
+  const handleTouchEnd = () => setIsDragging(false);
+
+  const handleWheel = (e: React.WheelEvent) => {
+    const delta = e.deltaY < 0 ? 0.25 : -0.25;
+    setZoomScale((prev) => {
+      const next = Math.max(1, Math.min(4, Number((prev + delta).toFixed(2))));
+      if (next === 1) setPanPosition({ x: 0, y: 0 });
+      return next;
+    });
   };
 
   return (
@@ -184,7 +258,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                 <Share2 size={16} />
               </button>
 
-              {/* Close Button */}
               <button
                 onClick={onClose}
                 style={{
@@ -211,7 +284,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
 
           {/* Modal Scrollable Body */}
           <div className="modal-body-scroll">
-            {/* Top Flex: Image + Summary */}
             <div
               style={{
                 display: 'flex',
@@ -221,7 +293,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                 marginBottom: '16px',
               }}
             >
-              {/* Left: Image Card (Click to open Fullscreen) */}
+              {/* Left: Image Card */}
               <div
                 style={{
                   flex: '1 1 260px',
@@ -246,12 +318,21 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                     overflow: 'hidden',
                     cursor: activeMedia?.type === 'image' ? 'zoom-in' : 'default',
                   }}
-                  title="Tam ekranda böyütmək üçün klikləyin"
+                  title="Tam ekranda böyütmək və sürüşdürmək üçün klikləyin"
                 >
                   {activeMedia?.type === 'video' ? (
                     <video src={activeMedia.url} poster={activeMedia.poster} controls playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'contain' }} onClick={(event) => event.stopPropagation()} />
                   ) : activeMedia?.url ? (
-                    <img src={activeMedia.url} alt={activeMedia.alt || product.title} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain' }} />
+                    <img 
+                      src={activeMedia.url} 
+                      alt={activeMedia.alt || product.title} 
+                      style={{ 
+                        maxWidth: '100%', 
+                        maxHeight: '100%', 
+                        objectFit: activeFitMode as any,
+                        objectPosition: activeObjectPosition 
+                      }} 
+                    />
                   ) : (
                     <div style={{ color: theme.textMuted, fontSize: '12px' }}>Media daha sonra əlavə ediləcək</div>
                   )}
@@ -273,7 +354,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                     </div>
                   )}
 
-                  {/* Click to Zoom Hint Icon */}
                   {activeMedia?.type === 'image' && activeMedia.url && <div
                     style={{
                       position: 'absolute',
@@ -296,7 +376,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                   </div>}
                 </div>
 
-                {mediaItems.length > 1 && <div className="product-media-strip no-scrollbar">{mediaItems.map((media, index) => <button key={media.id} className={activeMediaIndex === index ? 'active' : ''} onClick={() => setActiveMediaIndex(index)} style={{ borderColor: activeMediaIndex === index ? theme.primary : theme.border, background: theme.bgSecondary }}>{media.type === 'video' ? <span>▶ Video</span> : <img src={media.url} alt={media.alt || `${product.title} ${index + 1}`} />}</button>)}</div>}
+                {mediaItems.length > 1 && <div className="product-media-strip no-scrollbar">{mediaItems.map((media, index) => <button key={media.id} className={activeMediaIndex === index ? 'active' : ''} onClick={() => setActiveMediaIndex(index)} style={{ borderColor: activeMediaIndex === index ? theme.primary : theme.border, background: theme.bgSecondary }}>{media.type === 'video' ? <span>▶ Video</span> : <img src={media.url} alt={media.alt || `${product.title} ${index + 1}`} style={{ objectFit: (media as any).fitMode || 'contain', objectPosition: (media as any).objectPosition || 'center' }} />}</button>)}</div>}
 
                 {/* Origin Banner */}
                 <div
@@ -349,7 +429,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                     {product.shortDesc}
                   </p>
 
-                  {/* Price & Discount in Modal */}
                   {product.price !== undefined && (
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '12px' }}>
                       <span style={{ fontSize: '22px', fontWeight: 900, color: theme.text }}>
@@ -360,15 +439,9 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                           {product.oldPrice} {product.currency || '₼'}
                         </span>
                       )}
-                      {product.oldPrice && product.oldPrice > product.price && (
-                        <span style={{ backgroundColor: '#16a34a', color: '#ffffff', fontSize: '12px', fontWeight: 800, padding: '2px 8px', borderRadius: '6px' }}>
-                          -{Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)}%
-                        </span>
-                      )}
                     </div>
                   )}
 
-                  {/* Selling Highlights */}
                   <div
                     style={{
                       backgroundColor: theme.bgSecondary,
@@ -390,7 +463,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                   </div>
                 </div>
 
-                {/* Action Buttons */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
                   <button
                     onClick={() => onWhatsApp(product)}
@@ -447,7 +519,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
               </div>
             </div>
 
-            {/* Navigation Tabs */}
             <div
               style={{
                 display: 'flex',
@@ -471,63 +542,24 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
               >
                 Texniki Xüsusiyyətlər
               </button>
-
             </div>
 
-            {/* TAB 1: SPECS */}
             {activeTab === 'specs' && (
               <div>
                 {Object.entries(specGroups).map(([groupName, items]) => (
                   <div key={groupName} style={{ marginBottom: '14px' }}>
-                    <div
-                      style={{
-                        color: theme.primary,
-                        fontSize: '11px',
-                        fontWeight: 800,
-                        letterSpacing: '0.5px',
-                        textTransform: 'uppercase',
-                        marginBottom: '6px',
-                      }}
-                    >
+                    <div style={{ color: theme.primary, fontSize: '11px', fontWeight: 800, letterSpacing: '0.5px', textTransform: 'uppercase', marginBottom: '6px' }}>
                       {groupName}
                     </div>
-                    <div
-                      style={{
-                        backgroundColor: theme.bgSecondary,
-                        border: `1px solid ${theme.border}`,
-                        borderRadius: '10px',
-                        overflow: 'hidden',
-                      }}
-                    >
+                    <div style={{ backgroundColor: theme.bgSecondary, border: `1px solid ${theme.border}`, borderRadius: '10px', overflow: 'hidden' }}>
                       {items.map((item, idx) => (
-                        <div
-                          key={item.id || idx}
-                          style={{
-                            display: 'flex',
-                            flexDirection: 'row',
-                            justifyContent: 'space-between',
-                            alignItems: 'center',
-                            padding: '8px 12px',
-                            borderBottom: idx < items.length - 1 ? `1px solid ${theme.border}` : 'none',
-                            backgroundColor: idx % 2 === 0 ? 'transparent' : (theme.mode === 'dark' ? '#101726' : '#ffffff'),
-                          }}
-                        >
+                        <div key={item.id || idx} style={{ display: 'flex', flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: '8px 12px', borderBottom: idx < items.length - 1 ? `1px solid ${theme.border}` : 'none', backgroundColor: idx % 2 === 0 ? 'transparent' : (theme.mode === 'dark' ? '#101726' : '#ffffff') }}>
                           <div style={{ flex: '1.2', paddingRight: '8px' }}>
                             <div style={{ color: theme.text, fontSize: '12px', fontWeight: 600 }}>{item.name}</div>
-                            {item.description && (
-                              <div style={{ color: theme.textMuted, fontSize: '10px', marginTop: '1px' }}>
-                                {item.description}
-                              </div>
-                            )}
+                            {item.description && <div style={{ color: theme.textMuted, fontSize: '10px', marginTop: '1px' }}>{item.description}</div>}
                           </div>
                           <div style={{ flex: '1', textAlign: 'right' }}>
-                            <span
-                              style={{
-                                color: item.value ? (theme.mode === 'dark' ? '#38bdf8' : '#0284c7') : theme.textMuted,
-                                fontSize: '12px',
-                                fontWeight: 600,
-                              }}
-                            >
+                            <span style={{ color: item.value ? (theme.mode === 'dark' ? '#38bdf8' : '#0284c7') : theme.textMuted, fontSize: '12px', fontWeight: 600 }}>
                               {item.value ? item.value : '[Qeyd edilməyib]'}
                             </span>
                           </div>
@@ -538,148 +570,63 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                 ))}
               </div>
             )}
-
           </div>
         </div>
       </div>
 
-      {/* FULLSCREEN IMAGE LIGHTBOX MODAL */}
+      {/* FULLSCREEN ZOOM & PAN LIGHTBOX VIEW */}
       {isFullscreenImage && (
         <div
-          className="modal-backdrop-anim"
           style={{
             position: 'fixed',
             inset: 0,
-            width: '100vw',
-            height: '100dvh',
-            backgroundColor: 'rgba(0, 0, 0, 0.95)',
-            zIndex: 999999,
+            zIndex: 99999,
+            backgroundColor: 'rgba(5, 7, 12, 0.96)',
+            backdropFilter: 'blur(16px)',
             display: 'flex',
             flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: '16px',
-            touchAction: 'none',
           }}
           onClick={(e) => {
-            if (e.target === e.currentTarget) setIsFullscreenImage(false);
+            if (e.target === e.currentTarget && !isDragging) setIsFullscreenImage(false);
           }}
         >
-          {/* Top Control Bar */}
-          <div
-            style={{
-              position: 'absolute',
-              top: 'max(16px, env(safe-area-inset-top, 16px))',
-              left: '16px',
-              right: '16px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              zIndex: 10,
-            }}
-          >
-            <div
-              style={{
-                backgroundColor: 'rgba(255, 255, 255, 0.15)',
-                color: '#ffffff',
-                padding: '6px 12px',
-                borderRadius: '8px',
-                fontSize: '13px',
-                fontWeight: 700,
-                backdropFilter: 'blur(8px)',
-              }}
-            >
-              {product.code} - {product.title}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', background: 'rgba(15, 23, 42, 0.6)', zIndex: 30 }}>
+            <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', color: '#ffffff', padding: '6px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: 700, backdropFilter: 'blur(8px)' }}>
+              {product.code} — {product.title}
             </div>
-
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <button
-                onClick={toggleZoom}
-                style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.2)',
-                  border: 'none',
-                  color: '#ffffff',
-                  padding: '8px 12px',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  backdropFilter: 'blur(8px)',
-                }}
-              >
-                {zoomScale > 1 ? <ZoomOut size={16} /> : <ZoomIn size={16} />}
-                <span>{zoomScale > 1 ? `${zoomScale}x Sıfırla` : 'Böyüt'}</span>
-              </button>
-
-              <button
-                onClick={() => setIsFullscreenImage(false)}
-                style={{
-                  backgroundColor: theme.primary,
-                  border: 'none',
-                  color: '#ffffff',
-                  padding: '8px 14px',
-                  borderRadius: '8px',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
-                  fontSize: '13px',
-                  fontWeight: 800,
-                  boxShadow: '0 2px 10px rgba(220, 38, 38, 0.5)',
-                }}
-              >
-                <X size={18} />
-                <span>Bağla</span>
-              </button>
-            </div>
+            <button onClick={() => setIsFullscreenImage(false)} style={{ backgroundColor: theme.primary, border: 'none', color: '#ffffff', padding: '8px 16px', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 800 }}>
+              <X size={18} /> <span>Bağla</span>
+            </button>
           </div>
 
-          {/* Centered Zoomable Image */}
+          <div className="zoom-floating-controls" style={{ position: 'absolute', top: '80px', right: '20px', zIndex: 40, display: 'flex', gap: '8px' }}>
+            <button type="button" className="zoom-btn" onClick={zoomOut} disabled={zoomScale <= 1} title="Kiçilt (-)"><ZoomOut size={16} /></button>
+            <span style={{ color: '#fff', fontSize: '12px', fontWeight: 700 }}>{Math.round(zoomScale * 100)}%</span>
+            <button type="button" className="zoom-btn" onClick={zoomIn} disabled={zoomScale >= 4} title="Böyüt (+)"><ZoomIn size={16} /></button>
+            {zoomScale > 1 && <button type="button" onClick={resetZoom} title="1x Orijinal ölçüyə sıfırla" style={{ cursor: 'pointer', border: 'none', borderRadius: '8px', padding: '4px 8px' }}>1x Sıfırla</button>}
+          </div>
+
           <div
-            style={{
-              flex: 1,
-              width: '100%',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              overflow: 'hidden',
-              cursor: zoomScale > 1 ? 'zoom-out' : 'zoom-in',
-            }}
-            onClick={toggleZoom}
+            className={`zoom-pan-container ${zoomScale > 1 ? 'is-zoomed' : ''}`}
+            onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}
+            onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} onWheel={handleWheel}
+            onDoubleClick={toggleZoom}
+            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', cursor: isDragging ? 'grabbing' : 'grab' }}
           >
             <img
               src={activeMedia?.url || product.image}
               alt={activeMedia?.alt || product.title}
+              draggable={false}
               style={{
-                maxWidth: '92vw',
-                maxHeight: '82vh',
-                objectFit: 'contain',
-                borderRadius: '8px',
-                transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-                transform: `scale(${zoomScale})`,
+                maxWidth: '90vw',
+                maxHeight: '80vh',
+                objectFit: activeFitMode as any,
+                objectPosition: activeObjectPosition,
+                transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoomScale})`,
+                transition: isDragging ? 'none' : 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
                 userSelect: 'none',
               }}
             />
-          </div>
-
-          {/* Bottom Zoom / Close Hint */}
-          <div
-            style={{
-              position: 'absolute',
-              bottom: 'max(16px, env(safe-area-inset-bottom, 16px))',
-              backgroundColor: 'rgba(0, 0, 0, 0.6)',
-              color: '#94a3b8',
-              padding: '6px 14px',
-              borderRadius: '20px',
-              fontSize: '11px',
-              fontWeight: 500,
-              backdropFilter: 'blur(4px)',
-            }}
-          >
-            🔍 Şəkilə toxunaraq böyüdüb-kiçildə bilərsiniz
           </div>
         </div>
       )}

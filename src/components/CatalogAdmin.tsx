@@ -46,6 +46,8 @@ import {
   X,
   XCircle,
   Zap,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react';
 import { AdminPayload, catalogApi } from '../services/catalogApi';
 import {
@@ -183,9 +185,13 @@ export const CatalogAdmin: React.FC<Props> = ({
   const [lightbox, setLightbox] = useState<{
     productTitle: string;
     productCode: string;
-    media: Array<{ url: string; type?: 'image' | 'video'; alt?: string }>;
+    media: Array<{ url: string; type?: 'image' | 'video'; alt?: string; objectPosition?: string; fitMode?: string }>;
     currentIndex: number;
   } | null>(null);
+  const [adminZoomScale, setAdminZoomScale] = useState(1);
+  const [adminPan, setAdminPan] = useState({ x: 0, y: 0 });
+  const [isAdminDragging, setIsAdminDragging] = useState(false);
+  const [adminDragStart, setAdminDragStart] = useState({ x: 0, y: 0 });
 
   // On-the-fly Category & Brand creation modal
   const [quickModal, setQuickModal] = useState<{
@@ -444,29 +450,50 @@ export const CatalogAdmin: React.FC<Props> = ({
 
   // Open Lightbox
   const openProductLightbox = (product: Product, initialMediaIndex = 0) => {
-    const mediaItems: Array<{ url: string; type?: 'image' | 'video'; alt?: string }> = [];
-    if (product.image) {
-      mediaItems.push({ url: product.image, type: 'image', alt: product.title });
-    }
+    const mediaItems: Array<{ url: string; type?: 'image' | 'video'; alt?: string; objectPosition?: string; fitMode?: string }> = [];
     if (product.media && product.media.length) {
       product.media.forEach((m) => {
         if (m.url && !mediaItems.some((item) => item.url === m.url)) {
-          mediaItems.push({ url: m.url, type: m.type, alt: m.alt || product.title });
+          mediaItems.push({
+            url: m.url,
+            type: m.type,
+            alt: m.alt || product.title,
+            objectPosition: m.objectPosition || product.imagePosition || 'center',
+            fitMode: m.fitMode || product.imageFit || 'contain',
+          });
         }
       });
+    } else if (product.image) {
+      mediaItems.push({
+        url: product.image,
+        type: 'image',
+        alt: product.title,
+        objectPosition: product.imagePosition || 'center',
+        fitMode: product.imageFit || 'contain',
+      });
     }
+
     if (product.gallery && product.gallery.length) {
       product.gallery.forEach((g) => {
         if (g && !mediaItems.some((item) => item.url === g)) {
-          mediaItems.push({ url: g, type: 'image', alt: product.title });
+          mediaItems.push({
+            url: g,
+            type: 'image',
+            alt: product.title,
+            objectPosition: 'center',
+            fitMode: 'contain',
+          });
         }
       });
     }
 
     if (!mediaItems.length) {
-      mediaItems.push({ url: '/media/brands/ardo-logo.png', type: 'image', alt: product.title });
+      mediaItems.push({ url: '/media/brands/ardo-logo.png', type: 'image', alt: product.title, objectPosition: 'center', fitMode: 'contain' });
     }
 
+    setAdminZoomScale(1);
+    setAdminPan({ x: 0, y: 0 });
+    setIsAdminDragging(false);
     setLightbox({
       productTitle: product.title,
       productCode: product.code,
@@ -1946,7 +1973,7 @@ export const CatalogAdmin: React.FC<Props> = ({
         />
       )}
 
-      {/* LIGHTBOX ZOOM & MULTI-MEDIA VIEWER */}
+      {/* LIGHTBOX ZOOM & MULTI-MEDIA VIEWER WITH INTERACTIVE PAN & DRAG */}
       {lightbox && (
         <div className="admin-lightbox-backdrop" onClick={() => setLightbox(null)}>
           <div className="admin-lightbox-modal" onClick={(e) => e.stopPropagation()}>
@@ -1955,12 +1982,98 @@ export const CatalogAdmin: React.FC<Props> = ({
                 <h3>{lightbox.productTitle}</h3>
                 <span>Model: <b>{lightbox.productCode}</b> | Media: {lightbox.currentIndex + 1} / {lightbox.media.length}</span>
               </div>
-              <button className="admin-lightbox-close-btn" onClick={() => setLightbox(null)} title="Bağla">
-                <X size={20} />
-              </button>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {lightbox.media[lightbox.currentIndex]?.type !== 'video' && (
+                  <div className="zoom-floating-controls" style={{ position: 'static', padding: '4px 8px' }}>
+                    <button
+                      type="button"
+                      className="zoom-btn"
+                      onClick={() => setAdminZoomScale((prev) => {
+                        const next = Math.max(1, Number((prev - 0.5).toFixed(1)));
+                        if (next === 1) setAdminPan({ x: 0, y: 0 });
+                        return next;
+                      })}
+                      disabled={adminZoomScale <= 1}
+                      title="Kiçilt (-)"
+                    >
+                      <ZoomOut size={16} />
+                    </button>
+                    <span className="zoom-scale-pill">{Math.round(adminZoomScale * 100)}%</span>
+                    <button
+                      type="button"
+                      className="zoom-btn"
+                      onClick={() => setAdminZoomScale((prev) => Math.min(4, Number((prev + 0.5).toFixed(1))))}
+                      disabled={adminZoomScale >= 4}
+                      title="Böyüt (+)"
+                    >
+                      <ZoomIn size={16} />
+                    </button>
+                    {adminZoomScale > 1 && (
+                      <button
+                        type="button"
+                        className="zoom-btn reset-btn"
+                        onClick={() => {
+                          setAdminZoomScale(1);
+                          setAdminPan({ x: 0, y: 0 });
+                        }}
+                        title="1x Sıfırla"
+                      >
+                        1x Sıfırla
+                      </button>
+                    )}
+                  </div>
+                )}
+                <button className="admin-lightbox-close-btn" onClick={() => setLightbox(null)} title="Bağla">
+                  <X size={20} />
+                </button>
+              </div>
             </header>
 
-            <div className="admin-lightbox-viewer-box">
+            <div
+              className={`admin-lightbox-viewer-box zoom-pan-container ${adminZoomScale > 1 ? 'is-zoomed' : ''} ${isAdminDragging ? 'is-dragging' : ''}`}
+              onMouseDown={(e) => {
+                if (adminZoomScale <= 1) return;
+                setIsAdminDragging(true);
+                setAdminDragStart({ x: e.clientX, y: e.clientY });
+              }}
+              onMouseMove={(e) => {
+                if (!isAdminDragging || adminZoomScale <= 1) return;
+                const dx = e.clientX - adminDragStart.x;
+                const dy = e.clientY - adminDragStart.y;
+                setAdminPan((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
+                setAdminDragStart({ x: e.clientX, y: e.clientY });
+              }}
+              onMouseUp={() => setIsAdminDragging(false)}
+              onMouseLeave={() => setIsAdminDragging(false)}
+              onTouchStart={(e) => {
+                if (adminZoomScale <= 1 || e.touches.length !== 1) return;
+                setIsAdminDragging(true);
+                setAdminDragStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+              }}
+              onTouchMove={(e) => {
+                if (!isAdminDragging || adminZoomScale <= 1) return;
+                const dx = e.touches[0].clientX - adminDragStart.x;
+                const dy = e.touches[0].clientY - adminDragStart.y;
+                setAdminPan((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
+                setAdminDragStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+              }}
+              onTouchEnd={() => setIsAdminDragging(false)}
+              onWheel={(e) => {
+                const delta = e.deltaY < 0 ? 0.25 : -0.25;
+                setAdminZoomScale((prev) => {
+                  const next = Math.max(1, Math.min(4, Number((prev + delta).toFixed(2))));
+                  if (next === 1) setAdminPan({ x: 0, y: 0 });
+                  return next;
+                });
+              }}
+              onDoubleClick={() => {
+                setAdminZoomScale((prev) => {
+                  if (prev === 1) return 2;
+                  setAdminPan({ x: 0, y: 0 });
+                  return 1;
+                });
+              }}
+            >
               {lightbox.media[lightbox.currentIndex]?.type === 'video' ? (
                 <video
                   src={lightbox.media[lightbox.currentIndex]?.url}
@@ -1972,28 +2085,50 @@ export const CatalogAdmin: React.FC<Props> = ({
                 <img
                   src={lightbox.media[lightbox.currentIndex]?.url}
                   alt={lightbox.media[lightbox.currentIndex]?.alt || lightbox.productTitle}
+                  draggable={false}
                   className="admin-lightbox-img"
+                  style={{
+                    objectPosition: lightbox.media[lightbox.currentIndex]?.objectPosition || 'center',
+                    objectFit: (lightbox.media[lightbox.currentIndex]?.fitMode || 'contain') as any,
+                    transform: `translate(${adminPan.x}px, ${adminPan.y}px) scale(${adminZoomScale})`,
+                    transition: isAdminDragging ? 'none' : 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                    userSelect: 'none',
+                  }}
                 />
+              )}
+
+              {adminZoomScale > 1 && (
+                <div className="zoom-pan-hint" style={{ bottom: '12px' }}>
+                  🖱 Tutub sürüşdürərək hər tərəfə baxın
+                </div>
               )}
 
               {lightbox.media.length > 1 && (
                 <>
                   <button
                     className="admin-lightbox-nav-btn admin-lightbox-nav-prev"
-                    onClick={() => setLightbox((prev) => prev ? {
-                      ...prev,
-                      currentIndex: (prev.currentIndex - 1 + prev.media.length) % prev.media.length,
-                    } : null)}
+                    onClick={() => {
+                      setAdminZoomScale(1);
+                      setAdminPan({ x: 0, y: 0 });
+                      setLightbox((prev) => prev ? {
+                        ...prev,
+                        currentIndex: (prev.currentIndex - 1 + prev.media.length) % prev.media.length,
+                      } : null);
+                    }}
                     title="Əvvəlki media"
                   >
                     <ChevronLeft size={24} />
                   </button>
                   <button
                     className="admin-lightbox-nav-btn admin-lightbox-nav-next"
-                    onClick={() => setLightbox((prev) => prev ? {
-                      ...prev,
-                      currentIndex: (prev.currentIndex + 1) % prev.media.length,
-                    } : null)}
+                    onClick={() => {
+                      setAdminZoomScale(1);
+                      setAdminPan({ x: 0, y: 0 });
+                      setLightbox((prev) => prev ? {
+                        ...prev,
+                        currentIndex: (prev.currentIndex + 1) % prev.media.length,
+                      } : null);
+                    }}
                     title="Növbəti media"
                   >
                     <ChevronRight size={24} />
@@ -2008,9 +2143,13 @@ export const CatalogAdmin: React.FC<Props> = ({
                   <button
                     key={idx}
                     className={`admin-lightbox-thumb-btn ${idx === lightbox.currentIndex ? 'active' : ''}`}
-                    onClick={() => setLightbox((prev) => prev ? { ...prev, currentIndex: idx } : null)}
+                    onClick={() => {
+                      setAdminZoomScale(1);
+                      setAdminPan({ x: 0, y: 0 });
+                      setLightbox((prev) => prev ? { ...prev, currentIndex: idx } : null);
+                    }}
                   >
-                    {m.type === 'video' ? <span>🎬</span> : <img src={m.url} alt="" />}
+                    {m.type === 'video' ? <span>🎬</span> : <img src={m.url} alt="" style={{ objectPosition: m.objectPosition || 'center' }} />}
                   </button>
                 ))}
               </div>
@@ -3551,7 +3690,16 @@ export const ProductEditor = ({
                       title="Böyüdüb baxmaq üçün klikləyin"
                       style={{ cursor: 'pointer' }}
                     >
-                      {m.type === 'video' ? '🎬' : m.url ? <img src={m.url} alt={m.alt || ''} /> : '🖼'}
+                      {m.type === 'video' ? '🎬' : m.url ? (
+                        <img
+                          src={m.url}
+                          alt={m.alt || ''}
+                          style={{
+                            objectPosition: m.objectPosition || 'center',
+                            objectFit: (m.fitMode || 'contain') as any,
+                          }}
+                        />
+                      ) : '🖼'}
                     </div>
 
                     {/* Media URL Input */}
@@ -3626,6 +3774,70 @@ export const ProductEditor = ({
                     >
                       <Trash2 size={14} />
                     </button>
+
+                    {/* Position & Alignment Control Sub-Row */}
+                    <div className="media-pos-row">
+                      <div className="media-pos-label">
+                        <span>🎯 Şəkilin duruşu (Mövqe):</span>
+                      </div>
+
+                      {/* 9-Dot Visual Quick Alignment Picker */}
+                      <div className="media-pos-grid-picker" title="Tez mövqe seçimi (9 nöqtəli fokus)">
+                        {[
+                          { pos: 'top-left', icon: '↖', label: 'Yuxarı Sol' },
+                          { pos: 'top', icon: '⬆', label: 'Üst / Yuxarı' },
+                          { pos: 'top-right', icon: '↗', label: 'Yuxarı Sağ' },
+                          { pos: 'left', icon: '⬅', label: 'Sol' },
+                          { pos: 'center', icon: '⏺', label: 'Mərkəz (Orta)' },
+                          { pos: 'right', icon: '➡', label: 'Sağ' },
+                          { pos: 'bottom-left', icon: '↙', label: 'Aşağı Sol' },
+                          { pos: 'bottom', icon: '⬇', label: 'Alt / Aşağı' },
+                          { pos: 'bottom-right', icon: '↘', label: 'Aşağı Sağ' },
+                        ].map((btn) => (
+                          <button
+                            key={btn.pos}
+                            type="button"
+                            className={`media-pos-dot ${(m.objectPosition || 'center') === btn.pos ? 'active' : ''}`}
+                            onClick={() => updateMedia(i, { objectPosition: btn.pos })}
+                            title={btn.label}
+                          >
+                            {btn.icon}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Position Select Dropdown */}
+                      <select
+                        value={m.objectPosition || 'center'}
+                        onChange={(e) => updateMedia(i, { objectPosition: e.target.value })}
+                        className="media-pos-select"
+                        title="Duruş mövqeyini dəqiqləşdirin"
+                      >
+                        <option value="center">⏺ Mərkəz (Orta)</option>
+                        <option value="top">⬆ Üst (Yuxarı fokus)</option>
+                        <option value="bottom">⬇ Alt (Aşağı fokus)</option>
+                        <option value="left">⬅ Sol fokus</option>
+                        <option value="right">➡ Sağ fokus</option>
+                        <option value="top-left">↖ Yuxarı-Sol</option>
+                        <option value="top-right">↗ Yuxarı-Sağ</option>
+                        <option value="bottom-left">↙ Aşağı-Sol</option>
+                        <option value="bottom-right">↘ Aşağı-Sağ</option>
+                      </select>
+
+                      {/* Fit Mode Select Dropdown */}
+                      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginLeft: 'auto' }}>
+                        <span style={{ fontSize: '11px', color: 'rgba(127,127,127,0.85)', fontWeight: 600 }}>Görünüş:</span>
+                        <select
+                          value={m.fitMode || 'contain'}
+                          onChange={(e) => updateMedia(i, { fitMode: e.target.value as any })}
+                          className="media-fit-select"
+                          title="Kəsim / sığışdırma rejimi"
+                        >
+                          <option value="contain">🖼 Tam sığışdır (Contain)</option>
+                          <option value="cover">📐 Kartı doldur (Cover)</option>
+                        </select>
+                      </div>
+                    </div>
                   </div>
                 );
               })}

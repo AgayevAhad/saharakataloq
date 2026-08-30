@@ -215,15 +215,26 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
         {/* Product Image / Slideshow */}
         {coverImage ? (
-          <img
-            src={imageList[currentImageIdx] || coverImage}
-            alt={product.title}
-            loading="lazy"
-            style={{
-              opacity: isActive && videoItem ? 0 : 1,
-              transition: 'opacity 0.25s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
-            }}
-          />
+          (() => {
+            const currentImgUrl = imageList[currentImageIdx] || coverImage;
+            const activeMediaObj = (product.media || []).find((m) => m.url === currentImgUrl) || product.media?.[0];
+            const cardObjectPosition = activeMediaObj?.objectPosition || product.imagePosition || 'center';
+            const cardFitMode = activeMediaObj?.fitMode || product.imageFit || 'contain';
+
+            return (
+              <img
+                src={currentImgUrl}
+                alt={product.title}
+                loading="lazy"
+                style={{
+                  opacity: isActive && videoItem ? 0 : 1,
+                  objectFit: cardFitMode as any,
+                  objectPosition: cardObjectPosition,
+                  transition: 'opacity 0.25s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+                }}
+              />
+            );
+          })()
         ) : (
           <div className="media-placeholder">
             <ImageIcon size={34} />

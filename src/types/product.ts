@@ -27,6 +27,8 @@ export interface ProductMedia {
   url: string;
   alt?: string;
   poster?: string;
+  objectPosition?: 'center' | 'top' | 'bottom' | 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | string;
+  fitMode?: 'contain' | 'cover';
 }
 
 export interface ProductSpecItem {
@@ -45,6 +47,8 @@ export interface Product {
   category: ProductCategory;
   categoryName: string;
   image: string;
+  imagePosition?: 'center' | 'top' | 'bottom' | 'left' | 'right' | string;
+  imageFit?: 'contain' | 'cover';
   gallery?: string[];
   isFeatured?: boolean;
   isNew?: boolean;
