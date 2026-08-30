@@ -25,9 +25,10 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-# SQLite runtime locks / WAL
+# SQLite runtime locks / WAL / Media
 data/*.sqlite-shm
 data/*.sqlite-wal
+data/media/
 
 # OS / IDE
 .DS_Store
@@ -38,3 +39,8 @@ Thumbs.db
 *.swo
 .~lock.*
 *.tmp
+
+# Raw reference media & sample spreadsheets (Local only)
+Foto/
+File/
+
