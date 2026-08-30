@@ -7,4 +7,5 @@
 4. **Sticky Desktop Header**: Keep the header fixed/sticky at the top during scrolling with proper z-index and backdrop blur.
 5. **Multiple Addresses**: Full support for multiple store/showroom addresses in admin panel, database, and customer-facing components.
 6. **Admin Panel Synchronization**: Any new catalog feature, field, setting, brand, address, or model change MUST be fully supported and synchronized in the Admin Panel with intuitive UI, proper contrast, and end-to-end functionality.
+7. **Strict Responsiveness & Visual Integrity**: Responsiveness on BOTH Desktop (large screens, laptops) and Mobile (phones, tablets, touch devices) must NEVER be broken. Always maintain proper CSS grid/flex proportions, non-distorted images, card heights, touch targets, and automated test coverage for responsive layouts.
 

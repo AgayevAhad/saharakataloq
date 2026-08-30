@@ -253,7 +253,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     <div
       ref={cardRef}
       data-product-card-id={product.id}
-      className={`product-card ${isActive ? 'hovered is-focused' : ''} ${isMobileFocused ? 'mobile-focused' : ''}`}
+      className={`netflix-card-pop product-card ${isActive ? 'hovered is-focused' : ''} ${isMobileFocused ? 'mobile-focused' : ''}`}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {
         setIsHovered(false);
@@ -261,7 +261,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       }}
       style={{
         backgroundColor: theme.bgCard,
-        borderColor: theme.border,
+        border: `1px solid ${theme.border}`,
+        borderRadius: '14px',
+        display: 'flex',
+        flexDirection: 'column',
+        height: '100%',
         boxShadow: isActive
           ? `0 14px 34px -10px ${theme.mode === 'dark' ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.18)'}`
           : `0 2px 8px -2px ${theme.mode === 'dark' ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.06)'}`,
@@ -269,7 +273,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     >
       {/* Product Image / Video Frame Container with Touch Swiping */}
       <div
-        className="product-card-media"
+        className="product-card-img-wrap product-card-media"
         style={{
           backgroundColor: theme.mode === 'dark' ? '#0c101a' : '#f8fafc',
           cursor: 'pointer',
