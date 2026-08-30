@@ -156,7 +156,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
             onClick={() => onOpenArticle(currentArticle)}
             style={{
               backgroundColor: theme.mode === 'dark' ? 'rgba(239, 68, 68, 0.08)' : '#fef2f2',
-              border: `1.5px solid ${theme.mode === 'dark' ? 'rgba(239, 68, 68, 0.35)' : 'rgba(239, 68, 68, 0.4)'}`,
+              border: 'none',
               borderRadius: '12px',
               padding: '12px 16px',
               cursor: 'pointer',
@@ -164,7 +164,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
               alignItems: 'center',
               justifyContent: 'space-between',
               gap: '12px',
-              transition: 'transform 0.2s ease, border-color 0.2s ease',
+              transition: 'transform 0.2s ease, background-color 0.2s ease',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
