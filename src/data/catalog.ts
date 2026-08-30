@@ -123,6 +123,8 @@ export const DEFAULT_SETTINGS: CatalogSettings = {
   callButtonText: 'Zəng et',
   shareButtonText: 'Paylaş',
   scrollTopButtonText: 'Yuxarı',
+  catalogActive: true,
+  maintenanceMessage: 'Kataloqda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.',
 };
 
 export const normalizeProduct = (product: Product): Product => {
@@ -233,6 +235,8 @@ export const normalizeCatalog = (data?: Partial<CatalogData> | null): CatalogDat
       callButtonText: data?.settings?.callButtonText || DEFAULT_SETTINGS.callButtonText,
       shareButtonText: data?.settings?.shareButtonText || DEFAULT_SETTINGS.shareButtonText,
       scrollTopButtonText: data?.settings?.scrollTopButtonText || DEFAULT_SETTINGS.scrollTopButtonText,
+      catalogActive: data?.settings?.catalogActive !== undefined ? data.settings.catalogActive : true,
+      maintenanceMessage: data?.settings?.maintenanceMessage || DEFAULT_SETTINGS.maintenanceMessage,
     },
     countries,
     updatedAt: data?.updatedAt,

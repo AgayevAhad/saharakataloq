@@ -429,14 +429,17 @@ const server = http.createServer(async (req, res) => {
       const { password = '' } = await readBody(req);
       const actual = createHash('sha256').update(String(password)).digest();
       const expected = createHash('sha256').update(adminPassword).digest();
+      const userAgent = safeText(req.headers['user-agent'] || '', 300);
       if (!timingSafeEqual(actual, expected)) {
         attempts.count += 1; loginAttempts.set(ip, attempts);
+        draftDatabase.logAction({ category: 'auth', action: 'login_failed', title: 'Uğursuz giriş cəhdi', details: 'Yanlış şifrə daxil edildi', ipAddress: ip, userAgent, status: 'danger' });
         return send(res, 401, { error: 'Şifrə yanlışdır' });
       }
       loginAttempts.delete(ip);
       const token = randomBytes(32).toString('base64url');
       const csrfToken = randomBytes(24).toString('base64url');
       sessions.set(token, { ip, csrfToken, expiresAt: Date.now() + SESSION_TTL });
+      draftDatabase.logAction({ category: 'auth', action: 'login_success', title: 'Admin panelə uğurlu giriş', details: 'Yeni idarəetmə sessiyası başlandı', ipAddress: ip, userAgent, status: 'success' });
       return send(res, 200, { ok: true, csrfToken }, {
         'Set-Cookie': `sahara_admin=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${SESSION_TTL / 1000}${req.socket.encrypted ? '; Secure' : ''}`,
       });
@@ -447,16 +450,141 @@ const server = http.createServer(async (req, res) => {
       const analytics = catalogDatabase.getAnalytics();
       return send(res, 200, { ...catalog, analytics, csrfToken: session.csrfToken });
     }
+    if (path === '/api/admin/analytics' && req.method === 'GET') {
+      const session = requireAdmin(req, res); if (!session) return;
+      const range = url.searchParams.get('range') || 'all';
+      const from = url.searchParams.get('from') || undefined;
+      const to = url.searchParams.get('to') || undefined;
+      const filtered = catalogDatabase.getFilteredAnalytics({ range, fromDate: from, toDate: to });
+      return send(res, 200, filtered);
+    }
+    if (path === '/api/admin/logs' && req.method === 'GET') {
+      const session = requireAdmin(req, res); if (!session) return;
+      const category = url.searchParams.get('category') || 'all';
+      const search = url.searchParams.get('search') || '';
+      const limit = Number(url.searchParams.get('limit') || 100);
+      const offset = Number(url.searchParams.get('offset') || 0);
+      const result = draftDatabase.getLogs({ category, search, limit, offset });
+      return send(res, 200, result);
+    }
+    if (path === '/api/admin/logs/clear' && req.method === 'POST') {
+      const session = requireAdmin(req, res, true); if (!session) return;
+      draftDatabase.clearLogs();
+      catalogDatabase.clearLogs();
+      const userAgent = safeText(req.headers['user-agent'] || '', 300);
+      draftDatabase.logAction({ category: 'system', action: 'logs_cleared', title: 'Audit logları təmizləndi', details: 'Bütün köhnə log qeydləri silindi', ipAddress: session.ip, userAgent, status: 'warning' });
+      return send(res, 200, { ok: true });
+    }
+    if (path === '/api/admin/logs/export' && req.method === 'GET') {
+      const session = requireAdmin(req, res); if (!session) return;
+      const format = url.searchParams.get('format') || 'csv';
+      const category = url.searchParams.get('category') || 'all';
+      const result = draftDatabase.getLogs({ category, limit: 5000, offset: 0 });
+      if (format === 'json') {
+        res.writeHead(200, {
+          ...securityHeaders,
+          'Content-Type': 'application/json; charset=utf-8',
+          'Content-Disposition': `attachment; filename="sahara-audit-logs-${Date.now()}.json"`,
+        });
+        return res.end(JSON.stringify(result.logs, null, 2));
+      }
+      const headers = ['ID', 'Tarix', 'Kateqoriya', 'Hadisə', 'Başlıq', 'Detallar', 'Status', 'IP'];
+      const csvRows = [headers.join(',')];
+      for (const log of result.logs) {
+        csvRows.push([
+          log.id,
+          `"${log.createdAt}"`,
+          `"${log.category}"`,
+          `"${log.action}"`,
+          `"${String(log.title).replace(/"/g, '""')}"`,
+          `"${String(log.details).replace(/"/g, '""')}"`,
+          `"${log.status}"`,
+          `"${log.ipAddress}"`,
+        ].join(','));
+      }
+      res.writeHead(200, {
+        ...securityHeaders,
+        'Content-Type': 'text/csv; charset=utf-8',
+        'Content-Disposition': `attachment; filename="sahara-audit-logs-${Date.now()}.csv"`,
+      });
+      return res.end(csvRows.join('\n'));
+    }
+    if (path === '/api/admin/catalog/toggle-status' && req.method === 'POST') {
+      const session = requireAdmin(req, res, true); if (!session) return;
+      const body = await readBody(req);
+      const active = body.active !== false;
+      const message = safeText(body.message, 500) || 'Kataloqda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';
+      const draftCat = draftDatabase.getCatalog();
+      const updatedDraft = {
+        ...draftCat,
+        settings: {
+          ...draftCat.settings,
+          catalogActive: active,
+          maintenanceMessage: message,
+        },
+      };
+      draftDatabase.saveCatalog(updatedDraft);
+      const pubCat = catalogDatabase.getCatalog();
+      const updatedPub = {
+        ...pubCat,
+        settings: {
+          ...pubCat.settings,
+          catalogActive: active,
+          maintenanceMessage: message,
+        },
+      };
+      catalogDatabase.saveCatalog(updatedPub);
+      const userAgent = safeText(req.headers['user-agent'] || '', 300);
+      draftDatabase.logAction({
+        category: 'catalog_status',
+        action: active ? 'catalog_resumed' : 'catalog_paused',
+        title: active ? 'Kataloq fəaliyyəti bərpa edildi (Yayımda)' : 'Kataloq fəaliyyəti dayandırıldı (Profilaktika)',
+        details: active ? 'Ziyarətçilər kataloqa normal baxa bilər' : `Mesaj: ${message}`,
+        ipAddress: session.ip,
+        userAgent,
+        status: active ? 'success' : 'warning',
+      });
+      return send(res, 200, { ok: true, active, message });
+    }
     if (path === '/api/admin/catalog' && req.method === 'PUT') {
       const session = requireAdmin(req, res, true); if (!session) return;
       const catalog = validateCatalog(await readBody(req));
       draftDatabase.saveCatalog(catalog);
+      const userAgent = safeText(req.headers['user-agent'] || '', 300);
+      draftDatabase.logAction({
+        category: 'product',
+        action: 'draft_save',
+        title: 'Qaralama kataloq yeniləndi',
+        details: `${catalog.products.length} məhsul, ${catalog.categories.length} kateqoriya, ${catalog.brands.length} brend`,
+        ipAddress: session.ip,
+        userAgent,
+        status: 'info',
+      });
       return send(res, 200, { ok: true, updatedAt: catalog.updatedAt });
     }
     if (path === '/api/admin/publish' && req.method === 'POST') {
       const session = requireAdmin(req, res, true); if (!session) return;
       const catalog = validateCatalog(draftDatabase.getCatalog());
       catalogDatabase.saveCatalog(catalog);
+      const userAgent = safeText(req.headers['user-agent'] || '', 300);
+      draftDatabase.logAction({
+        category: 'product',
+        action: 'catalog_publish',
+        title: 'Kataloq ictimai canlı yayıma buraxıldı',
+        details: `${catalog.products.length} məhsul dərc edildi`,
+        ipAddress: session.ip,
+        userAgent,
+        status: 'success',
+      });
+      catalogDatabase.logAction({
+        category: 'product',
+        action: 'catalog_publish',
+        title: 'Kataloq ictimai canlı yayıma buraxıldı',
+        details: `${catalog.products.length} məhsul dərc edildi`,
+        ipAddress: session.ip,
+        userAgent,
+        status: 'success',
+      });
       return send(res, 200, { ok: true, updatedAt: catalog.updatedAt });
     }
     if (path === '/api/admin/change-password' && req.method === 'POST') {
@@ -484,10 +612,30 @@ const server = http.createServer(async (req, res) => {
       } catch (err) {
         console.error('Failed to update .env password:', err);
       }
+      const userAgent = safeText(req.headers['user-agent'] || '', 300);
+      draftDatabase.logAction({
+        category: 'auth',
+        action: 'password_change',
+        title: 'Admin şifrəsi dəyişdirildi',
+        details: 'Admin girişi üçün yeni şifrə təyin edildi',
+        ipAddress: session.ip,
+        userAgent,
+        status: 'warning',
+      });
       return send(res, 200, { ok: true });
     }
     if (path === '/api/admin/logout' && req.method === 'POST') {
       const session = requireAdmin(req, res, true); if (!session) return;
+      const userAgent = safeText(req.headers['user-agent'] || '', 300);
+      draftDatabase.logAction({
+        category: 'auth',
+        action: 'logout',
+        title: 'Admin çıxışı',
+        details: 'Admin sessiyası sonlandırıldı',
+        ipAddress: session.ip,
+        userAgent,
+        status: 'info',
+      });
       sessions.delete(parseCookies(req).sahara_admin);
       return send(res, 200, { ok: true }, { 'Set-Cookie': 'sahara_admin=; HttpOnly; SameSite=Strict; Path=/; Max-Age=0' });
     }

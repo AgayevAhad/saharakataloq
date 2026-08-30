@@ -71,6 +71,33 @@ export const catalogApi = {
     return body as ProductMedia;
   },
 
+  getFilteredAnalytics(range: string, fromDate?: string, toDate?: string) {
+    const params = new URLSearchParams({ range });
+    if (fromDate) params.append('from', fromDate);
+    if (toDate) params.append('to', toDate);
+    return request<CatalogAnalytics>(`/api/admin/analytics?${params.toString()}`);
+  },
+
+  getLogs(category = 'all', search = '', limit = 100, offset = 0) {
+    const params = new URLSearchParams({ category, search, limit: String(limit), offset: String(offset) });
+    return request<{ logs: any[]; total: number }>(`/api/admin/logs?${params.toString()}`);
+  },
+
+  clearLogs(csrfToken: string) {
+    return request<{ ok: true }>('/api/admin/logs/clear', {
+      method: 'POST',
+      headers: { ...jsonHeaders, 'X-CSRF-Token': csrfToken },
+    });
+  },
+
+  toggleCatalogStatus(active: boolean, message: string, csrfToken: string) {
+    return request<{ ok: true; active: boolean; message: string }>('/api/admin/catalog/toggle-status', {
+      method: 'POST',
+      headers: { ...jsonHeaders, 'X-CSRF-Token': csrfToken },
+      body: JSON.stringify({ active, message }),
+    });
+  },
+
   changePassword(oldPassword: string, newPassword: string, csrfToken: string) {
     return request<{ ok: true }>('/api/admin/change-password', {
       method: 'POST',

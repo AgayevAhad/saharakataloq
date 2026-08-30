@@ -123,6 +123,8 @@ export interface CatalogSettings {
   callButtonText?: string;
   shareButtonText?: string;
   scrollTopButtonText?: string;
+  catalogActive?: boolean;
+  maintenanceMessage?: string;
 }
 
 export interface CatalogData {
@@ -146,4 +148,22 @@ export interface CatalogAnalytics {
   contactActions: ContactActionTotals;
   contactActionsByProduct: Record<string, ContactActionTotals>;
   lastViewedAt?: string;
+  range?: string;
+  fromDate?: string | null;
+  toDate?: string | null;
 }
+
+export type AnalyticsRange = 'all' | 'today' | 'yesterday' | 'this_week' | 'this_month' | 'last_30_days' | 'custom';
+
+export interface AuditLog {
+  id: number;
+  category: 'auth' | 'product' | 'category_brand' | 'settings' | 'catalog_status' | 'import_export' | 'system';
+  action: string;
+  title: string;
+  details: string;
+  ipAddress: string;
+  userAgent: string;
+  status: 'info' | 'success' | 'warning' | 'danger';
+  createdAt: string;
+}
+

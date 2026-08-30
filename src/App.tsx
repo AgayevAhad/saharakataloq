@@ -5,7 +5,9 @@ import { lightTheme, darkTheme, ThemeMode } from './types/theme';
 import { DEFAULT_CATALOG, normalizeCatalog } from './data/catalog';
 import { filterCatalogProducts } from './utils/filter';
 import { phoneHref, whatsappHref } from './utils/contact';
+import { Lock, MessageCircle, Moon, Phone, Sparkles, Sun } from 'lucide-react';
 import { Header } from './components/Header';
+import { SaharaLogo } from './components/SaharaLogo';
 import { BrandShowcase } from './components/BrandShowcase';
 import { BannerHero } from './components/BannerHero';
 import { ProductCard } from './components/ProductCard';
@@ -173,6 +175,75 @@ export const App: React.FC = () => {
     if (!adminChecked) return <div className="app-loading" style={{ background: activeTheme.bg, color: activeTheme.text }}>Admin panel hazırlanır...</div>;
     if (!adminData) return <AdminLogin theme={activeTheme} onLogin={async (password) => { await catalogApi.login(password); setAdminData(await catalogApi.getAdminData()); }} />;
     return <><CatalogAdmin initial={adminData} theme={activeTheme} showToast={showToast} onSave={async (data) => { await catalogApi.saveCatalog(data, adminData.csrfToken); }} onPublish={async (data) => { await catalogApi.saveCatalog(data, adminData.csrfToken); await catalogApi.publishCatalog(adminData.csrfToken); const updated = await catalogApi.getCatalog(); setCatalog(normalizeCatalog(updated)); }} onUpload={(file) => catalogApi.uploadMedia(file, adminData.csrfToken)} onLogout={async () => { await catalogApi.logout(adminData.csrfToken); setAdminData(null); }} /><Toast message={toast.message} visible={toast.visible} theme={activeTheme} /></>;
+  }
+
+  // Public Catalog Maintenance Mode (Paused by Admin)
+  if (catalog.settings?.catalogActive === false) {
+    const waNumber = catalog.settings.whatsappNumber || '';
+    const phNumber = catalog.settings.phoneNumber || '';
+    return (
+      <div className="maintenance-screen-wrap" style={{ background: activeTheme.bg, color: activeTheme.text }}>
+        <div className="maintenance-screen-card" style={{ background: activeTheme.bgCard, borderColor: activeTheme.border }}>
+          <header className="maintenance-header">
+            <SaharaLogo isDark={themeMode === 'dark'} />
+            <button
+              onClick={toggleTheme}
+              className="theme-toggle-mini"
+              style={{ borderColor: activeTheme.border, color: activeTheme.text }}
+              title="Görünüşü dəyiş"
+            >
+              {themeMode === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
+            </button>
+          </header>
+
+          <div className="maintenance-badge">
+            <Sparkles size={14} color="#d97706" />
+            <span>Kataloqda Profilaktik Yenilənmə</span>
+          </div>
+
+          <h1 className="maintenance-title" style={{ color: activeTheme.text }}>
+            Tezliklə Xidmətinizdəyik
+          </h1>
+
+          <p className="maintenance-desc" style={{ color: activeTheme.textSecondary }}>
+            {catalog.settings.maintenanceMessage || 'Kataloqda profilaktik yenilənmə aparılır. Tezliklə yeni məhsul və qiymətlərlə xidmətinizdəyik.'}
+          </p>
+
+          <div className="maintenance-contacts">
+            {waNumber && (
+              <a
+                href={whatsappHref(waNumber, 'Salam! Kataloq haqqında məlumat almaq istəyirəm.')}
+                target="_blank"
+                rel="noreferrer"
+                className="maintenance-btn wa-btn"
+              >
+                <MessageCircle size={17} />
+                <span>WhatsApp ilə Əlaqə</span>
+              </a>
+            )}
+
+            {phNumber && (
+              <a
+                href={phoneHref(phNumber)}
+                className="maintenance-btn call-btn"
+                style={{ background: activeTheme.primary }}
+              >
+                <Phone size={17} />
+                <span>Zəng et ({phNumber})</span>
+              </a>
+            )}
+          </div>
+
+          <footer className="maintenance-footer" style={{ borderColor: activeTheme.border }}>
+            <span>{catalog.settings.companyName || 'Sahara Electronics'}</span>
+            <a href="/AdministratorNT" className="maintenance-admin-link">
+              <Lock size={12} />
+              <span>Admin Girişi</span>
+            </a>
+          </footer>
+        </div>
+      </div>
+    );
   }
 
   const selectedBrandInfo = selectedProduct ? catalog.brands.find((brand) => brand.id === selectedProduct.brandId) : undefined;

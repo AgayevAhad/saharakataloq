@@ -204,6 +204,26 @@ export const createCatalogDatabase = (databasePath) => {
       last_clicked_at TEXT,
       PRIMARY KEY (action_type, product_id)
     );
+    CREATE TABLE IF NOT EXISTS audit_logs (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      category TEXT NOT NULL,
+      action TEXT NOT NULL,
+      title TEXT NOT NULL,
+      details TEXT NOT NULL DEFAULT '',
+      ip_address TEXT NOT NULL DEFAULT '',
+      user_agent TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'info' CHECK(status IN ('info', 'success', 'warning', 'danger')),
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS audit_logs_created_idx ON audit_logs(created_at DESC);
+    CREATE INDEX IF NOT EXISTS audit_logs_category_idx ON audit_logs(category);
+    CREATE TABLE IF NOT EXISTS analytics_events (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      event_type TEXT NOT NULL,
+      product_id TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS analytics_events_date_idx ON analytics_events(created_at, event_type);
     INSERT OR IGNORE INTO schema_migrations(version, applied_at) VALUES (1, datetime('now'));
     INSERT OR IGNORE INTO catalog_analytics(id, catalog_views) VALUES (1, 0);
     INSERT OR IGNORE INTO catalog_settings(id, whatsapp_number, phone_number, updated_at) VALUES (1, '', '', datetime('now'));
@@ -233,6 +253,13 @@ export const createCatalogDatabase = (databasePath) => {
   }
 
   const settingsColumns = db.prepare('PRAGMA table_info(catalog_settings)').all().map((row) => row.name);
+  if (!settingsColumns.includes('catalog_active')) {
+    db.exec('ALTER TABLE catalog_settings ADD COLUMN catalog_active INTEGER NOT NULL DEFAULT 1 CHECK(catalog_active IN (0, 1));');
+  }
+  if (!settingsColumns.includes('maintenance_message')) {
+    db.exec("ALTER TABLE catalog_settings ADD COLUMN maintenance_message TEXT NOT NULL DEFAULT 'Kataloqda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';");
+  }
+
   const newSettingCols = [
     ['company_name', "TEXT NOT NULL DEFAULT 'Sahara Electronics'"],
     ['address', "TEXT NOT NULL DEFAULT 'Bakı şəhəri, Sədərək Ticarət Mərkəzi'"],
@@ -426,6 +453,8 @@ export const createCatalogDatabase = (databasePath) => {
       callButtonText: settingsRow?.call_button_text || 'Zəng et',
       shareButtonText: settingsRow?.share_button_text || 'Paylaş',
       scrollTopButtonText: settingsRow?.scroll_top_button_text || 'Yuxarı',
+      catalogActive: settingsRow?.catalog_active !== undefined ? Boolean(settingsRow.catalog_active) : true,
+      maintenanceMessage: settingsRow?.maintenance_message || 'Kataloqda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.',
     };
 
     return { brands, categories, products, settings, countries, articles, updatedAt: meta?.value };
@@ -521,10 +550,12 @@ export const createCatalogDatabase = (databasePath) => {
         const addressesJson = JSON.stringify(addressesToSave);
         const articlesJson = JSON.stringify(catalog.articles || defaultArticlesList);
         const primaryPhone = catalog.settings.phoneNumber || (catalog.settings.phoneNumbers && catalog.settings.phoneNumbers[0]) || '';
+        const catalogActiveVal = catalog.settings.catalogActive !== undefined ? bool(catalog.settings.catalogActive) : 1;
+        const maintenanceMsg = catalog.settings.maintenanceMessage || 'Kataloqda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';
 
         db.prepare(`
           UPDATE catalog_settings
-          SET whatsapp_number = ?, phone_number = ?, phone_numbers = ?, company_name = ?, address = ?, addresses = ?, email = ?, working_hours = ?, map_url = ?, location_note = ?, countries = ?, instagram_username = ?, instagram_url = ?, facebook_username = ?, facebook_url = ?, articles = ?, site_title = ?, site_subtitle = ?, header_caption = ?, catalog_heading = ?, catalog_subheading = ?, hero_banner_title = ?, hero_banner_subtitle = ?, footer_about = ?, footer_copyright = ?, primary_color = ?, font_family = ?, whatsapp_button_text = ?, call_button_text = ?, share_button_text = ?, scroll_top_button_text = ?, updated_at = ?
+          SET whatsapp_number = ?, phone_number = ?, phone_numbers = ?, company_name = ?, address = ?, addresses = ?, email = ?, working_hours = ?, map_url = ?, location_note = ?, countries = ?, instagram_username = ?, instagram_url = ?, facebook_username = ?, facebook_url = ?, articles = ?, site_title = ?, site_subtitle = ?, header_caption = ?, catalog_heading = ?, catalog_subheading = ?, hero_banner_title = ?, hero_banner_subtitle = ?, footer_about = ?, footer_copyright = ?, primary_color = ?, font_family = ?, whatsapp_button_text = ?, call_button_text = ?, share_button_text = ?, scroll_top_button_text = ?, catalog_active = ?, maintenance_message = ?, updated_at = ?
           WHERE id = 1
         `).run(
           catalog.settings.whatsappNumber || '',
@@ -558,6 +589,8 @@ export const createCatalogDatabase = (databasePath) => {
           catalog.settings.callButtonText || 'Zəng et',
           catalog.settings.shareButtonText || 'Paylaş',
           catalog.settings.scrollTopButtonText || 'Yuxarı',
+          catalogActiveVal,
+          maintenanceMsg,
           now
         );
       }
@@ -569,34 +602,158 @@ export const createCatalogDatabase = (databasePath) => {
     }
   };
 
-  const getAnalytics = () => {
-    const general = db.prepare('SELECT catalog_views, last_viewed_at FROM catalog_analytics WHERE id = 1').get();
-    const productRows = db.prepare('SELECT product_id, view_count FROM product_view_stats').all();
-    const contactRows = db.prepare('SELECT action_type, product_id, click_count FROM contact_action_stats').all();
+  const logAction = ({ category, action, title, details = '', ipAddress = '', userAgent = '', status = 'info' }) => {
+    try {
+      const stmt = db.prepare(`
+        INSERT INTO audit_logs(category, action, title, details, ip_address, user_agent, status, created_at)
+        VALUES(?, ?, ?, ?, ?, ?, ?, datetime('now'))
+      `);
+      stmt.run(
+        category || 'system',
+        action || 'action',
+        title || 'Audit Hadisəsi',
+        typeof details === 'object' ? JSON.stringify(details) : String(details || ''),
+        ipAddress || '',
+        userAgent || '',
+        status || 'info'
+      );
+    } catch (err) {
+      console.error('Audit log error:', err);
+    }
+  };
 
+  const getLogs = ({ category = 'all', search = '', limit = 100, offset = 0 } = {}) => {
+    let query = 'SELECT * FROM audit_logs';
+    const conditions = [];
+    const params = [];
+
+    if (category && category !== 'all') {
+      conditions.push('category = ?');
+      params.push(category);
+    }
+
+    if (search && search.trim()) {
+      conditions.push('(title LIKE ? OR details LIKE ? OR action LIKE ? OR ip_address LIKE ?)');
+      const pattern = `%${search.trim()}%`;
+      params.push(pattern, pattern, pattern, pattern);
+    }
+
+    if (conditions.length) {
+      query += ' WHERE ' + conditions.join(' AND ');
+    }
+
+    query += ' ORDER BY created_at DESC, id DESC LIMIT ? OFFSET ?';
+    params.push(Number(limit), Number(offset));
+
+    const rows = db.prepare(query).all(...params);
+
+    let countQuery = 'SELECT COUNT(*) as total FROM audit_logs';
+    const countParams = params.slice(0, -2);
+    if (conditions.length) {
+      countQuery += ' WHERE ' + conditions.join(' AND ');
+    }
+    const totalRow = db.prepare(countQuery).get(...countParams);
+
+    return {
+      logs: rows.map((r) => ({
+        id: r.id,
+        category: r.category,
+        action: r.action,
+        title: r.title,
+        details: r.details,
+        ipAddress: r.ip_address,
+        userAgent: r.user_agent,
+        status: r.status,
+        createdAt: r.created_at,
+      })),
+      total: totalRow?.total || 0,
+    };
+  };
+
+  const clearLogs = () => {
+    db.exec('DELETE FROM audit_logs');
+  };
+
+  const getFilteredAnalytics = ({ range = 'all', fromDate, toDate } = {}) => {
+    let dateFilter = '';
+    const params = [];
+
+    if (range === 'today') {
+      dateFilter = "date(created_at, 'localtime') = date('now', 'localtime')";
+    } else if (range === 'yesterday') {
+      dateFilter = "date(created_at, 'localtime') = date('now', 'localtime', '-1 day')";
+    } else if (range === 'this_week') {
+      dateFilter = "date(created_at, 'localtime') >= date('now', 'localtime', 'weekday 0', '-6 days')";
+    } else if (range === 'this_month') {
+      dateFilter = "strftime('%Y-%m', created_at, 'localtime') = strftime('%Y-%m', 'now', 'localtime')";
+    } else if (range === 'last_30_days') {
+      dateFilter = "date(created_at, 'localtime') >= date('now', 'localtime', '-30 days')";
+    } else if (range === 'custom' && fromDate) {
+      if (toDate) {
+        dateFilter = "date(created_at, 'localtime') BETWEEN date(?) AND date(?)";
+        params.push(fromDate, toDate);
+      } else {
+        dateFilter = "date(created_at, 'localtime') = date(?)";
+        params.push(fromDate);
+      }
+    }
+
+    let eventQuery = 'SELECT event_type, product_id, COUNT(*) as count FROM analytics_events';
+    if (dateFilter) {
+      eventQuery += ' WHERE ' + dateFilter;
+    }
+    eventQuery += ' GROUP BY event_type, product_id';
+
+    const eventRows = db.prepare(eventQuery).all(...params);
+
+    let catalogViews = 0;
     const productViews = {};
-    for (const row of productRows) productViews[row.product_id] = row.view_count;
-
     const contactActions = { whatsapp: 0, call: 0 };
     const contactActionsByProduct = {};
 
-    for (const row of contactRows) {
-      if (row.action_type === 'whatsapp' || row.action_type === 'call') {
-        contactActions[row.action_type] += row.click_count;
-        if (!contactActionsByProduct[row.product_id]) {
-          contactActionsByProduct[row.product_id] = { whatsapp: 0, call: 0 };
+    for (const row of eventRows) {
+      if (row.event_type === 'catalog_view') {
+        catalogViews += row.count;
+      } else if (row.event_type === 'product_view' && row.product_id) {
+        productViews[row.product_id] = (productViews[row.product_id] || 0) + row.count;
+      } else if (row.event_type === 'contact_whatsapp' || row.event_type === 'contact_call') {
+        const action = row.event_type === 'contact_whatsapp' ? 'whatsapp' : 'call';
+        contactActions[action] = (contactActions[action] || 0) + row.count;
+        if (row.product_id) {
+          if (!contactActionsByProduct[row.product_id]) {
+            contactActionsByProduct[row.product_id] = { whatsapp: 0, call: 0 };
+          }
+          contactActionsByProduct[row.product_id][action] = (contactActionsByProduct[row.product_id][action] || 0) + row.count;
         }
-        contactActionsByProduct[row.product_id][row.action_type] = row.click_count;
+      }
+    }
+
+    if (range === 'all') {
+      const general = db.prepare('SELECT catalog_views, last_viewed_at FROM catalog_analytics WHERE id = 1').get();
+      if (general && general.catalog_views > catalogViews) {
+        catalogViews = general.catalog_views;
+      }
+      const pRows = db.prepare('SELECT product_id, view_count FROM product_view_stats').all();
+      for (const pr of pRows) {
+        if (!productViews[pr.product_id] || pr.view_count > productViews[pr.product_id]) {
+          productViews[pr.product_id] = pr.view_count;
+        }
       }
     }
 
     return {
-      catalogViews: general?.catalog_views || 0,
+      catalogViews,
       productViews,
       contactActions,
       contactActionsByProduct,
-      lastViewedAt: general?.last_viewed_at || undefined,
+      range,
+      fromDate: fromDate || null,
+      toDate: toDate || null,
     };
+  };
+
+  const getAnalytics = () => {
+    return getFilteredAnalytics({ range: 'all' });
   };
 
   const trackEvent = (type, productId) => {
@@ -611,6 +768,7 @@ export const createCatalogDatabase = (databasePath) => {
         const action = type === 'contact_whatsapp' ? 'whatsapp' : 'call';
         db.prepare(`INSERT INTO contact_action_stats(action_type, product_id, click_count, last_clicked_at) VALUES(?, ?, 1, ?) ON CONFLICT(action_type, product_id) DO UPDATE SET click_count = click_count + 1, last_clicked_at = excluded.last_clicked_at`).run(action, productId, now);
       }
+      db.prepare('INSERT INTO analytics_events(event_type, product_id, created_at) VALUES(?, ?, ?)').run(type, productId || '', now);
       db.exec('COMMIT');
     } catch (error) {
       db.exec('ROLLBACK');
@@ -679,6 +837,10 @@ export const createCatalogDatabase = (databasePath) => {
     getCatalog,
     saveCatalog,
     getAnalytics,
+    getFilteredAnalytics,
+    logAction,
+    getLogs,
+    clearLogs,
     trackEvent,
     recordEvent,
     isCatalogEmpty,

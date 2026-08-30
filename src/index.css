@@ -1314,5 +1314,523 @@ button, input, textarea, select { font: inherit; }
   box-shadow: 0 14px 32px rgba(220, 38, 38, 0.7), 0 2px 8px rgba(0, 0, 0, 0.3) !important;
 }
 
+/* ==========================================================================
+   ADMIN PERIOD FILTERING BAR
+   ========================================================================== */
+.dash-period-card {
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 18px rgba(0, 0, 0, 0.04);
+}
 
+.dash-period-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
 
+.dash-period-title-group {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dash-period-icon-badge {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.dash-period-pills {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dash-period-pill {
+  padding: 8px 14px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  border: 1px solid transparent;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.dash-period-pill:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.dash-custom-date-box {
+  margin-top: 14px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+}
+
+.dash-custom-inputs {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.dash-custom-inputs label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.dash-custom-inputs input[type='date'] {
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  font-size: 13px;
+  outline: none;
+}
+
+.dash-custom-apply-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.dash-custom-apply-btn:hover {
+  transform: translateY(-1px);
+}
+
+/* ==========================================================================
+   CATALOG STATUS SWITCH & MODALS
+   ========================================================================== */
+.catalog-status-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.catalog-status-toggle-btn.is-active {
+  background: rgba(22, 163, 74, 0.14);
+  color: #16a34a;
+  border-color: rgba(22, 163, 74, 0.35);
+}
+
+.catalog-status-toggle-btn.is-active:hover {
+  background: rgba(22, 163, 74, 0.22);
+}
+
+.catalog-status-toggle-btn.is-paused {
+  background: rgba(217, 119, 6, 0.16);
+  color: #d97706;
+  border-color: rgba(217, 119, 6, 0.4);
+}
+
+.catalog-status-toggle-btn.is-paused:hover {
+  background: rgba(217, 119, 6, 0.25);
+}
+
+.admin-status-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.65);
+  backdrop-filter: blur(6px);
+  z-index: 9999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+}
+
+.admin-status-modal {
+  width: 100%;
+  max-width: 520px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.35);
+  overflow: hidden;
+  animation: modalScaleIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes modalScaleIn {
+  from {
+    transform: scale(0.95);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.admin-status-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.admin-status-modal-body {
+  padding: 20px;
+}
+
+.status-choice-grid {
+  display: grid;
+  gap: 12px;
+}
+
+.status-choice-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 2px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.2s ease;
+}
+
+.status-choice-card:hover {
+  border-color: var(--primary, #dc2626);
+}
+
+.status-choice-card.selected.active-choice {
+  border-color: #16a34a;
+  background: rgba(22, 163, 74, 0.08);
+}
+
+.status-choice-card.selected.paused-choice {
+  border-color: #d97706;
+  background: rgba(217, 119, 6, 0.08);
+}
+
+.status-choice-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.status-choice-text strong {
+  display: block;
+  font-size: 14px;
+  margin-bottom: 3px;
+}
+
+.status-choice-text p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--text-muted, #64748b);
+  line-height: 1.4;
+}
+
+.admin-status-modal-footer {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 14px 20px;
+  border-top: 1px solid var(--border);
+}
+
+.admin-status-modal-footer button {
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* ==========================================================================
+   AUDIT LOGS UI
+   ========================================================================== */
+.log-manager-card {
+  border-radius: 14px;
+  padding: 22px;
+}
+
+.log-manager-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 18px;
+}
+
+.log-action-buttons {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.log-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.log-btn:hover {
+  transform: translateY(-1px);
+}
+
+.spin-icon {
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.log-controls-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  flex-wrap: wrap;
+}
+
+.log-category-pills {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.log-cat-pill {
+  padding: 6px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  border: 1px solid transparent;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.log-search-box {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  min-width: 240px;
+}
+
+.log-search-box input {
+  border: none;
+  background: transparent;
+  font-size: 13px;
+  outline: none;
+  width: 100%;
+}
+
+.log-table th {
+  padding: 10px 14px;
+  font-size: 12px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.log-table td {
+  padding: 10px 14px;
+  vertical-align: middle;
+}
+
+.log-row:hover {
+  background: rgba(0, 0, 0, 0.03);
+}
+
+.log-category-tag {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 750;
+  border: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.log-status-badge {
+  display: inline-block;
+  padding: 3px 9px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   PUBLIC MAINTENANCE MODE SCREEN
+   ========================================================================== */
+.maintenance-screen-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.maintenance-screen-card {
+  width: 100%;
+  max-width: 520px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  padding: 36px 32px;
+  text-align: center;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.12);
+  box-sizing: border-box;
+}
+
+.maintenance-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.theme-toggle-mini {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  border: 1px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.maintenance-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  background: rgba(217, 119, 6, 0.12);
+  color: #d97706;
+  font-size: 12px;
+  font-weight: 800;
+  margin-bottom: 16px;
+}
+
+.maintenance-title {
+  font-size: 26px;
+  font-weight: 900;
+  margin: 0 0 12px 0;
+  letter-spacing: -0.02em;
+}
+
+.maintenance-desc {
+  font-size: 15px;
+  line-height: 1.6;
+  margin: 0 0 28px 0;
+}
+
+.maintenance-contacts {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 28px;
+}
+
+.maintenance-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 13px 20px;
+  border-radius: 12px;
+  font-size: 14px;
+  font-weight: 800;
+  text-decoration: none;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  color: #ffffff;
+}
+
+.maintenance-btn.wa-btn {
+  background: #16a34a;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.3);
+}
+
+.maintenance-btn.wa-btn:hover {
+  background: #15803d;
+  transform: translateY(-2px);
+}
+
+.maintenance-btn.call-btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.1);
+}
+
+.maintenance-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-muted, #64748b);
+}
+
+.maintenance-admin-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  color: inherit;
+  text-decoration: none;
+  font-weight: 700;
+  opacity: 0.7;
+  transition: opacity 0.15s ease;
+}
+
+.maintenance-admin-link:hover {
+  opacity: 1;
+  color: var(--primary, #dc2626);
+}
