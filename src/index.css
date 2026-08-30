@@ -2894,3 +2894,54 @@ button, input, textarea, select { font: inherit; }
   transform: translateY(-1px);
 }
 
+/* Product Card Media Navigation Buttons & Mobile Touch Swiping */
+.card-media-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.75);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 8;
+  opacity: 0;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.card-media-nav-btn:hover {
+  background: var(--primary, #dc2626);
+  border-color: var(--primary, #dc2626);
+  transform: translateY(-50%) scale(1.12);
+}
+
+.card-media-nav-btn.prev {
+  left: 6px;
+}
+
+.card-media-nav-btn.next {
+  right: 6px;
+}
+
+.product-card:hover .card-media-nav-btn,
+.product-card.mobile-focused .card-media-nav-btn {
+  opacity: 0.85;
+}
+
+@media (max-width: 768px) {
+  .card-media-nav-btn {
+    opacity: 0.75;
+    width: 26px;
+    height: 26px;
+  }
+}
+
+

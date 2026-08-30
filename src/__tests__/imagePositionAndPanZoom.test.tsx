@@ -195,4 +195,62 @@ describe('Image Positioning (Focal Point / Alignment) & Pan-Zoom & Visual Crop S
     fireEvent.click(resetBtn);
     expect(screen.getByText('100%')).toBeTruthy();
   });
+
+  it('supports touch swiping and arrow clicks to switch images on ProductCard', () => {
+    render(
+      <ProductCard
+        product={mockProduct}
+        theme={lightTheme}
+        onSelect={vi.fn()}
+        onShare={vi.fn()}
+        onWhatsApp={vi.fn()}
+        onCall={vi.fn()}
+        onCopyLink={vi.fn()}
+      />
+    );
+
+    // Initial image should be image 1
+    const img = screen.getByAltText('Aspirator Ardo AR6120 White') as HTMLImageElement;
+    expect(img.src).toContain('ardo-ar6120-white.jpg');
+
+    // Click Next Arrow
+    const nextBtn = screen.getByTitle('Növbəti şəkil');
+    fireEvent.click(nextBtn);
+
+    // Should switch to image 2
+    expect(img.src).toContain('ardo-ar6120-white-2.jpg');
+
+    // Click Prev Arrow
+    const prevBtn = screen.getByTitle('Əvvəlki şəkil');
+    fireEvent.click(prevBtn);
+
+    // Should switch back to image 1
+    expect(img.src).toContain('ardo-ar6120-white.jpg');
+
+    // Test Touch Swipe Left on media box
+    const mediaBox = img.parentElement as HTMLDivElement;
+    const createTouch = (x: number, y: number) => ({
+      clientX: x,
+      clientY: y,
+      pageX: x,
+      pageY: y,
+      screenX: x,
+      screenY: y,
+      target: mediaBox,
+      identifier: 0,
+      force: 1,
+      radiusX: 1,
+      radiusY: 1,
+      rotationAngle: 0,
+    });
+
+    const tStart = createTouch(200, 100);
+    const tMove = createTouch(120, 100);
+
+    fireEvent.touchStart(mediaBox, { touches: [tStart], targetTouches: [tStart], changedTouches: [tStart] });
+    fireEvent.touchMove(mediaBox, { touches: [tMove], targetTouches: [tMove], changedTouches: [tMove] });
+    fireEvent.touchEnd(mediaBox, { touches: [], targetTouches: [], changedTouches: [tMove] });
+
+    expect(img.src).toContain('ardo-ar6120-white-2.jpg');
+  });
 });
