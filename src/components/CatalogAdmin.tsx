@@ -10,6 +10,7 @@ import {
   ChevronRight,
   Clock,
   Copy,
+  Crop,
   Download,
   Eye,
   FileDown,
@@ -39,6 +40,7 @@ import {
   Search,
   Sparkles,
   Tag,
+  Target,
   Trash2,
   TrendingUp,
   Upload,
@@ -68,6 +70,7 @@ import { ThemeColors } from '../types/theme';
 import { SaharaLogo } from './SaharaLogo';
 import { AdminCatalogPreview } from './AdminCatalogPreview';
 import { ModernCalendarPicker } from './ModernCalendarPicker';
+import { ImageCropStudioModal } from './ImageCropStudioModal';
 import {
   downloadFile,
   exportProductsToCsv,
@@ -3275,6 +3278,14 @@ export const ProductEditor = ({
   const [dropTargetMediaIndex, setDropTargetMediaIndex] = useState<number | null>(null);
   const [mediaDropPosition, setMediaDropPosition] = useState<'before' | 'after' | null>(null);
 
+  // Visual Crop & Focal Studio state
+  const [cropStudioTarget, setCropStudioTarget] = useState<{
+    mediaIndex: number;
+    imageUrl: string;
+    objectPosition?: string;
+    fitMode?: 'contain' | 'cover';
+  } | null>(null);
+
   const change = <K extends keyof Product>(key: K, value: Product[K]) =>
     setProduct((current) => ({ ...current, [key]: value }));
 
@@ -3778,8 +3789,26 @@ export const ProductEditor = ({
                     {/* Position & Alignment Control Sub-Row */}
                     <div className="media-pos-row">
                       <div className="media-pos-label">
-                        <span>🎯 Şəkilin duruşu (Mövqe):</span>
+                        <span>🎯 Şəkilin duruşu:</span>
                       </div>
+
+                      {/* Visual Crop & Focal Studio Launcher Button */}
+                      {m.type !== 'video' && m.url && (
+                        <button
+                          type="button"
+                          className="crop-open-studio-btn"
+                          onClick={() => setCropStudioTarget({
+                            mediaIndex: i,
+                            imageUrl: m.url,
+                            objectPosition: m.objectPosition || 'center',
+                            fitMode: m.fitMode || 'contain',
+                          })}
+                          title="Şəkli vizual kəsin, nisbətini seçin və fokusunu interaktiv studiyada tənzimləyin"
+                        >
+                          <Crop size={13} />
+                          <span>✂️ Vizual Kəs & Tənzimlə</span>
+                        </button>
+                      )}
 
                       {/* 9-Dot Visual Quick Alignment Picker */}
                       <div className="media-pos-grid-picker" title="Tez mövqe seçimi (9 nöqtəli fokus)">
@@ -3942,6 +3971,42 @@ export const ProductEditor = ({
             Yadda saxla
           </button>
         </footer>
+
+        {/* INTERACTIVE VISUAL CROP & FOCAL POSITION STUDIO MODAL */}
+        {cropStudioTarget && (
+          <ImageCropStudioModal
+            isOpen={true}
+            imageUrl={cropStudioTarget.imageUrl}
+            initialObjectPosition={cropStudioTarget.objectPosition || 'center'}
+            initialFitMode={cropStudioTarget.fitMode || 'contain'}
+            productTitle={product.title}
+            theme={theme}
+            onClose={() => setCropStudioTarget(null)}
+            onSavePosition={(pos, fit) => {
+              updateMedia(cropStudioTarget.mediaIndex, { objectPosition: pos, fitMode: fit });
+              if (cropStudioTarget.mediaIndex === 0) {
+                setProduct((curr) => ({ ...curr, imagePosition: pos, imageFit: fit }));
+              }
+            }}
+            onSaveCroppedImage={(newUrl, pos) => {
+              updateMedia(cropStudioTarget.mediaIndex, {
+                url: newUrl,
+                objectPosition: pos || 'center',
+              });
+              if (cropStudioTarget.mediaIndex === 0) {
+                setProduct((curr) => ({
+                  ...curr,
+                  image: newUrl,
+                  imagePosition: pos || 'center',
+                }));
+              }
+            }}
+            onUpload={async (file) => {
+              const media = await onUpload(file);
+              return media.url;
+            }}
+          />
+        )}
       </div>
     </div>
   );

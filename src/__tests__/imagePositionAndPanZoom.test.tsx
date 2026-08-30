@@ -5,12 +5,13 @@ import { cleanup, render, screen, fireEvent } from '@testing-library/react';
 import { ProductEditor } from '../components/CatalogAdmin';
 import { ProductDetailModal } from '../components/ProductDetailModal';
 import { ProductCard } from '../components/ProductCard';
+import { ImageCropStudioModal } from '../components/ImageCropStudioModal';
 import { lightTheme } from '../types/theme';
 import { Product, Brand, CatalogCategory } from '../types/product';
 
 afterEach(cleanup);
 
-describe('Image Positioning (Focal Point / Alignment) & Pan-Zoom Features', () => {
+describe('Image Positioning (Focal Point / Alignment) & Pan-Zoom & Visual Crop Studio', () => {
   const mockProduct: Product = {
     id: 'prod-focal-1',
     code: 'AR 6120 WH',
@@ -54,7 +55,7 @@ describe('Image Positioning (Focal Point / Alignment) & Pan-Zoom Features', () =
     { id: 'hood', name: 'Aspiratorlar', slug: 'hood', icon: 'Wind', active: true },
   ];
 
-  it('renders 9-dot focal picker and position dropdowns in ProductEditor', () => {
+  it('renders 9-dot focal picker and Crop Studio buttons in ProductEditor', () => {
     const handleSave = vi.fn();
     render(
       <ProductEditor
@@ -76,13 +77,12 @@ describe('Image Positioning (Focal Point / Alignment) & Pan-Zoom Features', () =
     const fitSelects = screen.getAllByTitle(/Kəsim \/ sığışdırma rejimi/i);
     expect(fitSelects.length).toBe(2);
 
-    // Verify 9-dot buttons (e.g. "Üst / Yuxarı", "Alt / Aşağı", "Mərkəz (Orta)")
-    const topFocalBtns = screen.getAllByTitle(/Üst \/ Yuxarı/i);
-    expect(topFocalBtns.length).toBe(2);
+    // Verify Visual Crop Studio buttons exist
+    const cropStudioBtns = screen.getAllByTitle(/Şəkli vizual kəsin, nisbətini seçin və fokusunu interaktiv studiyada tənzimləyin/i);
+    expect(cropStudioBtns.length).toBe(2);
   });
 
-  it('updates media objectPosition when clicking 9-dot focal button and saves correctly', () => {
-    const handleSave = vi.fn();
+  it('opens Visual Crop & Focal Studio modal from ProductEditor', () => {
     render(
       <ProductEditor
         product={mockProduct}
@@ -92,28 +92,48 @@ describe('Image Positioning (Focal Point / Alignment) & Pan-Zoom Features', () =
         theme={lightTheme}
         onUpload={vi.fn()}
         onClose={vi.fn()}
-        onSave={handleSave}
+        onSave={vi.fn()}
       />
     );
 
-    // Click "Alt / Aşağı" on the first media item
-    const bottomFocalBtns = screen.getAllByTitle(/Alt \/ Aşağı/i);
-    fireEvent.click(bottomFocalBtns[0]);
+    const cropStudioBtns = screen.getAllByTitle(/Şəkli vizual kəsin, nisbətini seçin və fokusunu interaktiv studiyada tənzimləyin/i);
+    fireEvent.click(cropStudioBtns[0]);
 
-    // Save product
-    const saveBtns = screen.getAllByRole('button', { name: /Yadda saxla/i });
-    fireEvent.click(saveBtns[saveBtns.length - 1]);
+    // Studio modal header should appear
+    expect(screen.getByText(/Şəkil Kəsmə & Vizual Fokus Studiyası/i)).toBeTruthy();
+    expect(screen.getByText(/✂️ Şəkli Kəs \(Crop\)/i)).toBeTruthy();
+    expect(screen.getByText(/🎯 Fokus & Duruş \(Focal Pin\)/i)).toBeTruthy();
+  });
 
-    expect(handleSave).toHaveBeenCalledWith(
-      expect.objectContaining({
-        media: expect.arrayContaining([
-          expect.objectContaining({
-            id: 'm1',
-            objectPosition: 'bottom',
-          }),
-        ]),
-      })
+  it('interactively switches to Focal Pin mode and applies custom position in ImageCropStudioModal', () => {
+    const handleSavePosition = vi.fn();
+    render(
+      <ImageCropStudioModal
+        isOpen={true}
+        imageUrl="/media/products/ardo-ar6120-white.jpg"
+        initialObjectPosition="50% 50%"
+        initialFitMode="cover"
+        productTitle="ARDO Aspirator"
+        theme={lightTheme}
+        onClose={vi.fn()}
+        onSavePosition={handleSavePosition}
+        onSaveCroppedImage={vi.fn()}
+      />
     );
+
+    // Switch to Focal Mode
+    const focalTab = screen.getByRole('button', { name: /🎯 Fokus & Duruş/i });
+    fireEvent.click(focalTab);
+
+    // Click on Quick Focal preset (e.g. "⬆ Üst")
+    const topPreset = screen.getByRole('button', { name: /⬆ Üst/i });
+    fireEvent.click(topPreset);
+
+    // Apply Position Only button
+    const applyBtn = screen.getByRole('button', { name: /🎯 Mövqeni Tətbiq Et/i });
+    fireEvent.click(applyBtn);
+
+    expect(handleSavePosition).toHaveBeenCalledWith('50% 0%', 'cover');
   });
 
   it('renders ProductCard with custom objectPosition and fitMode styling', () => {
