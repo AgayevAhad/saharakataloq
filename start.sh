@@ -28,7 +28,7 @@ RESOLVED_PORT=$(node backend/resolvePort.mjs "$REQUESTED_PORT")
 export PORT="$RESOLVED_PORT"
 
 echo "=========================================================="
-echo "  SAHARA ELECTRONIC - KATALOQ CANLI SERVER                "
+echo "  🚀 SAHARA ELECTRONIC - PROD (STABİL İSTEHSALAT) SERVER  "
 echo "=========================================================="
 echo ""
 if [ "$RESOLVED_PORT" != "$REQUESTED_PORT" ]; then
