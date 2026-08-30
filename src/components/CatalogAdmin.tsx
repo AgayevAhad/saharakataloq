@@ -1362,15 +1362,35 @@ export const CatalogAdmin: React.FC<Props> = ({
                           </div>
                         </td>
 
-                        {/* Thumbnail with Lightbox click */}
+                        {/* Thumbnail with Lightbox click & Multi-image badge */}
                         <td>
-                          <div
-                            className="admin-prod-thumb"
-                            onClick={() => openProductLightbox(product)}
-                            title="Böyütmək və baxmaq üçün klikləyin"
-                            style={{ cursor: 'pointer' }}
-                          >
-                            {product.image ? <img src={product.image} alt="" /> : '🖼'}
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <div
+                              className="admin-prod-thumb"
+                              onClick={() => openProductLightbox(product)}
+                              title="Böyütmək və baxmaq üçün klikləyin"
+                              style={{ cursor: 'pointer' }}
+                            >
+                              {product.image ? <img src={product.image} alt={product.title} /> : '🖼'}
+                            </div>
+                            {product.gallery && product.gallery.length > 1 && (
+                              <span
+                                style={{
+                                  fontSize: '10px',
+                                  fontWeight: 800,
+                                  background: 'rgba(127,127,127,0.15)',
+                                  color: theme.textMuted,
+                                  padding: '2px 5px',
+                                  borderRadius: '4px',
+                                  whiteSpace: 'nowrap',
+                                  cursor: 'pointer',
+                                }}
+                                onClick={() => openProductLightbox(product)}
+                                title={`${product.gallery.length} foto/media mövcuddur`}
+                              >
+                                📷 {product.gallery.length}
+                              </span>
+                            )}
                           </div>
                         </td>
 
@@ -3080,7 +3100,7 @@ const COMMON_SPEC_SUGGESTIONS = [
 ];
 
 // PRODUCT EDITOR MODAL
-const ProductEditor = ({
+export const ProductEditor = ({
   product: initial,
   brands,
   categories,
@@ -3111,14 +3131,99 @@ const ProductEditor = ({
   const [customCountryInput, setCustomCountryInput] = useState('');
   const [isAddingCustomCountry, setIsAddingCustomCountry] = useState(false);
 
+  // Drag & drop / position reordering state for media
+  const [draggedMediaIndex, setDraggedMediaIndex] = useState<number | null>(null);
+  const [dropTargetMediaIndex, setDropTargetMediaIndex] = useState<number | null>(null);
+  const [mediaDropPosition, setMediaDropPosition] = useState<'before' | 'after' | null>(null);
+
   const change = <K extends keyof Product>(key: K, value: Product[K]) =>
     setProduct((current) => ({ ...current, [key]: value }));
 
-  const addMedia = (type: ProductMedia['type']) =>
-    change('media', [...(product.media || []), { id: newId('media'), type, url: '', alt: '' }]);
+  const addMedia = (type: ProductMedia['type']) => {
+    const list = [...(product.media || []), { id: newId('media'), type, url: '', alt: '' }];
+    setProduct((curr) => ({
+      ...curr,
+      media: list,
+      gallery: list.map((m) => m.url).filter(Boolean),
+    }));
+  };
 
-  const updateMedia = (index: number, patch: Partial<ProductMedia>) =>
-    change('media', (product.media || []).map((item, i) => (i === index ? { ...item, ...patch } : item)));
+  const updateMedia = (index: number, patch: Partial<ProductMedia>) => {
+    setProduct((curr) => {
+      const list = (curr.media || []).map((item, i) => (i === index ? { ...item, ...patch } : item));
+      const firstImg = list.find((m) => m.type === 'image' && m.url)?.url || (list[0]?.url || curr.image);
+      return {
+        ...curr,
+        media: list,
+        image: index === 0 && patch.url ? patch.url : firstImg,
+        gallery: list.map((m) => m.url).filter(Boolean),
+      };
+    });
+  };
+
+  const moveMediaToPosition = (fromIndex: number, targetPosition1Indexed: number) => {
+    setProduct((current) => {
+      const list = [...(current.media || [])];
+      if (!list.length) return current;
+      const targetIdx = Math.max(0, Math.min(list.length - 1, targetPosition1Indexed - 1));
+      if (fromIndex === targetIdx || fromIndex < 0 || fromIndex >= list.length) return current;
+      const [moved] = list.splice(fromIndex, 1);
+      list.splice(targetIdx, 0, moved);
+
+      const firstImg = list.find((m) => m.type === 'image' && m.url)?.url || (list[0]?.url || current.image);
+      const gallery = list.map((m) => m.url).filter(Boolean);
+
+      return {
+        ...current,
+        media: list,
+        image: firstImg,
+        gallery,
+      };
+    });
+  };
+
+  const setPrimaryMedia = (index: number) => {
+    moveMediaToPosition(index, 1);
+  };
+
+  const handleMediaDragStart = (index: number, e: React.DragEvent) => {
+    setDraggedMediaIndex(index);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', String(index));
+  };
+
+  const handleMediaDragOver = (index: number, e: React.DragEvent) => {
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    if (draggedMediaIndex === null || draggedMediaIndex === index) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    const midY = rect.top + rect.height / 2;
+    const pos = e.clientY < midY ? 'before' : 'after';
+    setDropTargetMediaIndex(index);
+    setMediaDropPosition(pos);
+  };
+
+  const handleMediaDrop = (targetIndex: number, e: React.DragEvent) => {
+    e.preventDefault();
+    if (draggedMediaIndex === null || draggedMediaIndex === targetIndex) {
+      setDraggedMediaIndex(null);
+      setDropTargetMediaIndex(null);
+      setMediaDropPosition(null);
+      return;
+    }
+    const targetPos = mediaDropPosition === 'before' ? targetIndex + 1 : targetIndex + 2;
+    const finalPos = draggedMediaIndex < targetIndex ? (mediaDropPosition === 'before' ? targetIndex : targetIndex + 1) : (mediaDropPosition === 'before' ? targetIndex + 1 : targetIndex + 2);
+    moveMediaToPosition(draggedMediaIndex, finalPos);
+    setDraggedMediaIndex(null);
+    setDropTargetMediaIndex(null);
+    setMediaDropPosition(null);
+  };
+
+  const handleMediaDragEnd = () => {
+    setDraggedMediaIndex(null);
+    setDropTargetMediaIndex(null);
+    setMediaDropPosition(null);
+  };
 
   const addSpec = () =>
     change('specs', [...product.specs, { id: newId('spec'), name: '', value: '', group: 'Əsas' }]);
@@ -3133,8 +3238,14 @@ const ProductEditor = ({
     setUploadError('');
     try {
       const uploaded = await onUpload(file);
-      if (!product.image && uploaded.type === 'image') change('image', uploaded.url);
-      change('media', [...(product.media || []), uploaded]);
+      const updatedMedia = [...(product.media || []), uploaded];
+      const firstImg = !product.image && uploaded.type === 'image' ? uploaded.url : product.image;
+      setProduct((curr) => ({
+        ...curr,
+        image: firstImg || uploaded.url,
+        media: updatedMedia,
+        gallery: updatedMedia.map((m) => m.url).filter(Boolean),
+      }));
     } catch (e) {
       setUploadError(e instanceof Error ? e.message : 'Media yüklənmədi');
     } finally {
@@ -3396,38 +3507,128 @@ const ProductEditor = ({
             </div>
             {uploadError && <p style={{ color: '#ef4444', fontSize: '12px' }}>{uploadError}</p>}
             <div className="media-list-grid">
-              {(product.media || []).map((m, i) => (
-                <div key={m.id || i} className="media-row-card">
+              {(product.media || []).map((m, i) => {
+                const isDragging = draggedMediaIndex === i;
+                const isDropTarget = dropTargetMediaIndex === i;
+                const dropClass = isDropTarget && mediaDropPosition ? `drop-${mediaDropPosition}` : '';
+                const isPrimary = i === 0;
+
+                return (
                   <div
-                    className="admin-thumb"
-                    onClick={() => onOpenLightbox?.(product, i)}
-                    title="Böyüdüb baxmaq üçün klikləyin"
-                    style={{ cursor: 'pointer' }}
+                    key={m.id || i}
+                    draggable
+                    onDragStart={(e) => handleMediaDragStart(i, e)}
+                    onDragOver={(e) => handleMediaDragOver(i, e)}
+                    onDrop={(e) => handleMediaDrop(i, e)}
+                    onDragEnd={handleMediaDragEnd}
+                    className={`media-row-card ${isPrimary ? 'is-primary' : ''} ${isDragging ? 'dragging' : ''} ${dropClass}`}
                   >
-                    {m.type === 'video' ? '🎬' : m.url ? <img src={m.url} alt="" /> : '🖼'}
+                    {/* Drag Handle */}
+                    <div className="media-drag-handle" title="Tutub sürüşdürərək sıranı dəyişin">
+                      <GripVertical size={16} />
+                    </div>
+
+                    {/* Sequence Number Input & Label */}
+                    <div className="media-seq-box" title="Sıra nömrəsi (Daxil edib dərhal sıranı dəyişə bilərsiniz)">
+                      <span>Sıra</span>
+                      <input
+                        type="number"
+                        min={1}
+                        max={(product.media || []).length}
+                        value={i + 1}
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value, 10);
+                          if (!isNaN(val)) moveMediaToPosition(i, val);
+                        }}
+                        className="media-seq-input"
+                      />
+                    </div>
+
+                    {/* Thumbnail Preview with Lightbox trigger */}
+                    <div
+                      className="admin-thumb"
+                      onClick={() => onOpenLightbox?.(product, i)}
+                      title="Böyüdüb baxmaq üçün klikləyin"
+                      style={{ cursor: 'pointer' }}
+                    >
+                      {m.type === 'video' ? '🎬' : m.url ? <img src={m.url} alt={m.alt || ''} /> : '🖼'}
+                    </div>
+
+                    {/* Media URL Input */}
+                    <input
+                      value={m.url}
+                      onChange={(e) => updateMedia(i, { url: e.target.value })}
+                      placeholder="Media URL (/media/products/...)"
+                      style={{ flex: 1 }}
+                    />
+
+                    {/* Alt Text Input */}
+                    <input
+                      value={m.alt || ''}
+                      onChange={(e) => updateMedia(i, { alt: e.target.value })}
+                      placeholder="Alt izahı (Şəkil təsviri)"
+                      style={{ flex: 1 }}
+                    />
+
+                    {/* Status Badge & Make Primary Button */}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      {isPrimary ? (
+                        <span className="media-status-pill primary" title="Bu foto kataloqda əsas kart şəkili olaraq görünür">
+                          ⭐ #1 Əsas
+                        </span>
+                      ) : (
+                        <button
+                          type="button"
+                          className="media-make-primary-btn"
+                          onClick={() => setPrimaryMedia(i)}
+                          title="Bu fotonu 1-ci sıraya keçirərək Əsas Şəkil et"
+                        >
+                          ⭐ 1-ci et
+                        </button>
+                      )}
+                    </div>
+
+                    {/* Up / Down Move Step Arrows */}
+                    <div className="media-order-arrows">
+                      <button
+                        type="button"
+                        disabled={i === 0}
+                        onClick={() => moveMediaToPosition(i, i)}
+                        title="1 pillə yuxarı keçir"
+                      >
+                        ▲
+                      </button>
+                      <button
+                        type="button"
+                        disabled={i === (product.media || []).length - 1}
+                        onClick={() => moveMediaToPosition(i, i + 2)}
+                        title="1 pillə aşağı keçir"
+                      >
+                        ▼
+                      </button>
+                    </div>
+
+                    {/* Delete Button */}
+                    <button
+                      type="button"
+                      className="del-btn"
+                      onClick={() => {
+                        const remaining = (product.media || []).filter((_, idx) => idx !== i);
+                        const firstImg = remaining.find((item) => item.type === 'image' && item.url)?.url || (remaining[0]?.url || '');
+                        setProduct((curr) => ({
+                          ...curr,
+                          media: remaining,
+                          image: firstImg,
+                          gallery: remaining.map((item) => item.url).filter(Boolean),
+                        }));
+                      }}
+                      title="Bu media faylını sil"
+                    >
+                      <Trash2 size={14} />
+                    </button>
                   </div>
-                  <input
-                    value={m.url}
-                    onChange={(e) => updateMedia(i, { url: e.target.value })}
-                    placeholder="Media URL"
-                  />
-                  <input
-                    value={m.alt || ''}
-                    onChange={(e) => updateMedia(i, { alt: e.target.value })}
-                    placeholder="Alt izahı"
-                  />
-                  <button type="button" onClick={() => change('image', m.url)} title="Əsas şəkil et">
-                    ⭐
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => change('media', (product.media || []).filter((_, idx) => idx !== i))}
-                    title="Sil"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -3516,7 +3717,13 @@ const ProductEditor = ({
             type="button"
             onClick={() => {
               if (!product.code.trim() || !product.title.trim()) return alert('Model kodu və adı mütləqdir');
-              onSave(product);
+              const firstImg = (product.media || []).find((m) => m.type === 'image' && m.url)?.url || (product.media?.[0]?.url || product.image);
+              const gallery = (product.media || []).map((m) => m.url).filter(Boolean);
+              onSave({
+                ...product,
+                image: firstImg,
+                gallery: gallery.length ? gallery : [firstImg].filter(Boolean),
+              });
             }}
             style={{ background: theme.primary, color: '#fff' }}
           >

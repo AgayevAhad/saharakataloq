@@ -448,11 +448,42 @@ button, input, textarea, select { font: inherit; }
 .admin-category-select { min-height: 40px; border: 1px solid; border-radius: 9px; padding: 0 11px; background: transparent; color: inherit; font-size: 12px; }
 .admin-table-wrap { border: 1px solid; border-radius: 13px; overflow: auto; }
 .admin-table-wrap table { width: 100%; border-collapse: collapse; font-size: 12px; }
-.admin-table-wrap th, .admin-table-wrap td { padding: 11px 13px; border-bottom: 1px solid rgba(127,127,127,.18); text-align: left; }
+.admin-table-wrap th, .admin-table-wrap td { padding: 10px 12px; border-bottom: 1px solid rgba(127,127,127,.18); text-align: left; vertical-align: middle; }
 .admin-table-wrap th { font-size: 11px; font-weight: 750; letter-spacing: .04em; text-transform: uppercase; }
 .admin-table-wrap tr:last-child td { border-bottom: 0; }
-.admin-thumb { width: 46px; height: 46px; display: grid; place-items: center; border-radius: 8px; overflow: hidden; }
-.admin-thumb img { width: 100%; height: 100%; object-fit: contain; }
+.admin-prod-thumb,
+.admin-thumb {
+  width: 46px;
+  height: 46px;
+  min-width: 46px;
+  min-height: 46px;
+  max-width: 46px;
+  max-height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 9px;
+  overflow: hidden;
+  background: rgba(127, 127, 127, 0.08);
+  border: 1px solid rgba(127, 127, 127, 0.22);
+  flex-shrink: 0;
+  box-sizing: border-box;
+  position: relative;
+}
+.admin-prod-thumb img,
+.admin-thumb img {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  display: block;
+  transition: transform 0.2s ease;
+}
+.admin-prod-thumb:hover img,
+.admin-thumb:hover img {
+  transform: scale(1.08);
+}
 .admin-code { font-weight: 750; }
 .admin-title { max-width: 280px; }
 .admin-badge { padding: 3px 8px; border-radius: 999px; font-size: 10px; font-weight: 750; text-transform: uppercase; }
@@ -587,10 +618,138 @@ button, input, textarea, select { font: inherit; }
   color: #fff !important;
   border: 0;
 }
-.media-list-grid, .specs-list-grid { display: grid; gap: 10px; }
-.media-row-card, .spec-row-card {
+.media-list-grid {
   display: grid;
-  grid-template-columns: 48px 1fr 1fr auto auto;
+  gap: 10px;
+}
+.media-row-card {
+  display: grid;
+  grid-template-columns: 24px 46px 54px 1fr 1fr auto auto auto;
+  gap: 10px;
+  align-items: center;
+  padding: 10px 12px;
+  border: 1px solid rgba(127,127,127,.22);
+  border-radius: 10px;
+  background: rgba(127,127,127,.04);
+  transition: all 0.2s ease;
+  position: relative;
+}
+.media-row-card.is-primary {
+  border-color: rgba(22, 163, 74, 0.5);
+  background: rgba(22, 163, 74, 0.06);
+}
+.media-row-card.dragging {
+  opacity: 0.35;
+  border: 2px dashed var(--admin-primary, #dc2626);
+}
+.media-row-card.drop-before {
+  border-top: 3px solid #2563eb !important;
+}
+.media-row-card.drop-after {
+  border-bottom: 3px solid #2563eb !important;
+}
+.media-drag-handle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: grab;
+  color: rgba(127,127,127,.6);
+}
+.media-drag-handle:active {
+  cursor: grabbing;
+  color: var(--admin-primary, #dc2626);
+}
+.media-seq-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+.media-seq-box span {
+  font-size: 9px;
+  font-weight: 750;
+  text-transform: uppercase;
+  color: rgba(127,127,127,.8);
+}
+.media-seq-input {
+  width: 46px !important;
+  min-height: 28px !important;
+  height: 28px !important;
+  padding: 2px 4px !important;
+  text-align: center !important;
+  font-weight: 800 !important;
+  font-size: 13px !important;
+  border-radius: 6px !important;
+  border: 1px solid rgba(127,127,127,.3) !important;
+  background: rgba(127,127,127,.08) !important;
+}
+.media-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px 7px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+.media-status-pill.primary {
+  background: rgba(22, 163, 74, 0.15);
+  color: #16a34a;
+}
+.media-status-pill.secondary {
+  background: rgba(127, 127, 127, 0.12);
+  color: inherit;
+  opacity: 0.85;
+}
+.media-order-arrows {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.media-order-arrows button {
+  width: 26px;
+  height: 18px;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border-radius: 4px;
+  border: 1px solid rgba(127,127,127,.25);
+  background: transparent;
+  cursor: pointer;
+  color: inherit;
+  font-size: 9px;
+  font-weight: 800;
+}
+.media-order-arrows button:hover:not(:disabled) {
+  background: rgba(127,127,127,.15);
+}
+.media-order-arrows button:disabled {
+  opacity: 0.25;
+  cursor: not-allowed;
+}
+.media-make-primary-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 750;
+  border: 1px solid rgba(22, 163, 74, 0.35);
+  background: rgba(22, 163, 74, 0.1);
+  color: #16a34a;
+  cursor: pointer;
+  white-space: nowrap;
+}
+.media-make-primary-btn:hover {
+  background: #16a34a;
+  color: #fff;
+}
+.specs-list-grid { display: grid; gap: 10px; }
+.spec-row-card {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1.2fr auto;
   gap: 8px;
   align-items: center;
   padding: 8px;
@@ -598,10 +757,7 @@ button, input, textarea, select { font: inherit; }
   border-radius: 10px;
   background: rgba(127,127,127,.04);
 }
-.spec-row-card {
-  grid-template-columns: 1fr 1fr 1.2fr auto;
-}
-.media-row-card button, .spec-row-card button {
+.spec-row-card button, .media-row-card button.del-btn {
   width: 32px;
   height: 32px;
   display: grid;
@@ -612,11 +768,7 @@ button, input, textarea, select { font: inherit; }
   cursor: pointer;
   color: #ef4444;
 }
-.media-row-card button[title="Əsas şəkil et"] {
-  color: inherit;
-  font-size: 14px;
-}
-.media-row-card button:hover, .spec-row-card button:hover {
+.spec-row-card button:hover, .media-row-card button.del-btn:hover {
   background: rgba(239,68,68,.1);
 }
 .product-modal-footer, .product-editor > footer {
