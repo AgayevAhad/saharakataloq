@@ -100,12 +100,11 @@ describe('Image Positioning (Focal Point / Alignment) & Pan-Zoom & Visual Crop S
     fireEvent.click(cropStudioBtns[0]);
 
     // Studio modal header should appear
-    expect(screen.getByText(/Şəkil Kəsmə & Vizual Fokus Studiyası/i)).toBeTruthy();
-    expect(screen.getByText(/✂️ Şəkli Kəs \(Crop\)/i)).toBeTruthy();
-    expect(screen.getByText(/🎯 Fokus & Duruş \(Focal Pin\)/i)).toBeTruthy();
+    expect(screen.getByText(/Məhsul Şəkli Canlı Kart Duruşu & Kəsim Studiyası/i)).toBeTruthy();
+    expect(screen.getByText(/🎴 Kataloq Kartı/i)).toBeTruthy();
   });
 
-  it('interactively switches to Focal Pin mode and applies custom position in ImageCropStudioModal', () => {
+  it('interactively applies custom position in ImageCropStudioModal', () => {
     const handleSavePosition = vi.fn();
     render(
       <ImageCropStudioModal
@@ -121,16 +120,12 @@ describe('Image Positioning (Focal Point / Alignment) & Pan-Zoom & Visual Crop S
       />
     );
 
-    // Switch to Focal Mode
-    const focalTab = screen.getByRole('button', { name: /🎯 Fokus & Duruş/i });
-    fireEvent.click(focalTab);
-
     // Click on Quick Focal preset (e.g. "⬆ Üst")
     const topPreset = screen.getByRole('button', { name: /⬆ Üst/i });
     fireEvent.click(topPreset);
 
-    // Apply Position Only button
-    const applyBtn = screen.getByRole('button', { name: /🎯 Mövqeni Tətbiq Et/i });
+    // Apply Position button
+    const applyBtn = screen.getByRole('button', { name: /🎯 Mövqeni Yadda Saxla/i });
     fireEvent.click(applyBtn);
 
     expect(handleSavePosition).toHaveBeenCalledWith('50% 0%', 'cover');

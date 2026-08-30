@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { 
   X, Check, Crop, Target, RotateCw, ZoomIn, ZoomOut, 
-  RotateCcw, Sparkles, RefreshCw, Layers, Eye
+  RefreshCw, Eye, Move, Maximize2, Sparkles, AlertCircle
 } from 'lucide-react';
 import { ThemeColors } from '../types/theme';
 
@@ -18,8 +18,6 @@ export interface ImageCropStudioModalProps {
   onUpload?: (file: File) => Promise<string>;
 }
 
-type AspectRatioPreset = 'free' | '1:1' | '4:3' | '3:4' | '16:9';
-
 export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
   isOpen,
   imageUrl,
@@ -32,13 +30,7 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
   onSaveCroppedImage,
   onUpload,
 }) => {
-  const [activeMode, setActiveMode] = useState<'crop' | 'focal'>('crop');
-  const [aspectRatio, setAspectRatio] = useState<AspectRatioPreset>('4:3');
-  const [zoom, setZoom] = useState(1);
-  const [rotation, setRotation] = useState(0);
-  const [isSaving, setIsSaving] = useState(false);
-
-  // Parse initial object-position into X and Y percentages (0-100)
+  // Parse initial position into percentages [0-100]
   const parsePos = (posStr: string): { x: number; y: number } => {
     const s = posStr.trim().toLowerCase();
     if (s === 'top') return { x: 50, y: 0 };
@@ -63,160 +55,58 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
     return { x: 50, y: 50 };
   };
 
-  const [focalPoint, setFocalPoint] = useState<{ x: number; y: number }>(() => parsePos(initialObjectPosition));
+  const [focal, setFocal] = useState<{ x: number; y: number }>(() => parsePos(initialObjectPosition));
   const [fitMode, setFitMode] = useState<'contain' | 'cover'>(initialFitMode);
+  const [zoom, setZoom] = useState(1);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [isSaving, setIsSaving] = useState(false);
+  const [activeFrameType, setActiveFrameType] = useState<'card' | 'modal'>('card');
 
-  // Crop Box state relative to natural image dimensions [0 to 1 range]
-  const [cropRect, setCropRect] = useState<{ x: number; y: number; width: number; height: number }>({
-    x: 0.1,
-    y: 0.1,
-    width: 0.8,
-    height: 0.8,
-  });
+  const [imageSize, setImageSize] = useState({ width: 0, height: 0 });
+  const [loaded, setLoaded] = useState(false);
 
-  const [imageDimensions, setImageDimensions] = useState<{ width: number; height: number }>({ width: 800, height: 600 });
-  const [imageLoaded, setImageLoaded] = useState(false);
-
-  const containerRef = useRef<HTMLDivElement>(null);
+  const frameRef = useRef<HTMLDivElement>(null);
   const imageRef = useRef<HTMLImageElement>(null);
-  const canvasPreviewRef = useRef<HTMLCanvasElement>(null);
 
-  // Dragging crop box / handles state
-  const [activeDragHandle, setActiveDragHandle] = useState<string | null>(null);
-  const [dragStartPos, setDragStartPos] = useState<{ x: number; y: number }>({ x: 0, y: 0 });
-  const [initialRectOnDrag, setInitialRectOnDrag] = useState<typeof cropRect | null>(null);
-
-  // Load Image Dimensions
   useEffect(() => {
     if (!imageUrl) return;
-    setImageLoaded(false);
+    setLoaded(false);
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.src = imageUrl;
     img.onload = () => {
-      setImageDimensions({ width: img.naturalWidth || 800, height: img.naturalHeight || 600 });
-      setImageLoaded(true);
-      // Initialize center 80% crop
-      setCropRect({ x: 0.1, y: 0.1, width: 0.8, height: 0.8 });
+      setImageSize({ width: img.naturalWidth || 800, height: img.naturalHeight || 600 });
+      setLoaded(true);
     };
   }, [imageUrl]);
 
-  // Adjust crop aspect ratio when preset changes
-  useEffect(() => {
-    if (aspectRatio === 'free') return;
-    let targetRatio = 1;
-    if (aspectRatio === '1:1') targetRatio = 1;
-    if (aspectRatio === '4:3') targetRatio = 4 / 3;
-    if (aspectRatio === '3:4') targetRatio = 3 / 4;
-    if (aspectRatio === '16:9') targetRatio = 16 / 9;
-
-    setCropRect((curr) => {
-      const imgAspect = imageDimensions.width / (imageDimensions.height || 1);
-      let newW = 0.8;
-      let newH = 0.8;
-
-      if (targetRatio > imgAspect) {
-        newW = 0.85;
-        newH = (0.85 * imgAspect) / targetRatio;
-      } else {
-        newH = 0.85;
-        newW = (0.85 * targetRatio) / imgAspect;
-      }
-
-      newW = Math.min(0.95, Math.max(0.2, newW));
-      newH = Math.min(0.95, Math.max(0.2, newH));
-
-      const newX = Math.max(0, (1 - newW) / 2);
-      const newY = Math.max(0, (1 - newH) / 2);
-
-      return { x: newX, y: newY, width: newW, height: newH };
-    });
-  }, [aspectRatio, imageDimensions]);
-
-  // Render Canvas Crop Preview
-  useEffect(() => {
-    if (!canvasPreviewRef.current || !imageRef.current || !imageLoaded) return;
-    const canvas = canvasPreviewRef.current;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-
-    const img = imageRef.current;
-    const cropX = Math.max(0, cropRect.x * img.naturalWidth);
-    const cropY = Math.max(0, cropRect.y * img.naturalHeight);
-    const cropW = Math.max(10, cropRect.width * img.naturalWidth);
-    const cropH = Math.max(10, cropRect.height * img.naturalHeight);
-
-    canvas.width = cropW;
-    canvas.height = cropH;
-
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, canvas.width, canvas.height);
-  }, [cropRect, imageLoaded, imageUrl]);
-
-  // Handle Focal Point Click on Image
-  const handleImageFocalClick = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (activeMode !== 'focal') return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = Math.max(0, Math.min(100, Math.round(((e.clientX - rect.left) / rect.width) * 100)));
-    const y = Math.max(0, Math.min(100, Math.round(((e.clientY - rect.top) / rect.height) * 100)));
-    setFocalPoint({ x, y });
-  };
-
-  // Dragging crop handles
-  const handleMouseDownOnHandle = (handle: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    e.preventDefault();
-    setActiveDragHandle(handle);
-    setDragStartPos({ x: e.clientX, y: e.clientY });
-    setInitialRectOnDrag({ ...cropRect });
+  // Handle Dragging / Panning directly inside frame
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setDragStart({ x: e.clientX, y: e.clientY });
   };
 
   const handleMouseMove = useCallback((e: MouseEvent) => {
-    if (!activeDragHandle || !initialRectOnDrag || !containerRef.current) return;
-    const containerRect = containerRef.current.getBoundingClientRect();
-    const dx = (e.clientX - dragStartPos.x) / containerRect.width;
-    const dy = (e.clientY - dragStartPos.y) / containerRect.height;
+    if (!isDragging || !frameRef.current) return;
+    const rect = frameRef.current.getBoundingClientRect();
+    const deltaX = (e.clientX - dragStart.x) / rect.width;
+    const deltaY = (e.clientY - dragStart.y) / rect.height;
 
-    setCropRect(() => {
-      let { x, y, width, height } = initialRectOnDrag;
-      const minSize = 0.15;
-
-      if (activeDragHandle === 'move') {
-        x = Math.max(0, Math.min(1 - width, x + dx));
-        y = Math.max(0, Math.min(1 - height, y + dy));
-      } else if (activeDragHandle === 'se') {
-        width = Math.max(minSize, Math.min(1 - x, width + dx));
-        height = Math.max(minSize, Math.min(1 - y, height + dy));
-      } else if (activeDragHandle === 'sw') {
-        const newX = Math.max(0, Math.min(x + width - minSize, x + dx));
-        width = width + (x - newX);
-        x = newX;
-        height = Math.max(minSize, Math.min(1 - y, height + dy));
-      } else if (activeDragHandle === 'ne') {
-        const newY = Math.max(0, Math.min(y + height - minSize, y + dy));
-        height = height + (y - newY);
-        y = newY;
-        width = Math.max(minSize, Math.min(1 - x, width + dx));
-      } else if (activeDragHandle === 'nw') {
-        const newX = Math.max(0, Math.min(x + width - minSize, x + dx));
-        width = width + (x - newX);
-        x = newX;
-        const newY = Math.max(0, Math.min(y + height - minSize, y + dy));
-        height = height + (y - newY);
-        y = newY;
-      }
-
-      return { x, y, width, height };
-    });
-  }, [activeDragHandle, dragStartPos, initialRectOnDrag]);
+    // Moving mouse left should shift focus right, moving mouse up should shift focus down
+    setFocal((curr) => ({
+      x: Math.max(0, Math.min(100, Number((curr.x - deltaX * 100).toFixed(1)))),
+      y: Math.max(0, Math.min(100, Number((curr.y - deltaY * 100).toFixed(1)))),
+    }));
+    setDragStart({ x: e.clientX, y: e.clientY });
+  }, [isDragging, dragStart]);
 
   const handleMouseUp = useCallback(() => {
-    setActiveDragHandle(null);
-    setInitialRectOnDrag(null);
+    setIsDragging(false);
   }, []);
 
   useEffect(() => {
-    if (activeDragHandle) {
+    if (isDragging) {
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mouseup', handleMouseUp);
     }
@@ -224,41 +114,116 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [activeDragHandle, handleMouseMove, handleMouseUp]);
+  }, [isDragging, handleMouseMove, handleMouseUp]);
 
-  // Save Cropped Image to Server
-  const handleSaveCrop = async () => {
-    if (!imageRef.current) return;
+  // Touch drag support
+  const handleTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length === 1) {
+      setIsDragging(true);
+      setDragStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+    }
+  };
+
+  const handleTouchMove = (e: React.TouchEvent) => {
+    if (!isDragging || e.touches.length !== 1 || !frameRef.current) return;
+    const rect = frameRef.current.getBoundingClientRect();
+    const deltaX = (e.touches[0].clientX - dragStart.x) / rect.width;
+    const deltaY = (e.touches[0].clientY - dragStart.y) / rect.height;
+
+    setFocal((curr) => ({
+      x: Math.max(0, Math.min(100, Number((curr.x - deltaX * 100).toFixed(1)))),
+      y: Math.max(0, Math.min(100, Number((curr.y - deltaY * 100).toFixed(1)))),
+    }));
+    setDragStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+  };
+
+  const handleTouchEnd = () => setIsDragging(false);
+
+  // Wheel zoom inside frame
+  const handleWheel = (e: React.WheelEvent) => {
+    e.preventDefault();
+    const delta = e.deltaY < 0 ? 0.1 : -0.1;
+    setZoom((curr) => Math.max(1, Math.min(3, Number((curr + delta).toFixed(2)))));
+  };
+
+  // Reset to original full view
+  const handleReset = () => {
+    setFocal({ x: 50, y: 50 });
+    setFitMode('contain');
+    setZoom(1);
+  };
+
+  // Save non-destructive visual positioning
+  const handleSaveFocalPosition = () => {
+    const formatted = `${focal.x}% ${focal.y}%`;
+    onSavePosition(formatted, fitMode);
+    onClose();
+  };
+
+  // Pixel-perfect WYSIWYG Canvas Crop Export
+  const handleExportCroppedImage = async () => {
+    if (!imageRef.current || !frameRef.current) return;
     setIsSaving(true);
     try {
       const img = imageRef.current;
-      const cropCanvas = document.createElement('canvas');
-      const ctx = cropCanvas.getContext('2d');
+      const frame = frameRef.current;
+      const frameRect = frame.getBoundingClientRect();
+
+      const canvas = document.createElement('canvas');
+      const ctx = canvas.getContext('2d');
       if (!ctx) throw new Error('Canvas dəstəklənmir');
 
-      const cropX = Math.max(0, Math.round(cropRect.x * img.naturalWidth));
-      const cropY = Math.max(0, Math.round(cropRect.y * img.naturalHeight));
-      const cropW = Math.max(20, Math.round(cropRect.width * img.naturalWidth));
-      const cropH = Math.max(20, Math.round(cropRect.height * img.naturalHeight));
+      const targetW = 800;
+      const targetH = Math.round((800 * frameRect.height) / frameRect.width);
+      canvas.width = targetW;
+      canvas.height = targetH;
 
-      cropCanvas.width = cropW;
-      cropCanvas.height = cropH;
+      ctx.fillStyle = theme.mode === 'dark' ? '#0c101a' : '#ffffff';
+      ctx.fillRect(0, 0, targetW, targetH);
 
-      ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
+      const natW = img.naturalWidth;
+      const natH = img.naturalHeight;
+      const imgAspect = natW / natH;
+      const frameAspect = targetW / targetH;
 
-      // Convert canvas to Blob
+      let drawW = targetW * zoom;
+      let drawH = targetH * zoom;
+
+      if (fitMode === 'contain') {
+        if (imgAspect > frameAspect) {
+          drawW = targetW * zoom;
+          drawH = (targetW / imgAspect) * zoom;
+        } else {
+          drawH = targetH * zoom;
+          drawW = (targetH * imgAspect) * zoom;
+        }
+      } else {
+        // cover
+        if (imgAspect > frameAspect) {
+          drawH = targetH * zoom;
+          drawW = (targetH * imgAspect) * zoom;
+        } else {
+          drawW = targetW * zoom;
+          drawH = (targetW / imgAspect) * zoom;
+        }
+      }
+
+      const offsetX = (targetW - drawW) * (focal.x / 100);
+      const offsetY = (targetH - drawH) * (focal.y / 100);
+
+      ctx.drawImage(img, offsetX, offsetY, drawW, drawH);
+
       const blob = await new Promise<Blob | null>((resolve) =>
-        cropCanvas.toBlob(resolve, 'image/jpeg', 0.92)
+        canvas.toBlob(resolve, 'image/jpeg', 0.92)
       );
 
-      if (!blob) throw new Error('Şəkil yaradıla bilmədi');
+      if (!blob) throw new Error('Şəkil kəsilə bilmədi');
 
       let savedUrl = '';
       if (onUpload) {
         const file = new File([blob], `cropped-${Date.now()}.jpg`, { type: 'image/jpeg' });
         savedUrl = await onUpload(file);
       } else {
-        // Direct binary upload to /api/admin/media
         const res = await fetch('/api/admin/media', {
           method: 'POST',
           headers: {
@@ -272,7 +237,7 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
         savedUrl = data.url;
       }
 
-      await onSaveCroppedImage(savedUrl, `${focalPoint.x}% ${focalPoint.y}%`);
+      await onSaveCroppedImage(savedUrl, 'center');
       onClose();
     } catch (err) {
       alert(`Xəta: ${err instanceof Error ? err.message : 'Kəsmə zamanı xəta baş verdi'}`);
@@ -281,247 +246,245 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
     }
   };
 
-  // Save Focal Point Position Coordinates
-  const handleApplyPositionOnly = () => {
-    const formatted = `${focalPoint.x}% ${focalPoint.y}%`;
-    onSavePosition(formatted, fitMode);
-    onClose();
-  };
-
   if (!isOpen) return null;
 
-  const currentFocalStyle = `${focalPoint.x}% ${focalPoint.y}%`;
+  const currentFocalStyle = `${focal.x}% ${focal.y}%`;
 
   return (
     <div className="crop-studio-backdrop" onClick={(e) => e.target === e.currentTarget && onClose()}>
-      <div className="crop-studio-modal" style={{ background: theme.bgCard, borderColor: theme.border, color: theme.text }}>
+      <div className="crop-studio-modal" style={{ background: theme.bgCard, borderColor: theme.border, color: theme.text, maxWidth: '1000px' }}>
         
-        {/* Studio Header */}
+        {/* Header */}
         <header className="crop-studio-header" style={{ borderBottomColor: theme.border }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <div className="crop-studio-icon-badge" style={{ background: theme.primary, color: '#fff' }}>
-              <Crop size={18} />
+              <Maximize2 size={18} />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800 }}>Şəkil Kəsmə & Vizual Fokus Studiyası</h3>
+              <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800 }}>Məhsul Şəkli Canlı Kart Duruşu & Kəsim Studiyası</h3>
               <p style={{ margin: 0, fontSize: '11px', color: theme.textMuted }}>
-                {productTitle} — Şəkli kəsin, bucağı seçin və real vaxtda baxın
+                {productTitle} — Şəkli çərçivə içində tutub sürüşdürün (Pan & Drag) və dəqiq görünüşü seçin
               </p>
             </div>
           </div>
 
-          {/* Mode Switcher Tabs */}
-          <div className="crop-mode-tabs" style={{ background: theme.bgSecondary, borderColor: theme.border }}>
-            <button
-              type="button"
-              className={`crop-mode-tab ${activeMode === 'crop' ? 'active' : ''}`}
-              onClick={() => setActiveMode('crop')}
-            >
-              <Crop size={14} />
-              <span>✂️ Şəkli Kəs (Crop)</span>
-            </button>
-            <button
-              type="button"
-              className={`crop-mode-tab ${activeMode === 'focal' ? 'active' : ''}`}
-              onClick={() => setActiveMode('focal')}
-            >
-              <Target size={14} />
-              <span>🎯 Fokus & Duruş (Focal Pin)</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            {/* Frame View Toggle */}
+            <div className="crop-mode-tabs" style={{ background: theme.bgSecondary, borderColor: theme.border }}>
+              <button
+                type="button"
+                className={`crop-mode-tab ${activeFrameType === 'card' ? 'active' : ''}`}
+                onClick={() => setActiveFrameType('card')}
+                title="Kataloq kartı proporsiyası"
+              >
+                🎴 Kataloq Kartı
+              </button>
+              <button
+                type="button"
+                className={`crop-mode-tab ${activeFrameType === 'modal' ? 'active' : ''}`}
+                onClick={() => setActiveFrameType('modal')}
+                title="Məhsul detalları pəncərəsi proporsiyası"
+              >
+                🔍 Detal Pəncərəsi
+              </button>
+            </div>
+
+            <button type="button" className="crop-close-btn" onClick={onClose} title="Bağla">
+              <X size={18} />
             </button>
           </div>
-
-          <button type="button" className="crop-close-btn" onClick={onClose} title="Bağla">
-            <X size={18} />
-          </button>
         </header>
 
-        {/* Studio Main Workspace */}
-        <div className="crop-studio-body">
+        {/* Main Body */}
+        <div className="crop-studio-body" style={{ gridTemplateColumns: '1fr 340px' }}>
           
-          {/* Left: Interactive Canvas Workspace */}
+          {/* Left: WYSIWYG Interactive Frame */}
           <div className="crop-workspace-col">
-            <div className="crop-canvas-stage" ref={containerRef}>
-              <img
-                ref={imageRef}
-                src={imageUrl}
-                alt="Crop subject"
-                className="crop-source-img"
-                style={{
-                  transform: `scale(${zoom}) rotate(${rotation}deg)`,
-                  transition: 'transform 0.15s ease',
-                }}
-              />
-
-              {/* MODE 1: VISUAL CROP BOX OVERLAY */}
-              {activeMode === 'crop' && (
-                <div
-                  className="crop-box-overlay"
-                  style={{
-                    left: `${cropRect.x * 100}%`,
-                    top: `${cropRect.y * 100}%`,
-                    width: `${cropRect.width * 100}%`,
-                    height: `${cropRect.height * 100}%`,
-                  }}
-                  onMouseDown={(e) => handleMouseDownOnHandle('move', e)}
-                >
-                  {/* Rule of Thirds Grid Lines */}
-                  <div className="crop-grid-line v1" />
-                  <div className="crop-grid-line v2" />
-                  <div className="crop-grid-line h1" />
-                  <div className="crop-grid-line h2" />
-
-                  {/* Corner Resize Handles */}
-                  <div className="crop-handle nw" onMouseDown={(e) => handleMouseDownOnHandle('nw', e)} />
-                  <div className="crop-handle ne" onMouseDown={(e) => handleMouseDownOnHandle('ne', e)} />
-                  <div className="crop-handle sw" onMouseDown={(e) => handleMouseDownOnHandle('sw', e)} />
-                  <div className="crop-handle se" onMouseDown={(e) => handleMouseDownOnHandle('se', e)} />
-                  
-                  <div className="crop-box-badge">
-                    {Math.round(cropRect.width * imageDimensions.width)} × {Math.round(cropRect.height * imageDimensions.height)} px
-                  </div>
-                </div>
-              )}
-
-              {/* MODE 2: INTERACTIVE FOCAL POINT TARGET RETICLE */}
-              {activeMode === 'focal' && (
-                <div className="focal-click-overlay" onClick={handleImageFocalClick}>
-                  {/* Draggable Focal Pin */}
-                  <div
-                    className="focal-target-pin"
-                    style={{
-                      left: `${focalPoint.x}%`,
-                      top: `${focalPoint.y}%`,
-                    }}
-                  >
-                    <div className="focal-reticle-ring" />
-                    <div className="focal-reticle-dot" />
-                    <span className="focal-coords-badge">X:{focalPoint.x}% Y:{focalPoint.y}%</span>
-                  </div>
-                </div>
-              )}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                fontSize: '11.5px',
+                color: theme.textMuted,
+                padding: '0 4px',
+              }}
+            >
+              <span>🖱 <b>Şəkli tutub sürüşdürərək</b> istədiyiniz hissəyə fokuslayın</span>
+              <span>🔍 Mövqe: <b>X:{focal.x}% Y:{focal.y}%</b> | Miqyas: <b>{Math.round(zoom * 100)}%</b></span>
             </div>
 
-            {/* Bottom Controls Bar */}
+            {/* Live Interactive Framing Container */}
+            <div
+              className="crop-canvas-stage"
+              style={{
+                height: activeFrameType === 'card' ? '380px' : '420px',
+                maxHeight: '440px',
+                background: '#090d16',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                position: 'relative',
+                overflow: 'hidden',
+              }}
+            >
+              {/* WYSIWYG Frame Box */}
+              <div
+                ref={frameRef}
+                onMouseDown={handleMouseDown}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                onWheel={handleWheel}
+                style={{
+                  width: activeFrameType === 'card' ? '380px' : '460px',
+                  height: activeFrameType === 'card' ? '280px' : '320px',
+                  maxWidth: '92%',
+                  maxHeight: '90%',
+                  borderRadius: '12px',
+                  border: '2px solid #38bdf8',
+                  boxShadow: '0 0 0 9999px rgba(0, 0, 0, 0.75), 0 8px 30px rgba(0,0,0,0.8)',
+                  position: 'relative',
+                  overflow: 'hidden',
+                  cursor: isDragging ? 'grabbing' : 'grab',
+                  background: theme.mode === 'dark' ? '#0c101a' : '#f8fafc',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  userSelect: 'none',
+                }}
+                title="Şəkli tutub hər tərəfə sürüşdürün"
+              >
+                <img
+                  ref={imageRef}
+                  src={imageUrl}
+                  alt="Subject"
+                  draggable={false}
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: fitMode,
+                    objectPosition: currentFocalStyle,
+                    transform: `scale(${zoom})`,
+                    transition: isDragging ? 'none' : 'transform 0.15s ease',
+                    pointerEvents: 'none',
+                    userSelect: 'none',
+                  }}
+                />
+
+                {/* Framing Reticle Center Indicator */}
+                <div
+                  style={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    width: '16px',
+                    height: '16px',
+                    border: '1px solid rgba(56, 189, 248, 0.4)',
+                    borderRadius: '50%',
+                    pointerEvents: 'none',
+                  }}
+                />
+
+                {/* Badge Overlay */}
+                <div className="crop-box-badge" style={{ bottom: '8px', left: '8px' }}>
+                  {activeFrameType === 'card' ? '🎴 Kataloq Kart Görünüşü' : '🔍 Detal Pəncərəsi'}
+                </div>
+              </div>
+            </div>
+
+            {/* Interactive Alignment & Zoom Bar */}
             <div className="crop-controls-bar" style={{ background: theme.bgSecondary, borderColor: theme.border }}>
-              {activeMode === 'crop' ? (
-                <>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <span style={{ fontSize: '11.5px', fontWeight: 700, color: theme.textMuted }}>Kəsim Nisbəti:</span>
-                    {(['free', '1:1', '4:3', '3:4', '16:9'] as AspectRatioPreset[]).map((preset) => (
-                      <button
-                        key={preset}
-                        type="button"
-                        className={`crop-ratio-btn ${aspectRatio === preset ? 'active' : ''}`}
-                        onClick={() => setAspectRatio(preset)}
-                      >
-                        {preset === 'free' ? 'Sərbəst' : preset}
-                      </button>
-                    ))}
-                  </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <span style={{ fontSize: '11px', fontWeight: 700, color: theme.textMuted }}>Sürətli Bucaq:</span>
+                <button type="button" className={`crop-ratio-btn ${focal.y === 0 ? 'active' : ''}`} onClick={() => setFocal({ x: 50, y: 0 })}>⬆ Üst</button>
+                <button type="button" className={`crop-ratio-btn ${focal.x === 50 && focal.y === 50 ? 'active' : ''}`} onClick={() => setFocal({ x: 50, y: 50 })}>⏺ Mərkəz</button>
+                <button type="button" className={`crop-ratio-btn ${focal.y === 100 ? 'active' : ''}`} onClick={() => setFocal({ x: 50, y: 100 })}>⬇ Alt</button>
+                <button type="button" className={`crop-ratio-btn ${focal.x === 0 ? 'active' : ''}`} onClick={() => setFocal({ x: 0, y: 50 })}>⬅ Sol</button>
+                <button type="button" className={`crop-ratio-btn ${focal.x === 100 ? 'active' : ''}`} onClick={() => setFocal({ x: 100, y: 50 })}>➡ Sağ</button>
+              </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
-                    <button
-                      type="button"
-                      className="crop-tool-btn"
-                      onClick={() => setRotation((r) => (r + 90) % 360)}
-                      title="90° Çevir"
-                    >
-                      <RotateCw size={14} /> 90°
-                    </button>
-                    <button
-                      type="button"
-                      className="crop-tool-btn"
-                      onClick={() => { setZoom(1); setRotation(0); setCropRect({ x: 0.1, y: 0.1, width: 0.8, height: 0.8 }); }}
-                      title="Sıfırla"
-                    >
-                      <RefreshCw size={14} /> Sıfırla
-                    </button>
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <span style={{ fontSize: '11.5px', fontWeight: 700, color: theme.textMuted }}>Sürətli Fokus Nöqtəsi:</span>
-                    <button type="button" className="crop-ratio-btn" onClick={() => setFocalPoint({ x: 50, y: 0 })}>⬆ Üst</button>
-                    <button type="button" className="crop-ratio-btn" onClick={() => setFocalPoint({ x: 50, y: 50 })}>⏺ Mərkəz</button>
-                    <button type="button" className="crop-ratio-btn" onClick={() => setFocalPoint({ x: 50, y: 100 })}>⬇ Alt</button>
-                    <button type="button" className="crop-ratio-btn" onClick={() => setFocalPoint({ x: 0, y: 50 })}>⬅ Sol</button>
-                    <button type="button" className="crop-ratio-btn" onClick={() => setFocalPoint({ x: 100, y: 50 })}>➡ Sağ</button>
-                  </div>
-
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: 'auto' }}>
-                    <span style={{ fontSize: '11px', color: theme.textMuted }}>Kəsim Rejimi:</span>
-                    <select
-                      value={fitMode}
-                      onChange={(e) => setFitMode(e.target.value as any)}
-                      className="crop-select"
-                    >
-                      <option value="contain">Tam Sığışdır (Contain)</option>
-                      <option value="cover">Kartı Doldur (Cover)</option>
-                    </select>
-                  </div>
-                </>
-              )}
+              {/* Zoom Slider */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginLeft: 'auto' }}>
+                <button type="button" className="crop-tool-btn" onClick={() => setZoom((z) => Math.max(1, z - 0.2))} disabled={zoom <= 1} title="Kiçilt">
+                  <ZoomOut size={13} />
+                </button>
+                <input
+                  type="range"
+                  min="1"
+                  max="2.5"
+                  step="0.05"
+                  value={zoom}
+                  onChange={(e) => setZoom(parseFloat(e.target.value))}
+                  style={{ width: '80px', accentColor: theme.primary }}
+                />
+                <button type="button" className="crop-tool-btn" onClick={() => setZoom((z) => Math.min(2.5, z + 0.2))} disabled={zoom >= 2.5} title="Böyüt">
+                  <ZoomIn size={13} />
+                </button>
+                <button type="button" className="crop-tool-btn" onClick={handleReset} title="Orijinal vəziyyətə sıfırla">
+                  <RefreshCw size={13} /> Sıfırla
+                </button>
+              </div>
             </div>
           </div>
 
-          {/* Right: Real-Time Live Catalog Previews */}
+          {/* Right: Settings, Explanations & Live Card Previews */}
           <div className="crop-preview-col" style={{ borderLeftColor: theme.border }}>
-            <h4 style={{ margin: '0 0 12px 0', fontSize: '12.5px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Eye size={15} color={theme.primary} /> Canlı Kataloq Görünüşü
+            <h4 style={{ margin: '0 0 10px 0', fontSize: '12.5px', fontWeight: 800, display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <Eye size={15} color={theme.primary} /> Canlı Kart Görünüşü
             </h4>
 
-            {/* Preview 1: Product Card Frame (250px x 180px) */}
+            {/* Fit Mode Selector */}
+            <div style={{ marginBottom: '10px' }}>
+              <label style={{ fontSize: '11px', fontWeight: 700, color: theme.textMuted, display: 'block', marginBottom: '4px' }}>
+                Görünüş Rejimi (Kəsim / Sığışdırma):
+              </label>
+              <select
+                value={fitMode}
+                onChange={(e) => setFitMode(e.target.value as any)}
+                className="crop-select"
+                style={{ width: '100%', padding: '7px 10px', fontSize: '12px' }}
+              >
+                <option value="contain">🖼 Tam Sığışdır (Heç bir tərəfi kəsilməsin)</option>
+                <option value="cover">📐 Kartı Doldur & Bucaq Seç (Cover)</option>
+              </select>
+            </div>
+
+            {/* Preview Mini Card */}
             <div className="crop-card-preview-box" style={{ background: theme.bgSecondary, borderColor: theme.border }}>
-              <span className="crop-preview-label">1. Məhsul Kartı (Əsas Səhifə & Kateqoriya)</span>
-              <div className="crop-preview-card-frame" style={{ background: theme.mode === 'dark' ? '#0c101a' : '#f8fafc' }}>
-                {activeMode === 'crop' ? (
-                  <canvas ref={canvasPreviewRef} className="crop-canvas-preview" />
-                ) : (
-                  <img
-                    src={imageUrl}
-                    alt="Preview"
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectPosition: currentFocalStyle,
-                      objectFit: fitMode,
-                    }}
-                  />
-                )}
+              <span className="crop-preview-label">Kataloq Kartı (Real Ölçü):</span>
+              <div className="crop-preview-card-frame" style={{ background: theme.mode === 'dark' ? '#0c101a' : '#f8fafc', height: '150px' }}>
+                <img
+                  src={imageUrl}
+                  alt="Preview"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectPosition: currentFocalStyle,
+                    objectFit: fitMode,
+                    transform: `scale(${zoom})`,
+                    transition: 'all 0.1s ease',
+                  }}
+                />
               </div>
             </div>
 
-            {/* Preview 2: Details Modal Frame */}
-            <div className="crop-card-preview-box" style={{ background: theme.bgSecondary, borderColor: theme.border, marginTop: '14px' }}>
-              <span className="crop-preview-label">2. Məhsul Pəncərəsi (Ətraflı Baxış)</span>
-              <div className="crop-preview-modal-frame" style={{ background: theme.mode === 'dark' ? '#0c101a' : '#f8fafc' }}>
-                {activeMode === 'crop' ? (
-                  <canvas ref={canvasPreviewRef} className="crop-canvas-preview" />
-                ) : (
-                  <img
-                    src={imageUrl}
-                    alt="Preview"
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectPosition: currentFocalStyle,
-                      objectFit: fitMode,
-                    }}
-                  />
-                )}
+            {/* Informational Guidance */}
+            <div className="crop-info-card" style={{ background: theme.bgSecondary, borderColor: theme.border, fontSize: '11.5px', marginTop: '10px' }}>
+              <div style={{ display: 'flex', gap: '6px', alignItems: 'flex-start', color: '#38bdf8', marginBottom: '6px' }}>
+                <Sparkles size={15} style={{ flexShrink: 0, marginTop: '2px' }} />
+                <span><b>Tövsiyə olunan:</b> "🎯 Mövqeni Yadda Saxla" seçimi orijinal şəkli korlamır, kartda şəklin yalnız istədiyiniz bucağını göstərir.</span>
               </div>
-            </div>
-
-            {/* Summary & Coordinates Card */}
-            <div className="crop-info-card" style={{ background: theme.bgSecondary, borderColor: theme.border }}>
-              <div><b>Orijinal:</b> {imageDimensions.width} × {imageDimensions.height} px</div>
-              <div><b>Mövqe:</b> <code>{currentFocalStyle}</code> ({fitMode})</div>
+              <div style={{ color: theme.textMuted }}>
+                • Orijinal Ölçü: <b>{imageSize.width} × {imageSize.height} px</b><br />
+                • Duruş Koordinatı: <code>{currentFocalStyle}</code>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Studio Footer with Action Buttons */}
+        {/* Footer */}
         <footer className="crop-studio-footer" style={{ borderTopColor: theme.border }}>
           <button type="button" className="crop-cancel-btn" onClick={onClose} disabled={isSaving}>
             İmtina
@@ -530,34 +493,35 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
           <div style={{ display: 'flex', gap: '10px' }}>
             <button
               type="button"
-              className="crop-focal-apply-btn"
-              onClick={handleApplyPositionOnly}
+              className="crop-save-btn"
+              onClick={handleExportCroppedImage}
               disabled={isSaving}
-              title="Orijinal faylı kəsmədən yalnız duruş mövqeyini yadda saxla"
+              style={{ background: 'transparent', border: `1px solid ${theme.border}`, color: theme.text }}
+              title="Çərçivədə gördüyünüz sahəni yeni kəsilmiş şəkil faylı olaraq saxla"
             >
-              <Target size={15} />
-              <span>🎯 Mövqeni Tətbiq Et</span>
+              {isSaving ? (
+                <>
+                  <RefreshCw size={14} className="spin-anim" />
+                  <span>Kəsilir...</span>
+                </>
+              ) : (
+                <>
+                  <Crop size={14} />
+                  <span>✂️ Kəsib Yeni Şəkil Et</span>
+                </>
+              )}
             </button>
 
             <button
               type="button"
-              className="crop-save-btn"
-              onClick={handleSaveCrop}
+              className="crop-focal-apply-btn"
+              onClick={handleSaveFocalPosition}
               disabled={isSaving}
-              style={{ background: theme.primary, color: '#fff' }}
-              title="Kəsilmiş yeni şəkli serverə yükləyib saxla"
+              style={{ background: theme.primary, color: '#ffffff', border: 'none', padding: '9px 20px', fontWeight: 800 }}
+              title="Orijinal faylı kəsmədən dəqiq kart duruşunu saxla"
             >
-              {isSaving ? (
-                <>
-                  <RefreshCw size={15} className="spin-anim" />
-                  <span>Kəsilir & Yüklənir...</span>
-                </>
-              ) : (
-                <>
-                  <Check size={16} />
-                  <span>✂️ Kəsilmiş Şəkli Saxla</span>
-                </>
-              )}
+              <Check size={16} />
+              <span>🎯 Mövqeni Yadda Saxla</span>
             </button>
           </div>
         </footer>
