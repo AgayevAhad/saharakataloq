@@ -123,13 +123,14 @@ export async function importLotusData() {
         stockStatus: 'in_stock',
         isNew: false,
         isFeatured: false,
+        status: 'published',
       });
     }
   }
 
   console.log(`Parsed ${lotusProducts.length} Lotus products from Excel.`);
 
-  const dbPaths = ['data/draft-catalog.sqlite', 'data/catalog.sqlite'];
+  const dbPaths = ['data/catalog-draft.sqlite', 'data/catalog.sqlite'];
 
   for (const dbPath of dbPaths) {
     const db = createCatalogDatabase(path.join(ROOT, dbPath));
