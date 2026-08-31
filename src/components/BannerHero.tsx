@@ -37,12 +37,17 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
   const activeArticles = articles.filter((a) => a.active !== false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const [animating, setAnimating] = useState(false);
 
   useEffect(() => {
     if (activeArticles.length <= 1 || isPaused) return;
     const timer = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % activeArticles.length);
-    }, 4500);
+      setAnimating(true);
+      setTimeout(() => {
+        setCurrentIndex((prev) => (prev + 1) % activeArticles.length);
+        setAnimating(false);
+      }, 200);
+    }, 3800);
     return () => clearInterval(timer);
   }, [activeArticles.length, isPaused]);
 
@@ -50,12 +55,20 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
 
   const prevSlide = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCurrentIndex((prev) => (prev - 1 + activeArticles.length) % activeArticles.length);
+    setAnimating(true);
+    setTimeout(() => {
+      setCurrentIndex((prev) => (prev - 1 + activeArticles.length) % activeArticles.length);
+      setAnimating(false);
+    }, 150);
   };
 
   const nextSlide = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setCurrentIndex((prev) => (prev + 1) % activeArticles.length);
+    setAnimating(true);
+    setTimeout(() => {
+      setCurrentIndex((prev) => (prev + 1) % activeArticles.length);
+      setAnimating(false);
+    }, 150);
   };
 
   return (
@@ -90,7 +103,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
                 letterSpacing: '0.3px',
               }}
             >
-              🇮🇹 İtalyan brendi
+              🇮🇹 ARDO & 🇹🇷 LOTUS
             </span>
             <span
               style={{
@@ -133,7 +146,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
             {heroTitle ? (
               <span>{heroTitle}</span>
             ) : (
-              <>Eviniz üçün seçilmiş <span style={{ color: theme.primary }}>məişət texnikası</span></>
+              <>Premium <span style={{ color: theme.primary }}>ARDO & LOTUS</span> Məişət Texnikası</>
             )}
           </h2>
           <p
@@ -144,19 +157,22 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
               lineHeight: '22px',
             }}
           >
-            {heroSubtitle || 'Sahara Electronics — İtalyan ARDO məhsullarının və innovativ texnologiyaların rəsmi kataloqu.'}
+            {heroSubtitle || 'Eleqant italyan dizaynı, müasir Lotus həlləri və 3 ilə qədər rəsmi zəmanətli orijinal məhsullar.'}
           </p>
         </div>
 
-        {/* Dynamic Interactive Technology Carousel Bar */}
+        {/* Dynamic Interactive Auto-Rotating Technology Carousel Bar */}
         {currentArticle && (
           <div
             onMouseEnter={() => setIsPaused(true)}
             onMouseLeave={() => setIsPaused(false)}
             onClick={() => onOpenArticle(currentArticle)}
+            role="button"
+            tabIndex={0}
+            aria-label={`Texnologiya: ${currentArticle.title}`}
             style={{
               backgroundColor: theme.mode === 'dark' ? 'rgba(239, 68, 68, 0.08)' : '#fef2f2',
-              border: 'none',
+              border: `1px solid ${theme.mode === 'dark' ? 'rgba(239, 68, 68, 0.2)' : '#fee2e2'}`,
               borderRadius: '12px',
               padding: '12px 16px',
               cursor: 'pointer',
@@ -164,20 +180,23 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
               alignItems: 'center',
               justifyContent: 'space-between',
               gap: '12px',
-              transition: 'transform 0.2s ease, background-color 0.2s ease',
+              transition: 'transform 0.2s ease, background-color 0.2s ease, opacity 0.2s ease',
+              opacity: animating ? 0.4 : 1,
+              transform: animating ? 'translateY(2px)' : 'translateY(0)',
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flex: 1, minWidth: 0 }}>
               <div
                 style={{
-                  width: '40px',
-                  height: '40px',
+                  width: '42px',
+                  height: '42px',
                   borderRadius: '10px',
                   backgroundColor: theme.mode === 'dark' ? '#2e0e0e' : '#fee2e2',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
+                  transition: 'transform 0.3s ease',
                 }}
               >
                 {getArticleIcon(currentArticle.icon, theme.primary, 22)}
@@ -200,11 +219,13 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
                     <span
                       style={{
                         fontSize: '10px',
-                        fontWeight: 700,
+                        fontWeight: 750,
                         backgroundColor: theme.primary,
                         color: '#ffffff',
-                        padding: '2px 6px',
-                        borderRadius: '4px',
+                        padding: '2px 8px',
+                        borderRadius: '6px',
+                        letterSpacing: '0.2px',
+                        boxShadow: '0 2px 6px rgba(220, 38, 38, 0.25)',
                       }}
                     >
                       {currentArticle.badge}
@@ -230,8 +251,10 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
             <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
               {activeArticles.length > 1 && (
                 <button
+                  type="button"
                   onClick={prevSlide}
-                  title="Əvvəlki"
+                  title="Əvvəlki texnologiya"
+                  aria-label="Əvvəlki texnologiya"
                   style={{
                     background: theme.bgCard,
                     border: `1px solid ${theme.border}`,
@@ -269,8 +292,10 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
 
               {activeArticles.length > 1 && (
                 <button
+                  type="button"
                   onClick={nextSlide}
-                  title="Növbəti"
+                  title="Növbəti texnologiya"
+                  aria-label="Növbəti texnologiya"
                   style={{
                     background: theme.bgCard,
                     border: `1px solid ${theme.border}`,
@@ -298,7 +323,14 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
             {activeArticles.map((art, idx) => (
               <button
                 key={art.id}
-                onClick={() => setCurrentIndex(idx)}
+                type="button"
+                onClick={() => {
+                  setAnimating(true);
+                  setTimeout(() => {
+                    setCurrentIndex(idx);
+                    setAnimating(false);
+                  }, 150);
+                }}
                 style={{
                   width: idx === currentIndex ? '22px' : '8px',
                   height: '6px',
@@ -309,7 +341,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
                 }}
-                aria-label={`Slayd ${idx + 1}`}
+                aria-label={`Slayd ${idx + 1}: ${art.title}`}
               />
             ))}
           </div>

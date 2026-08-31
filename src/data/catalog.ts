@@ -94,6 +94,34 @@ export const DEFAULT_ARTICLES: TechnologyArticle[] = [
       { title: 'Şirəli Daxili, Xırtıldayan Qabıq', desc: 'Yeməyin şirəsini daxilində saxlayaraq xaricdən mükəmməl xırtıldayan dad verir.' },
     ],
   },
+  {
+    id: 'art-lotus-rapidair',
+    title: 'Lotus 360° Rapid Air & Sağlam Qızartma',
+    subtitle: 'Yağsız və 90%-dək daha az kalorili xırtıldayan yemək bişirmə texnologiyası.',
+    badge: '🪷 Lotus Airfryer',
+    icon: 'Flame',
+    active: true,
+    advantages: [
+      { title: '360° İntensiv İsti Hava', desc: 'Sirkulyasiyalı isti hava ilə yeməklər bərabər və xırtıldayan bişir.' },
+      { title: 'Şüşə Qab və İşıqlandırma', desc: 'Bişmə prosesini qapağı açmadan rahatlıqla izləmə imkanı.' },
+      { title: '8 Sensorlu Proqram', desc: 'Ət, tərəvəz, xəmir və qızartmalar üçün bir toxunuşla hazır rejimlər.' },
+      { title: 'Asan Təmizlənən Örtük', desc: 'Yanmağa və yapışmağa qarşı xüsusi dözümlü qab örtüyü.' },
+    ],
+  },
+  {
+    id: 'art-lotus-touch',
+    title: 'Lotus Ağıllı Sensor İdarəetmə & LED Displey',
+    subtitle: 'Dəqiq temperatur və vaxt nəzarəti ilə erqonomik və zərif istifadə təcrübəsi.',
+    badge: '🎛️ Sensor & Displey',
+    icon: 'Zap',
+    active: true,
+    advantages: [
+      { title: 'Dəqiq Rəqəmsal Nəzarət', desc: 'Dərəcə və taymeri saniyə dəqiqliyi ilə tənzimləmə.' },
+      { title: 'Təhlükəsizlik Sistemi', desc: 'Həddindən artıq qızmadan qorunma və avtomatik sönmə.' },
+      { title: 'Temperli Şüşə Panel', desc: 'Cızılmaya dözümlü və asan silinən premium material.' },
+      { title: 'Səssiz Sensor Düymələr', desc: 'Yüksək həssaslıqlı sensor reaksiyası ilə rahat idarəetmə.' },
+    ],
+  },
 ];
 
 export const DEFAULT_ADDRESSES: StoreAddress[] = [

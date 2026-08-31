@@ -8,4 +8,5 @@
 5. **Multiple Addresses**: Full support for multiple store/showroom addresses in admin panel, database, and customer-facing components.
 6. **Admin Panel Synchronization**: Any new catalog feature, field, setting, brand, address, or model change MUST be fully supported and synchronized in the Admin Panel with intuitive UI, proper contrast, and end-to-end functionality.
 7. **Strict Responsiveness & Visual Integrity**: Responsiveness on BOTH Desktop (large screens, laptops) and Mobile (phones, tablets, touch devices) must NEVER be broken. Always maintain proper CSS grid/flex proportions, non-distorted images, card heights, touch targets, and automated test coverage for responsive layouts.
+8. **Multi-Brand Promotional & Technology Spotlight Synchronization**: Promotional hero banners, technology highlights, and informational spotlights must actively and dynamically showcase features across all active catalog brands (e.g. ARDO SABAF/Inverter, Lotus Rapid Air/Smart Touch, etc.) with smooth animated rotation, rather than being restricted to a single brand. When new brands or technologies are introduced, these spotlights must automatically support and reflect them.
 
