@@ -309,7 +309,21 @@ export const App: React.FC = () => {
             }, 60);
           }}
         />
-        <BannerHero theme={activeTheme} articles={catalog.articles} heroTitle={catalog.settings?.heroBannerTitle} heroSubtitle={catalog.settings?.heroBannerSubtitle} onOpenArticle={openArticle} />
+        <BannerHero
+          theme={activeTheme}
+          brands={catalog.brands}
+          articles={catalog.articles}
+          heroTitle={catalog.settings?.heroBannerTitle}
+          heroSubtitle={catalog.settings?.heroBannerSubtitle}
+          onOpenArticle={openArticle}
+          onSelectBrand={(brandId) => {
+            setSelectedBrand(brandId);
+            setSelectedCategory('all');
+            setTimeout(() => {
+              document.querySelector('.catalog-section')?.scrollIntoView({ behavior: 'smooth' });
+            }, 60);
+          }}
+        />
 
         {isCatalogActive && (
           <section className="catalog-section">
