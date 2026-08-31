@@ -6,15 +6,17 @@ describe('Public kataloq başlanğıc modeli', () => {
     expect(DEFAULT_CATALOG.products).toEqual([]);
   });
 
-  it('yalnız təsdiqlənmiş kateqoriya adlarını saxlayır', () => {
+  it('təsdiqlənmiş kataloq kateqoriya adlarını saxlayır', () => {
     expect(DEFAULT_CATEGORIES.map((item) => item.name)).toEqual([
       'Aspiratorlar', 'Kondisionerlər', 'Mikrodalğalı sobalar',
       'Bişirmə panelləri', 'Sobalar', 'Soyuducular',
+      'Fritözlər & Airfryer', 'Paltaryuyanlar', 'Termopotlar',
+      'Tozsoranlar', 'Televizorlar',
     ]);
   });
 
-  it('Lotus və Artel brendlərini Tezliklə statusunda saxlayır', () => {
-    expect(DEFAULT_BRANDS.find((item) => item.id === 'lotus')?.comingSoon).toBe(true);
+  it('Lotus və ARDO brendlərini aktiv statusda saxlayır, Artel isə Tezliklə statusundadır', () => {
+    expect(DEFAULT_BRANDS.find((item) => item.id === 'lotus')?.comingSoon).toBe(false);
     expect(DEFAULT_BRANDS.find((item) => item.id === 'artel')?.comingSoon).toBe(true);
     expect(DEFAULT_BRANDS.find((item) => item.id === 'ardo')?.comingSoon).toBe(false);
   });

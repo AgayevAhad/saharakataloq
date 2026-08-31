@@ -23,8 +23,18 @@ export const DEFAULT_BRANDS: Brand[] = [
     active: true,
     comingSoon: false,
   },
-  { id: 'lotus', name: 'LOTUS', slug: 'lotus', originCountry: '', manufacturingCountries: [], logo: '/media/brands/lotus-mark.svg', active: true, comingSoon: true },
-  { id: 'artel', name: 'ARTEL', slug: 'artel', originCountry: '', manufacturingCountries: [], logo: '/media/brands/artel-logo.svg', active: true, comingSoon: true },
+  {
+    id: 'lotus',
+    name: 'LOTUS',
+    slug: 'lotus',
+    originCountry: 'Türkiyə',
+    manufacturingCountries: ['Türkiyə', 'Çin'],
+    description: 'Yüksək keyfiyyətli Lotus məişət texnikası və elektronika məhsulları.',
+    logo: '/media/brands/lotus-mark.svg',
+    active: true,
+    comingSoon: false,
+  },
+  { id: 'artel', name: 'ARTEL', slug: 'artel', originCountry: 'Özbəkistan', manufacturingCountries: ['Özbəkistan'], logo: '/media/brands/artel-logo.svg', active: true, comingSoon: true },
 ];
 
 export const DEFAULT_CATEGORIES: CatalogCategory[] = [
@@ -34,6 +44,11 @@ export const DEFAULT_CATEGORIES: CatalogCategory[] = [
   { id: 'cooktop', name: 'Bişirmə panelləri', slug: 'bisirme-panelleri', icon: 'Flame', active: true, sortOrder: 3 },
   { id: 'oven', name: 'Sobalar', slug: 'sobalar', icon: 'Layers', active: true, sortOrder: 4 },
   { id: 'refrigerator', name: 'Soyuducular', slug: 'soyuducular', icon: 'Refrigerator', active: true, sortOrder: 5 },
+  { id: 'airfryer', name: 'Fritözlər & Airfryer', slug: 'airfryer', icon: 'Flame', active: true, sortOrder: 6 },
+  { id: 'washer', name: 'Paltaryuyanlar', slug: 'paltaryuyanlar', icon: 'Layers', active: true, sortOrder: 7 },
+  { id: 'thermopot', name: 'Termopotlar', slug: 'termopotlar', icon: 'Box', active: true, sortOrder: 8 },
+  { id: 'vacuum_cleaner', name: 'Tozsoranlar', slug: 'tozsoranlar', icon: 'Wind', active: true, sortOrder: 9 },
+  { id: 'tv', name: 'Televizorlar', slug: 'televizorlar', icon: 'Box', active: true, sortOrder: 10 },
 ];
 
 export const DEFAULT_ARTICLES: TechnologyArticle[] = [

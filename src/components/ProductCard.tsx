@@ -223,6 +223,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         return <Box size={13} color="#f59e0b" />;
       case 'refrigerator':
         return <Refrigerator size={13} color="#14b8a6" />;
+      case 'airfryer':
+        return <Flame size={13} color="#ea580c" />;
+      case 'washer':
+        return <Layers size={13} color="#3b82f6" />;
+      case 'thermopot':
+        return <Box size={13} color="#d97706" />;
+      case 'vacuum_cleaner':
+        return <Wind size={13} color="#6366f1" />;
+      case 'tv':
+        return <Box size={13} color="#8b5cf6" />;
       default:
         return <Box size={13} color={theme.primary} />;
     }
