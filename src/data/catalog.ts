@@ -49,6 +49,8 @@ export const DEFAULT_CATEGORIES: CatalogCategory[] = [
   { id: 'thermopot', name: 'Termopotlar', slug: 'termopotlar', icon: 'Box', active: true, sortOrder: 8 },
   { id: 'vacuum_cleaner', name: 'Tozsoranlar', slug: 'tozsoranlar', icon: 'Wind', active: true, sortOrder: 9 },
   { id: 'tv', name: 'Televizorlar', slug: 'televizorlar', icon: 'Box', active: true, sortOrder: 10 },
+  { id: 'meat_grinder', name: 'Ətçəkənlər', slug: 'etcekenler', icon: 'Box', active: true, sortOrder: 11 },
+  { id: 'iron', name: 'Ütülər', slug: 'utuler', icon: 'Wind', active: true, sortOrder: 12 },
 ];
 
 export const DEFAULT_ARTICLES: TechnologyArticle[] = [

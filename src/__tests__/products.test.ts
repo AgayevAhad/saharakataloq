@@ -11,7 +11,7 @@ describe('Public kataloq başlanğıc modeli', () => {
       'Aspiratorlar', 'Kondisionerlər', 'Mikrodalğalı sobalar',
       'Bişirmə panelləri', 'Sobalar', 'Soyuducular',
       'Fritözlər & Airfryer', 'Paltaryuyanlar', 'Termopotlar',
-      'Tozsoranlar', 'Televizorlar',
+      'Tozsoranlar', 'Televizorlar', 'Ətçəkənlər', 'Ütülər',
     ]);
   });
 

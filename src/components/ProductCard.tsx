@@ -233,6 +233,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         return <Wind size={13} color="#6366f1" />;
       case 'tv':
         return <Box size={13} color="#8b5cf6" />;
+      case 'meat_grinder':
+        return <Box size={13} color="#dc2626" />;
+      case 'iron':
+        return <Wind size={13} color="#0284c7" />;
       default:
         return <Box size={13} color={theme.primary} />;
     }
