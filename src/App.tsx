@@ -5,7 +5,7 @@ import { lightTheme, darkTheme, ThemeMode } from './types/theme';
 import { DEFAULT_CATALOG, normalizeCatalog } from './data/catalog';
 import { filterCatalogProducts } from './utils/filter';
 import { phoneHref, whatsappHref } from './utils/contact';
-import { Lock, MessageCircle, Moon, Phone, Sparkles, Sun } from 'lucide-react';
+import { ArrowLeft, Lock, MessageCircle, Moon, Phone, Sparkles, Sun } from 'lucide-react';
 import { Header } from './components/Header';
 import { SaharaLogo } from './components/SaharaLogo';
 import { BrandShowcase } from './components/BrandShowcase';
@@ -19,8 +19,10 @@ import { AdminLogin } from './components/AdminLogin';
 import { CatalogAdmin } from './components/CatalogAdmin';
 import { Footer } from './components/Footer';
 import { FloatingActions } from './components/FloatingActions';
+import { BrandCategoryFilter } from './components/BrandCategoryFilter';
 
 const THEME_KEY = 'sahara_theme_mode';
+
 const getInitialThemeMode = (): ThemeMode => {
   const saved = localStorage.getItem(THEME_KEY) as ThemeMode | null;
   if (saved === 'light' || saved === 'dark') return saved;
@@ -31,8 +33,8 @@ const isAdminPath = () => window.location.pathname.startsWith('/AdministratorNT'
 
 export const App: React.FC = () => {
   const [catalog, setCatalog] = useState<CatalogData>(DEFAULT_CATALOG);
-  const [selectedCategory, setSelectedCategory] = useState<ProductCategory>('all');
-  const [selectedBrand, setSelectedBrand] = useState<string>('all');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isInverterModalOpen, setIsInverterModalOpen] = useState(false);
@@ -144,9 +146,21 @@ export const App: React.FC = () => {
     setIsInverterModalOpen(true);
   };
 
+  const isCatalogActive = selectedBrand !== null || selectedCategory !== null || searchQuery.trim().length > 0;
+
   const filteredProducts = useMemo(() => {
-    return filterCatalogProducts(catalog.products, selectedCategory, selectedBrand, searchQuery);
-  }, [catalog.products, searchQuery, selectedBrand, selectedCategory]);
+    if (!isCatalogActive) return [];
+    return filterCatalogProducts(
+      catalog.products,
+      selectedCategory || 'all',
+      selectedBrand || 'all',
+      searchQuery
+    );
+  }, [catalog.products, isCatalogActive, searchQuery, selectedBrand, selectedCategory]);
+
+  const activeBrandObj = selectedBrand && selectedBrand !== 'all'
+    ? catalog.brands.find((b) => b.id === selectedBrand)
+    : null;
 
   const toggleTheme = () => {
     const next = themeMode === 'dark' ? 'light' : 'dark';
@@ -249,53 +263,146 @@ export const App: React.FC = () => {
   const selectedBrandInfo = selectedProduct ? catalog.brands.find((brand) => brand.id === selectedProduct.brandId) : undefined;
   return (
     <div id="catalog-top-anchor" style={{ backgroundColor: activeTheme.bg, minHeight: '100vh' }}>
-      <Header theme={activeTheme} isDarkMode={themeMode === 'dark'} onToggleTheme={toggleTheme} selectedCategory={selectedCategory} onSelectCategory={setSelectedCategory} selectedBrand={selectedBrand} onSelectBrand={setSelectedBrand} brands={catalog.brands} categories={catalog.categories} products={catalog.products} settings={catalog.settings} searchQuery={searchQuery} onSearchChange={setSearchQuery} onOpenInverterInfo={() => openArticle()} onOpenCatalogShare={() => openShare(null)} totalCount={catalog.products.length} filteredCount={filteredProducts.length} />
+      <Header
+        theme={activeTheme}
+        isDarkMode={themeMode === 'dark'}
+        onToggleTheme={toggleTheme}
+        selectedCategory={selectedCategory || ''}
+        onSelectCategory={(catId) => {
+          setSelectedCategory(catId);
+          setSelectedBrand('all');
+          setTimeout(() => {
+            document.querySelector('.catalog-section')?.scrollIntoView({ behavior: 'smooth' });
+          }, 50);
+        }}
+        selectedBrand={selectedBrand || ''}
+        onSelectBrand={(brandId) => {
+          setSelectedBrand(brandId);
+          setSelectedCategory('all');
+        }}
+        brands={catalog.brands}
+        categories={catalog.categories}
+        products={catalog.products}
+        settings={catalog.settings}
+        searchQuery={searchQuery}
+        onSearchChange={(query) => {
+          setSearchQuery(query);
+          if (query.trim() && !selectedBrand) {
+            setSelectedBrand('all');
+          }
+        }}
+        onOpenInverterInfo={() => openArticle()}
+        onOpenCatalogShare={() => openShare(null)}
+        totalCount={catalog.products.length}
+        filteredCount={filteredProducts.length}
+      />
       <main className="catalog-main">
-        <BrandShowcase brands={catalog.brands} products={catalog.products} theme={activeTheme} onSelect={(brandId) => { setSelectedBrand(brandId); document.querySelector('.catalog-section')?.scrollIntoView({ behavior: 'smooth' }); }} />
+        <BrandShowcase
+          brands={catalog.brands}
+          products={catalog.products}
+          theme={activeTheme}
+          onSelect={(brandId) => {
+            setSelectedBrand(brandId);
+            setSelectedCategory('all');
+            setTimeout(() => {
+              document.querySelector('.catalog-section')?.scrollIntoView({ behavior: 'smooth' });
+            }, 60);
+          }}
+        />
         <BannerHero theme={activeTheme} articles={catalog.articles} heroTitle={catalog.settings?.heroBannerTitle} heroSubtitle={catalog.settings?.heroBannerSubtitle} onOpenArticle={openArticle} />
-        <section className="catalog-section">
-          <div className="catalog-section-heading">
-            <div>
-              <h1 style={{ color: activeTheme.text }}>
-                {selectedCategory === 'all' ? (catalog.settings?.catalogHeading || 'Bütün məhsullar') : catalog.categories.find((item) => item.id === selectedCategory)?.name}
-              </h1>
-              <p style={{ color: activeTheme.textMuted }}>
-                {catalog.settings?.catalogSubheading || 'Modellərə və texniki xüsusiyyət sahələrinə baxın'}
-              </p>
-            </div>
-          </div>
-          {!filteredProducts.length ? (
-            <div className="empty-catalog" style={{ color: activeTheme.textMuted }}>
-              Axtarışınıza uyğun məhsul tapılmadı.
-              <button onClick={() => { setSearchQuery(''); setSelectedCategory('all'); setSelectedBrand('all'); }} style={{ background: activeTheme.primary }}>
-                Filtrləri sıfırla
-              </button>
-            </div>
-          ) : (
-            <div className="product-grid-container">
-              {filteredProducts.map((product) => {
-                const brand = catalog.brands.find((item) => item.id === product.brandId);
-                return (
-                  <ProductCard
-                    key={product.id}
-                    product={product}
-                    theme={activeTheme}
-                    brandName={brand?.name}
-                    brandOrigin={brand?.originCountry ? `${brand.originCountry} brendi` : ''}
-                    whatsappButtonText={catalog.settings?.whatsappButtonText}
-                    callButtonText={catalog.settings?.callButtonText}
-                    shareButtonText={catalog.settings?.shareButtonText}
-                    onSelect={selectProduct}
-                    onShare={(item) => openShare(item)}
-                    onWhatsApp={openWhatsApp}
-                    onCall={openCall}
-                    onCopyLink={copyLink}
-                  />
-                );
-              })}
-            </div>
-          )}
-        </section>
+
+        {isCatalogActive && (
+          <section className="catalog-section">
+            {activeBrandObj ? (
+              <BrandCategoryFilter
+                brand={activeBrandObj}
+                categories={catalog.categories}
+                products={catalog.products}
+                selectedCategory={selectedCategory || 'all'}
+                onSelectCategory={(catId) => setSelectedCategory(catId)}
+                onBackToBrands={() => {
+                  setSelectedBrand(null);
+                  setSelectedCategory(null);
+                  setSearchQuery('');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                theme={activeTheme}
+              />
+            ) : (
+              <div className="catalog-section-heading">
+                <div>
+                  <h1 style={{ color: activeTheme.text }}>
+                    {searchQuery
+                      ? `"${searchQuery}" axtarış nəticələri`
+                      : selectedCategory === 'all'
+                      ? (catalog.settings?.catalogHeading || 'Bütün məhsullar (Bütün brendlər)')
+                      : `${catalog.categories.find((item) => item.id === selectedCategory)?.name || 'Məhsullar'} (Bütün brendlər)`}
+                  </h1>
+                  <p style={{ color: activeTheme.textMuted }}>
+                    {catalog.settings?.catalogSubheading || 'Modellərə və texniki xüsusiyyət sahələrinə baxın'}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSelectedBrand(null);
+                    setSelectedCategory(null);
+                    setSearchQuery('');
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                  }}
+                  className="brand-back-btn"
+                  style={{
+                    borderColor: activeTheme.border,
+                    color: activeTheme.text,
+                    backgroundColor: activeTheme.bgSecondary,
+                  }}
+                >
+                  <ArrowLeft size={15} />
+                  <span>Vitrinə qayıt</span>
+                </button>
+              </div>
+            )}
+
+            {!filteredProducts.length ? (
+              <div className="empty-catalog" style={{ color: activeTheme.textMuted }}>
+                Axtarışınıza uyğun məhsul tapılmadı.
+                <button
+                  onClick={() => {
+                    setSearchQuery('');
+                    setSelectedCategory('all');
+                    if (selectedBrand) setSelectedBrand(selectedBrand);
+                  }}
+                  style={{ background: activeTheme.primary }}
+                >
+                  Filtrləri sıfırla
+                </button>
+              </div>
+            ) : (
+              <div className="product-grid-container">
+                {filteredProducts.map((product) => {
+                  const brand = catalog.brands.find((item) => item.id === product.brandId);
+                  return (
+                    <ProductCard
+                      key={product.id}
+                      product={product}
+                      theme={activeTheme}
+                      brandName={brand?.name}
+                      brandOrigin={brand?.originCountry ? `${brand.originCountry} brendi` : ''}
+                      whatsappButtonText={catalog.settings?.whatsappButtonText}
+                      callButtonText={catalog.settings?.callButtonText}
+                      shareButtonText={catalog.settings?.shareButtonText}
+                      onSelect={selectProduct}
+                      onShare={(item) => openShare(item)}
+                      onWhatsApp={openWhatsApp}
+                      onCall={openCall}
+                      onCopyLink={copyLink}
+                    />
+                  );
+                })}
+              </div>
+            )}
+          </section>
+        )}
       </main>
       
       {/* Corporate Desktop & Mobile Footer */}
@@ -306,7 +413,9 @@ export const App: React.FC = () => {
         onSelectCategory={(catId) => {
           setSelectedCategory(catId);
           setSelectedBrand('all');
-          document.querySelector('.catalog-section')?.scrollIntoView({ behavior: 'smooth' });
+          setTimeout(() => {
+            document.querySelector('.catalog-section')?.scrollIntoView({ behavior: 'smooth' });
+          }, 50);
         }}
       />
 

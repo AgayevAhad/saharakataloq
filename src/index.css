@@ -362,6 +362,122 @@ button, input, textarea, select { font: inherit; }
 .catalog-section-heading { display: flex; justify-content: space-between; align-items: end; margin: 10px 0 16px; }
 .catalog-section-heading h1 { font-size: clamp(20px, 3vw, 26px); }
 .catalog-section-heading p { font-size: 12px; margin-top: 4px; }
+
+/* BRAND-FIRST DEDICATED CATEGORY FILTER BAR */
+.brand-category-filter-bar {
+  margin: 12px 0 20px;
+  padding: 16px clamp(14px, 2.5vw, 20px);
+  border: 1px solid;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.brand-category-filter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.brand-category-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.brand-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 12px;
+  border: 1px solid;
+  border-radius: 9px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.brand-back-btn:hover {
+  transform: translateX(-2px);
+  opacity: 0.9;
+}
+
+.brand-title-badge {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.brand-filter-logo {
+  height: 28px;
+  max-width: 110px;
+  object-fit: contain;
+}
+
+.brand-filter-name-text {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.brand-filter-count-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 9px;
+  border: 1px solid;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 700;
+}
+
+.brand-origin-badge {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.brand-category-pills-wrap {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.brand-category-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  border: 1px solid;
+  border-radius: 24px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: all 0.2s ease;
+}
+
+.brand-category-pill:hover {
+  opacity: 0.92;
+  transform: translateY(-1px);
+}
+
+.brand-category-pill.active {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.brand-category-pill .pill-count {
+  font-size: 11px;
+  opacity: 0.85;
+}
 .empty-catalog { min-height: 280px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; text-align: center; }
 .empty-catalog button { color: white; padding: 9px 16px; border: 0; border-radius: 9px; cursor: pointer; }
 .catalog-footer { padding: 26px 16px; border-top: 1px solid; text-align: center; display: grid; gap: 6px; }
