@@ -153,4 +153,23 @@ describe('ProductDetailModal — məhsul detal modalı', () => {
     );
     expect(screen.getByText(/Türkiyə/i)).toBeDefined();
   });
+
+  it('renders modern 2-column dominant image layout and slender info section', () => {
+    const { container } = render(
+      <ProductDetailModal product={testProduct} brand={testBrand} theme={lightTheme} visible={true}
+        onClose={vi.fn()} onShare={vi.fn()} onWhatsApp={vi.fn()} onCall={vi.fn()} onCopyLink={vi.fn()} />
+    );
+
+    const layoutGrid = container.querySelector('.product-detail-modal-layout');
+    expect(layoutGrid).not.toBeNull();
+
+    const imageCol = container.querySelector('.product-modal-image-col');
+    expect(imageCol).not.toBeNull();
+
+    const imageStage = container.querySelector('.product-detail-image-stage');
+    expect(imageStage).not.toBeNull();
+
+    const infoCol = container.querySelector('.product-modal-info-col');
+    expect(infoCol).not.toBeNull();
+  });
 });

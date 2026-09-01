@@ -87,10 +87,60 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
 
   if (!visible || !product) return null;
 
-  const mediaItems = product.media?.length
-    ? product.media
-    : [{ id: `${product.id}-main`, type: 'image' as const, url: product.image, alt: product.title }];
-  const activeMedia = mediaItems[Math.min(activeMediaIndex, mediaItems.length - 1)];
+  const mediaItems = useMemo(() => {
+    if (!product) return [];
+    const items: Array<{ id: string; url: string; type?: 'image' | 'video'; alt?: string; poster?: string; objectPosition?: string; fitMode?: string }> = [];
+    const seen = new Set<string>();
+
+    if (product.media && product.media.length) {
+      product.media.forEach((m, idx) => {
+        if (m.url && !seen.has(m.url)) {
+          seen.add(m.url);
+          items.push({
+            id: m.id || `media-${idx}`,
+            url: m.url,
+            type: m.type || 'image',
+            alt: m.alt || product.title,
+            poster: m.poster,
+            objectPosition: m.objectPosition || product.imagePosition || 'center',
+            fitMode: m.fitMode || product.imageFit || 'contain',
+          });
+        }
+      });
+    }
+
+    if (product.image && !seen.has(product.image)) {
+      seen.add(product.image);
+      items.push({
+        id: `main-${product.id}`,
+        url: product.image,
+        type: 'image',
+        alt: product.title,
+        objectPosition: product.imagePosition || 'center',
+        fitMode: product.imageFit || 'contain',
+      });
+    }
+
+    if (product.gallery && product.gallery.length) {
+      product.gallery.forEach((url, idx) => {
+        if (url && !seen.has(url)) {
+          seen.add(url);
+          items.push({
+            id: `gal-${idx}`,
+            url,
+            type: 'image',
+            alt: product.title,
+            objectPosition: 'center',
+            fitMode: 'contain',
+          });
+        }
+      });
+    }
+
+    return items.length ? items : [{ id: 'empty', url: '', type: 'image' as const, alt: product.title }];
+  }, [product]);
+
+  const activeMedia = mediaItems[Math.min(activeMediaIndex, Math.max(0, mediaItems.length - 1))];
 
   const activeObjectPosition = (activeMedia as any)?.objectPosition || (product as any).imagePosition || 'center';
   const activeFitMode = (activeMedia as any)?.fitMode || (product as any).imageFit || 'contain';
@@ -284,186 +334,211 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
 
           {/* Modal Scrollable Body */}
           <div className="modal-body-scroll">
-            <div
-              style={{
-                display: 'flex',
-                flexDirection: 'row',
-                flexWrap: 'wrap',
-                gap: '16px',
-                marginBottom: '16px',
-              }}
-            >
-              {/* Left: Image Card */}
-              <div
-                style={{
-                  flex: '1 1 260px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '10px',
-                }}
-              >
+            <div className="product-detail-modal-layout">
+              {/* Sol Tərəf: Geniş və Ön Planda Olan Şəkil Kartı */}
+              <div className="product-modal-image-col">
                 <div
+                  className="product-detail-image-stage"
                   onClick={() => activeMedia?.type === 'image' && activeMedia.url && setIsFullscreenImage(true)}
                   style={{
-                    width: '100%',
-                    height: '240px',
                     backgroundColor: theme.mode === 'dark' ? '#0c101a' : '#f8fafc',
-                    borderRadius: '12px',
-                    border: `1px solid ${theme.border}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '12px',
-                    position: 'relative',
-                    overflow: 'hidden',
+                    borderColor: theme.border,
                     cursor: activeMedia?.type === 'image' ? 'zoom-in' : 'default',
                   }}
                   title="Tam ekranda böyütmək və sürüşdürmək üçün klikləyin"
                 >
                   {activeMedia?.type === 'video' ? (
-                    <video src={activeMedia.url} poster={activeMedia.poster} controls playsInline preload="metadata" style={{ width: '100%', height: '100%', objectFit: 'contain' }} onClick={(event) => event.stopPropagation()} />
+                    <video
+                      src={activeMedia.url}
+                      poster={activeMedia.poster}
+                      controls
+                      playsInline
+                      preload="metadata"
+                      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                      onClick={(event) => event.stopPropagation()}
+                    />
                   ) : activeMedia?.url ? (
-                    <img 
-                      src={activeMedia.url} 
-                      alt={activeMedia.alt || product.title} 
-                      style={{ 
-                        maxWidth: '100%', 
-                        maxHeight: '100%', 
+                    <img
+                      src={activeMedia.url}
+                      alt={activeMedia.alt || product.title}
+                      style={{
+                        maxWidth: '100%',
+                        maxHeight: '100%',
                         objectFit: activeFitMode as any,
-                        objectPosition: activeObjectPosition 
-                      }} 
+                        objectPosition: activeObjectPosition,
+                      }}
                     />
                   ) : (
-                    <div style={{ color: theme.textMuted, fontSize: '12px' }}>Media daha sonra əlavə ediləcək</div>
+                    <div style={{ color: theme.textMuted, fontSize: '13px' }}>Media daha sonra əlavə ediləcək</div>
                   )}
+
                   {product.badgeText && (
                     <div
                       style={{
                         position: 'absolute',
-                        top: '10px',
-                        left: '10px',
+                        top: '12px',
+                        left: '12px',
                         backgroundColor: theme.primary,
                         color: '#ffffff',
-                        padding: '3px 8px',
-                        borderRadius: '6px',
-                        fontSize: '10px',
-                        fontWeight: 700,
+                        padding: '4px 10px',
+                        borderRadius: '8px',
+                        fontSize: '11px',
+                        fontWeight: 800,
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
                       }}
                     >
                       {product.badgeText}
                     </div>
                   )}
 
-                  {activeMedia?.type === 'image' && activeMedia.url && <div
-                    style={{
-                      position: 'absolute',
-                      bottom: '10px',
-                      right: '10px',
-                      backgroundColor: 'rgba(0, 0, 0, 0.7)',
-                      color: '#ffffff',
-                      padding: '4px 8px',
-                      borderRadius: '6px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      fontSize: '11px',
-                      fontWeight: 600,
-                      backdropFilter: 'blur(4px)',
-                    }}
-                  >
-                    <Maximize2 size={12} />
-                    <span>Tam Ekran Bax</span>
-                  </div>}
+                  {activeMedia?.type === 'image' && activeMedia.url && (
+                    <div
+                      style={{
+                        position: 'absolute',
+                        bottom: '12px',
+                        right: '12px',
+                        backgroundColor: 'rgba(0, 0, 0, 0.72)',
+                        color: '#ffffff',
+                        padding: '5px 10px',
+                        borderRadius: '8px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '5px',
+                        fontSize: '11px',
+                        fontWeight: 700,
+                        backdropFilter: 'blur(6px)',
+                      }}
+                    >
+                      <Maximize2 size={13} />
+                      <span>Tam Ekran Bax</span>
+                    </div>
+                  )}
                 </div>
 
-                {mediaItems.length > 1 && <div className="product-media-strip no-scrollbar">{mediaItems.map((media, index) => <button key={media.id} className={activeMediaIndex === index ? 'active' : ''} onClick={() => setActiveMediaIndex(index)} style={{ borderColor: activeMediaIndex === index ? theme.primary : theme.border, background: theme.bgSecondary }}>{media.type === 'video' ? <span>▶ Video</span> : <img src={media.url} alt={media.alt || `${product.title} ${index + 1}`} style={{ objectFit: (media as any).fitMode || 'contain', objectPosition: (media as any).objectPosition || 'center' }} />}</button>)}</div>}
+                {mediaItems.length > 1 && (
+                  <div className="product-media-strip no-scrollbar">
+                    {mediaItems.map((media, index) => (
+                      <button
+                        key={media.id}
+                        className={activeMediaIndex === index ? 'active' : ''}
+                        onClick={() => setActiveMediaIndex(index)}
+                        style={{
+                          borderColor: activeMediaIndex === index ? theme.primary : theme.border,
+                          background: theme.bgSecondary,
+                        }}
+                      >
+                        {media.type === 'video' ? (
+                          <span>▶ Video</span>
+                        ) : (
+                          <img
+                            src={media.url}
+                            alt={media.alt || `${product.title} ${index + 1}`}
+                            style={{
+                              objectFit: (media as any).fitMode || 'contain',
+                              objectPosition: (media as any).objectPosition || 'center',
+                            }}
+                          />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
 
-                {/* Origin Banner */}
+                {/* Origin & Warranty Banner */}
                 <div
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    gap: '8px',
+                    gap: '10px',
                     backgroundColor: theme.bgSecondary,
                     border: `1px solid ${theme.border}`,
-                    padding: '8px 12px',
-                    borderRadius: '10px',
+                    padding: '10px 14px',
+                    borderRadius: '12px',
                   }}
                 >
-                  <span style={{ fontSize: '20px' }}>🇮🇹</span>
+                  <span style={{ fontSize: '22px' }}>
+                    {brand?.id === 'lotus' ? '🌐' : '🇮🇹'}
+                  </span>
                   <div style={{ flex: 1 }}>
-                    <div style={{ color: theme.text, fontSize: '12px', fontWeight: 700 }}>
-                      {brand?.name || 'ARDO'}{brand?.originCountry ? ` — ${brand.originCountry} brendi` : ''}
+                    <div style={{ color: theme.text, fontSize: '13px', fontWeight: 700 }}>
+                      {brand?.name || product.brandId.toUpperCase()}
+                      {brand?.originCountry ? ` — ${brand.originCountry} brendi` : ''}
                     </div>
-                    <div style={{ color: theme.textMuted, fontSize: '10px' }}>
-                      {product.manufacturingCountry ? `İstehsal: ${product.manufacturingCountry}` : 'Sahara Electronic Rəsmi Zəmanəti'}
+                    <div style={{ color: theme.textMuted, fontSize: '11px' }}>
+                      {product.manufacturingCountry
+                        ? `İstehsal: ${product.manufacturingCountry}`
+                        : 'Sahara Electronic Rəsmi Zəmanəti'}
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Right: Info & CTAs */}
-              <div
-                style={{
-                  flex: '1 1 280px',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  gap: '12px',
-                }}
-              >
+              {/* Sağ Tərəf: İncə və Aydın Detal & Əlaqə Paneli */}
+              <div className="product-modal-info-col">
                 <div>
                   <h2
                     style={{
                       fontFamily: 'Outfit, sans-serif',
-                      fontSize: '18px',
+                      fontSize: '20px',
                       fontWeight: 800,
                       color: theme.text,
-                      lineHeight: '24px',
-                      marginBottom: '6px',
+                      lineHeight: '26px',
+                      marginBottom: '8px',
                     }}
                   >
                     {product.title}
                   </h2>
-                  <p style={{ fontSize: '12px', color: theme.textSecondary, lineHeight: '18px', marginBottom: '10px' }}>
-                    {product.shortDesc}
-                  </p>
+                  {product.shortDesc && (
+                    <p
+                      style={{
+                        fontSize: '13px',
+                        color: theme.textSecondary,
+                        lineHeight: '19px',
+                        marginBottom: '12px',
+                      }}
+                    >
+                      {product.shortDesc}
+                    </p>
+                  )}
 
                   {product.price !== undefined && (
-                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '12px' }}>
-                      <span style={{ fontSize: '22px', fontWeight: 900, color: theme.text }}>
+                    <div style={{ display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '14px' }}>
+                      <span style={{ fontSize: '24px', fontWeight: 900, color: theme.text }}>
                         {product.price} {product.currency || '₼'}
                       </span>
                       {product.oldPrice && product.oldPrice > product.price && (
-                        <span style={{ fontSize: '14px', color: theme.textMuted, textDecoration: 'line-through' }}>
+                        <span style={{ fontSize: '15px', color: theme.textMuted, textDecoration: 'line-through' }}>
                           {product.oldPrice} {product.currency || '₼'}
                         </span>
                       )}
                     </div>
                   )}
 
-                  <div
-                    style={{
-                      backgroundColor: theme.bgSecondary,
-                      border: `1px solid ${theme.border}`,
-                      padding: '10px 12px',
-                      borderRadius: '10px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '5px',
-                    }}
-                  >
-                    <div style={{ color: theme.text, fontSize: '11px', fontWeight: 700 }}>Əsas Üstünlüklər:</div>
-                    {product.highlights.map((h, i) => (
-                      <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <Flame size={12} color={theme.primary} />
-                        <span style={{ color: theme.textSecondary, fontSize: '11px' }}>{h}</span>
-                      </div>
-                    ))}
-                  </div>
+                  {product.highlights && product.highlights.length > 0 && (
+                    <div
+                      style={{
+                        backgroundColor: theme.bgSecondary,
+                        border: `1px solid ${theme.border}`,
+                        padding: '12px 14px',
+                        borderRadius: '12px',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '6px',
+                        marginBottom: '14px',
+                      }}
+                    >
+                      <div style={{ color: theme.text, fontSize: '12px', fontWeight: 800 }}>Əsas Üstünlüklər:</div>
+                      {product.highlights.map((h, i) => (
+                        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <Flame size={13} color={theme.primary} />
+                          <span style={{ color: theme.textSecondary, fontSize: '12px' }}>{h}</span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: 'auto' }}>
                   <button
                     onClick={() => onWhatsApp(product)}
                     style={{
@@ -474,22 +549,29 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                       backgroundColor: '#16a34a',
                       color: '#ffffff',
                       border: 'none',
-                      padding: '11px',
-                      borderRadius: '10px',
-                      fontSize: '13px',
+                      padding: '12px',
+                      borderRadius: '12px',
+                      fontSize: '14px',
                       fontWeight: 700,
                       cursor: 'pointer',
-                      boxShadow: '0 4px 12px rgba(22, 163, 74, 0.25)',
+                      boxShadow: '0 4px 14px rgba(22, 163, 74, 0.28)',
+                      transition: 'transform 0.15s ease',
                     }}
                   >
-                    <WhatsAppIcon size={19} color="#ffffff" />
+                    <WhatsAppIcon size={20} color="#ffffff" />
                     <span>{whatsappButtonText}</span>
                   </button>
 
                   <button
                     onClick={() => onCall(product)}
                     className="modal-call-button"
-                    style={{ backgroundColor: theme.primary }}
+                    style={{
+                      backgroundColor: theme.primary,
+                      padding: '12px',
+                      borderRadius: '12px',
+                      fontSize: '14px',
+                      fontWeight: 700,
+                    }}
                   >
                     <Phone size={18} />
                     <span>{callButtonText}</span>
@@ -505,8 +587,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                       backgroundColor: theme.bgSecondary,
                       border: `1px solid ${theme.border}`,
                       color: theme.primary,
-                      padding: '9px',
-                      borderRadius: '10px',
+                      padding: '10px',
+                      borderRadius: '12px',
                       fontSize: '12px',
                       fontWeight: 600,
                       cursor: 'pointer',
