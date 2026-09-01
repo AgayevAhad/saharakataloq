@@ -4199,6 +4199,24 @@ export const ProductEditor = ({
       ? Math.round(((product.oldPrice - product.price) / product.oldPrice) * 100)
       : null;
 
+  const resolveFriendlyMediaName = (m: ProductMedia, index: number): string => {
+    if (m.originalName && !m.originalName.startsWith('/uploads/') && !/^mti[a-z0-9]/i.test(m.originalName)) {
+      return m.originalName;
+    }
+    if (m.url && !m.url.startsWith('/uploads/')) {
+      try {
+        const clean = decodeURIComponent(m.url.split('?')[0]);
+        const parts = clean.split('/');
+        const last = parts[parts.length - 1] || '';
+        if (last && !/^mti[a-z0-9]/i.test(last)) {
+          return last;
+        }
+      } catch {}
+    }
+    const codePart = (product.code || product.title || 'Məhsul').trim();
+    return index === 0 ? `${codePart}.jpg` : `${codePart} (${index + 1}).jpg`;
+  };
+
   return (
     <div className="product-modal-backdrop" onClick={onClose}>
       <div
@@ -4507,77 +4525,56 @@ export const ProductEditor = ({
                     {/* Media File Info & Inputs */}
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, minWidth: '240px' }}>
                       {/* Original / Clean Filename Badge & Code Match Indicator */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', flexWrap: 'wrap' }}>
-                        <span style={{ fontWeight: 750, color: theme.textSecondary }}>
-                          📁 Fayl:
-                        </span>
-                        <span
-                          style={{
-                            fontFamily: 'monospace',
-                            background: theme.bgSecondary,
-                            padding: '1px 6px',
-                            borderRadius: '4px',
-                            border: `1px solid ${theme.border}`,
-                            fontSize: '11px',
-                            color: theme.primary,
-                            fontWeight: 700,
-                            maxWidth: '260px',
-                            overflow: 'hidden',
-                            textOverflow: 'ellipsis',
-                            whiteSpace: 'nowrap',
-                          }}
-                          title={m.originalName || (() => {
-                            try {
-                              const clean = decodeURIComponent((m.url || '').split('?')[0]);
-                              const parts = clean.split('/');
-                              return parts[parts.length - 1] || clean;
-                            } catch {
-                              return m.url;
-                            }
-                          })()}
-                        >
-                          {m.originalName || (() => {
-                            try {
-                              const clean = decodeURIComponent((m.url || '').split('?')[0]);
-                              const parts = clean.split('/');
-                              return parts[parts.length - 1] || clean;
-                            } catch {
-                              return m.url || '—';
-                            }
-                          })() || '—'}
-                        </span>
-                        {/* Name match check indicator */}
-                        {(() => {
-                          const currentCode = (product.code || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
-                          const extractedName = (() => {
-                            try {
-                              const clean = decodeURIComponent((m.url || '').split('?')[0]);
-                              const parts = clean.split('/');
-                              return parts[parts.length - 1] || clean;
-                            } catch {
-                              return m.url || '';
-                            }
-                          })();
-                          const fname = (m.originalName || extractedName).toLowerCase().replace(/[^a-z0-9]/g, '');
-                          const matches = currentCode && fname.includes(currentCode);
-                          return matches ? (
+                      {(() => {
+                        const friendlyName = resolveFriendlyMediaName(m, i);
+                        const currentCode = (product.code || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+                        const fname = friendlyName.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        const matches = Boolean(currentCode && (fname.includes(currentCode) || currentCode.includes(fname)));
+
+                        return (
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', flexWrap: 'wrap' }}>
+                            <span style={{ fontWeight: 750, color: theme.textSecondary }}>
+                              📁 Fayl:
+                            </span>
                             <span
                               style={{
-                                background: 'rgba(34, 197, 94, 0.15)',
-                                color: '#16a34a',
-                                border: '1px solid rgba(34, 197, 94, 0.3)',
-                                padding: '1px 5px',
+                                fontFamily: 'monospace',
+                                background: theme.bgSecondary,
+                                padding: '1px 6px',
                                 borderRadius: '4px',
-                                fontSize: '10px',
-                                fontWeight: 800,
+                                border: `1px solid ${theme.border}`,
+                                fontSize: '11px',
+                                color: theme.primary,
+                                fontWeight: 700,
+                                maxWidth: '260px',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
                               }}
-                              title="Şəkil faylının adı məhsulun model kodu ilə tam uyğundur"
+                              title={friendlyName}
                             >
-                              ✓ Kodla uyğundur
+                              {friendlyName}
                             </span>
-                          ) : null;
-                        })()}
-                      </div>
+                            {/* Name match check indicator */}
+                            {matches && (
+                              <span
+                                style={{
+                                  background: 'rgba(34, 197, 94, 0.15)',
+                                  color: '#16a34a',
+                                  border: '1px solid rgba(34, 197, 94, 0.3)',
+                                  padding: '1px 5px',
+                                  borderRadius: '4px',
+                                  fontSize: '10px',
+                                  fontWeight: 800,
+                                }}
+                                title="Şəkil faylının adı məhsulun model kodu ilə tam uyğundur"
+                              >
+                                ✓ Kodla uyğundur
+                              </span>
+                            )}
+                          </div>
+                        );
+                      })()}
 
                       {/* Inputs Row: URL + Original Name + Alt text */}
                       <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
@@ -4589,7 +4586,7 @@ export const ProductEditor = ({
                           style={{ flex: 1, minWidth: '140px' }}
                         />
                         <input
-                          value={m.originalName || ''}
+                          value={m.originalName || resolveFriendlyMediaName(m, i)}
                           onChange={(e) => updateMedia(i, { originalName: e.target.value })}
                           placeholder="Orijinal fayl adı (Məs: 604B.jpg)"
                           title="Orijinal fayl adı / mənbə adı qeydi"

@@ -121,11 +121,11 @@ describe('Image File Name Display and Match Verification Suite', () => {
     // Verify the original file name is displayed
     expect(screen.getByText('604B_inox.jpg')).toBeDefined();
 
-    // Verify the extracted file name for uploaded hash is displayed
-    expect(screen.getByText('3872910-xyz.webp')).toBeDefined();
+    // Verify the clean human-readable name is generated for uploaded hash without originalName
+    expect(screen.getByText('604B (2).jpg')).toBeDefined();
 
-    // Verify the code match indicator is rendered for matching name
-    expect(screen.getByText('✓ Kodla uyğundur')).toBeDefined();
+    // Verify the code match indicator is rendered for matching names
+    expect(screen.getAllByText('✓ Kodla uyğundur').length).toBe(2);
 
     // Verify originalName input field is editable
     const origInputs = screen.getAllByPlaceholderText(/Orijinal fayl adı/i);
