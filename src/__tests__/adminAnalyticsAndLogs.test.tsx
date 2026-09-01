@@ -10,6 +10,21 @@ import { TEST_PRODUCT } from './fixtures';
 import { AuditLog, CatalogAnalytics } from '../types/product';
 import { App } from '../App';
 
+beforeEach(() => {
+  vi.spyOn(catalogApi, 'track').mockImplementation(() => Promise.resolve());
+  const mockFetch = vi.fn().mockImplementation(() =>
+    Promise.resolve({
+      ok: true,
+      json: async () => ({ ok: true }),
+      text: async () => JSON.stringify({ ok: true }),
+    } as any)
+  );
+  global.fetch = mockFetch;
+  if (typeof window !== 'undefined') {
+    window.fetch = mockFetch;
+  }
+});
+
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
