@@ -26,6 +26,7 @@ export interface ProductMedia {
   type: 'image' | 'video';
   url: string;
   alt?: string;
+  originalName?: string;
   poster?: string;
   objectPosition?: 'center' | 'top' | 'bottom' | 'left' | 'right' | 'top-left' | 'top-right' | 'bottom-left' | 'bottom-right' | string;
   fitMode?: 'contain' | 'cover';

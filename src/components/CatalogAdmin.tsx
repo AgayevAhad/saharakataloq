@@ -4504,21 +4504,106 @@ export const ProductEditor = ({
                       ) : '🖼'}
                     </div>
 
-                    {/* Media URL Input */}
-                    <input
-                      value={m.url}
-                      onChange={(e) => updateMedia(i, { url: e.target.value })}
-                      placeholder="Media URL (/media/products/...)"
-                      style={{ flex: 1 }}
-                    />
+                    {/* Media File Info & Inputs */}
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', flex: 1, minWidth: '240px' }}>
+                      {/* Original / Clean Filename Badge & Code Match Indicator */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', flexWrap: 'wrap' }}>
+                        <span style={{ fontWeight: 750, color: theme.textSecondary }}>
+                          📁 Fayl:
+                        </span>
+                        <span
+                          style={{
+                            fontFamily: 'monospace',
+                            background: theme.bgSecondary,
+                            padding: '1px 6px',
+                            borderRadius: '4px',
+                            border: `1px solid ${theme.border}`,
+                            fontSize: '11px',
+                            color: theme.primary,
+                            fontWeight: 700,
+                            maxWidth: '260px',
+                            overflow: 'hidden',
+                            textOverflow: 'ellipsis',
+                            whiteSpace: 'nowrap',
+                          }}
+                          title={m.originalName || (() => {
+                            try {
+                              const clean = decodeURIComponent((m.url || '').split('?')[0]);
+                              const parts = clean.split('/');
+                              return parts[parts.length - 1] || clean;
+                            } catch {
+                              return m.url;
+                            }
+                          })()}
+                        >
+                          {m.originalName || (() => {
+                            try {
+                              const clean = decodeURIComponent((m.url || '').split('?')[0]);
+                              const parts = clean.split('/');
+                              return parts[parts.length - 1] || clean;
+                            } catch {
+                              return m.url || '—';
+                            }
+                          })() || '—'}
+                        </span>
+                        {/* Name match check indicator */}
+                        {(() => {
+                          const currentCode = (product.code || '').trim().toLowerCase().replace(/[^a-z0-9]/g, '');
+                          const extractedName = (() => {
+                            try {
+                              const clean = decodeURIComponent((m.url || '').split('?')[0]);
+                              const parts = clean.split('/');
+                              return parts[parts.length - 1] || clean;
+                            } catch {
+                              return m.url || '';
+                            }
+                          })();
+                          const fname = (m.originalName || extractedName).toLowerCase().replace(/[^a-z0-9]/g, '');
+                          const matches = currentCode && fname.includes(currentCode);
+                          return matches ? (
+                            <span
+                              style={{
+                                background: 'rgba(34, 197, 94, 0.15)',
+                                color: '#16a34a',
+                                border: '1px solid rgba(34, 197, 94, 0.3)',
+                                padding: '1px 5px',
+                                borderRadius: '4px',
+                                fontSize: '10px',
+                                fontWeight: 800,
+                              }}
+                              title="Şəkil faylının adı məhsulun model kodu ilə tam uyğundur"
+                            >
+                              ✓ Kodla uyğundur
+                            </span>
+                          ) : null;
+                        })()}
+                      </div>
 
-                    {/* Alt Text Input */}
-                    <input
-                      value={m.alt || ''}
-                      onChange={(e) => updateMedia(i, { alt: e.target.value })}
-                      placeholder="Alt izahı (Şəkil təsviri)"
-                      style={{ flex: 1 }}
-                    />
+                      {/* Inputs Row: URL + Original Name + Alt text */}
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                        <input
+                          value={m.url}
+                          onChange={(e) => updateMedia(i, { url: e.target.value })}
+                          placeholder="Media URL (/media/products/...)"
+                          title="Faylın serverdəki tam URL yolu"
+                          style={{ flex: 1, minWidth: '140px' }}
+                        />
+                        <input
+                          value={m.originalName || ''}
+                          onChange={(e) => updateMedia(i, { originalName: e.target.value })}
+                          placeholder="Orijinal fayl adı (Məs: 604B.jpg)"
+                          title="Orijinal fayl adı / mənbə adı qeydi"
+                          style={{ width: '180px' }}
+                        />
+                        <input
+                          value={m.alt || ''}
+                          onChange={(e) => updateMedia(i, { alt: e.target.value })}
+                          placeholder="Alt izahı (Təsvir)"
+                          title="Şəkil təsviri (Alt text)"
+                          style={{ width: '130px' }}
+                        />
+                      </div>
+                    </div>
 
                     {/* Status Badge & Make Primary Button */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>

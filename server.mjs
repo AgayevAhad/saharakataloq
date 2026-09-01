@@ -396,8 +396,17 @@ const server = http.createServer(async (req, res) => {
       if (!validMediaSignature(buffer, contentType)) return send(res, 415, { error: 'Fayl məzmunu seçilən media formatına uyğun deyil' });
       await mkdir(MEDIA_DIR, { recursive: true });
       const fileName = `${Date.now().toString(36)}-${randomBytes(8).toString('hex')}.${mediaInfo[0]}`;
-      await writeFile(join(MEDIA_DIR, fileName), buffer, { mode: 0o600 });
-      return send(res, 201, { id: `media-${randomBytes(8).toString('hex')}`, type: mediaInfo[1], url: `/uploads/${fileName}`, alt: safeText(req.headers['x-media-alt'], 300) });
+      const rawOrigName = req.headers['x-original-name']
+        ? decodeURIComponent(String(req.headers['x-original-name']))
+        : req.headers['x-media-alt'];
+      const originalName = safeText(rawOrigName, 300);
+      return send(res, 201, {
+        id: `media-${randomBytes(8).toString('hex')}`,
+        type: mediaInfo[1],
+        url: `/uploads/${fileName}`,
+        alt: safeText(req.headers['x-media-alt'], 300),
+        originalName: originalName || fileName,
+      });
     }
     if (path === '/api/catalog' && req.method === 'GET') {
       const catalog = await readCatalog();

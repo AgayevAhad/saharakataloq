@@ -63,12 +63,23 @@ export const catalogApi = {
   async uploadMedia(file: File, csrfToken: string): Promise<ProductMedia> {
     const response = await fetch('/api/admin/media', {
       method: 'POST', credentials: 'same-origin',
-      headers: { 'Content-Type': file.type, 'X-CSRF-Token': csrfToken, 'X-Media-Alt': file.name },
+      headers: {
+        'Content-Type': file.type,
+        'X-CSRF-Token': csrfToken,
+        'X-Media-Alt': encodeURIComponent(file.name),
+        'X-Original-Name': encodeURIComponent(file.name),
+      },
       body: file,
     });
     const body = await response.json().catch(() => ({}));
     if (!response.ok) throw new Error(body.error || 'Media yüklənmədi');
-    return body as ProductMedia;
+    return {
+      id: body.id,
+      type: body.type,
+      url: body.url,
+      alt: body.alt || file.name,
+      originalName: body.originalName || file.name,
+    } as ProductMedia;
   },
 
   getFilteredAnalytics(range: string, fromDate?: string, toDate?: string) {
