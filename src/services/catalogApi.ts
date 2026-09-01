@@ -106,6 +106,33 @@ export const catalogApi = {
     });
   },
 
+  getSnapshots(limit = 50, offset = 0) {
+    return request<{ snapshots: Array<{ id: string; name: string; productCount: number; createdBy: string; createdAt: string }>; total: number }>(`/api/admin/snapshots?limit=${limit}&offset=${offset}`);
+  },
+
+  createSnapshot(name: string, csrfToken: string) {
+    return request<{ ok: true; snapshot: any }>('/api/admin/snapshots', {
+      method: 'POST',
+      headers: { ...jsonHeaders, 'X-CSRF-Token': csrfToken },
+      body: JSON.stringify({ name }),
+    });
+  },
+
+  restoreSnapshot(id: string, csrfToken: string) {
+    return request<{ ok: true; catalog: CatalogData }>('/api/admin/snapshots/restore', {
+      method: 'POST',
+      headers: { ...jsonHeaders, 'X-CSRF-Token': csrfToken },
+      body: JSON.stringify({ id }),
+    });
+  },
+
+  deleteSnapshot(id: string, csrfToken: string) {
+    return request<{ ok: true }>(`/api/admin/snapshots/${id}`, {
+      method: 'DELETE',
+      headers: { ...jsonHeaders, 'X-CSRF-Token': csrfToken },
+    });
+  },
+
   logout(csrfToken: string) {
     return request<{ ok: true }>('/api/admin/logout', {
       method: 'POST',

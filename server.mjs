@@ -565,6 +565,7 @@ const server = http.createServer(async (req, res) => {
     if (path === '/api/admin/publish' && req.method === 'POST') {
       const session = requireAdmin(req, res, true); if (!session) return;
       const catalog = validateCatalog(draftDatabase.getCatalog());
+      catalogDatabase.createSnapshot({ name: `Canlı yayımdan əvvəlki avtomatik nüsxə (${new Date().toLocaleTimeString('az-AZ')})`, createdBy: 'auto-publish' });
       catalogDatabase.saveCatalog(catalog);
       const userAgent = safeText(req.headers['user-agent'] || '', 300);
       draftDatabase.logAction({
@@ -586,6 +587,60 @@ const server = http.createServer(async (req, res) => {
         status: 'success',
       });
       return send(res, 200, { ok: true, updatedAt: catalog.updatedAt });
+    }
+    if (path === '/api/admin/snapshots' && req.method === 'GET') {
+      const session = requireAdmin(req, res); if (!session) return;
+      const limit = Number(url.searchParams.get('limit') || 50);
+      const offset = Number(url.searchParams.get('offset') || 0);
+      const result = draftDatabase.getSnapshots({ limit, offset });
+      return send(res, 200, result);
+    }
+    if (path === '/api/admin/snapshots' && req.method === 'POST') {
+      const session = requireAdmin(req, res, true); if (!session) return;
+      const body = await readBody(req);
+      const name = safeText(body.name, 120) || 'Əllə yaradılmış ehtiyat nüsxə';
+      const snap = draftDatabase.createSnapshot({ name, createdBy: 'admin' });
+      catalogDatabase.createSnapshot({ name, createdBy: 'admin' });
+      const userAgent = safeText(req.headers['user-agent'] || '', 300);
+      draftDatabase.logAction({
+        category: 'system',
+        action: 'snapshot_created',
+        title: 'Kataloq ehtiyat nüsxəsi (Snapshot) yaradıldı',
+        details: `Ad: "${name}", ${snap.productCount} məhsul`,
+        ipAddress: session.ip,
+        userAgent,
+        status: 'success',
+      });
+      return send(res, 200, { ok: true, snapshot: snap });
+    }
+    if (path === '/api/admin/snapshots/restore' && req.method === 'POST') {
+      const session = requireAdmin(req, res, true); if (!session) return;
+      const body = await readBody(req);
+      const { id } = body;
+      if (!id) return send(res, 400, { error: 'Nüsxə ID-si tələb olunur' });
+      try {
+        const restored = draftDatabase.restoreSnapshot(id);
+        const userAgent = safeText(req.headers['user-agent'] || '', 300);
+        draftDatabase.logAction({
+          category: 'system',
+          action: 'snapshot_restored',
+          title: 'Kataloq əvvəlki nüsxədən bərpa edildi',
+          details: `Nüsxə ID: ${id}, ${restored.products.length} məhsul`,
+          ipAddress: session.ip,
+          userAgent,
+          status: 'warning',
+        });
+        return send(res, 200, { ok: true, catalog: restored });
+      } catch (err) {
+        return send(res, 404, { error: err.message || 'Nüsxə tapılmadı' });
+      }
+    }
+    if (path.startsWith('/api/admin/snapshots/') && req.method === 'DELETE') {
+      const session = requireAdmin(req, res, true); if (!session) return;
+      const id = path.replace('/api/admin/snapshots/', '');
+      draftDatabase.deleteSnapshot(id);
+      catalogDatabase.deleteSnapshot(id);
+      return send(res, 200, { ok: true });
     }
     if (path === '/api/admin/change-password' && req.method === 'POST') {
       const session = requireAdmin(req, res, true); if (!session) return;

@@ -40,6 +40,7 @@ import {
   Power,
   RefreshCw,
   Rocket,
+  RotateCcw,
   Save,
   Search,
   Sparkles,
@@ -75,6 +76,7 @@ import { SaharaLogo } from './SaharaLogo';
 import { AdminCatalogPreview } from './AdminCatalogPreview';
 import { ModernCalendarPicker } from './ModernCalendarPicker';
 import { ImageCropStudioModal } from './ImageCropStudioModal';
+import { SnapshotManager } from './SnapshotManager';
 import {
   downloadFile,
   exportProductsToCsv,
@@ -106,8 +108,26 @@ type Tab =
   | 'appearance'
   | 'articles'
   | 'contact'
+  | 'snapshots'
   | 'logs'
   | 'security';
+
+export const isProductModified = (current: Product, orig?: Product): boolean => {
+  if (!orig) return true; // Newly created product
+  if (current.title !== orig.title) return true;
+  if (current.code !== orig.code) return true;
+  if (current.price !== orig.price || current.oldPrice !== orig.oldPrice) return true;
+  if (current.image !== orig.image) return true;
+  if (current.imagePosition !== orig.imagePosition || current.imageFit !== orig.imageFit) return true;
+  if (current.shortDesc !== orig.shortDesc) return true;
+  if (current.status !== orig.status) return true;
+  if (current.badgeText !== orig.badgeText) return true;
+  if (current.category !== orig.category || current.brandId !== orig.brandId) return true;
+  if (JSON.stringify(current.media || []) !== JSON.stringify(orig.media || [])) return true;
+  if (JSON.stringify(current.specs || []) !== JSON.stringify(orig.specs || [])) return true;
+  if (JSON.stringify(current.highlights || []) !== JSON.stringify(orig.highlights || [])) return true;
+  return false;
+};
 
 type CompletenessFilter = 'all' | 'missing-media' | 'missing-specs' | 'draft';
 
@@ -215,13 +235,26 @@ export const CatalogAdmin: React.FC<Props> = ({
   const [adminCategory, setAdminCategory] = useState<string>('all');
   const [adminMediaFilter, setAdminMediaFilter] = useState<'all' | 'has-media' | 'no-media'>('all');
   const [adminSpecsFilter, setAdminSpecsFilter] = useState<'all' | 'has-specs' | 'no-specs'>('all');
-  const [adminStatusFilter, setAdminStatusFilter] = useState<'all' | 'published' | 'draft'>('all');
+  const [adminStatusFilter, setAdminStatusFilter] = useState<'all' | 'published' | 'draft' | 'modified'>('all');
   const [adminViewMode, setAdminViewMode] = useState<'table' | 'cards'>('table');
   const [completeness, setCompleteness] = useState<CompletenessFilter>('all');
   const [editing, setEditing] = useState<Product | null>(null);
   const [saving, setSaving] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const csvFileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleRevertSingleProduct = (productId: string) => {
+    const orig = initial.products.find((p) => p.id === productId);
+    if (!orig) {
+      showToast('İlkin məhsul məlumatı tapılmadı');
+      return;
+    }
+    setCatalog((prev) => ({
+      ...prev,
+      products: prev.products.map((p) => (p.id === productId ? JSON.parse(JSON.stringify(orig)) : p)),
+    }));
+    showToast(`"${orig.code || orig.title}" ilkin halına qaytarıldı.`);
+  };
 
   // Password change state
   const [oldPassword, setOldPassword] = useState('');
@@ -391,10 +424,14 @@ export const CatalogAdmin: React.FC<Props> = ({
       if (adminSpecsFilter === 'has-specs') matchesSpecs = hasSpecs;
       else if (adminSpecsFilter === 'no-specs') matchesSpecs = !hasSpecs;
 
-      // 6. Status Filter (Dərc / Qaralama)
+      // 6. Status Filter (Dərc / Qaralama / Düzəliş)
       let matchesStatus = true;
       if (adminStatusFilter === 'published') matchesStatus = p.status === 'published';
       else if (adminStatusFilter === 'draft') matchesStatus = p.status === 'draft';
+      else if (adminStatusFilter === 'modified') {
+        const orig = initial.products.find((ip) => ip.id === p.id);
+        matchesStatus = isProductModified(p, orig);
+      }
 
       // 7. Completeness legacy filter fallback
       let matchesCompleteness = true;
@@ -812,7 +849,8 @@ export const CatalogAdmin: React.FC<Props> = ({
     ['appearance', 'Görünüş & Mətnlər', <Palette size={17} />],
     ['articles', 'Texnologiyalar (i)', <Zap size={17} />],
     ['contact', 'Əlaqə & Sosial', <Phone size={17} />],
-    ['logs', 'Loglama (Audit)', <History size={17} />],
+    ['snapshots', 'Bərpa & Nüsxələr', <RotateCcw size={17} />],
+    ['logs', 'Loglama (Audit)', <FileText size={17} />],
     ['security', 'Təhlükəsizlik', <Lock size={17} />],
   ];
 
@@ -1313,10 +1351,10 @@ export const CatalogAdmin: React.FC<Props> = ({
                   </option>
                 </select>
 
-                {/* Status Filter (Dərc / Qaralama) */}
+                {/* Status Filter (Dərc / Qaralama / Düzəliş) */}
                 <select
                   value={adminStatusFilter}
-                  onChange={(e) => setAdminStatusFilter(e.target.value as 'all' | 'published' | 'draft')}
+                  onChange={(e) => setAdminStatusFilter(e.target.value as 'all' | 'published' | 'draft' | 'modified')}
                   className="admin-category-select"
                   title="Məhsul statusuna görə süzgəc"
                 >
@@ -1326,6 +1364,9 @@ export const CatalogAdmin: React.FC<Props> = ({
                   </option>
                   <option value="draft">
                     📝 Qaralamalar ({catalog.products.filter((p) => p.status === 'draft').length})
+                  </option>
+                  <option value="modified">
+                    ✏️ Düzəliş edilənlər ({catalog.products.filter((p) => isProductModified(p, initial.products.find((ip) => ip.id === p.id))).length})
                   </option>
                 </select>
 
@@ -1522,6 +1563,8 @@ export const CatalogAdmin: React.FC<Props> = ({
                   const brand = catalog.brands.find((b) => b.id === product.brandId);
                   const mediaCount = getProductUniqueMediaCount(product);
                   const specsCount = product.specs?.length || 0;
+                  const initialProduct = initial.products.find((p) => p.id === product.id);
+                  const isModified = isProductModified(product, initialProduct);
 
                   return (
                     <div
@@ -1551,6 +1594,21 @@ export const CatalogAdmin: React.FC<Props> = ({
                           >
                             {product.status === 'published' ? 'Dərc edilib' : 'Qaralama'}
                           </span>
+                          {isModified && (
+                            <span
+                              style={{
+                                background: '#d97706',
+                                color: '#ffffff',
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                fontSize: '10px',
+                                fontWeight: 800,
+                              }}
+                              title="Bu məhsulda redaktə və ya kəsim dəyişikliyi var"
+                            >
+                              ✏️ Düzəliş
+                            </span>
+                          )}
                         </div>
                         {mediaCount > 1 && (
                           <span className="admin-card-media-count">🖼 {mediaCount} foto</span>
@@ -1588,6 +1646,17 @@ export const CatalogAdmin: React.FC<Props> = ({
                           >
                             <Pencil size={12} /> Redaktə
                           </button>
+                          {isModified && initialProduct && (
+                            <button
+                              type="button"
+                              className="admin-card-btn"
+                              onClick={() => handleRevertSingleProduct(product.id)}
+                              title="Bu məhsulu ilkin dərc olunmuş vəziyyətinə qaytar"
+                              style={{ background: 'rgba(217, 119, 6, 0.15)', color: '#d97706', border: '1px solid #d97706' }}
+                            >
+                              <RotateCcw size={12} />
+                            </button>
+                          )}
                           <button
                             type="button"
                             className="admin-card-btn duplicate"
@@ -1743,7 +1812,30 @@ export const CatalogAdmin: React.FC<Props> = ({
 
                           {/* Model Code */}
                           <td>
-                            <strong className="admin-code">{product.code || '—'}</strong>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <strong className="admin-code">{product.code || '—'}</strong>
+                              {(() => {
+                                const initialProduct = initial.products.find((p) => p.id === product.id);
+                                const isModified = isProductModified(product, initialProduct);
+                                return isModified ? (
+                                  <span
+                                    style={{
+                                      background: 'rgba(217, 119, 6, 0.15)',
+                                      color: '#d97706',
+                                      border: '1px solid #d97706',
+                                      padding: '1px 5px',
+                                      borderRadius: '4px',
+                                      fontSize: '10px',
+                                      fontWeight: 800,
+                                      whiteSpace: 'nowrap',
+                                    }}
+                                    title="Bu məhsulda redaktə və ya kəsim dəyişikliyi var"
+                                  >
+                                    ✏️ Düzəliş
+                                  </span>
+                                ) : null;
+                              })()}
+                            </div>
                           </td>
 
                           {/* Product Title */}
@@ -1936,6 +2028,25 @@ export const CatalogAdmin: React.FC<Props> = ({
                               >
                                 <Copy size={15} />
                               </button>
+                              {(() => {
+                                const initialProduct = initial.products.find((p) => p.id === product.id);
+                                const isModified = isProductModified(product, initialProduct);
+                                return isModified && initialProduct ? (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleRevertSingleProduct(product.id)}
+                                    title="Bu məhsulu ilkin dərc olunmuş vəziyyətinə qaytar"
+                                    style={{
+                                      background: 'transparent',
+                                      color: '#d97706',
+                                      border: 'none',
+                                      cursor: 'pointer',
+                                    }}
+                                  >
+                                    <RotateCcw size={15} />
+                                  </button>
+                                ) : null;
+                              })()}
                               <button
                                 onClick={() => setEditing(product)}
                                 title="Redaktə et"
@@ -2034,7 +2145,17 @@ export const CatalogAdmin: React.FC<Props> = ({
           />
         )}
 
-        {/* TAB 8: AUDIT & SYSTEM LOGS */}
+        {/* TAB 8: SNAPSHOTS & RESTORE */}
+        {tab === 'snapshots' && (
+          <SnapshotManager
+            theme={theme}
+            csrfToken={initial.csrfToken}
+            showToast={showToast}
+            onRestore={(restored) => setCatalog(restored)}
+          />
+        )}
+
+        {/* TAB 9: AUDIT & SYSTEM LOGS */}
         {tab === 'logs' && (
           <LogManager
             theme={theme}

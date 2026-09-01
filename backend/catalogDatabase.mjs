@@ -251,7 +251,15 @@ export const createCatalogDatabase = (databasePath) => {
       product_id TEXT NOT NULL DEFAULT '',
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
-    CREATE INDEX IF NOT EXISTS analytics_events_date_idx ON analytics_events(created_at, event_type);
+    CREATE TABLE IF NOT EXISTS catalog_snapshots (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL,
+      catalog_json TEXT NOT NULL,
+      product_count INTEGER NOT NULL DEFAULT 0,
+      created_by TEXT NOT NULL DEFAULT 'admin',
+      created_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+    CREATE INDEX IF NOT EXISTS catalog_snapshots_date_idx ON catalog_snapshots(created_at DESC);
     INSERT OR IGNORE INTO schema_migrations(version, applied_at) VALUES (1, datetime('now'));
     INSERT OR IGNORE INTO catalog_analytics(id, catalog_views) VALUES (1, 0);
     INSERT OR IGNORE INTO catalog_settings(id, whatsapp_number, phone_number, updated_at) VALUES (1, '', '', datetime('now'));
@@ -871,6 +879,60 @@ export const createCatalogDatabase = (databasePath) => {
     }
   };
 
+  const createSnapshot = ({ name = 'Avtomatik Nüsxə', createdBy = 'admin', catalogData = null } = {}) => {
+    const data = catalogData || getCatalog();
+    const id = `snap-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
+    const json = JSON.stringify(data);
+    const productCount = data.products?.length || 0;
+    db.prepare('INSERT INTO catalog_snapshots(id, name, catalog_json, product_count, created_by, created_at) VALUES (?, ?, ?, ?, ?, datetime(\'now\'))')
+      .run(id, name, json, productCount, createdBy);
+    
+    // Prune very old auto-snapshots, keeping last 50
+    db.exec(`DELETE FROM catalog_snapshots WHERE id NOT IN (SELECT id FROM catalog_snapshots ORDER BY created_at DESC LIMIT 50)`);
+    return { id, name, productCount, createdAt: new Date().toISOString() };
+  };
+
+  const getSnapshots = ({ limit = 50, offset = 0 } = {}) => {
+    const rows = db.prepare('SELECT id, name, product_count, created_by, created_at FROM catalog_snapshots ORDER BY created_at DESC LIMIT ? OFFSET ?').all(limit, offset);
+    const total = db.prepare('SELECT COUNT(*) as count FROM catalog_snapshots').get().count;
+    return {
+      snapshots: rows.map((r) => ({
+        id: r.id,
+        name: r.name,
+        productCount: r.product_count,
+        createdBy: r.created_by,
+        createdAt: r.created_at,
+      })),
+      total,
+    };
+  };
+
+  const getSnapshot = (id) => {
+    const row = db.prepare('SELECT * FROM catalog_snapshots WHERE id = ?').get(id);
+    if (!row) return null;
+    return {
+      id: row.id,
+      name: row.name,
+      catalog: JSON.parse(row.catalog_json),
+      productCount: row.product_count,
+      createdBy: row.created_by,
+      createdAt: row.created_at,
+    };
+  };
+
+  const restoreSnapshot = (id) => {
+    const snap = getSnapshot(id);
+    if (!snap) throw new Error('Nüsxə tapılmadı');
+    createSnapshot({ name: `Bərpadan əvvəlki ehtiyat nüsxə (${snap.name})`, createdBy: 'system' });
+    saveCatalog(snap.catalog);
+    return snap.catalog;
+  };
+
+  const deleteSnapshot = (id) => {
+    db.prepare('DELETE FROM catalog_snapshots WHERE id = ?').run(id);
+    return true;
+  };
+
   const tableNames = () => {
     return db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map((r) => r.name);
   };
@@ -884,6 +946,11 @@ export const createCatalogDatabase = (databasePath) => {
   return {
     getCatalog,
     saveCatalog,
+    createSnapshot,
+    getSnapshots,
+    getSnapshot,
+    restoreSnapshot,
+    deleteSnapshot,
     getAnalytics,
     getFilteredAnalytics,
     logAction,

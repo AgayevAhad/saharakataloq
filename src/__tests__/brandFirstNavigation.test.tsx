@@ -1,6 +1,6 @@
 // @vitest-environment happy-dom
 import React from 'react';
-import { afterEach, describe, it, expect, vi } from 'vitest';
+import { afterEach, beforeEach, describe, it, expect, vi } from 'vitest';
 import { cleanup, render, screen, fireEvent } from '@testing-library/react';
 import { App } from '../App';
 import { BrandCategoryFilter } from '../components/BrandCategoryFilter';
@@ -9,8 +9,25 @@ import { lightTheme } from '../types/theme';
 import { DEFAULT_BRANDS, DEFAULT_CATEGORIES } from '../data/catalog';
 import { Product } from '../types/product';
 
+const originalFetch = global.fetch;
+
+beforeEach(() => {
+  const mockFetch = vi.fn().mockImplementation(() =>
+    Promise.resolve({
+      ok: true,
+      json: async () => ({ ok: true }),
+      text: async () => JSON.stringify({ ok: true }),
+    } as any)
+  );
+  global.fetch = mockFetch;
+  if (typeof window !== 'undefined') {
+    window.fetch = mockFetch;
+  }
+});
+
 afterEach(() => {
   cleanup();
+  global.fetch = originalFetch;
 });
 
 const TEST_ARDO_PRODUCT: Product = {
