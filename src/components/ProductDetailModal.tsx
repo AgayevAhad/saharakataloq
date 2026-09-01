@@ -341,7 +341,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                   className="product-detail-image-stage"
                   onClick={() => activeMedia?.type === 'image' && activeMedia.url && setIsFullscreenImage(true)}
                   style={{
-                    backgroundColor: theme.mode === 'dark' ? '#0c101a' : '#f8fafc',
+                    backgroundColor: theme.mode === 'dark' ? '#131926' : '#ffffff',
                     borderColor: theme.border,
                     cursor: activeMedia?.type === 'image' ? 'zoom-in' : 'default',
                   }}
