@@ -4,10 +4,20 @@ import { Brand, Product } from '../types/product';
 import { ThemeColors } from '../types/theme';
 import { BrandMark } from './BrandMark';
 
-const ardoBackdrops = [
-  '/media/products/ardo-604b.jpg',
-  '/media/products/ardo-c640e-inox.jpg',
-];
+const brandBackdrops: Record<string, string[]> = {
+  ardo: [
+    '/media/products/ardo-6331-gb.jpg',
+    '/media/products/ardo-ar6120-black.jpg',
+    '/media/products/ardo-6032-b.jpg',
+    '/media/products/ardo-604b.jpg',
+  ],
+  lotus: [
+    '/media/products/lotus-oven-lt-829-full-touch-black.jpg',
+    '/media/products/lotus-cooktop-lt-941-cmw.jpg',
+    '/media/products/lotus-airfryer-5-5-black.jpg',
+    '/media/products/lotus-oven-lt-615-full-black.jpg',
+  ],
+};
 
 export const BrandShowcase: React.FC<{
   brands: Brand[];
@@ -27,6 +37,7 @@ export const BrandShowcase: React.FC<{
       {brands.map((brand, index) => {
         const count = products.filter((product) => product.brandId === brand.id && product.status !== 'draft').length;
         const soon = brand.comingSoon || count === 0;
+        const backdrops = brandBackdrops[brand.id] || [];
         return (
           <article
             key={brand.id}
@@ -45,9 +56,9 @@ export const BrandShowcase: React.FC<{
             className={`brand-showcase-card brand-${brand.id} brand-tone-${index % 3} ${soon ? 'coming-soon' : 'ready'}`}
             style={{ borderColor: theme.border, background: theme.bgCard }}
           >
-            {brand.id === 'ardo' && (
+            {backdrops.length > 0 && (
               <div className="brand-card-backdrops" aria-hidden="true">
-                {ardoBackdrops.map((src, imageIndex) => (
+                {backdrops.map((src, imageIndex) => (
                   <img key={src} src={src} alt="" style={{ animationDelay: `${imageIndex * 5}s` }} />
                 ))}
               </div>

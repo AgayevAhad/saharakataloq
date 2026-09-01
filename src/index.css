@@ -480,6 +480,8 @@ button, input, textarea, select { font: inherit; }
 
 /* BRAND-FIRST DEDICATED CATEGORY FILTER BAR */
 .brand-category-filter-bar {
+  position: relative;
+  overflow: hidden;
   margin: 12px 0 20px;
   padding: 16px clamp(14px, 2.5vw, 20px);
   border: 1px solid;
@@ -488,6 +490,21 @@ button, input, textarea, select { font: inherit; }
   flex-direction: column;
   gap: 14px;
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.brand-filter-bar-backdrop {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 45%;
+  background-size: cover;
+  background-position: center;
+  opacity: 0.15;
+  pointer-events: none;
+  border-radius: 0 16px 16px 0;
+  mask-image: linear-gradient(to right, transparent, rgba(0, 0, 0, 1) 40%);
+  -webkit-mask-image: linear-gradient(to right, transparent, rgba(0, 0, 0, 1) 40%);
 }
 
 .brand-category-filter-header {

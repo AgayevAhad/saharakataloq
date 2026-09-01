@@ -13,6 +13,11 @@ interface BrandCategoryFilterProps {
   theme: ThemeColors;
 }
 
+const brandCoverImages: Record<string, string> = {
+  ardo: '/media/products/ardo-6331-gb.jpg',
+  lotus: '/media/products/lotus-oven-lt-829-full-touch-black.jpg',
+};
+
 export const BrandCategoryFilter: React.FC<BrandCategoryFilterProps> = ({
   brand,
   categories,
@@ -33,6 +38,8 @@ export const BrandCategoryFilter: React.FC<BrandCategoryFilterProps> = ({
     })
     .filter((cat) => cat.count > 0);
 
+  const coverImage = brandCoverImages[brand.id];
+
   return (
     <div
       className="brand-category-filter-bar"
@@ -41,6 +48,15 @@ export const BrandCategoryFilter: React.FC<BrandCategoryFilterProps> = ({
         borderColor: theme.border,
       }}
     >
+      {coverImage && (
+        <div
+          className="brand-filter-bar-backdrop"
+          style={{
+            backgroundImage: `url(${coverImage})`,
+          }}
+          aria-hidden="true"
+        />
+      )}
       <div className="brand-category-filter-header">
         <div className="brand-category-title-wrap">
           <button
