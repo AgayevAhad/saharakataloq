@@ -122,12 +122,18 @@ for (const dbPath of ['./data/catalog.sqlite', './data/catalog-draft.sqlite']) {
       updatedCount++;
       const mainImage = urls[0];
       const gallery = [...urls];
-      const media = urls.map((url, idx) => ({
-        id: `${p.id}-media-${idx + 1}`,
-        type: 'image',
-        url,
-        alt: `${p.title} - Şəkil ${idx + 1}`,
-      }));
+      const existingMediaByUrl = new Map((p.media || []).map((m) => [m.url, m]));
+      const media = urls.map((url, idx) => {
+        const existing = existingMediaByUrl.get(url);
+        return {
+          id: existing?.id || `${p.id}-media-${idx + 1}`,
+          type: 'image',
+          url,
+          alt: existing?.alt || `${p.title} - Şəkil ${idx + 1}`,
+          fitMode: existing?.fitMode || p.imageFit || 'contain',
+          objectPosition: existing?.objectPosition || p.imagePosition || 'center',
+        };
+      });
 
       return {
         ...p,

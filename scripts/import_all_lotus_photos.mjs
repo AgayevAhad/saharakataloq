@@ -193,20 +193,24 @@ for (const [key, group] of modelPhotoGroups.entries()) {
     });
   }
 
-  const mediaItems = webImageUrls.map((url, i) => ({
-    id: `m-lotus-${sanitizeFilename(category)}-${sanitizeFilename(modelCode)}-${i + 1}`,
-    type: 'image',
-    url: url,
-    alt: `Lotus ${modelCode} - Şəkil ${i + 1}`,
-    fitMode: 'contain',
-    objectPosition: 'center'
-  }));
-
   if (product) {
-    // Update existing product with high quality media
+    // Update existing product with high quality media, PRESERVING user crop and custom positioning
+    const existingMediaByUrl = new Map((product.media || []).map((m) => [m.url, m]));
+    const preservedMediaItems = webImageUrls.map((url, i) => {
+      const existing = existingMediaByUrl.get(url);
+      return {
+        id: existing?.id || `m-lotus-${sanitizeFilename(category)}-${sanitizeFilename(modelCode)}-${i + 1}`,
+        type: 'image',
+        url: url,
+        alt: existing?.alt || `Lotus ${modelCode} - Şəkil ${i + 1}`,
+        fitMode: existing?.fitMode || product.imageFit || 'contain',
+        objectPosition: existing?.objectPosition || product.imagePosition || 'center',
+      };
+    });
+
     product.image = webImageUrls[0];
     product.gallery = webImageUrls;
-    product.media = mediaItems;
+    product.media = preservedMediaItems;
     product.status = 'published';
     updatedProductsCount++;
   } else {

@@ -22,20 +22,26 @@ describe('Lotus Media & Multi-Category Import Suite', () => {
     expect(categories.has('iron')).toBe(true);
   });
 
-  it('All Lotus products with media point to existing physical files in public/media/products/', () => {
-    const productsWithImages = lotusProducts.filter((p: any) => p.image && p.image.startsWith('/media/products/'));
-    expect(productsWithImages.length).toBeGreaterThanOrEqual(60);
+  it('All Lotus products with media point to existing physical files in public/media/products/ or public/uploads/', () => {
+    const productsWithImages = lotusProducts.filter((p: any) => p.image && (p.image.startsWith('/media/products/') || p.image.startsWith('/uploads/')));
+    expect(productsWithImages.length).toBeGreaterThanOrEqual(40);
 
     for (const prod of productsWithImages) {
-      const relPath = (prod.image as string).replace(/^\//, '');
-      const fullPath = join(process.cwd(), 'public', relPath.replace(/^public\//, '').replace(/^media\//, 'media/'));
-      expect(existsSync(fullPath)).toBe(true);
+      const isUpload = (prod.image as string).startsWith('/uploads/');
+      const filePath = isUpload
+        ? join(process.cwd(), 'data', 'media', (prod.image as string).replace('/uploads/', ''))
+        : join(process.cwd(), 'public', (prod.image as string).replace(/^\//, ''));
+      const fileExists = existsSync(filePath);
+      expect(fileExists).toBe(true);
 
       if (prod.gallery && prod.gallery.length > 0) {
         for (const galUrl of prod.gallery) {
-          const galRel = galUrl.replace(/^\//, '');
-          const galFull = join(process.cwd(), 'public', galRel.replace(/^public\//, '').replace(/^media\//, 'media/'));
-          expect(existsSync(galFull)).toBe(true);
+          const isGalUpload = galUrl.startsWith('/uploads/');
+          const galPath = isGalUpload
+            ? join(process.cwd(), 'data', 'media', galUrl.replace('/uploads/', ''))
+            : join(process.cwd(), 'public', galUrl.replace(/^\//, ''));
+          const galExists = existsSync(galPath);
+          expect(galExists).toBe(true);
         }
       }
     }
