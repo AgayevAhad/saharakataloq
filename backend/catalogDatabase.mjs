@@ -194,6 +194,7 @@ export const createCatalogDatabase = (databasePath) => {
       media_type TEXT NOT NULL CHECK(media_type IN ('image', 'video')),
       url TEXT NOT NULL,
       alt_text TEXT NOT NULL DEFAULT '',
+      original_name TEXT NOT NULL DEFAULT '',
       poster TEXT NOT NULL DEFAULT '',
       sort_order INTEGER NOT NULL DEFAULT 0
     );
@@ -295,6 +296,9 @@ export const createCatalogDatabase = (databasePath) => {
   }
 
   const productMediaColumns = db.prepare('PRAGMA table_info(product_media)').all().map((row) => row.name);
+  if (!productMediaColumns.includes('original_name')) {
+    db.exec("ALTER TABLE product_media ADD COLUMN original_name TEXT NOT NULL DEFAULT '';");
+  }
   if (!productMediaColumns.includes('object_position')) {
     db.exec("ALTER TABLE product_media ADD COLUMN object_position TEXT NOT NULL DEFAULT 'center';");
   }
@@ -382,6 +386,7 @@ export const createCatalogDatabase = (databasePath) => {
         type: item.media_type,
         url: item.url,
         alt: item.alt_text || undefined,
+        originalName: item.original_name || undefined,
         poster: item.poster || undefined,
         objectPosition: item.object_position || 'center',
         fitMode: item.fit_mode || 'contain',
@@ -562,7 +567,24 @@ export const createCatalogDatabase = (databasePath) => {
         db.prepare('DELETE FROM product_highlights WHERE product_id = ?').run(product.id);
         db.prepare('DELETE FROM product_specs WHERE product_id = ?').run(product.id);
 
-        (product.media || []).forEach((item, index) => db.prepare('INSERT INTO product_media(id,product_id,media_type,url,alt_text,poster,object_position,fit_mode,sort_order) VALUES(?,?,?,?,?,?,?,?,?)').run(item.id, product.id, item.type, item.url, item.alt || '', item.poster || '', item.objectPosition || 'center', item.fitMode || 'contain', index));
+        (product.media || []).forEach((item, index) =>
+          db
+            .prepare(
+              'INSERT INTO product_media(id,product_id,media_type,url,alt_text,original_name,poster,object_position,fit_mode,sort_order) VALUES(?,?,?,?,?,?,?,?,?,?)'
+            )
+            .run(
+              item.id,
+              product.id,
+              item.type,
+              item.url,
+              item.alt || '',
+              item.originalName || '',
+              item.poster || '',
+              item.objectPosition || 'center',
+              item.fitMode || 'contain',
+              index
+            )
+        );
         (product.highlights || []).forEach((value, index) => db.prepare('INSERT INTO product_highlights(product_id,value,sort_order) VALUES(?,?,?)').run(product.id, value, index));
         (product.specs || []).forEach((item, index) => db.prepare('INSERT INTO product_specs(id,product_id,name,value,description,icon,spec_group,sort_order) VALUES(?,?,?,?,?,?,?,?)').run(item.id, product.id, item.name, item.value || '', item.description || '', item.icon || '', item.group || 'Əsas', index));
       }
