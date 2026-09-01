@@ -127,6 +127,47 @@ const slugify = (text: string) =>
 
 const newId = (prefix: string) => `${prefix}-${Date.now().toString(36)}`;
 
+export const getProductUniqueMediaUrls = (product: Product): string[] => {
+  const urls: string[] = [];
+  const seen = new Set<string>();
+
+  if (product.image && typeof product.image === 'string' && product.image.trim()) {
+    const clean = product.image.trim();
+    seen.add(clean);
+    urls.push(clean);
+  }
+
+  if (Array.isArray(product.gallery)) {
+    product.gallery.forEach((url) => {
+      if (url && typeof url === 'string') {
+        const clean = url.trim();
+        if (clean && !seen.has(clean)) {
+          seen.add(clean);
+          urls.push(clean);
+        }
+      }
+    });
+  }
+
+  if (Array.isArray(product.media)) {
+    product.media.forEach((item) => {
+      if (item?.url && typeof item.url === 'string') {
+        const clean = item.url.trim();
+        if (clean && !seen.has(clean)) {
+          seen.add(clean);
+          urls.push(clean);
+        }
+      }
+    });
+  }
+
+  return urls;
+};
+
+export const getProductUniqueMediaCount = (product: Product): number => {
+  return getProductUniqueMediaUrls(product).length;
+};
+
 const emptyProduct = (brands: Brand[], categories: CatalogCategory[]): Product => ({
   id: newId('product'),
   code: '',
@@ -340,7 +381,7 @@ export const CatalogAdmin: React.FC<Props> = ({
 
       // 4. Media Filter (Şəkilli və ya Şəkilsiz)
       let matchesMedia = true;
-      const hasMedia = Boolean(p.image || (p.gallery && p.gallery.length > 0) || (p.media && p.media.length > 0));
+      const hasMedia = getProductUniqueMediaCount(p) > 0;
       if (adminMediaFilter === 'has-media') matchesMedia = hasMedia;
       else if (adminMediaFilter === 'no-media') matchesMedia = !hasMedia;
 
@@ -505,42 +546,19 @@ export const CatalogAdmin: React.FC<Props> = ({
 
   // Open Lightbox
   const openProductLightbox = (product: Product, initialMediaIndex = 0) => {
+    const uniqueUrls = getProductUniqueMediaUrls(product);
     const mediaItems: Array<{ url: string; type?: 'image' | 'video'; alt?: string; objectPosition?: string; fitMode?: string }> = [];
-    if (product.media && product.media.length) {
-      product.media.forEach((m) => {
-        if (m.url && !mediaItems.some((item) => item.url === m.url)) {
-          mediaItems.push({
-            url: m.url,
-            type: m.type,
-            alt: m.alt || product.title,
-            objectPosition: m.objectPosition || product.imagePosition || 'center',
-            fitMode: m.fitMode || product.imageFit || 'contain',
-          });
-        }
-      });
-    } else if (product.image) {
-      mediaItems.push({
-        url: product.image,
-        type: 'image',
-        alt: product.title,
-        objectPosition: product.imagePosition || 'center',
-        fitMode: product.imageFit || 'contain',
-      });
-    }
 
-    if (product.gallery && product.gallery.length) {
-      product.gallery.forEach((g) => {
-        if (g && !mediaItems.some((item) => item.url === g)) {
-          mediaItems.push({
-            url: g,
-            type: 'image',
-            alt: product.title,
-            objectPosition: 'center',
-            fitMode: 'contain',
-          });
-        }
+    uniqueUrls.forEach((url) => {
+      const matchMedia = product.media?.find((m) => m.url === url);
+      mediaItems.push({
+        url,
+        type: matchMedia?.type || 'image',
+        alt: matchMedia?.alt || product.title,
+        objectPosition: matchMedia?.objectPosition || product.imagePosition || 'center',
+        fitMode: matchMedia?.fitMode || product.imageFit || 'contain',
       });
-    }
+    });
 
     if (!mediaItems.length) {
       mediaItems.push({ url: '/media/brands/ardo-logo.png', type: 'image', alt: product.title, objectPosition: 'center', fitMode: 'contain' });
@@ -1272,10 +1290,10 @@ export const CatalogAdmin: React.FC<Props> = ({
                 >
                   <option value="all">Bütün Media</option>
                   <option value="has-media">
-                    🖼 Şəkilli olanlar ({catalog.products.filter((p) => Boolean(p.image || p.media?.length)).length})
+                    🖼 Şəkilli olanlar ({catalog.products.filter((p) => getProductUniqueMediaCount(p) > 0).length})
                   </option>
                   <option value="no-media">
-                    📷 Şəkilsiz olanlar ({catalog.products.filter((p) => !Boolean(p.image || p.media?.length)).length})
+                    📷 Şəkilsiz olanlar ({catalog.products.filter((p) => getProductUniqueMediaCount(p) === 0).length})
                   </option>
                 </select>
 
@@ -1486,10 +1504,10 @@ export const CatalogAdmin: React.FC<Props> = ({
               </div>
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                 <span>
-                  Şəkilli: <strong style={{ color: '#16a34a' }}>{filtered.filter((p) => Boolean(p.image || p.media?.length)).length}</strong>
+                  Şəkilli: <strong style={{ color: '#16a34a' }}>{filtered.filter((p) => getProductUniqueMediaCount(p) > 0).length}</strong>
                 </span>
                 <span>
-                  Şəkilsiz: <strong style={{ color: '#ef4444' }}>{filtered.filter((p) => !Boolean(p.image || p.media?.length)).length}</strong>
+                  Şəkilsiz: <strong style={{ color: '#ef4444' }}>{filtered.filter((p) => getProductUniqueMediaCount(p) === 0).length}</strong>
                 </span>
                 <span>
                   Göstəricili: <strong style={{ color: '#2563eb' }}>{filtered.filter((p) => Boolean(p.specs?.length)).length}</strong>
@@ -1502,8 +1520,7 @@ export const CatalogAdmin: React.FC<Props> = ({
                 {filtered.map((product) => {
                   const catalogIndex = catalog.products.findIndex((p) => p.id === product.id);
                   const brand = catalog.brands.find((b) => b.id === product.brandId);
-                  const mediaCount =
-                    (product.gallery?.length || 0) + (product.media?.length || 0) || (product.image ? 1 : 0);
+                  const mediaCount = getProductUniqueMediaCount(product);
                   const specsCount = product.specs?.length || 0;
 
                   return (
@@ -1700,24 +1717,27 @@ export const CatalogAdmin: React.FC<Props> = ({
                               >
                                 {product.image ? <img src={product.image} alt={product.title} /> : '🖼'}
                               </div>
-                              {product.gallery && product.gallery.length > 1 && (
-                                <span
-                                  style={{
-                                    fontSize: '10px',
-                                    fontWeight: 800,
-                                    background: 'rgba(127,127,127,0.15)',
-                                    color: theme.textMuted,
-                                    padding: '2px 5px',
-                                    borderRadius: '4px',
-                                    whiteSpace: 'nowrap',
-                                    cursor: 'pointer',
-                                  }}
-                                  onClick={() => openProductLightbox(product)}
-                                  title={`${product.gallery.length} foto/media mövcuddur`}
-                                >
-                                  +{product.gallery.length - 1}
-                                </span>
-                              )}
+                              {(() => {
+                                const mediaCount = getProductUniqueMediaCount(product);
+                                return mediaCount > 1 ? (
+                                  <span
+                                    style={{
+                                      fontSize: '10px',
+                                      fontWeight: 800,
+                                      background: 'rgba(127,127,127,0.15)',
+                                      color: theme.textMuted,
+                                      padding: '2px 5px',
+                                      borderRadius: '4px',
+                                      whiteSpace: 'nowrap',
+                                      cursor: 'pointer',
+                                    }}
+                                    onClick={() => openProductLightbox(product)}
+                                    title={`${mediaCount} foto/media mövcuddur`}
+                                  >
+                                    +{mediaCount - 1}
+                                  </span>
+                                ) : null;
+                              })()}
                             </div>
                           </td>
 

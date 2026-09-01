@@ -230,4 +230,52 @@ describe('Admin Panel Brand, Media, Specs Filters and View Mode Suite', () => {
     expect(screen.getByText('Model Kodu')).toBeDefined();
     expect(screen.getByText('Sıra (№)')).toBeDefined();
   });
+
+  it('calculates accurate unique photo counts when image, gallery, and media arrays overlap', () => {
+    const productWithDuplicates: Product = {
+      id: 'p-overlap-1',
+      brandId: 'lotus',
+      code: 'LT-MULTI-2',
+      title: 'Lotus Çoxşəkilli Məhsul',
+      category: 'airfryer',
+      categoryName: 'Fritözlər & Airfryer',
+      shortDesc: 'Test',
+      image: '/media/products/img1.jpg',
+      gallery: ['/media/products/img1.jpg', '/media/products/img2.jpg'],
+      media: [
+        { id: 'm1', type: 'image', url: '/media/products/img1.jpg' },
+        { id: 'm2', type: 'image', url: '/media/products/img2.jpg' },
+      ],
+      highlights: [],
+      specs: [],
+      status: 'published',
+    };
+
+    const adminPayload: AdminPayload = {
+      ...mockAdminData(),
+      products: [productWithDuplicates],
+    };
+
+    render(
+      <CatalogAdmin
+        initial={adminPayload}
+        theme={lightTheme}
+        onSave={vi.fn()}
+        onPublish={vi.fn()}
+        onUpload={vi.fn()}
+        onLogout={vi.fn()}
+        showToast={vi.fn()}
+      />
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Məhsullar/i }));
+
+    // Switch to Card Grid view
+    fireEvent.click(screen.getByTitle('Kart / Vitrin görünüşü'));
+
+    // Should display exactly "🖼 2 foto" (NOT 4 or 5!)
+    expect(screen.getByText('🖼 2 foto')).toBeDefined();
+    expect(screen.queryByText('🖼 4 foto')).toBeNull();
+    expect(screen.queryByText('🖼 5 foto')).toBeNull();
+  });
 });
