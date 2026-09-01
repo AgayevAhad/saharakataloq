@@ -233,9 +233,11 @@ export const CatalogAdmin: React.FC<Props> = ({
   const [query, setQuery] = useState('');
   const [adminBrand, setAdminBrand] = useState<string>('all');
   const [adminCategory, setAdminCategory] = useState<string>('all');
-  const [adminMediaFilter, setAdminMediaFilter] = useState<'all' | 'has-media' | 'no-media'>('all');
+  const [adminMediaFilter, setAdminMediaFilter] = useState<'all' | 'has-media' | 'no-media' | 'multi-media' | 'single-media'>('all');
   const [adminSpecsFilter, setAdminSpecsFilter] = useState<'all' | 'has-specs' | 'no-specs'>('all');
   const [adminStatusFilter, setAdminStatusFilter] = useState<'all' | 'published' | 'draft' | 'modified'>('all');
+  const [adminPriceFilter, setAdminPriceFilter] = useState<'all' | 'has-price' | 'no-price'>('all');
+  const [adminStockFilter, setAdminStockFilter] = useState<'all' | 'in_stock' | 'out_of_stock' | 'preorder'>('all');
   const [adminViewMode, setAdminViewMode] = useState<'table' | 'cards'>('table');
   const [completeness, setCompleteness] = useState<CompletenessFilter>('all');
   const [editing, setEditing] = useState<Product | null>(null);
@@ -254,6 +256,71 @@ export const CatalogAdmin: React.FC<Props> = ({
       products: prev.products.map((p) => (p.id === productId ? JSON.parse(JSON.stringify(orig)) : p)),
     }));
     showToast(`"${orig.code || orig.title}" ilkin halına qaytarıldı.`);
+  };
+
+  const handleBulkSetStatus = (
+    target:
+      | 'no-media-draft'
+      | 'has-media-pub'
+      | 'has-media-draft'
+      | 'has-specs-pub'
+      | 'no-specs-draft'
+      | 'current-filter-pub'
+      | 'current-filter-draft'
+  ) => {
+    let affectedCount = 0;
+    setCatalog((prev) => {
+      const updatedProducts = prev.products.map((p) => {
+        const mediaCount = getProductUniqueMediaCount(p);
+        const hasSpecs = Boolean(p.specs && p.specs.length > 0);
+        let newStatus = p.status;
+
+        if (target === 'no-media-draft' && mediaCount === 0 && p.status !== 'draft') {
+          newStatus = 'draft';
+          affectedCount++;
+        } else if (target === 'has-media-pub' && mediaCount > 0 && p.status !== 'published') {
+          newStatus = 'published';
+          affectedCount++;
+        } else if (target === 'has-media-draft' && mediaCount > 0 && p.status !== 'draft') {
+          newStatus = 'draft';
+          affectedCount++;
+        } else if (target === 'has-specs-pub' && hasSpecs && p.status !== 'published') {
+          newStatus = 'published';
+          affectedCount++;
+        } else if (target === 'no-specs-draft' && !hasSpecs && p.status !== 'draft') {
+          newStatus = 'draft';
+          affectedCount++;
+        } else if (target === 'current-filter-pub') {
+          const isCurrentFiltered = filtered.some((fp) => fp.id === p.id);
+          if (isCurrentFiltered && p.status !== 'published') {
+            newStatus = 'published';
+            affectedCount++;
+          }
+        } else if (target === 'current-filter-draft') {
+          const isCurrentFiltered = filtered.some((fp) => fp.id === p.id);
+          if (isCurrentFiltered && p.status !== 'draft') {
+            newStatus = 'draft';
+            affectedCount++;
+          }
+        }
+
+        return newStatus !== p.status ? { ...p, status: newStatus } : p;
+      });
+
+      return { ...prev, products: updatedProducts };
+    });
+
+    const messages: Record<string, string> = {
+      'no-media-draft': `${affectedCount} şəkilsiz məhsul dərcdən çıxarıldı (qaralamaya keçirildi).`,
+      'has-media-pub': `${affectedCount} şəkilli məhsul canlı yayıma buraxıldı (dərc edildi).`,
+      'has-media-draft': `${affectedCount} şəkilli məhsul qaralamaya keçirildi.`,
+      'has-specs-pub': `${affectedCount} texniki göstəricisi olan məhsul dərc edildi.`,
+      'no-specs-draft': `${affectedCount} texniki göstəricisi olmayan məhsul dərcdən çıxarıldı.`,
+      'current-filter-pub': `Süzgəcdəki ${affectedCount} məhsul dərc edildi.`,
+      'current-filter-draft': `Süzgəcdəki ${affectedCount} məhsul qaralamaya keçirildi.`,
+    };
+
+    showToast?.(messages[target] || `${affectedCount} məhsulun statusu yeniləndi.`);
   };
 
   // Password change state
@@ -292,7 +359,14 @@ export const CatalogAdmin: React.FC<Props> = ({
   const [analyticsRange, setAnalyticsRange] = useState<string>('all');
   const [customStartDate, setCustomStartDate] = useState<string>('');
   const [customEndDate, setCustomEndDate] = useState<string>('');
-  const [analyticsStats, setAnalyticsStats] = useState<CatalogAnalytics>(initial.analytics);
+  const [analyticsStats, setAnalyticsStats] = useState<CatalogAnalytics>(
+    initial.analytics || {
+      catalogViews: 0,
+      productViews: {},
+      contactActions: { whatsapp: 0, call: 0 },
+      contactActionsByProduct: {},
+    }
+  );
   const [analyticsLoading, setAnalyticsLoading] = useState(false);
 
   const loadFilteredAnalytics = useCallback(async (range: string, from?: string, to?: string) => {
@@ -412,11 +486,13 @@ export const CatalogAdmin: React.FC<Props> = ({
           .toLocaleLowerCase('az')
           .includes(needle);
 
-      // 4. Media Filter (Şəkilli və ya Şəkilsiz)
+      // 4. Media Filter (Şəkilli, Şəkilsiz, Çoxşəkilli, Təkşəkilli)
       let matchesMedia = true;
-      const hasMedia = getProductUniqueMediaCount(p) > 0;
-      if (adminMediaFilter === 'has-media') matchesMedia = hasMedia;
-      else if (adminMediaFilter === 'no-media') matchesMedia = !hasMedia;
+      const mediaCount = getProductUniqueMediaCount(p);
+      if (adminMediaFilter === 'has-media') matchesMedia = mediaCount > 0;
+      else if (adminMediaFilter === 'no-media') matchesMedia = mediaCount === 0;
+      else if (adminMediaFilter === 'multi-media') matchesMedia = mediaCount > 1;
+      else if (adminMediaFilter === 'single-media') matchesMedia = mediaCount === 1;
 
       // 5. Specs Filter (Texniki göstəricisi olan və ya olmayan)
       let matchesSpecs = true;
@@ -433,9 +509,21 @@ export const CatalogAdmin: React.FC<Props> = ({
         matchesStatus = isProductModified(p, orig);
       }
 
-      // 7. Completeness legacy filter fallback
+      // 7. Price Filter (Qiymətli / Qiymətsiz)
+      let matchesPrice = true;
+      const hasPrice = p.price !== undefined && p.price !== null && Number(p.price) > 0;
+      if (adminPriceFilter === 'has-price') matchesPrice = hasPrice;
+      else if (adminPriceFilter === 'no-price') matchesPrice = !hasPrice;
+
+      // 8. Stock Filter (Stok vəziyyəti)
+      let matchesStock = true;
+      if (adminStockFilter !== 'all') {
+        matchesStock = (p.stockStatus || 'in_stock') === adminStockFilter;
+      }
+
+      // 9. Completeness legacy filter fallback
       let matchesCompleteness = true;
-      if (completeness === 'missing-media') matchesCompleteness = !hasMedia;
+      if (completeness === 'missing-media') matchesCompleteness = mediaCount === 0;
       if (completeness === 'missing-specs') matchesCompleteness = !hasSpecs;
       if (completeness === 'draft') matchesCompleteness = p.status === 'draft';
 
@@ -446,6 +534,8 @@ export const CatalogAdmin: React.FC<Props> = ({
         matchesMedia &&
         matchesSpecs &&
         matchesStatus &&
+        matchesPrice &&
+        matchesStock &&
         matchesCompleteness
       );
     });
@@ -453,18 +543,20 @@ export const CatalogAdmin: React.FC<Props> = ({
     adminBrand,
     adminCategory,
     adminMediaFilter,
+    adminPriceFilter,
     adminSpecsFilter,
     adminStatusFilter,
+    adminStockFilter,
     catalog.products,
     completeness,
     query,
   ]);
 
   // Executive Dashboard Stats (Calculated dynamically for selected period)
-  const totalCatalogViews = analyticsStats.catalogViews || 0;
+  const totalCatalogViews = analyticsStats?.catalogViews || 0;
   const totalProductViews = useMemo(
-    () => Object.values(analyticsStats.productViews || {}).reduce((a, b) => a + b, 0),
-    [analyticsStats.productViews]
+    () => Object.values(analyticsStats?.productViews || {}).reduce((a, b) => a + b, 0),
+    [analyticsStats?.productViews]
   );
   const totalWhatsApp = analyticsStats.contactActions?.whatsapp || 0;
   const totalCalls = analyticsStats.contactActions?.call || 0;
@@ -1319,10 +1411,10 @@ export const CatalogAdmin: React.FC<Props> = ({
                   ))}
                 </select>
 
-                {/* Media Filter (Şəkilli / Şəkilsiz) */}
+                {/* Media Filter (Şəkilli / Şəkilsiz / Çoxşəkilli) */}
                 <select
                   value={adminMediaFilter}
-                  onChange={(e) => setAdminMediaFilter(e.target.value as 'all' | 'has-media' | 'no-media')}
+                  onChange={(e) => setAdminMediaFilter(e.target.value as 'all' | 'has-media' | 'no-media' | 'multi-media' | 'single-media')}
                   className="admin-category-select"
                   title="Şəkilli və ya şəkilsiz məhsullara görə süzgəc"
                 >
@@ -1332,6 +1424,12 @@ export const CatalogAdmin: React.FC<Props> = ({
                   </option>
                   <option value="no-media">
                     📷 Şəkilsiz olanlar ({catalog.products.filter((p) => getProductUniqueMediaCount(p) === 0).length})
+                  </option>
+                  <option value="multi-media">
+                    📸 Çoxşəkilli (&gt;1) ({catalog.products.filter((p) => getProductUniqueMediaCount(p) > 1).length})
+                  </option>
+                  <option value="single-media">
+                    🖼️ Tək şəkilli (=1) ({catalog.products.filter((p) => getProductUniqueMediaCount(p) === 1).length})
                   </option>
                 </select>
 
@@ -1367,6 +1465,41 @@ export const CatalogAdmin: React.FC<Props> = ({
                   </option>
                   <option value="modified">
                     ✏️ Düzəliş edilənlər ({catalog.products.filter((p) => isProductModified(p, initial.products.find((ip) => ip.id === p.id))).length})
+                  </option>
+                </select>
+
+                {/* Price Filter */}
+                <select
+                  value={adminPriceFilter}
+                  onChange={(e) => setAdminPriceFilter(e.target.value as 'all' | 'has-price' | 'no-price')}
+                  className="admin-category-select"
+                  title="Qiymətə görə süzgəc"
+                >
+                  <option value="all">Bütün Qiymətlər</option>
+                  <option value="has-price">
+                    💰 Qiyməti olanlar ({catalog.products.filter((p) => p.price && Number(p.price) > 0).length})
+                  </option>
+                  <option value="no-price">
+                    🏷️ Qiymətsiz olanlar ({catalog.products.filter((p) => !p.price || Number(p.price) <= 0).length})
+                  </option>
+                </select>
+
+                {/* Stock Filter */}
+                <select
+                  value={adminStockFilter}
+                  onChange={(e) => setAdminStockFilter(e.target.value as 'all' | 'in_stock' | 'out_of_stock' | 'preorder')}
+                  className="admin-category-select"
+                  title="Stok vəziyyətinə görə süzgəc"
+                >
+                  <option value="all">Bütün Stok</option>
+                  <option value="in_stock">
+                    🟢 Stokda var ({catalog.products.filter((p) => (p.stockStatus || 'in_stock') === 'in_stock').length})
+                  </option>
+                  <option value="out_of_stock">
+                    🔴 Bitib / Yoxdur ({catalog.products.filter((p) => p.stockStatus === 'out_of_stock').length})
+                  </option>
+                  <option value="preorder">
+                    🟡 Ön sifariş ({catalog.products.filter((p) => p.stockStatus === 'preorder').length})
                   </option>
                 </select>
 
@@ -1531,28 +1664,196 @@ export const CatalogAdmin: React.FC<Props> = ({
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                margin: '12px 0 16px',
+                margin: '12px 0 10px',
                 padding: '8px 14px',
                 background: theme.bgSecondary,
                 borderRadius: '8px',
                 border: `1px solid ${theme.border}`,
                 fontSize: '12px',
                 color: theme.textMuted,
+                flexWrap: 'wrap',
+                gap: '8px',
               }}
             >
               <div>
                 Göstərilir: <strong style={{ color: theme.text }}>{filtered.length}</strong> / {catalog.products.length} məhsul
               </div>
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
                 <span>
-                  Şəkilli: <strong style={{ color: '#16a34a' }}>{filtered.filter((p) => getProductUniqueMediaCount(p) > 0).length}</strong>
+                  Şəkilli: <strong style={{ color: '#16a34a' }}>{catalog.products.filter((p) => getProductUniqueMediaCount(p) > 0).length}</strong>
                 </span>
                 <span>
-                  Şəkilsiz: <strong style={{ color: '#ef4444' }}>{filtered.filter((p) => getProductUniqueMediaCount(p) === 0).length}</strong>
+                  Şəkilsiz: <strong style={{ color: '#ef4444' }}>{catalog.products.filter((p) => getProductUniqueMediaCount(p) === 0).length}</strong>
                 </span>
                 <span>
-                  Göstəricili: <strong style={{ color: '#2563eb' }}>{filtered.filter((p) => Boolean(p.specs?.length)).length}</strong>
+                  Göstəricili: <strong style={{ color: '#2563eb' }}>{catalog.products.filter((p) => Boolean(p.specs?.length)).length}</strong>
                 </span>
+                <span>
+                  Göstəricisiz: <strong style={{ color: '#d97706' }}>{catalog.products.filter((p) => !Boolean(p.specs?.length)).length}</strong>
+                </span>
+                <span>
+                  Yayımda: <strong style={{ color: '#16a34a' }}>{catalog.products.filter((p) => p.status === 'published').length}</strong>
+                </span>
+                <span>
+                  Qaralama: <strong style={{ color: '#64748b' }}>{catalog.products.filter((p) => p.status === 'draft').length}</strong>
+                </span>
+              </div>
+            </div>
+
+            {/* Bulk Visibility Actions Toolbar */}
+            <div
+              className="admin-bulk-actions-bar"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                gap: '10px',
+                marginBottom: '16px',
+                padding: '10px 14px',
+                background: theme.bgCard,
+                borderRadius: '8px',
+                border: `1px solid ${theme.border}`,
+                flexWrap: 'wrap',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <span style={{ fontSize: '12px', fontWeight: 800, color: theme.textMuted, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <Zap size={14} color={theme.primary} />
+                  Toplu Görünüş Əməliyyatları:
+                </span>
+
+                {/* 1. Şəkilsizləri Gizlə */}
+                <button
+                  type="button"
+                  onClick={() => handleBulkSetStatus('no-media-draft')}
+                  title="Şəkli olmayan bütün məhsulları qaralamaya keçir (gizlə)"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '6px 11px',
+                    borderRadius: '6px',
+                    background: 'rgba(239, 68, 68, 0.12)',
+                    color: '#ef4444',
+                    border: '1px solid rgba(239, 68, 68, 0.25)',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  🚫 Şəkilsizləri Dərcdən Çıxar (Gizlə)
+                </button>
+
+                {/* 2. Şəkilliləri Dərc Et */}
+                <button
+                  type="button"
+                  onClick={() => handleBulkSetStatus('has-media-pub')}
+                  title="Şəkli olan bütün məhsulları canlı yayıma burax (dərc et)"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '6px 11px',
+                    borderRadius: '6px',
+                    background: 'rgba(22, 163, 74, 0.12)',
+                    color: '#16a34a',
+                    border: '1px solid rgba(22, 163, 74, 0.25)',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  🖼️ Şəkilliləri Dərc Et
+                </button>
+
+                {/* 3. Göstəricisi Olanları Dərc Et */}
+                <button
+                  type="button"
+                  onClick={() => handleBulkSetStatus('has-specs-pub')}
+                  title="Texniki parametrləri olan məhsulları dərc et"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '6px 11px',
+                    borderRadius: '6px',
+                    background: 'rgba(37, 99, 235, 0.12)',
+                    color: '#2563eb',
+                    border: '1px solid rgba(37, 99, 235, 0.25)',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  📊 Parametrliləri Dərc Et
+                </button>
+
+                {/* 4. Göstəricisi Olmayanları Gizlə */}
+                <button
+                  type="button"
+                  onClick={() => handleBulkSetStatus('no-specs-draft')}
+                  title="Texniki parametrləri boş olan məhsulları qaralamaya keçir"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '6px 11px',
+                    borderRadius: '6px',
+                    background: 'rgba(217, 119, 6, 0.12)',
+                    color: '#d97706',
+                    border: '1px solid rgba(217, 119, 6, 0.25)',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  ⚠️ Parametrsizləri Dərcdən Çıxar
+                </button>
+              </div>
+
+              {/* Filtered Subset Actions */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <button
+                  type="button"
+                  onClick={() => handleBulkSetStatus('current-filter-pub')}
+                  title="Hazırda ekranda görünən bütün filtirlənmiş məhsulları dərc et"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    background: theme.primary,
+                    color: '#ffffff',
+                    border: 'none',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Eye size={12} /> Süzgəcdəkiləri Dərc Et ({filtered.length})
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleBulkSetStatus('current-filter-draft')}
+                  title="Hazırda ekranda görünən bütün filtirlənmiş məhsulları qaralamaya keçir (gizlə)"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '6px 12px',
+                    borderRadius: '6px',
+                    background: theme.bgSecondary,
+                    color: theme.text,
+                    border: `1px solid ${theme.border}`,
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <EyeOff size={12} /> Süzgəcdəkiləri Gizlə ({filtered.length})
+                </button>
               </div>
             </div>
 

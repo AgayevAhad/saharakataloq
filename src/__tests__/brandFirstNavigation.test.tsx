@@ -9,9 +9,12 @@ import { lightTheme } from '../types/theme';
 import { DEFAULT_BRANDS, DEFAULT_CATEGORIES } from '../data/catalog';
 import { Product } from '../types/product';
 
+import { catalogApi } from '../services/catalogApi';
+
 const originalFetch = global.fetch;
 
 beforeEach(() => {
+  vi.spyOn(catalogApi, 'track').mockImplementation(() => {});
   const mockFetch = vi.fn().mockImplementation(() =>
     Promise.resolve({
       ok: true,
@@ -28,6 +31,7 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   global.fetch = originalFetch;
+  vi.restoreAllMocks();
 });
 
 const TEST_ARDO_PRODUCT: Product = {
