@@ -13,6 +13,7 @@ import {
   Crop,
   Download,
   Eye,
+  EyeOff,
   FileDown,
   FileSpreadsheet,
   FileText,
@@ -20,8 +21,11 @@ import {
   Globe,
   GripVertical,
   History,
+  Image as ImageIcon,
   KeyRound,
   Layers,
+  LayoutGrid,
+  List,
   Lock,
   LogOut,
   Mail,
@@ -166,7 +170,12 @@ export const CatalogAdmin: React.FC<Props> = ({
   const [catalog, setCatalog] = useState<CatalogData>(initial);
   const [tab, setTab] = useState<Tab>('dashboard');
   const [query, setQuery] = useState('');
+  const [adminBrand, setAdminBrand] = useState<string>('all');
   const [adminCategory, setAdminCategory] = useState<string>('all');
+  const [adminMediaFilter, setAdminMediaFilter] = useState<'all' | 'has-media' | 'no-media'>('all');
+  const [adminSpecsFilter, setAdminSpecsFilter] = useState<'all' | 'has-specs' | 'no-specs'>('all');
+  const [adminStatusFilter, setAdminStatusFilter] = useState<'all' | 'published' | 'draft'>('all');
+  const [adminViewMode, setAdminViewMode] = useState<'table' | 'cards'>('table');
   const [completeness, setCompleteness] = useState<CompletenessFilter>('all');
   const [editing, setEditing] = useState<Product | null>(null);
   const [saving, setSaving] = useState(false);
@@ -316,19 +325,62 @@ export const CatalogAdmin: React.FC<Props> = ({
   const filtered = useMemo(() => {
     const needle = query.trim().toLocaleLowerCase('az');
     return catalog.products.filter((p) => {
+      // 1. Brand Filter
+      const matchesBrand = adminBrand === 'all' || p.brandId === adminBrand;
+
+      // 2. Category Filter
       const matchesCategory = adminCategory === 'all' || p.category === adminCategory;
+
+      // 3. Search query
       const matchesNeedle =
         !needle ||
-        `${p.code} ${p.title} ${p.categoryName} ${p.badgeText || ''}`
+        `${p.code} ${p.title} ${p.categoryName} ${p.brandId} ${p.badgeText || ''}`
           .toLocaleLowerCase('az')
           .includes(needle);
+
+      // 4. Media Filter (Şəkilli və ya Şəkilsiz)
+      let matchesMedia = true;
+      const hasMedia = Boolean(p.image || (p.gallery && p.gallery.length > 0) || (p.media && p.media.length > 0));
+      if (adminMediaFilter === 'has-media') matchesMedia = hasMedia;
+      else if (adminMediaFilter === 'no-media') matchesMedia = !hasMedia;
+
+      // 5. Specs Filter (Texniki göstəricisi olan və ya olmayan)
+      let matchesSpecs = true;
+      const hasSpecs = Boolean(p.specs && p.specs.length > 0);
+      if (adminSpecsFilter === 'has-specs') matchesSpecs = hasSpecs;
+      else if (adminSpecsFilter === 'no-specs') matchesSpecs = !hasSpecs;
+
+      // 6. Status Filter (Dərc / Qaralama)
+      let matchesStatus = true;
+      if (adminStatusFilter === 'published') matchesStatus = p.status === 'published';
+      else if (adminStatusFilter === 'draft') matchesStatus = p.status === 'draft';
+
+      // 7. Completeness legacy filter fallback
       let matchesCompleteness = true;
-      if (completeness === 'missing-media') matchesCompleteness = !(p.image || p.media?.length);
-      if (completeness === 'missing-specs') matchesCompleteness = !p.specs?.length;
+      if (completeness === 'missing-media') matchesCompleteness = !hasMedia;
+      if (completeness === 'missing-specs') matchesCompleteness = !hasSpecs;
       if (completeness === 'draft') matchesCompleteness = p.status === 'draft';
-      return matchesCategory && matchesNeedle && matchesCompleteness;
+
+      return (
+        matchesBrand &&
+        matchesCategory &&
+        matchesNeedle &&
+        matchesMedia &&
+        matchesSpecs &&
+        matchesStatus &&
+        matchesCompleteness
+      );
     });
-  }, [adminCategory, catalog.products, completeness, query]);
+  }, [
+    adminBrand,
+    adminCategory,
+    adminMediaFilter,
+    adminSpecsFilter,
+    adminStatusFilter,
+    catalog.products,
+    completeness,
+    query,
+  ]);
 
   // Executive Dashboard Stats (Calculated dynamically for selected period)
   const totalCatalogViews = analyticsStats.catalogViews || 0;
@@ -1181,29 +1233,113 @@ export const CatalogAdmin: React.FC<Props> = ({
               </div>
 
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                {/* Brand Filter */}
                 <select
-                  value={adminCategory}
-                  onChange={(e) => setAdminCategory(e.target.value)}
+                  value={adminBrand}
+                  onChange={(e) => setAdminBrand(e.target.value)}
                   className="admin-category-select"
+                  title="Brendə görə süzgəc"
                 >
-                  <option value="all">Bütün kateqoriyalar</option>
-                  {catalog.categories.map((c) => (
-                    <option key={c.id} value={c.id}>
-                      {c.name}
+                  <option value="all">Bütün brendlər ({catalog.brands.length})</option>
+                  {catalog.brands.map((b) => (
+                    <option key={b.id} value={b.id}>
+                      {b.name} ({catalog.products.filter((p) => p.brandId === b.id).length})
                     </option>
                   ))}
                 </select>
 
+                {/* Category Filter */}
                 <select
-                  value={completeness}
-                  onChange={(e) => setCompleteness(e.target.value as CompletenessFilter)}
+                  value={adminCategory}
+                  onChange={(e) => setAdminCategory(e.target.value)}
                   className="admin-category-select"
+                  title="Kateqoriyaya görə süzgəc"
                 >
-                  <option value="all">Bütün statuslar</option>
-                  <option value="draft">Yalnız Qaralamalar</option>
-                  <option value="missing-media">Şəkli olmayanlar</option>
-                  <option value="missing-specs">Texniki göstəricisi boş olanlar</option>
+                  <option value="all">Bütün kateqoriyalar</option>
+                  {catalog.categories.map((c) => (
+                    <option key={c.id} value={c.id}>
+                      {c.name} ({catalog.products.filter((p) => p.category === c.id).length})
+                    </option>
+                  ))}
                 </select>
+
+                {/* Media Filter (Şəkilli / Şəkilsiz) */}
+                <select
+                  value={adminMediaFilter}
+                  onChange={(e) => setAdminMediaFilter(e.target.value as 'all' | 'has-media' | 'no-media')}
+                  className="admin-category-select"
+                  title="Şəkilli və ya şəkilsiz məhsullara görə süzgəc"
+                >
+                  <option value="all">Bütün Media</option>
+                  <option value="has-media">
+                    🖼 Şəkilli olanlar ({catalog.products.filter((p) => Boolean(p.image || p.media?.length)).length})
+                  </option>
+                  <option value="no-media">
+                    📷 Şəkilsiz olanlar ({catalog.products.filter((p) => !Boolean(p.image || p.media?.length)).length})
+                  </option>
+                </select>
+
+                {/* Specs Filter (Texniki göstəricisi olan / olmayan) */}
+                <select
+                  value={adminSpecsFilter}
+                  onChange={(e) => setAdminSpecsFilter(e.target.value as 'all' | 'has-specs' | 'no-specs')}
+                  className="admin-category-select"
+                  title="Texniki göstəricilərə görə süzgəc"
+                >
+                  <option value="all">Bütün Göstəricilər</option>
+                  <option value="has-specs">
+                    📊 Göstəricisi olanlar ({catalog.products.filter((p) => Boolean(p.specs?.length)).length})
+                  </option>
+                  <option value="no-specs">
+                    ⚠️ Göstəricisi boş olanlar ({catalog.products.filter((p) => !Boolean(p.specs?.length)).length})
+                  </option>
+                </select>
+
+                {/* Status Filter (Dərc / Qaralama) */}
+                <select
+                  value={adminStatusFilter}
+                  onChange={(e) => setAdminStatusFilter(e.target.value as 'all' | 'published' | 'draft')}
+                  className="admin-category-select"
+                  title="Məhsul statusuna görə süzgəc"
+                >
+                  <option value="all">Bütün Statuslar</option>
+                  <option value="published">
+                    ✅ Dərc edilmişlər ({catalog.products.filter((p) => p.status === 'published').length})
+                  </option>
+                  <option value="draft">
+                    📝 Qaralamalar ({catalog.products.filter((p) => p.status === 'draft').length})
+                  </option>
+                </select>
+
+                {/* View Mode Toggle Switch (Table vs Cards) */}
+                <div className="admin-view-toggle" style={{ borderColor: theme.border, background: theme.bgSecondary }}>
+                  <button
+                    type="button"
+                    className={`admin-view-btn ${adminViewMode === 'table' ? 'active' : ''}`}
+                    style={{
+                      background: adminViewMode === 'table' ? theme.primary : 'transparent',
+                      color: adminViewMode === 'table' ? '#ffffff' : theme.textMuted,
+                    }}
+                    onClick={() => setAdminViewMode('table')}
+                    title="Sıra / Cədvəl görünüşü"
+                  >
+                    <List size={14} />
+                    <span>Siyahı</span>
+                  </button>
+                  <button
+                    type="button"
+                    className={`admin-view-btn ${adminViewMode === 'cards' ? 'active' : ''}`}
+                    style={{
+                      background: adminViewMode === 'cards' ? theme.primary : 'transparent',
+                      color: adminViewMode === 'cards' ? '#ffffff' : theme.textMuted,
+                    }}
+                    onClick={() => setAdminViewMode('cards')}
+                    title="Kart / Vitrin görünüşü"
+                  >
+                    <LayoutGrid size={14} />
+                    <span>Kartlar</span>
+                  </button>
+                </div>
 
                 {/* Bulk Excel & CSV Buttons */}
                 <button
@@ -1330,286 +1466,499 @@ export const CatalogAdmin: React.FC<Props> = ({
               </div>
             </div>
 
-            <div className="admin-table-wrap" style={{ borderColor: theme.border, background: theme.bgCard }}>
-              <table>
-                <thead>
-                  <tr style={{ borderBottomColor: theme.border }}>
-                    <th style={{ width: '80px' }}>Sıra (№)</th>
-                    <th style={{ width: '56px' }}>Foto</th>
-                    <th>Model Kodu</th>
-                    <th>Məhsul Adı</th>
-                    <th>Kateqoriya</th>
-                    <th>Brend</th>
-                    <th>Qiymət</th>
-                    <th>Nişan (Badge)</th>
-                    <th>Status & Stok</th>
-                    <th style={{ textAlign: 'right' }}>Əməliyyatlar</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((product) => {
-                    const catalogIndex = catalog.products.findIndex((p) => p.id === product.id);
-                    const isDragging = draggedIndex === catalogIndex;
-                    const isDropTarget = dropTargetIndex === catalogIndex;
-                    const dropClass = isDropTarget && dropPosition ? `drop-${dropPosition}` : '';
+            {/* Results count & status overview bar */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                margin: '12px 0 16px',
+                padding: '8px 14px',
+                background: theme.bgSecondary,
+                borderRadius: '8px',
+                border: `1px solid ${theme.border}`,
+                fontSize: '12px',
+                color: theme.textMuted,
+              }}
+            >
+              <div>
+                Göstərilir: <strong style={{ color: theme.text }}>{filtered.length}</strong> / {catalog.products.length} məhsul
+              </div>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+                <span>
+                  Şəkilli: <strong style={{ color: '#16a34a' }}>{filtered.filter((p) => Boolean(p.image || p.media?.length)).length}</strong>
+                </span>
+                <span>
+                  Şəkilsiz: <strong style={{ color: '#ef4444' }}>{filtered.filter((p) => !Boolean(p.image || p.media?.length)).length}</strong>
+                </span>
+                <span>
+                  Göstəricili: <strong style={{ color: '#2563eb' }}>{filtered.filter((p) => Boolean(p.specs?.length)).length}</strong>
+                </span>
+              </div>
+            </div>
 
-                    return (
-                      <tr
-                        key={product.id}
-                        draggable
-                        onDragStart={(e) => handleDragStart(catalogIndex, e)}
-                        onDragOver={(e) => handleDragOver(catalogIndex, e)}
-                        onDrop={(e) => handleDrop(catalogIndex, e)}
-                        onDragEnd={handleDragEnd}
-                        className={`drag-row ${isDragging ? 'dragging' : ''} ${dropClass}`}
-                        style={{ borderBottomColor: theme.border }}
+            {adminViewMode === 'cards' ? (
+              <div className="admin-products-cards-grid">
+                {filtered.map((product) => {
+                  const catalogIndex = catalog.products.findIndex((p) => p.id === product.id);
+                  const brand = catalog.brands.find((b) => b.id === product.brandId);
+                  const mediaCount =
+                    (product.gallery?.length || 0) + (product.media?.length || 0) || (product.image ? 1 : 0);
+                  const specsCount = product.specs?.length || 0;
+
+                  return (
+                    <div
+                      key={product.id}
+                      className="admin-product-card"
+                      style={{ background: theme.bgCard, borderColor: theme.border }}
+                    >
+                      {/* Card Media Preview */}
+                      <div
+                        className="admin-card-image-wrap"
+                        onClick={() => openProductLightbox(product)}
+                        title="Böyütmək və baxmaq üçün klikləyin"
                       >
-                        {/* Drag Handle & Sequence input */}
-                        <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                            <span className="drag-handle" title="Mouse ilə tutub sıranı dəyişmək üçün sürüşdürün">
-                              <GripVertical size={16} />
-                            </span>
-                            <input
-                              type="number"
-                              min={1}
-                              max={catalog.products.length}
-                              defaultValue={catalogIndex + 1}
-                              key={`seq-${catalogIndex}-${catalog.products.length}`}
-                              onBlur={(e) => {
-                                const val = parseInt(e.target.value, 10);
-                                if (!isNaN(val)) moveProductToPosition(catalogIndex, val);
-                              }}
-                              onKeyDown={(e) => {
-                                if (e.key === 'Enter') {
-                                  const val = parseInt((e.target as HTMLInputElement).value, 10);
-                                  if (!isNaN(val)) moveProductToPosition(catalogIndex, val);
-                                }
-                              }}
-                              className="seq-badge-input"
-                              title="Sıra nömrəsini daxil edib Enter basın"
-                            />
-                          </div>
-                        </td>
-
-                        {/* Thumbnail with Lightbox click & Multi-image badge */}
-                        <td>
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            <div
-                              className="admin-prod-thumb"
-                              onClick={() => openProductLightbox(product)}
-                              title="Böyütmək və baxmaq üçün klikləyin"
-                              style={{ cursor: 'pointer' }}
-                            >
-                              {product.image ? <img src={product.image} alt={product.title} /> : '🖼'}
-                            </div>
-                            {product.gallery && product.gallery.length > 1 && (
-                              <span
-                                style={{
-                                  fontSize: '10px',
-                                  fontWeight: 800,
-                                  background: 'rgba(127,127,127,0.15)',
-                                  color: theme.textMuted,
-                                  padding: '2px 5px',
-                                  borderRadius: '4px',
-                                  whiteSpace: 'nowrap',
-                                  cursor: 'pointer',
-                                }}
-                                onClick={() => openProductLightbox(product)}
-                                title={`${product.gallery.length} foto/media mövcuddur`}
-                              >
-                                📷 {product.gallery.length}
-                              </span>
-                            )}
-                          </div>
-                        </td>
-
-                        <td>
-                          <strong>{product.code}</strong>
-                        </td>
-
-                        <td>{product.title}</td>
-
-                        {/* Inline Category Select + On the fly create */}
-                        <td>
-                          <select
-                            value={product.category}
-                            onChange={(e) => {
-                              if (e.target.value === '__new_category__') {
-                                setQuickModal({ type: 'category', targetProductId: product.id });
-                              } else {
-                                updateProductInline(product.id, { category: e.target.value });
-                              }
-                            }}
-                            className="inline-table-select"
-                            style={{ background: theme.bgSecondary, borderColor: theme.border }}
+                        {product.image ? (
+                          <img src={product.image} alt={product.title} className="admin-card-img" />
+                        ) : (
+                          <div className="admin-card-no-img">📷 Şəkilsiz</div>
+                        )}
+                        <div className="admin-card-badges">
+                          <span className="admin-card-brand-badge">
+                            {brand?.name || product.brandId.toUpperCase()}
+                          </span>
+                          <span
+                            className={`admin-card-status-badge ${
+                              product.status === 'published' ? 'published' : 'draft'
+                            }`}
                           >
-                            {catalog.categories.map((c) => (
-                              <option key={c.id} value={c.id}>
-                                {c.name}
-                              </option>
-                            ))}
-                            <option value="__new_category__">+ Yeni Kateqoriya Yarat...</option>
-                          </select>
-                        </td>
+                            {product.status === 'published' ? 'Dərc edilib' : 'Qaralama'}
+                          </span>
+                        </div>
+                        {mediaCount > 1 && (
+                          <span className="admin-card-media-count">🖼 {mediaCount} foto</span>
+                        )}
+                      </div>
 
-                        {/* Inline Brand Select + On the fly create */}
-                        <td>
-                          <select
-                            value={product.brandId}
-                            onChange={(e) => {
-                              if (e.target.value === '__new_brand__') {
-                                setQuickModal({ type: 'brand', targetProductId: product.id });
-                              } else {
-                                updateProductInline(product.id, { brandId: e.target.value });
-                              }
-                            }}
-                            className="inline-table-select"
-                            style={{ background: theme.bgSecondary, borderColor: theme.border }}
-                          >
-                            {catalog.brands.map((b) => (
-                              <option key={b.id} value={b.id}>
-                                {b.name}
-                              </option>
-                            ))}
-                            <option value="__new_brand__">+ Yeni Brend Yarat...</option>
-                          </select>
-                        </td>
+                      {/* Card Body */}
+                      <div className="admin-card-body">
+                        <div className="admin-card-category">{product.categoryName}</div>
+                        <h4 className="admin-card-title" title={product.title} style={{ color: theme.text }}>
+                          {product.title || 'Adsız məhsul'}
+                        </h4>
+                        <div className="admin-card-code" style={{ color: theme.textMuted }}>
+                          Model: <strong style={{ color: theme.text }}>{product.code || 'KODSUZ'}</strong> (№ {catalogIndex + 1})
+                        </div>
 
-                        {/* Price */}
-                        <td>
-                          {product.price ? (
-                            <span>
-                              <b>{product.price} {product.currency || '₼'}</b>
-                              {product.oldPrice && (
-                                <del style={{ color: theme.textMuted, marginLeft: '4px', fontSize: '11px' }}>
-                                  {product.oldPrice}
-                                </del>
-                              )}
-                            </span>
-                          ) : (
-                            <span style={{ color: theme.textMuted }}>—</span>
-                          )}
-                        </td>
-
-                        {/* Badge */}
-                        <td>
-                          {product.badgeText ? (
-                            <span
-                              style={{
-                                padding: '2px 8px',
-                                borderRadius: '6px',
-                                fontSize: '11px',
-                                fontWeight: 800,
-                                backgroundColor:
-                                  product.badgeColor === 'green'
-                                    ? '#16a34a'
-                                    : product.badgeColor === 'blue'
-                                    ? '#2563eb'
-                                    : product.badgeColor === 'amber'
-                                    ? '#d97706'
-                                    : product.badgeColor === 'purple'
-                                    ? '#7c3aed'
-                                    : theme.primary,
-                                color: '#ffffff',
-                              }}
-                            >
-                              {product.badgeText}
-                            </span>
-                          ) : (
-                            <span style={{ color: theme.textMuted }}>—</span>
-                          )}
-                        </td>
-
-                        {/* Inline Status & Stock Fast Edit */}
-                        <td>
-                          <div style={{ display: 'grid', gap: '4px' }}>
-                            <select
-                              value={product.status || 'published'}
-                              onChange={(e) => updateProductInline(product.id, { status: e.target.value as 'published' | 'draft' })}
-                              className="inline-table-select"
-                              style={{
-                                background: product.status === 'published' ? 'rgba(37, 99, 235, 0.12)' : 'rgba(127,127,127,0.12)',
-                                color: product.status === 'published' ? '#2563eb' : theme.textMuted,
-                                fontWeight: 750,
-                              }}
-                            >
-                              <option value="published">Yayımda</option>
-                              <option value="draft">Qaralama</option>
-                            </select>
-                            <select
-                              value={product.stockStatus || 'in_stock'}
-                              onChange={(e) => updateProductInline(product.id, { stockStatus: e.target.value as Product['stockStatus'] })}
-                              className="inline-table-select"
-                              style={{
-                                background:
-                                  product.stockStatus === 'in_stock'
-                                    ? 'rgba(22, 163, 74, 0.12)'
-                                    : product.stockStatus === 'out_of_stock'
-                                    ? 'rgba(239, 68, 68, 0.12)'
-                                    : 'rgba(217, 119, 6, 0.12)',
-                                color:
-                                  product.stockStatus === 'in_stock'
-                                    ? '#16a34a'
-                                    : product.stockStatus === 'out_of_stock'
-                                    ? '#ef4444'
-                                    : '#d97706',
-                                fontWeight: 700,
-                              }}
-                            >
-                              <option value="in_stock">Stokda var</option>
-                              <option value="out_of_stock">Bitib (Yoxdur)</option>
-                              <option value="preorder">Ön sifariş</option>
-                            </select>
-                          </div>
-                        </td>
+                        {/* Quick Stats */}
+                        <div className="admin-card-stats" style={{ borderColor: theme.border }}>
+                          <span className={`admin-card-stat ${specsCount > 0 ? 'good' : 'warn'}`}>
+                            📊 {specsCount} parametr
+                          </span>
+                          <span className={`admin-card-stat ${product.price ? 'price' : 'no-price'}`}>
+                            💰 {product.price ? `${product.price} ${product.currency || '₼'}` : 'Qiymətsiz'}
+                          </span>
+                        </div>
 
                         {/* Actions */}
-                        <td style={{ textAlign: 'right' }}>
-                          <div className="row-actions" style={{ justifyContent: 'flex-end' }}>
-                            <button
-                              onClick={() => openProductLightbox(product)}
-                              title="Şəkilləri və videoları böyüdüb izlə"
-                              style={{ background: 'transparent', color: '#0ea5e9', border: 'none', cursor: 'pointer' }}
+                        <div className="admin-card-actions">
+                          <button
+                            type="button"
+                            className="admin-card-btn edit"
+                            onClick={() => setEditing(product)}
+                            style={{ background: theme.primary, borderColor: theme.primary }}
+                            title="Məhsulu redaktə et"
+                          >
+                            <Pencil size={12} /> Redaktə
+                          </button>
+                          <button
+                            type="button"
+                            className="admin-card-btn duplicate"
+                            onClick={() => duplicateProduct(product)}
+                            title="Nüsxəsini çıxar"
+                          >
+                            <Copy size={12} />
+                          </button>
+                          <button
+                            type="button"
+                            className={`admin-card-btn toggle ${
+                              product.status === 'published' ? 'to-draft' : 'to-pub'
+                            }`}
+                            onClick={() =>
+                              updateProductInline(product.id, {
+                                status: product.status === 'published' ? 'draft' : 'published',
+                              })
+                            }
+                            title={
+                              product.status === 'published'
+                                ? 'Qaralamaya keçir (Gizlə)'
+                                : 'Dərc et (Göstər)'
+                            }
+                          >
+                            {product.status === 'published' ? <EyeOff size={12} /> : <Eye size={12} />}
+                          </button>
+                          <button
+                            type="button"
+                            className="admin-card-btn delete"
+                            onClick={() => removeProduct(product.id)}
+                            title="Məhsulu sil"
+                          >
+                            <Trash2 size={12} />
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+                {!filtered.length && (
+                  <div
+                    style={{
+                      gridColumn: '1 / -1',
+                      textAlign: 'center',
+                      padding: '40px 20px',
+                      color: theme.textMuted,
+                      background: theme.bgCard,
+                      border: `1px solid ${theme.border}`,
+                      borderRadius: '14px',
+                    }}
+                  >
+                    Axtarış və filtrlərə uyğun heç bir məhsul tapılmadı.
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="admin-table-wrap" style={{ borderColor: theme.border, background: theme.bgCard }}>
+                <table>
+                  <thead>
+                    <tr style={{ borderBottomColor: theme.border }}>
+                      <th style={{ width: '80px' }}>Sıra (№)</th>
+                      <th style={{ width: '56px' }}>Foto</th>
+                      <th>Model Kodu</th>
+                      <th>Məhsul Adı</th>
+                      <th>Kateqoriya</th>
+                      <th>Brend</th>
+                      <th>Qiymət</th>
+                      <th>Nişan (Badge)</th>
+                      <th>Status & Stok</th>
+                      <th style={{ textAlign: 'right' }}>Əməliyyatlar</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map((product) => {
+                      const catalogIndex = catalog.products.findIndex((p) => p.id === product.id);
+                      const isDragging = draggedIndex === catalogIndex;
+                      const isDropTarget = dropTargetIndex === catalogIndex;
+                      const dropClass = isDropTarget && dropPosition ? `drop-${dropPosition}` : '';
+
+                      return (
+                        <tr
+                          key={product.id}
+                          draggable
+                          onDragStart={(e) => handleDragStart(catalogIndex, e)}
+                          onDragOver={(e) => handleDragOver(catalogIndex, e)}
+                          onDrop={(e) => handleDrop(catalogIndex, e)}
+                          onDragEnd={handleDragEnd}
+                          className={`drag-row ${isDragging ? 'dragging' : ''} ${dropClass}`}
+                          style={{ borderBottomColor: theme.border }}
+                        >
+                          {/* Drag Handle & Sequence input */}
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <span className="drag-handle" title="Mouse ilə tutub sıranı dəyişmək üçün sürüşdürün">
+                                <GripVertical size={16} />
+                              </span>
+                              <input
+                                type="number"
+                                min={1}
+                                max={catalog.products.length}
+                                defaultValue={catalogIndex + 1}
+                                key={`seq-${catalogIndex}-${catalog.products.length}`}
+                                onBlur={(e) => {
+                                  const val = parseInt(e.target.value, 10);
+                                  if (!isNaN(val)) moveProductToPosition(catalogIndex, val);
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    const val = parseInt((e.target as HTMLInputElement).value, 10);
+                                    if (!isNaN(val)) moveProductToPosition(catalogIndex, val);
+                                  }
+                                }}
+                                className="seq-badge-input"
+                                title="Sıra nömrəsini daxil edib Enter basın"
+                              />
+                            </div>
+                          </td>
+
+                          {/* Thumbnail with Lightbox click & Multi-image badge */}
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                              <div
+                                className="admin-prod-thumb"
+                                onClick={() => openProductLightbox(product)}
+                                title="Böyütmək və baxmaq üçün klikləyin"
+                                style={{ cursor: 'pointer' }}
+                              >
+                                {product.image ? <img src={product.image} alt={product.title} /> : '🖼'}
+                              </div>
+                              {product.gallery && product.gallery.length > 1 && (
+                                <span
+                                  style={{
+                                    fontSize: '10px',
+                                    fontWeight: 800,
+                                    background: 'rgba(127,127,127,0.15)',
+                                    color: theme.textMuted,
+                                    padding: '2px 5px',
+                                    borderRadius: '4px',
+                                    whiteSpace: 'nowrap',
+                                    cursor: 'pointer',
+                                  }}
+                                  onClick={() => openProductLightbox(product)}
+                                  title={`${product.gallery.length} foto/media mövcuddur`}
+                                >
+                                  +{product.gallery.length - 1}
+                                </span>
+                              )}
+                            </div>
+                          </td>
+
+                          {/* Model Code */}
+                          <td>
+                            <strong className="admin-code">{product.code || '—'}</strong>
+                          </td>
+
+                          {/* Product Title */}
+                          <td>
+                            <span className="admin-title" title={product.title}>
+                              {product.title}
+                            </span>
+                          </td>
+
+                          {/* Inline Category Select + On the fly create */}
+                          <td>
+                            <select
+                              value={product.category}
+                              onChange={(e) => {
+                                if (e.target.value === '__new_category__') {
+                                  setQuickModal({ type: 'category', targetProductId: product.id });
+                                } else {
+                                  const cat = catalog.categories.find((c) => c.id === e.target.value);
+                                  updateProductInline(product.id, {
+                                    category: e.target.value,
+                                    categoryName: cat?.name || product.categoryName,
+                                  });
+                                }
+                              }}
+                              className="inline-table-select"
+                              style={{ background: theme.bgSecondary, borderColor: theme.border }}
                             >
-                              <Maximize2 size={15} />
-                            </button>
-                            <button
-                              onClick={() => duplicateProduct(product)}
-                              title="Nüsxəsini çıxar"
-                              style={{ background: 'transparent', color: theme.textMuted, border: 'none', cursor: 'pointer' }}
+                              {catalog.categories.map((c) => (
+                                <option key={c.id} value={c.id}>
+                                  {c.name}
+                                </option>
+                              ))}
+                              <option value="__new_category__">+ Yeni Kateqoriya Yarat...</option>
+                            </select>
+                          </td>
+
+                          {/* Inline Brand Select + On the fly create */}
+                          <td>
+                            <select
+                              value={product.brandId || 'ardo'}
+                              onChange={(e) => {
+                                if (e.target.value === '__new_brand__') {
+                                  setQuickModal({ type: 'brand', targetProductId: product.id });
+                                } else {
+                                  updateProductInline(product.id, { brandId: e.target.value });
+                                }
+                              }}
+                              className="inline-table-select"
+                              style={{ background: theme.bgSecondary, borderColor: theme.border }}
                             >
-                              <Copy size={15} />
-                            </button>
-                            <button
-                              onClick={() => setEditing(product)}
-                              title="Redaktə et"
-                              style={{ background: 'transparent', color: theme.primary, border: 'none', cursor: 'pointer' }}
-                            >
-                              <Pencil size={15} />
-                            </button>
-                            <button
-                              onClick={() => removeProduct(product.id)}
-                              title="Sil"
-                              style={{ background: 'transparent', color: '#ef4444', border: 'none', cursor: 'pointer' }}
-                            >
-                              <Trash2 size={15} />
-                            </button>
-                          </div>
+                              {catalog.brands.map((b) => (
+                                <option key={b.id} value={b.id}>
+                                  {b.name}
+                                </option>
+                              ))}
+                              <option value="__new_brand__">+ Yeni Brend Yarat...</option>
+                            </select>
+                          </td>
+
+                          {/* Inline Price Fast Edit */}
+                          <td>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <input
+                                type="number"
+                                defaultValue={product.price ?? ''}
+                                placeholder="Qiymət"
+                                key={`price-${product.id}-${product.price}`}
+                                onBlur={(e) => {
+                                  const val = e.target.value === '' ? undefined : parseFloat(e.target.value);
+                                  updateProductInline(product.id, { price: val });
+                                }}
+                                onKeyDown={(e) => {
+                                  if (e.key === 'Enter') {
+                                    const val = (e.target as HTMLInputElement).value === '' ? undefined : parseFloat((e.target as HTMLInputElement).value);
+                                    updateProductInline(product.id, { price: val });
+                                  }
+                                }}
+                                className="inline-table-input"
+                                style={{ width: '80px' }}
+                              />
+                              <span style={{ fontSize: '11px', color: theme.textMuted }}>
+                                {product.currency || '₼'}
+                              </span>
+                            </div>
+                          </td>
+
+                          {/* Badge */}
+                          <td>
+                            {product.badgeText ? (
+                              <span
+                                className="admin-badge"
+                                style={{
+                                  background:
+                                    product.badgeColor === 'red'
+                                      ? '#dc2626'
+                                      : product.badgeColor === 'green'
+                                      ? '#16a34a'
+                                      : product.badgeColor === 'blue'
+                                      ? '#2563eb'
+                                      : '#d97706',
+                                  color: '#ffffff',
+                                }}
+                              >
+                                {product.badgeText}
+                              </span>
+                            ) : (
+                              <span style={{ color: theme.textMuted }}>—</span>
+                            )}
+                          </td>
+
+                          {/* Inline Status & Stock Fast Edit */}
+                          <td>
+                            <div style={{ display: 'grid', gap: '4px' }}>
+                              <select
+                                value={product.status || 'published'}
+                                onChange={(e) =>
+                                  updateProductInline(product.id, {
+                                    status: e.target.value as 'published' | 'draft',
+                                  })
+                                }
+                                className="inline-table-select"
+                                style={{
+                                  background:
+                                    product.status === 'published'
+                                      ? 'rgba(37, 99, 235, 0.12)'
+                                      : 'rgba(127,127,127,0.12)',
+                                  color:
+                                    product.status === 'published' ? '#2563eb' : theme.textMuted,
+                                  fontWeight: 750,
+                                }}
+                              >
+                                <option value="published">Yayımda</option>
+                                <option value="draft">Qaralama</option>
+                              </select>
+                              <select
+                                value={product.stockStatus || 'in_stock'}
+                                onChange={(e) =>
+                                  updateProductInline(product.id, {
+                                    stockStatus: e.target.value as Product['stockStatus'],
+                                  })
+                                }
+                                className="inline-table-select"
+                                style={{
+                                  background:
+                                    product.stockStatus === 'in_stock'
+                                      ? 'rgba(22, 163, 74, 0.12)'
+                                      : product.stockStatus === 'out_of_stock'
+                                      ? 'rgba(239, 68, 68, 0.12)'
+                                      : 'rgba(217, 119, 6, 0.12)',
+                                  color:
+                                    product.stockStatus === 'in_stock'
+                                      ? '#16a34a'
+                                      : product.stockStatus === 'out_of_stock'
+                                      ? '#ef4444'
+                                      : '#d97706',
+                                  fontWeight: 700,
+                                }}
+                              >
+                                <option value="in_stock">Stokda var</option>
+                                <option value="out_of_stock">Bitib (Yoxdur)</option>
+                                <option value="preorder">Ön sifariş</option>
+                              </select>
+                            </div>
+                          </td>
+
+                          {/* Actions */}
+                          <td style={{ textAlign: 'right' }}>
+                            <div className="row-actions" style={{ justifyContent: 'flex-end' }}>
+                              <button
+                                onClick={() => openProductLightbox(product)}
+                                title="Şəkilləri və videoları böyüdüb izlə"
+                                style={{
+                                  background: 'transparent',
+                                  color: '#0ea5e9',
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                <Maximize2 size={15} />
+                              </button>
+                              <button
+                                onClick={() => duplicateProduct(product)}
+                                title="Nüsxəsini çıxar"
+                                style={{
+                                  background: 'transparent',
+                                  color: theme.textMuted,
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                <Copy size={15} />
+                              </button>
+                              <button
+                                onClick={() => setEditing(product)}
+                                title="Redaktə et"
+                                style={{
+                                  background: 'transparent',
+                                  color: theme.primary,
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                <Pencil size={15} />
+                              </button>
+                              <button
+                                onClick={() => removeProduct(product.id)}
+                                title="Sil"
+                                style={{
+                                  background: 'transparent',
+                                  color: '#ef4444',
+                                  border: 'none',
+                                  cursor: 'pointer',
+                                }}
+                              >
+                                <Trash2 size={15} />
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                    {!filtered.length && (
+                      <tr>
+                        <td
+                          colSpan={10}
+                          style={{ textAlign: 'center', padding: '30px', color: theme.textMuted }}
+                        >
+                          Axtarışa uyğun məhsul tapılmadı.
                         </td>
                       </tr>
-                    );
-                  })}
-                  {!filtered.length && (
-                    <tr>
-                      <td colSpan={10} style={{ textAlign: 'center', padding: '30px', color: theme.textMuted }}>
-                        Axtarışa uyğun məhsul tapılmadı.
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
         )}
 
