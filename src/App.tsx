@@ -26,7 +26,7 @@ const THEME_KEY = 'sahara_theme_mode';
 const getInitialThemeMode = (): ThemeMode => {
   const saved = localStorage.getItem(THEME_KEY) as ThemeMode | null;
   if (saved === 'light' || saved === 'dark') return saved;
-  return window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+  return 'light';
 };
 
 const isAdminPath = () => window.location.pathname.startsWith('/AdministratorNT');

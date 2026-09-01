@@ -70,9 +70,14 @@ describe('Lotus Brand & 190 Products Import & 43 Media Audit Tests', () => {
     });
 
     // Verify every single public media file is referenced in the catalog
+    const unreferenced: string[] = [];
     for (const file of publicFiles) {
       const url = `/media/products/${file}`;
-      expect(registeredUrls.has(url)).toBe(true);
+      if (!registeredUrls.has(url)) unreferenced.push(file);
     }
+    if (unreferenced.length > 0) {
+      console.log('Unreferenced public files:', unreferenced);
+    }
+    expect(unreferenced).toEqual([]);
   });
 });

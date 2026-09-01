@@ -273,6 +273,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         setIsHovered(false);
         setHasManuallySwiped(false);
       }}
+      onClick={(e) => {
+        const target = e.target as HTMLElement;
+        if (target.closest('button') || target.closest('a') || target.closest('.card-action-btn-wa') || target.closest('.card-action-btn-call') || target.closest('.card-action-btn-share')) {
+          return;
+        }
+        onSelect(product);
+      }}
       style={{
         backgroundColor: theme.bgCard,
         border: `1px solid ${theme.border}`,
@@ -280,6 +287,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
+        cursor: 'pointer',
         boxShadow: isActive
           ? `0 14px 34px -10px ${theme.mode === 'dark' ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.18)'}`
           : `0 2px 8px -2px ${theme.mode === 'dark' ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.06)'}`,

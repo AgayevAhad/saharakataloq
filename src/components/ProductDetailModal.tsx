@@ -85,8 +85,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
     return groups;
   }, [product]);
 
-  if (!visible || !product) return null;
-
   const mediaItems = useMemo(() => {
     if (!product) return [];
     const items: Array<{ id: string; url: string; type?: 'image' | 'video'; alt?: string; poster?: string; objectPosition?: string; fitMode?: string }> = [];
@@ -137,13 +135,13 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
       });
     }
 
-    return items.length ? items : [{ id: 'empty', url: '', type: 'image' as const, alt: product.title }];
+    return items.length ? items : [{ id: 'empty', url: '', type: 'image' as const, alt: product?.title || '' }];
   }, [product]);
 
   const activeMedia = mediaItems[Math.min(activeMediaIndex, Math.max(0, mediaItems.length - 1))];
 
-  const activeObjectPosition = (activeMedia as any)?.objectPosition || (product as any).imagePosition || 'center';
-  const activeFitMode = (activeMedia as any)?.fitMode || (product as any).imageFit || 'contain';
+  const activeObjectPosition = (activeMedia as any)?.objectPosition || (product as any)?.imagePosition || 'center';
+  const activeFitMode = (activeMedia as any)?.fitMode || (product as any)?.imageFit || 'contain';
 
   const handlePrint = () => {
     if (typeof window !== 'undefined') {
@@ -217,6 +215,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
       return next;
     });
   };
+
+  if (!visible || !product) return null;
 
   return (
     <>
