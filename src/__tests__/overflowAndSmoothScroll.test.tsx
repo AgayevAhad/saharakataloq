@@ -50,5 +50,10 @@ describe('Horizontal Overflow Prevention & Smooth Scroll Suite', () => {
 
     // Verify modal overlay and splash container are not using unconstrained 100vw
     expect(indexCss).not.toContain('.modal-overlay-wrap {\n  position: fixed;\n  inset: 0;\n  width: 100vw;');
+
+    // Verify product grid and cards are clamped with minmax(0, 1fr) to prevent blowout
+    expect(indexCss).toContain('grid-template-columns: minmax(0, 1fr);');
+    expect(indexCss).toContain('.brand-showcase-card { min-height: 176px; color: #fff; background: #111827 !important; overflow: hidden !important; contain: paint !important;');
+    expect(indexCss).toContain('overscroll-behavior-x: contain; contain: layout paint;');
   });
 });
