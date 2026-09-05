@@ -1,7 +1,8 @@
-import React, { useState, useMemo, useEffect, useCallback } from 'react';
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
 import { 
   X, Share2, Copy, Printer, Flame, Phone,
-  ZoomIn, ZoomOut, Maximize2, ChevronLeft, ChevronRight, Image as ImageIcon
+  ZoomIn, ZoomOut, Maximize2, ChevronLeft, ChevronRight, Image as ImageIcon,
+  Volume2, VolumeX, Play, RotateCcw
 } from 'lucide-react';
 import { Brand, Product } from '../types/product';
 import { ThemeColors } from '../types/theme';
@@ -43,6 +44,29 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
+  const [isVideoMuted, setIsVideoMuted] = useState(true);
+
+  const modalVideoRef = useRef<HTMLVideoElement>(null);
+  const fsVideoRef = useRef<HTMLVideoElement>(null);
+
+  // Reset video mute state to true whenever modal opens or product changes (Səssiz video by default)
+  useEffect(() => {
+    if (visible) {
+      setIsVideoMuted(true);
+      if (modalVideoRef.current) modalVideoRef.current.muted = true;
+      if (fsVideoRef.current) fsVideoRef.current.muted = true;
+    }
+  }, [visible, product?.id]);
+
+  const toggleVideoMute = (e?: React.MouseEvent) => {
+    e?.stopPropagation();
+    setIsVideoMuted((prev) => {
+      const next = !prev;
+      if (modalVideoRef.current) modalVideoRef.current.muted = next;
+      if (fsVideoRef.current) fsVideoRef.current.muted = next;
+      return next;
+    });
+  };
 
   // Touch swipe states for stage & lightbox
   const [stageTouchStartX, setStageTouchStartX] = useState<number | null>(null);
@@ -492,15 +516,94 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                   )}
 
                   {activeMedia?.type === 'video' ? (
-                    <video
-                      src={activeMedia.url}
-                      poster={activeMedia.poster}
-                      controls
-                      playsInline
-                      preload="metadata"
-                      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                    <div
+                      style={{
+                        position: 'relative',
+                        width: '100%',
+                        height: '100%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: '#000000',
+                      }}
                       onClick={(event) => event.stopPropagation()}
-                    />
+                    >
+                      <video
+                        ref={modalVideoRef}
+                        src={activeMedia.url}
+                        poster={activeMedia.poster}
+                        controls
+                        playsInline
+                        autoPlay
+                        muted={isVideoMuted}
+                        preload="metadata"
+                        style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                      />
+                      {/* Floating Səs (Audio / Mute) Düyməsi */}
+                      <button
+                        type="button"
+                        className="modal-video-audio-toggle-btn"
+                        onClick={toggleVideoMute}
+                        style={{
+                          position: 'absolute',
+                          bottom: '50px',
+                          left: '12px',
+                          zIndex: 12,
+                          background: isVideoMuted ? 'rgba(15, 23, 42, 0.88)' : theme.primary,
+                          color: '#ffffff',
+                          border: '1px solid rgba(255, 255, 255, 0.3)',
+                          padding: '6px 12px',
+                          borderRadius: '24px',
+                          fontSize: '12px',
+                          fontWeight: 800,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          cursor: 'pointer',
+                          boxShadow: '0 4px 14px rgba(0,0,0,0.45)',
+                          backdropFilter: 'blur(8px)',
+                          transition: 'all 0.2s ease',
+                        }}
+                        title={isVideoMuted ? 'Səsi Açmaq üçün klikləyin' : 'Səsi Bağlamaq üçün klikləyin'}
+                        aria-label={isVideoMuted ? 'Səsi Aç' : 'Səsi Bağla'}
+                      >
+                        {isVideoMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+                        <span>{isVideoMuted ? 'Səsi Aç' : 'Səsi Bağla'}</span>
+                      </button>
+
+                      {/* Fullscreen Trigger on Video */}
+                      <button
+                        type="button"
+                        className="modal-video-fs-btn"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setIsFullscreenImage(true);
+                        }}
+                        style={{
+                          position: 'absolute',
+                          bottom: '50px',
+                          right: '12px',
+                          zIndex: 12,
+                          background: 'rgba(15, 23, 42, 0.88)',
+                          color: '#ffffff',
+                          border: '1px solid rgba(255, 255, 255, 0.3)',
+                          padding: '6px 12px',
+                          borderRadius: '24px',
+                          fontSize: '12px',
+                          fontWeight: 700,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          cursor: 'pointer',
+                          boxShadow: '0 4px 14px rgba(0,0,0,0.45)',
+                          backdropFilter: 'blur(8px)',
+                        }}
+                        title="Tam Ekran Rejiminə Keç"
+                      >
+                        <Maximize2 size={14} />
+                        <span>Tam Ekran</span>
+                      </button>
+                    </div>
                   ) : activeMedia?.url ? (
                     <ShimmerImage
                       src={activeMedia.url}
@@ -884,15 +987,57 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
             style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', cursor: zoomScale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default' }}
           >
             {activeMedia?.type === 'video' ? (
-              <video
-                src={activeMedia.url}
-                poster={activeMedia.poster}
-                controls
-                playsInline
-                autoPlay
-                style={{ maxWidth: '90vw', maxHeight: '80vh', objectFit: 'contain' }}
+              <div
+                style={{
+                  position: 'relative',
+                  maxWidth: '90vw',
+                  maxHeight: '80vh',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
                 onClick={(e) => e.stopPropagation()}
-              />
+              >
+                <video
+                  ref={fsVideoRef}
+                  src={activeMedia.url}
+                  poster={activeMedia.poster}
+                  controls
+                  playsInline
+                  autoPlay
+                  muted={isVideoMuted}
+                  style={{ maxWidth: '90vw', maxHeight: '80vh', objectFit: 'contain' }}
+                />
+                {/* Floating Sound Toggle Button in Lightbox */}
+                <button
+                  type="button"
+                  className="fs-video-audio-toggle-btn"
+                  onClick={toggleVideoMute}
+                  style={{
+                    position: 'absolute',
+                    bottom: '60px',
+                    left: '16px',
+                    zIndex: 50,
+                    background: isVideoMuted ? 'rgba(15, 23, 42, 0.9)' : theme.primary,
+                    color: '#ffffff',
+                    border: '1px solid rgba(255, 255, 255, 0.3)',
+                    padding: '8px 16px',
+                    borderRadius: '30px',
+                    fontSize: '13px',
+                    fontWeight: 800,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '7px',
+                    cursor: 'pointer',
+                    boxShadow: '0 4px 18px rgba(0,0,0,0.5)',
+                    backdropFilter: 'blur(10px)',
+                  }}
+                  title={isVideoMuted ? 'Səsi Aç' : 'Səsi Bağla'}
+                >
+                  {isVideoMuted ? <VolumeX size={17} /> : <Volume2 size={17} />}
+                  <span>{isVideoMuted ? 'Səsi Aç' : 'Səsi Bağla'}</span>
+                </button>
+              </div>
             ) : (
               <img
                 src={activeMedia?.url || product.image}

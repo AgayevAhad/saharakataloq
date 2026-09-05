@@ -113,20 +113,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   const isActive = isHovered || isMobileFocused;
 
+  const isFirstMediaVideo = product.media?.[0]?.type === 'video';
+
   // Video Autoplay / Pause
   useEffect(() => {
     if (!videoItem || !videoRef.current) return;
-    if (isActive) {
+    if (isFirstMediaVideo || isActive) {
       videoRef.current.play().catch(() => {});
     } else {
       videoRef.current.pause();
       videoRef.current.currentTime = 0;
     }
-  }, [isActive, videoItem]);
+  }, [isActive, videoItem, isFirstMediaVideo]);
 
   // Slideshow Cycling on Desktop Hover or Single Focused Mobile Card
   useEffect(() => {
-    if (!isActive || videoItem || imageList.length <= 1 || hasManuallySwiped) {
+    if (!isActive || isFirstMediaVideo || videoItem || imageList.length <= 1 || hasManuallySwiped) {
       if (!hasManuallySwiped && !isActive) setCurrentImageIdx(0);
       return;
     }
@@ -134,7 +136,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       setCurrentImageIdx((prev) => (prev + 1) % imageList.length);
     }, 1600);
     return () => clearInterval(interval);
-  }, [isActive, videoItem, imageList.length, hasManuallySwiped]);
+  }, [isActive, isFirstMediaVideo, videoItem, imageList.length, hasManuallySwiped]);
 
   // Touch Swipe Handlers for Mobile
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -281,6 +283,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             poster={videoItem.poster || coverImage}
             muted
             loop
+            autoPlay={isFirstMediaVideo}
             playsInline
             style={{
               position: 'absolute',
@@ -289,13 +292,41 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               height: '100%',
               objectFit: 'contain',
               padding: '8px',
-              opacity: isActive ? 1 : 0,
+              opacity: (isFirstMediaVideo || isActive) ? 1 : 0,
               transition: 'opacity 0.3s ease',
               zIndex: 2,
               pointerEvents: 'none',
               borderRadius: '12px 12px 0 0',
             }}
           />
+        )}
+
+        {/* Video Indicator Badge */}
+        {videoItem && (
+          <div
+            className="card-video-indicator-badge"
+            style={{
+              position: 'absolute',
+              bottom: '10px',
+              left: '10px',
+              zIndex: 6,
+              background: 'rgba(124, 58, 237, 0.9)',
+              color: '#ffffff',
+              padding: '3px 7px',
+              borderRadius: '6px',
+              fontSize: '11px',
+              fontWeight: 800,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
+              pointerEvents: 'none',
+              backdropFilter: 'blur(4px)',
+            }}
+          >
+            <PlayCircle size={12} />
+            <span>{isFirstMediaVideo ? 'Video Qapaq' : 'Video'}</span>
+          </div>
         )}
 
         {/* Product Image / Slideshow */}
@@ -315,7 +346,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 objectPosition={cardObjectPosition}
                 spinnerSize={24}
                 style={{
-                  opacity: isActive && videoItem ? 0 : undefined,
+                  opacity: (isFirstMediaVideo || (isActive && videoItem)) ? 0 : undefined,
                 }}
               />
             );

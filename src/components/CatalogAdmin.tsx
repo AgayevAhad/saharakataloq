@@ -188,6 +188,17 @@ export const getProductUniqueMediaCount = (product: Product): number => {
   return getProductUniqueMediaUrls(product).length;
 };
 
+export const getProductVideoCount = (product: Product): number => {
+  if (!Array.isArray(product.media)) return 0;
+  return product.media.filter((item) => item?.type === 'video' && Boolean(item.url)).length;
+};
+
+export const getProductImageCount = (product: Product): number => {
+  const total = getProductUniqueMediaCount(product);
+  const videos = getProductVideoCount(product);
+  return Math.max(0, total - videos);
+};
+
 const emptyProduct = (brands: Brand[], categories: CatalogCategory[]): Product => ({
   id: newId('product'),
   code: '',
@@ -233,7 +244,7 @@ export const CatalogAdmin: React.FC<Props> = ({
   const [query, setQuery] = useState('');
   const [adminBrand, setAdminBrand] = useState<string>('all');
   const [adminCategory, setAdminCategory] = useState<string>('all');
-  const [adminMediaFilter, setAdminMediaFilter] = useState<'all' | 'has-media' | 'no-media' | 'multi-media' | 'single-media'>('all');
+  const [adminMediaFilter, setAdminMediaFilter] = useState<'all' | 'has-media' | 'no-media' | 'has-video' | 'no-video' | 'multi-media' | 'single-media'>('all');
   const [adminSpecsFilter, setAdminSpecsFilter] = useState<'all' | 'has-specs' | 'no-specs'>('all');
   const [adminStatusFilter, setAdminStatusFilter] = useState<'all' | 'published' | 'draft' | 'modified'>('all');
   const [adminPriceFilter, setAdminPriceFilter] = useState<'all' | 'has-price' | 'no-price'>('all');
@@ -486,10 +497,13 @@ export const CatalogAdmin: React.FC<Props> = ({
           .toLocaleLowerCase('az')
           .includes(needle);
 
-      // 4. Media Filter (Şəkilli, Şəkilsiz, Çoxşəkilli, Təkşəkilli)
+      // 4. Media Filter (Videolu, Videosuz, Şəkilli, Şəkilsiz, Çoxşəkilli, Təkşəkilli)
       let matchesMedia = true;
       const mediaCount = getProductUniqueMediaCount(p);
-      if (adminMediaFilter === 'has-media') matchesMedia = mediaCount > 0;
+      const videoCount = getProductVideoCount(p);
+      if (adminMediaFilter === 'has-video') matchesMedia = videoCount > 0;
+      else if (adminMediaFilter === 'no-video') matchesMedia = videoCount === 0;
+      else if (adminMediaFilter === 'has-media') matchesMedia = mediaCount > 0;
       else if (adminMediaFilter === 'no-media') matchesMedia = mediaCount === 0;
       else if (adminMediaFilter === 'multi-media') matchesMedia = mediaCount > 1;
       else if (adminMediaFilter === 'single-media') matchesMedia = mediaCount === 1;
@@ -1411,25 +1425,31 @@ export const CatalogAdmin: React.FC<Props> = ({
                   ))}
                 </select>
 
-                {/* Media Filter (Şəkilli / Şəkilsiz / Çoxşəkilli) */}
+                {/* Media Filter (Videolu / Videosuz / Şəkilli / Şəkilsiz / Çoxşəkilli) */}
                 <select
                   value={adminMediaFilter}
-                  onChange={(e) => setAdminMediaFilter(e.target.value as 'all' | 'has-media' | 'no-media' | 'multi-media' | 'single-media')}
+                  onChange={(e) => setAdminMediaFilter(e.target.value as 'all' | 'has-media' | 'no-media' | 'has-video' | 'no-video' | 'multi-media' | 'single-media')}
                   className="admin-category-select"
                   title="Şəkilli və ya şəkilsiz məhsullara görə süzgəc"
                 >
-                  <option value="all">Bütün Media</option>
+                  <option value="all">Bütün Media ({catalog.products.length})</option>
+                  <option value="has-video">
+                    🎬 Videolu olanlar ({catalog.products.filter((p) => getProductVideoCount(p) > 0).length})
+                  </option>
+                  <option value="no-video">
+                    📹 Videosuz olanlar ({catalog.products.filter((p) => getProductVideoCount(p) === 0).length})
+                  </option>
                   <option value="has-media">
-                    🖼 Şəkilli olanlar ({catalog.products.filter((p) => getProductUniqueMediaCount(p) > 0).length})
+                    🖼 Medialı olanlar ({catalog.products.filter((p) => getProductUniqueMediaCount(p) > 0).length})
                   </option>
                   <option value="no-media">
-                    📷 Şəkilsiz olanlar ({catalog.products.filter((p) => getProductUniqueMediaCount(p) === 0).length})
+                    📷 Mediasız olanlar ({catalog.products.filter((p) => getProductUniqueMediaCount(p) === 0).length})
                   </option>
                   <option value="multi-media">
-                    📸 Çoxşəkilli (&gt;1) ({catalog.products.filter((p) => getProductUniqueMediaCount(p) > 1).length})
+                    📸 Çoxmedia (&gt;1) ({catalog.products.filter((p) => getProductUniqueMediaCount(p) > 1).length})
                   </option>
                   <option value="single-media">
-                    🖼️ Tək şəkilli (=1) ({catalog.products.filter((p) => getProductUniqueMediaCount(p) === 1).length})
+                    🖼️ Tək media (=1) ({catalog.products.filter((p) => getProductUniqueMediaCount(p) === 1).length})
                   </option>
                 </select>
 
@@ -1680,6 +1700,9 @@ export const CatalogAdmin: React.FC<Props> = ({
               </div>
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
                 <span>
+                  Videolu: <strong style={{ color: '#8b5cf6' }}>{catalog.products.filter((p) => getProductVideoCount(p) > 0).length}</strong>
+                </span>
+                <span>
                   Şəkilli: <strong style={{ color: '#16a34a' }}>{catalog.products.filter((p) => getProductUniqueMediaCount(p) > 0).length}</strong>
                 </span>
                 <span>
@@ -1895,6 +1918,23 @@ export const CatalogAdmin: React.FC<Props> = ({
                           >
                             {product.status === 'published' ? 'Dərc edilib' : 'Qaralama'}
                           </span>
+                          {product.media?.some((m) => m.type === 'video') && (
+                            <span
+                              className="admin-card-video-badge"
+                              style={{
+                                background: 'rgba(124, 58, 237, 0.9)',
+                                color: '#ffffff',
+                                padding: '2px 6px',
+                                borderRadius: '4px',
+                                fontSize: '10px',
+                                fontWeight: 800,
+                                boxShadow: '0 2px 6px rgba(124, 58, 237, 0.4)',
+                              }}
+                              title="Bu məhsulun video çarxı var"
+                            >
+                              🎬 Video
+                            </span>
+                          )}
                           {isModified && (
                             <span
                               style={{
@@ -1912,7 +1952,9 @@ export const CatalogAdmin: React.FC<Props> = ({
                           )}
                         </div>
                         {mediaCount > 1 && (
-                          <span className="admin-card-media-count">🖼 {mediaCount} foto</span>
+                          <span className="admin-card-media-count">
+                            {product.media?.some((m) => m.type === 'video') ? `🎬 ${mediaCount} media` : `🖼 ${mediaCount} foto`}
+                          </span>
                         )}
                       </div>
 
@@ -2087,6 +2129,26 @@ export const CatalogAdmin: React.FC<Props> = ({
                               >
                                 {product.image ? <img src={product.image} alt={product.title} /> : '🖼'}
                               </div>
+                              {product.media?.some((m) => m.type === 'video') && (
+                                <span
+                                  className="admin-video-badge"
+                                  style={{
+                                    fontSize: '10px',
+                                    fontWeight: 800,
+                                    background: 'rgba(124, 58, 237, 0.15)',
+                                    color: '#8b5cf6',
+                                    border: '1px solid rgba(124, 58, 237, 0.3)',
+                                    padding: '1px 5px',
+                                    borderRadius: '4px',
+                                    whiteSpace: 'nowrap',
+                                    cursor: 'pointer',
+                                  }}
+                                  onClick={() => openProductLightbox(product)}
+                                  title="Bu məhsulda video mövcuddur"
+                                >
+                                  🎬 Video
+                                </span>
+                              )}
                               {(() => {
                                 const mediaCount = getProductUniqueMediaCount(product);
                                 return mediaCount > 1 ? (
@@ -4111,7 +4173,10 @@ export const ProductEditor = ({
       const [moved] = list.splice(fromIndex, 1);
       list.splice(targetIdx, 0, moved);
 
-      const firstImg = list.find((m) => m.type === 'image' && m.url)?.url || (list[0]?.url || current.image);
+      const firstMedia = list[0];
+      const firstImg = firstMedia?.type === 'video'
+        ? (firstMedia.poster || list.find((m) => m.type === 'image' && m.url)?.url || firstMedia.url || current.image)
+        : (list.find((m) => m.type === 'image' && m.url)?.url || (list[0]?.url || current.image));
       const gallery = list.map((m) => m.url).filter(Boolean);
 
       return {
@@ -4508,9 +4573,32 @@ export const ProductEditor = ({
                       className="admin-thumb"
                       onClick={() => onOpenLightbox?.(product, i)}
                       title="Böyüdüb baxmaq üçün klikləyin"
-                      style={{ cursor: 'pointer' }}
+                      style={{ cursor: 'pointer', position: 'relative' }}
                     >
-                      {m.type === 'video' ? '🎬' : m.url ? (
+                      {m.type === 'video' ? (
+                        <div style={{ position: 'relative', width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0f172a' }}>
+                          {m.poster ? (
+                            <img src={m.poster} alt={m.alt || ''} style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                          ) : m.url ? (
+                            <video src={m.url} style={{ width: '100%', height: '100%', objectFit: 'contain' }} muted playsInline />
+                          ) : null}
+                          <span
+                            style={{
+                              position: 'absolute',
+                              bottom: '2px',
+                              right: '2px',
+                              background: 'rgba(124, 58, 237, 0.95)',
+                              color: '#fff',
+                              fontSize: '9px',
+                              fontWeight: 800,
+                              padding: '1px 4px',
+                              borderRadius: '3px',
+                            }}
+                          >
+                            🎬 Video
+                          </span>
+                        </div>
+                      ) : m.url ? (
                         <img
                           src={m.url}
                           alt={m.alt || ''}
@@ -4519,7 +4607,9 @@ export const ProductEditor = ({
                             objectFit: (m.fitMode || 'contain') as any,
                           }}
                         />
-                      ) : '🖼'}
+                      ) : (
+                        '🖼'
+                      )}
                     </div>
 
                     {/* Media File Info & Inputs */}
@@ -4534,7 +4624,7 @@ export const ProductEditor = ({
                         return (
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', flexWrap: 'wrap' }}>
                             <span style={{ fontWeight: 750, color: theme.textSecondary }}>
-                              📁 Fayl:
+                              📁 {m.type === 'video' ? 'Video Fayl:' : 'Şəkil Faylı:'}
                             </span>
                             <span
                               style={{
@@ -4544,7 +4634,7 @@ export const ProductEditor = ({
                                 borderRadius: '4px',
                                 border: `1px solid ${theme.border}`,
                                 fontSize: '11px',
-                                color: theme.primary,
+                                color: m.type === 'video' ? '#8b5cf6' : theme.primary,
                                 fontWeight: 700,
                                 maxWidth: '260px',
                                 overflow: 'hidden',
@@ -4567,7 +4657,7 @@ export const ProductEditor = ({
                                   fontSize: '10px',
                                   fontWeight: 800,
                                 }}
-                                title="Şəkil faylının adı məhsulun model kodu ilə tam uyğundur"
+                                title="Media faylının adı məhsulun model kodu ilə tam uyğundur"
                               >
                                 ✓ Kodla uyğundur
                               </span>
@@ -4581,10 +4671,19 @@ export const ProductEditor = ({
                         <input
                           value={m.url}
                           onChange={(e) => updateMedia(i, { url: e.target.value })}
-                          placeholder="Media URL (/media/products/...)"
+                          placeholder={m.type === 'video' ? 'Video URL (/media/products/videos/...)' : 'Şəkil URL (/media/products/...)'}
                           title="Faylın serverdəki tam URL yolu"
                           style={{ flex: 1, minWidth: '140px' }}
                         />
+                        {m.type === 'video' && (
+                          <input
+                            value={m.poster || ''}
+                            onChange={(e) => updateMedia(i, { poster: e.target.value })}
+                            placeholder="Video posteri URL (/media/...)"
+                            title="Video Qapaq Şəkili (Poster URL)"
+                            style={{ flex: 1, minWidth: '140px' }}
+                          />
+                        )}
                         <input
                           value={m.originalName || resolveFriendlyMediaName(m, i)}
                           onChange={(e) => updateMedia(i, { originalName: e.target.value })}
@@ -4596,7 +4695,7 @@ export const ProductEditor = ({
                           value={m.alt || ''}
                           onChange={(e) => updateMedia(i, { alt: e.target.value })}
                           placeholder="Alt izahı (Təsvir)"
-                          title="Şəkil təsviri (Alt text)"
+                          title="Media təsviri (Alt text)"
                           style={{ width: '130px' }}
                         />
                       </div>
@@ -4605,17 +4704,22 @@ export const ProductEditor = ({
                     {/* Status Badge & Make Primary Button */}
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                       {isPrimary ? (
-                        <span className="media-status-pill primary" title="Bu foto kataloqda əsas kart şəkili olaraq görünür">
-                          ⭐ #1 Əsas
+                        <span
+                          className="media-status-pill primary"
+                          style={m.type === 'video' ? { background: 'linear-gradient(135deg, #7c3aed, #6366f1)', color: '#fff' } : undefined}
+                          title={m.type === 'video' ? 'Bu video kataloqda hərəkətli qapaq videosu olaraq görünür' : 'Bu foto kataloqda əsas kart şəkili olaraq görünür'}
+                        >
+                          {m.type === 'video' ? '🎬 #1 Əsas Video (Qapaq)' : '⭐ #1 Əsas'}
                         </span>
                       ) : (
                         <button
                           type="button"
                           className="media-make-primary-btn"
                           onClick={() => setPrimaryMedia(i)}
-                          title="Bu fotonu 1-ci sıraya keçirərək Əsas Şəkil et"
+                          title={m.type === 'video' ? 'Bu videonu 1-ci sıraya keçirərək Kataloq Qapaq Videosu et' : 'Bu fotonu 1-ci sıraya keçirərək Əsas Şəkil et'}
+                          style={m.type === 'video' ? { borderColor: '#8b5cf6', color: '#8b5cf6' } : undefined}
                         >
-                          ⭐ 1-ci et
+                          {m.type === 'video' ? '🎬 1-ci / Qapaq et' : '⭐ 1-ci et'}
                         </button>
                       )}
                     </div>
