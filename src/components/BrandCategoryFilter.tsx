@@ -2,6 +2,7 @@ import React from 'react';
 import { ArrowLeft, Sparkles } from 'lucide-react';
 import { Brand, CatalogCategory, Product } from '../types/product';
 import { ThemeColors } from '../types/theme';
+import { ShimmerImage } from './ShimmerImage';
 
 interface BrandCategoryFilterProps {
   brand: Brand;
@@ -76,10 +77,12 @@ export const BrandCategoryFilter: React.FC<BrandCategoryFilterProps> = ({
 
           <div className="brand-title-badge">
             {brand.logo ? (
-              <img
+              <ShimmerImage
                 src={brand.logo}
                 alt={brand.name}
+                spinnerSize={14}
                 className="brand-filter-logo"
+                containerStyle={{ width: '80px', height: '32px' }}
               />
             ) : (
               <span className="brand-filter-name-text">{brand.name}</span>

@@ -20,6 +20,7 @@ import {
 import { Product } from '../types/product';
 import { ThemeColors } from '../types/theme';
 import { WhatsAppIcon } from './WhatsAppIcon';
+import { ShimmerImage } from './ShimmerImage';
 
 interface ProductCardProps {
   product: Product;
@@ -340,19 +341,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             const cardFitMode = activeMediaObj?.fitMode || product.imageFit || 'contain';
 
             return (
-              <div className="img-shimmer-container">
-                <img
-                  src={currentImgUrl}
-                  alt={product.title}
-                  loading="lazy"
-                  style={{
-                    opacity: isActive && videoItem ? 0 : 1,
-                    objectFit: cardFitMode as any,
-                    objectPosition: cardObjectPosition,
-                    transition: 'opacity 0.25s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
-                  }}
-                />
-              </div>
+              <ShimmerImage
+                src={currentImgUrl}
+                alt={product.title}
+                loading="lazy"
+                objectFit={cardFitMode as any}
+                objectPosition={cardObjectPosition}
+                spinnerSize={24}
+                style={{
+                  opacity: isActive && videoItem ? 0 : undefined,
+                }}
+              />
             );
           })()
         ) : (

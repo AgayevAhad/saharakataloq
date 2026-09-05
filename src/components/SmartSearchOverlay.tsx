@@ -2,6 +2,7 @@ import React, { useMemo } from 'react';
 import { Search, ChevronRight, Sparkles } from 'lucide-react';
 import { Brand, CatalogCategory, Product, ProductCategory } from '../types/product';
 import { ThemeColors } from '../types/theme';
+import { ShimmerImage } from './ShimmerImage';
 
 interface SmartSearchOverlayProps {
   visible: boolean;
@@ -486,10 +487,13 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
                 >
                   <div className="smart-search-img-box" style={{ backgroundColor: isDarkMode ? '#0f172a' : '#ffffff' }}>
                     {prodImg ? (
-                      <img
+                      <ShimmerImage
                         src={prodImg}
                         alt={prod.title}
                         loading="lazy"
+                        objectFit="contain"
+                        spinnerSize={18}
+                        containerStyle={{ width: '100%', height: '100%' }}
                         className="smart-search-prod-img"
                       />
                     ) : (

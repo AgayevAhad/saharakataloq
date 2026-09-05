@@ -6,6 +6,7 @@ import {
 import { Brand, Product } from '../types/product';
 import { ThemeColors } from '../types/theme';
 import { WhatsAppIcon } from './WhatsAppIcon';
+import { ShimmerImage } from './ShimmerImage';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -495,18 +496,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                       onClick={(event) => event.stopPropagation()}
                     />
                   ) : activeMedia?.url ? (
-                    <div className="img-shimmer-container">
-                      <img
-                        src={activeMedia.url}
-                        alt={activeMedia.alt || product.title}
-                        style={{
-                          maxWidth: '100%',
-                          maxHeight: '100%',
-                          objectFit: activeFitMode as any,
-                          objectPosition: activeObjectPosition,
-                        }}
-                      />
-                    </div>
+                    <ShimmerImage
+                      src={activeMedia.url}
+                      alt={activeMedia.alt || product.title}
+                      objectFit={activeFitMode as any}
+                      objectPosition={activeObjectPosition}
+                      spinnerSize={28}
+                      containerStyle={{ width: '100%', height: '100%' }}
+                    />
                   ) : (
                     <div style={{ color: theme.textMuted, fontSize: '13px' }}>Media daha sonra əlavə ediləcək</div>
                   )}
@@ -579,13 +576,13 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                         {media.type === 'video' ? (
                           <span>▶ Video</span>
                         ) : (
-                          <img
+                          <ShimmerImage
                             src={media.url}
                             alt={media.alt || `${product.title} ${index + 1}`}
-                            style={{
-                              objectFit: (media as any).fitMode || 'contain',
-                              objectPosition: (media as any).objectPosition || 'center',
-                            }}
+                            objectFit={(media as any).fitMode || 'contain'}
+                            objectPosition={(media as any).objectPosition || 'center'}
+                            spinnerSize={14}
+                            containerStyle={{ width: '100%', height: '100%' }}
                           />
                         )}
                       </button>
