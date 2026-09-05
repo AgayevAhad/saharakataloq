@@ -39,16 +39,32 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
   const [isPaused, setIsPaused] = useState(false);
   const [animating, setAnimating] = useState(false);
 
+  const isMountedRef = React.useRef(true);
+  const animTimeoutRef = React.useRef<any>(null);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+      if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current);
+    };
+  }, []);
+
   useEffect(() => {
     if (activeArticles.length <= 1 || isPaused) return;
     const timer = setInterval(() => {
+      if (!isMountedRef.current) return;
       setAnimating(true);
-      setTimeout(() => {
+      animTimeoutRef.current = setTimeout(() => {
+        if (!isMountedRef.current) return;
         setCurrentIndex((prev) => (prev + 1) % activeArticles.length);
         setAnimating(false);
       }, 200);
     }, 4200);
-    return () => clearInterval(timer);
+    return () => {
+      clearInterval(timer);
+      if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current);
+    };
   }, [activeArticles.length, isPaused]);
 
   const currentArticle = activeArticles[currentIndex] || activeArticles[0];
@@ -56,7 +72,9 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
   const prevSlide = (e: React.MouseEvent) => {
     e.stopPropagation();
     setAnimating(true);
-    setTimeout(() => {
+    if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current);
+    animTimeoutRef.current = setTimeout(() => {
+      if (!isMountedRef.current) return;
       setCurrentIndex((prev) => (prev - 1 + activeArticles.length) % activeArticles.length);
       setAnimating(false);
     }, 150);
@@ -65,7 +83,9 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
   const nextSlide = (e: React.MouseEvent) => {
     e.stopPropagation();
     setAnimating(true);
-    setTimeout(() => {
+    if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current);
+    animTimeoutRef.current = setTimeout(() => {
+      if (!isMountedRef.current) return;
       setCurrentIndex((prev) => (prev + 1) % activeArticles.length);
       setAnimating(false);
     }, 150);

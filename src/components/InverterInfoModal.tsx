@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { X, Zap, VolumeX, ShieldCheck, Thermometer, Flame, Wind, CheckCircle2 } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { X, Zap, VolumeX, ShieldCheck, Thermometer, Flame, Wind, CheckCircle2, Sparkles, Layers, Sliders } from 'lucide-react';
 import { TechnologyArticle } from '../types/product';
 import { ThemeColors } from '../types/theme';
+import { useHorizontalScroll } from '../hooks/useHorizontalScroll';
 
 interface InverterInfoModalProps {
   theme: ThemeColors;
@@ -11,10 +12,52 @@ interface InverterInfoModalProps {
   initialArticleId?: string | null;
 }
 
-const getAdvantageIcon = (idx: number, iconName?: string, color?: string) => {
-  switch (idx) {
+const getArticleIcon = (iconName?: string, fallbackIndex = 0, color?: string) => {
+  const icon = (iconName || '').toLowerCase();
+  if (icon.includes('flame') || icon.includes('sabaf')) {
+    return <Flame size={18} color="#f97316" />;
+  }
+  if (icon.includes('wind') || icon.includes('fan') || icon.includes('convection') || icon.includes('rapidair')) {
+    return <Wind size={18} color="#06b6d4" />;
+  }
+  if (icon.includes('layers') || icon.includes('touch') || icon.includes('sensor')) {
+    return <Sliders size={18} color="#8b5cf6" />;
+  }
+  if (icon.includes('shield') || icon.includes('security')) {
+    return <ShieldCheck size={18} color="#16a34a" />;
+  }
+  if (icon.includes('thermometer') || icon.includes('temp')) {
+    return <Thermometer size={18} color="#ec4899" />;
+  }
+  if (icon.includes('volumex') || icon.includes('silent') || icon.includes('sound')) {
+    return <VolumeX size={18} color="#0284c7" />;
+  }
+  if (icon.includes('sparkles')) {
+    return <Sparkles size={18} color="#eab308" />;
+  }
+  if (icon.includes('zap') || icon.includes('electric') || icon.includes('inverter')) {
+    return <Zap size={18} color={color || '#ef4444'} />;
+  }
+
+  // Fallback by index
+  switch (fallbackIndex % 5) {
     case 0:
       return <Zap size={18} color={color || '#ef4444'} />;
+    case 1:
+      return <Flame size={18} color="#f97316" />;
+    case 2:
+      return <Wind size={18} color="#06b6d4" />;
+    case 3:
+      return <ShieldCheck size={18} color="#16a34a" />;
+    default:
+      return <CheckCircle2 size={18} color={color || '#ef4444'} />;
+  }
+};
+
+const getAdvantageIcon = (idx: number, articleIcon?: string, primaryColor?: string) => {
+  switch (idx) {
+    case 0:
+      return getArticleIcon(articleIcon, 0, primaryColor);
     case 1:
       return <VolumeX size={18} color="#0284c7" />;
     case 2:
@@ -22,7 +65,7 @@ const getAdvantageIcon = (idx: number, iconName?: string, color?: string) => {
     case 3:
       return <Thermometer size={18} color="#ec4899" />;
     default:
-      return <CheckCircle2 size={18} color={color || '#ef4444'} />;
+      return <CheckCircle2 size={18} color={primaryColor || '#ef4444'} />;
   }
 };
 
@@ -33,16 +76,55 @@ export const InverterInfoModal: React.FC<InverterInfoModalProps> = ({
   articles = [],
   initialArticleId,
 }) => {
-  const activeArticles = articles.filter((a) => a.active !== false);
-  const [selectedId, setSelectedId] = useState<string>(activeArticles[0]?.id || 'art-inverter');
+  const activeArticles = useMemo(
+    () => (articles.length > 0 ? articles.filter((a) => a.active !== false) : []),
+    [articles]
+  );
 
-  useEffect(() => {
+  const [selectedId, setSelectedId] = useState<string>(() => {
     if (initialArticleId && activeArticles.some((a) => a.id === initialArticleId)) {
-      setSelectedId(initialArticleId);
-    } else if (activeArticles.length > 0 && !activeArticles.some((a) => a.id === selectedId)) {
-      setSelectedId(activeArticles[0].id);
+      return initialArticleId;
     }
-  }, [initialArticleId, activeArticles, selectedId]);
+    return activeArticles[0]?.id || 'art-inverter';
+  });
+
+  // Enable fluid horizontal touch swiping and desktop drag with auto-centering on active pill
+  const { containerRef: tabsScrollRef, scrollItemIntoView, hasMoved, dragProps } = useHorizontalScroll<HTMLDivElement>({
+    activeSelector: '.inverter-modal-tab.is-active',
+    activeDependency: selectedId,
+  });
+
+  // Sync only when modal visibility changes or initialArticleId prop is updated from outside
+  useEffect(() => {
+    if (visible) {
+      if (initialArticleId && activeArticles.some((a) => a.id === initialArticleId)) {
+        setSelectedId(initialArticleId);
+      } else if (activeArticles.length > 0 && !activeArticles.some((a) => a.id === selectedId)) {
+        setSelectedId(activeArticles[0].id);
+      }
+    }
+  }, [visible, initialArticleId]); // Note: selectedId is intentionally omitted so tab clicks stay active
+
+  // Escape key support to close modal
+  useEffect(() => {
+    if (!visible) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        onClose();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [visible, onClose]);
+
+  const handleSelectTab = useCallback(
+    (artId: string, e: React.MouseEvent<HTMLButtonElement>) => {
+      if (hasMoved()) return;
+      setSelectedId(artId);
+      scrollItemIntoView(e);
+    },
+    [hasMoved, scrollItemIntoView]
+  );
 
   if (!visible) return null;
 
@@ -58,6 +140,7 @@ export const InverterInfoModal: React.FC<InverterInfoModalProps> = ({
         right: 0,
         bottom: 0,
         width: '100%',
+        maxWidth: '100%',
         height: '100dvh',
         backgroundColor: 'rgba(0, 0, 0, 0.82)',
         backdropFilter: 'blur(8px)',
@@ -68,6 +151,7 @@ export const InverterInfoModal: React.FC<InverterInfoModalProps> = ({
         justifyContent: 'center',
         padding: 'clamp(8px, 2.5vw, 16px)',
         boxSizing: 'border-box',
+        overflowX: 'hidden',
       }}
       onClick={onClose}
     >
@@ -135,15 +219,18 @@ export const InverterInfoModal: React.FC<InverterInfoModalProps> = ({
               flexShrink: 0,
             }}
             aria-label="Bağla"
+            title="Bağla"
           >
             <X size={18} />
           </button>
         </div>
 
-        {/* Dynamic Category/Article Chips if multiple articles */}
+        {/* Dynamic Multi-Brand Technology Category/Article Chips */}
         {activeArticles.length > 1 && (
           <div
+            ref={tabsScrollRef}
             className="no-scrollbar"
+            {...dragProps}
             style={{
               display: 'flex',
               gap: '8px',
@@ -152,28 +239,41 @@ export const InverterInfoModal: React.FC<InverterInfoModalProps> = ({
               backgroundColor: theme.bgSecondary,
               borderBottom: `1px solid ${theme.border}`,
               flexShrink: 0,
+              cursor: 'grab',
+              userSelect: 'none',
+              WebkitOverflowScrolling: 'touch',
             }}
           >
-            {activeArticles.map((art) => {
+            {activeArticles.map((art, idx) => {
               const isSelected = art.id === selectedId;
+              const shortTitle = art.title.split(' ')[0] + (art.title.split(' ')[1] ? ' ' + art.title.split(' ')[1] : '');
               return (
                 <button
                   key={art.id}
-                  onClick={() => setSelectedId(art.id)}
+                  onClick={(e) => handleSelectTab(art.id, e)}
+                  className={`inverter-modal-tab ${isSelected ? 'is-active' : ''}`}
                   style={{
-                    padding: '6px 14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '7px 14px',
                     borderRadius: '20px',
                     fontSize: '12px',
-                    fontWeight: 700,
+                    fontWeight: isSelected ? 800 : 600,
                     cursor: 'pointer',
                     whiteSpace: 'nowrap',
+                    flexShrink: 0,
                     border: `1px solid ${isSelected ? theme.primary : theme.border}`,
                     backgroundColor: isSelected ? theme.primary : theme.bgCard,
                     color: isSelected ? '#ffffff' : theme.textSecondary,
+                    boxShadow: isSelected ? `0 2px 10px ${theme.primary}40` : 'none',
                     transition: 'all 0.2s ease',
                   }}
                 >
-                  {art.title.split(' ')[0]} {art.badge ? `(${art.badge})` : ''}
+                  <span style={{ display: 'flex', alignItems: 'center', opacity: isSelected ? 1 : 0.85 }}>
+                    {getArticleIcon(art.icon, idx, isSelected ? '#ffffff' : theme.primary)}
+                  </span>
+                  <span>{art.badge ? art.badge : shortTitle}</span>
                 </button>
               );
             })}
@@ -203,7 +303,7 @@ export const InverterInfoModal: React.FC<InverterInfoModalProps> = ({
                   padding: 'clamp(12px, 3vw, 16px)',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', flexWrap: 'wrap' }}>
                   <h3
                     style={{
                       fontFamily: 'Outfit, sans-serif',
@@ -218,12 +318,12 @@ export const InverterInfoModal: React.FC<InverterInfoModalProps> = ({
                   {currentArticle.badge && (
                     <span
                       style={{
-                        fontSize: '10px',
+                        fontSize: '11px',
                         fontWeight: 700,
                         backgroundColor: theme.badgeBg,
                         color: theme.badgeText,
                         border: `1px solid ${theme.primaryLight}`,
-                        padding: '2px 8px',
+                        padding: '3px 10px',
                         borderRadius: '6px',
                       }}
                     >

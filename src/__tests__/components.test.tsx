@@ -92,13 +92,18 @@ describe('Sahara Electronic - UI Komponentləri və İstifadəçi Qarşılıqlı
     expect(screen.queryByText('Məhsul linki kopyalandı!')).toBeNull();
   });
 
-  it('InverterInfoModal komponenti açıldıqda texnologiya üstünlüklərini göstərməlidir', () => {
+  it('InverterInfoModal komponenti açıldıqda texnologiya üstünlüklərini göstərməlidir və tablar arası keçid etməlidir', () => {
     const handleClose = vi.fn();
     render(<InverterInfoModal visible={true} onClose={handleClose} theme={darkTheme} articles={DEFAULT_ARTICLES} />);
 
     expect(screen.getAllByText(/İnvertor Texnologiyası/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/Tənzimlənən enerji istifadəsi/i)).toBeDefined();
     expect(screen.getByText(/Səs və vibrasiyanın/i)).toBeDefined();
+
+    // Click on SABAF technology tab
+    const sabafTab = screen.getByText(/🔥 İtalyan Təhlükəsizlik/i);
+    fireEvent.click(sabafTab);
+    expect(screen.getByText(/İtalyan SABAF Qaz Yanma Sistemi/i)).toBeDefined();
   });
 
   it('ShareModal sosial şəbəkə düymələrini və kopyalama funksionallığını təmin etməlidir', () => {
