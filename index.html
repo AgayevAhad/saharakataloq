@@ -54,13 +54,171 @@
         background: #3b4252;
       }
 
+      /* Sahara Premium Splash Screen */
+      .sahara-splash-container {
+        position: fixed;
+        inset: 0;
+        width: 100vw;
+        height: 100dvh;
+        background: radial-gradient(circle at 50% 40%, #151a27 0%, #080a0f 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 999999;
+        transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.5s;
+        overflow: hidden;
+        user-select: none;
+      }
+
+      .sahara-splash-container.splash-fade-out {
+        opacity: 0;
+        transform: scale(1.04);
+        pointer-events: none;
+        visibility: hidden;
+      }
+
+      .sahara-splash-glow {
+        position: absolute;
+        width: 420px;
+        height: 420px;
+        border-radius: 50%;
+        background: radial-gradient(circle, rgba(220, 38, 38, 0.18) 0%, rgba(220, 38, 38, 0) 70%);
+        filter: blur(40px);
+        animation: splashGlowPulse 2.8s ease-in-out infinite alternate;
+        pointer-events: none;
+      }
+
+      .sahara-splash-content {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        text-align: center;
+        padding: 24px;
+        max-width: 360px;
+        z-index: 2;
+      }
+
+      .sahara-splash-logo-wrap {
+        position: relative;
+        width: 120px;
+        height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 22px;
+        background: rgba(255, 255, 255, 0.04);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        border-radius: 28px;
+        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        animation: splashLogoFloat 3s ease-in-out infinite alternate;
+      }
+
+      .sahara-splash-logo {
+        width: 78px;
+        height: 78px;
+        object-fit: contain;
+        filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
+      }
+
+      .sahara-splash-ring {
+        position: absolute;
+        inset: -6px;
+        border-radius: 34px;
+        border: 1.5px solid transparent;
+        border-top-color: rgba(220, 38, 38, 0.7);
+        border-right-color: rgba(245, 158, 11, 0.5);
+        animation: splashRingRotate 3.5s linear infinite;
+      }
+
+      .sahara-splash-text {
+        margin-bottom: 24px;
+      }
+
+      .sahara-splash-brand {
+        font-family: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+        font-size: 20px;
+        font-weight: 800;
+        letter-spacing: 0.12em;
+        text-transform: uppercase;
+        color: #ffffff;
+        margin-bottom: 6px;
+        background: linear-gradient(135deg, #ffffff 40%, #cbd5e1 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .sahara-splash-tagline {
+        font-size: 12px;
+        font-weight: 500;
+        color: #94a3b8;
+        letter-spacing: 0.04em;
+      }
+
+      .sahara-splash-loader {
+        width: 160px;
+        height: 3px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 999px;
+        overflow: hidden;
+        margin-bottom: 12px;
+        position: relative;
+      }
+
+      .sahara-splash-bar {
+        position: absolute;
+        top: 0;
+        left: 0;
+        height: 100%;
+        width: 45%;
+        background: linear-gradient(90deg, #dc2626, #f59e0b);
+        border-radius: 999px;
+        box-shadow: 0 0 10px rgba(220, 38, 38, 0.8);
+        animation: splashBarProgress 1.4s ease-in-out infinite alternate;
+      }
+
+      .sahara-splash-hint {
+        font-size: 11px;
+        color: #64748b;
+        font-weight: 400;
+        animation: splashHintPulse 1.8s ease-in-out infinite;
+      }
+
+      @keyframes splashGlowPulse {
+        0% { transform: scale(0.9); opacity: 0.6; }
+        100% { transform: scale(1.15); opacity: 1; }
+      }
+
+      @keyframes splashLogoFloat {
+        0% { transform: translateY(0); }
+        100% { transform: translateY(-5px); }
+      }
+
+      @keyframes splashRingRotate {
+        0% { transform: rotate(0deg); }
+        100% { transform: rotate(360deg); }
+      }
+
+      @keyframes splashBarProgress {
+        0% { left: 0%; width: 25%; }
+        50% { width: 55%; }
+        100% { left: 75%; width: 25%; }
+      }
+
+      @keyframes splashHintPulse {
+        0%, 100% { opacity: 0.6; }
+        50% { opacity: 1; }
+      }
+
       /* Print / PDF generation styles */
       @media print {
         body {
           background: #ffffff !important;
           color: #000000 !important;
         }
-        .no-print {
+        .no-print, .sahara-splash-container {
           display: none !important;
         }
         .print-only {
@@ -70,7 +228,38 @@
     </style>
   </head>
   <body>
+    <!-- Sahara Premium Splash & Brand Launch Screen -->
+    <div id="app-splash-screen" class="sahara-splash-container" aria-hidden="true">
+      <div class="sahara-splash-glow"></div>
+      <div class="sahara-splash-content">
+        <div class="sahara-splash-logo-wrap">
+          <img src="/media/SaharaLogo.png" alt="Sahara Electronics" class="sahara-splash-logo" />
+          <div class="sahara-splash-ring"></div>
+        </div>
+        <div class="sahara-splash-text">
+          <h1 class="sahara-splash-brand">SAHARA ELECTRONICS</h1>
+          <p class="sahara-splash-tagline">Rəsmi Məhsul Kataloqu</p>
+        </div>
+        <div class="sahara-splash-loader">
+          <div class="sahara-splash-bar"></div>
+        </div>
+        <span class="sahara-splash-hint">Kataloq modelləri hazırlanır...</span>
+      </div>
+    </div>
+
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
+    <script>
+      // Fallback timer to guarantee splash dismissal
+      window.addEventListener('load', function() {
+        setTimeout(function() {
+          var splash = document.getElementById('app-splash-screen');
+          if (splash && !splash.classList.contains('splash-fade-out')) {
+            splash.classList.add('splash-fade-out');
+            setTimeout(function() { if (splash.parentNode) splash.parentNode.removeChild(splash); }, 550);
+          }
+        }, 3000);
+      });
+    </script>
   </body>
 </html>

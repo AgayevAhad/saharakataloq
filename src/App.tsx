@@ -79,6 +79,15 @@ export const App: React.FC = () => {
         parseDeepLink(fallback.products);
       } finally {
         setIsLoadingCatalog(false);
+        if (typeof document !== 'undefined') {
+          const splash = document.getElementById('app-splash-screen');
+          if (splash) {
+            splash.classList.add('splash-fade-out');
+            setTimeout(() => {
+              splash.remove();
+            }, 550);
+          }
+        }
       }
       if (isAdminPath()) {
         try {
