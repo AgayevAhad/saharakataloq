@@ -6,6 +6,8 @@ import { SaharaLogo } from './SaharaLogo';
 import { SocialPopoverButton } from './SocialIcons';
 import { SmartSearchOverlay } from './SmartSearchOverlay';
 
+import { useHorizontalScroll } from '../hooks/useHorizontalScroll';
+
 interface HeaderProps {
   theme: ThemeColors;
   isDarkMode: boolean;
@@ -37,6 +39,11 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectProduct, onOpenInverterInfo, onOpenCatalogShare, totalCount, filteredCount,
 }) => {
   const [searchFocused, setSearchFocused] = useState(false);
+
+  const { containerRef: filterRowRef, scrollItemIntoView, dragProps, hasMoved } = useHorizontalScroll({
+    activeSelector: '.filter-pill.active',
+    activeDependency: selectedCategory,
+  });
 
   const isQueryActive = searchQuery.trim().length > 0;
 
@@ -138,10 +145,20 @@ export const Header: React.FC<HeaderProps> = ({
               />
             </div>
 
-          <div className="filter-row category-filter-row no-scrollbar" aria-label="Kateqoriya filtri">
+          <div
+            ref={filterRowRef}
+            {...dragProps}
+            className="filter-row category-filter-row no-scrollbar"
+            aria-label="Kateqoriya filtri"
+            style={{ cursor: 'grab' }}
+          >
             <button
               className={selectedCategory === 'all' ? 'filter-pill active' : 'filter-pill'}
-              onClick={() => onSelectCategory('all')}
+              onClick={(e) => {
+                if (hasMoved()) return;
+                scrollItemIntoView(e);
+                onSelectCategory('all');
+              }}
               style={pillStyle(theme)}
             >
               Bütün məhsullar
@@ -150,7 +167,11 @@ export const Header: React.FC<HeaderProps> = ({
               <button
                 key={category.id}
                 className={selectedCategory === category.id ? 'filter-pill active' : 'filter-pill'}
-                onClick={() => onSelectCategory(category.id)}
+                onClick={(e) => {
+                  if (hasMoved()) return;
+                  scrollItemIntoView(e);
+                  onSelectCategory(category.id);
+                }}
                 style={pillStyle(theme)}
               >
                 {category.name}

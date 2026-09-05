@@ -7,6 +7,7 @@ import { Brand, Product } from '../types/product';
 import { ThemeColors } from '../types/theme';
 import { WhatsAppIcon } from './WhatsAppIcon';
 import { ShimmerImage } from './ShimmerImage';
+import { useHorizontalScroll } from '../hooks/useHorizontalScroll';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -323,6 +324,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
     setTimeout(() => setStageIsSwiping(false), 60);
   };
 
+  const { containerRef: mediaStripRef, scrollItemIntoView: scrollMediaIntoView, dragProps: mediaStripDragProps, hasMoved: mediaStripHasMoved } = useHorizontalScroll({
+    activeSelector: '.product-media-strip button.active',
+    activeDependency: activeMediaIndex,
+  });
+
   if (!visible || !product) return null;
 
   return (
@@ -562,12 +568,21 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                 </div>
 
                 {mediaItems.length > 1 && (
-                  <div className="product-media-strip no-scrollbar">
+                  <div
+                    ref={mediaStripRef}
+                    {...mediaStripDragProps}
+                    className="product-media-strip no-scrollbar"
+                    style={{ cursor: 'grab' }}
+                  >
                     {mediaItems.map((media, index) => (
                       <button
                         key={media.id}
                         className={activeMediaIndex === index ? 'active' : ''}
-                        onClick={() => setActiveMediaIndex(index)}
+                        onClick={(e) => {
+                          if (mediaStripHasMoved()) return;
+                          scrollMediaIntoView(e);
+                          setActiveMediaIndex(index);
+                        }}
                         style={{
                           borderColor: activeMediaIndex === index ? theme.primary : theme.border,
                           background: theme.bgSecondary,

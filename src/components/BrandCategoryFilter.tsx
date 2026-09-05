@@ -4,6 +4,8 @@ import { Brand, CatalogCategory, Product } from '../types/product';
 import { ThemeColors } from '../types/theme';
 import { ShimmerImage } from './ShimmerImage';
 
+import { useHorizontalScroll } from '../hooks/useHorizontalScroll';
+
 interface BrandCategoryFilterProps {
   brand: Brand;
   categories: CatalogCategory[];
@@ -30,6 +32,11 @@ export const BrandCategoryFilter: React.FC<BrandCategoryFilterProps> = ({
 }) => {
   const brandProducts = products.filter((p) => p.brandId === brand.id && p.status !== 'draft');
   const totalCount = brandProducts.length;
+
+  const { containerRef: pillsRef, scrollItemIntoView, dragProps, hasMoved } = useHorizontalScroll({
+    activeSelector: '.brand-category-pill.active',
+    activeDependency: selectedCategory,
+  });
 
   // Calculate only categories that actually have products for this brand
   const availableCategories = categories
@@ -107,13 +114,24 @@ export const BrandCategoryFilter: React.FC<BrandCategoryFilterProps> = ({
         )}
       </div>
 
-      <div className="brand-category-pills-wrap no-scrollbar" role="tablist" aria-label={`${brand.name} kateqoriyaları`}>
+      <div
+        ref={pillsRef}
+        {...dragProps}
+        className="brand-category-pills-wrap no-scrollbar"
+        role="tablist"
+        aria-label={`${brand.name} kateqoriyaları`}
+        style={{ cursor: 'grab' }}
+      >
         <button
           type="button"
           role="tab"
           aria-selected={selectedCategory === 'all'}
           className={`brand-category-pill ${selectedCategory === 'all' ? 'active' : ''}`}
-          onClick={() => onSelectCategory('all')}
+          onClick={(e) => {
+            if (hasMoved()) return;
+            scrollItemIntoView(e);
+            onSelectCategory('all');
+          }}
           style={{
             backgroundColor: selectedCategory === 'all' ? theme.primary : theme.bgSecondary,
             color: selectedCategory === 'all' ? '#ffffff' : theme.text,
@@ -133,7 +151,11 @@ export const BrandCategoryFilter: React.FC<BrandCategoryFilterProps> = ({
               role="tab"
               aria-selected={isActive}
               className={`brand-category-pill ${isActive ? 'active' : ''}`}
-              onClick={() => onSelectCategory(cat.id)}
+              onClick={(e) => {
+                if (hasMoved()) return;
+                scrollItemIntoView(e);
+                onSelectCategory(cat.id);
+              }}
               style={{
                 backgroundColor: isActive ? theme.primary : theme.bgSecondary,
                 color: isActive ? '#ffffff' : theme.text,

@@ -3,6 +3,7 @@ import { Search, ChevronRight, Sparkles } from 'lucide-react';
 import { Brand, CatalogCategory, Product, ProductCategory } from '../types/product';
 import { ThemeColors } from '../types/theme';
 import { ShimmerImage } from './ShimmerImage';
+import { useHorizontalScroll } from '../hooks/useHorizontalScroll';
 
 interface SmartSearchOverlayProps {
   visible: boolean;
@@ -79,6 +80,11 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
 }) => {
   const [hoveredItem, setHoveredItem] = React.useState<SuggestionItem | null>(null);
   const [hoveredCategoryId, setHoveredCategoryId] = React.useState<string | null>(null);
+
+  const { containerRef: searchCatRef, scrollItemIntoView, dragProps, hasMoved } = useHorizontalScroll({
+    activeSelector: '.smart-search-category-pill.is-hovered',
+    activeDependency: hoveredCategoryId,
+  });
 
   const needle = searchQuery.trim().toLocaleLowerCase('az');
 
@@ -429,19 +435,18 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
                 onMouseLeave={() => setHoveredItem(null)}
                 style={{ color: theme.text }}
               >
-                <Search className="smart-search-item-icon" size={15} color={hoveredItem?.id === item.id ? theme.primary : theme.textMuted} />
-                <span className="smart-search-item-text">
-                  <HighlightedQueryText
-                    text={item.displayText}
-                    query={searchQuery}
-                    highlightColor={theme.primary}
-                  />
-                </span>
+                <div className="smart-search-item-left">
+                  <Search size={14} className="smart-search-item-icon" style={{ color: theme.textMuted }} />
+                  <span className="smart-search-item-text">
+                    <HighlightedQueryText text={item.displayText} query={searchQuery} highlightColor={theme.primary} />
+                  </span>
+                </div>
                 {item.categoryName && (
-                  <span className="smart-search-item-cat-badge" style={{ color: theme.textMuted }}>
+                  <span className="smart-search-item-badge" style={{ color: theme.textMuted }}>
                     {item.categoryName}
                   </span>
                 )}
+                <ChevronRight size={13} className="smart-search-item-arrow" style={{ color: theme.textMuted }} />
               </button>
             ))}
 
@@ -463,10 +468,10 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
               type="button"
               className="smart-search-show-all-btn"
               onClick={handleShowAll}
-              style={{ color: theme.text, borderColor: theme.border }}
+              style={{ color: theme.primary }}
             >
               <span>Hamısını göstər</span>
-              <ChevronRight size={13} />
+              <ChevronRight size={12} />
             </button>
           </div>
 
@@ -543,13 +548,22 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
           <span className="smart-search-section-title" style={{ color: theme.textMuted }}>
             Kateqoriyalar
           </span>
-          <div className="smart-search-categories-row no-scrollbar">
+          <div
+            ref={searchCatRef}
+            {...dragProps}
+            className="smart-search-categories-row no-scrollbar"
+            style={{ cursor: 'grab' }}
+          >
             {activeCategories.map((cat) => (
               <button
                 key={cat.id}
                 type="button"
                 className={`smart-search-category-pill ${hoveredCategoryId === cat.id ? 'is-hovered' : ''}`}
-                onClick={() => handleCategoryPillClick(cat.id)}
+                onClick={(e) => {
+                  if (hasMoved()) return;
+                  scrollItemIntoView(e);
+                  handleCategoryPillClick(cat.id);
+                }}
                 onMouseEnter={() => setHoveredCategoryId(cat.id)}
                 onMouseLeave={() => setHoveredCategoryId(null)}
                 style={{
