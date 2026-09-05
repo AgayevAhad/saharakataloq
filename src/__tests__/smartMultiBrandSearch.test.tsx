@@ -177,7 +177,7 @@ describe('SmartSearchOverlay & Multi-Brand Search Tests', () => {
     const onSelectBrand = vi.fn();
     const onClose = vi.fn();
 
-    render(
+    const { container } = render(
       <SmartSearchOverlay
         visible={true}
         searchQuery=""
@@ -193,7 +193,7 @@ describe('SmartSearchOverlay & Multi-Brand Search Tests', () => {
       />
     );
 
-    const ovenPill = screen.getAllByText('Sobalar')[0];
+    const ovenPill = container.querySelector('.smart-search-category-pill') as HTMLElement;
     fireEvent.click(ovenPill);
 
     expect(onSelectCategory).toHaveBeenCalledWith('oven');
@@ -262,7 +262,7 @@ describe('SmartSearchOverlay & Multi-Brand Search Tests', () => {
   });
 
   it('updates the right preview images and title dynamically when hovering with mouse over suggestions or categories', () => {
-    render(
+    const { container } = render(
       <SmartSearchOverlay
         visible={true}
         searchQuery=""
@@ -292,8 +292,9 @@ describe('SmartSearchOverlay & Multi-Brand Search Tests', () => {
     fireEvent.mouseLeave(ardoSuggestion.closest('button')!);
     expect(screen.getByText('Populyar məhsullar')).toBeDefined();
 
-    // Hover over a category pill
-    const airfryerPill = screen.getAllByText('Fritözlər (Airfryer)')[0];
+    // Hover over a category pill (airfryer pill)
+    const categoryPills = container.querySelectorAll('.smart-search-category-pill');
+    const airfryerPill = categoryPills[1] as HTMLElement;
     fireEvent.mouseEnter(airfryerPill);
 
     expect(screen.getByText('Fritözlər (Airfryer) məhsulları')).toBeDefined();

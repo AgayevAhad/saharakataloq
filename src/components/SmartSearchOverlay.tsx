@@ -163,6 +163,7 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
           id: `featured-lotus`,
           displayText: featuredLotus.title,
           queryValue: featuredLotus.code || featuredLotus.title,
+          categoryName: featuredLotus.categoryName,
           type: 'product',
           product: featuredLotus,
         });
@@ -173,12 +174,13 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
           id: `featured-ardo`,
           displayText: featuredArdo.title,
           queryValue: featuredArdo.code || featuredArdo.title,
+          categoryName: featuredArdo.categoryName,
           type: 'product',
           product: featuredArdo,
         });
       }
 
-      // Add popular category keywords
+      // Add popular real active categories from catalog
       categories.slice(0, 4).forEach((cat) => {
         addSuggestion({
           id: `default-cat-${cat.id}`,
@@ -189,25 +191,48 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
         });
       });
 
-      // Technology & feature highlights
-      ['Sabaf qaz odluqları', 'Inverter mühərrik', 'Touch control hava qızdırıcı'].forEach((kw, idx) => {
+      // Verified Technology highlights linked to real products
+      const sabafProduct = products.find((p) =>
+        `${p.title} ${p.shortDesc} ${p.specs?.map((s) => s.value).join(' ')}`.toLowerCase().includes('sabaf')
+      );
+      if (sabafProduct) {
         addSuggestion({
-          id: `kw-${idx}`,
-          displayText: kw,
-          queryValue: kw,
+          id: `kw-sabaf`,
+          displayText: 'Sabaf qaz odluqları',
+          queryValue: 'Sabaf',
           type: 'keyword',
+          product: sabafProduct,
         });
-      });
+      }
 
-      // Add remaining products to reach 9 suggestions
-      products.slice(0, 9).forEach((p) => {
+      const inverterProduct = products.find((p) =>
+        `${p.title} ${p.shortDesc} ${p.specs?.map((s) => s.value).join(' ')}`.toLowerCase().includes('inverter') ||
+        `${p.title} ${p.shortDesc} ${p.specs?.map((s) => s.value).join(' ')}`.toLowerCase().includes('invertor')
+      );
+      if (inverterProduct) {
         addSuggestion({
-          id: `p-fill-${p.id}`,
-          displayText: p.title,
-          queryValue: p.code || p.title,
-          type: 'product',
-          product: p,
+          id: `kw-inverter`,
+          displayText: 'Inverter mühərrikli modellər',
+          queryValue: 'Inverter',
+          type: 'keyword',
+          product: inverterProduct,
         });
+      }
+
+      // Add remaining active catalog products to reach 9 suggestions
+      products.forEach((p) => {
+        if (items.length < 9) {
+          const brandObj = brands.find((b) => b.id === p.brandId);
+          addSuggestion({
+            id: `p-fill-${p.id}`,
+            displayText: p.title,
+            queryValue: p.code || p.title,
+            categoryName: p.categoryName,
+            brandName: brandObj?.name,
+            type: 'product',
+            product: p,
+          });
+        }
       });
     }
 
@@ -240,11 +265,17 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
       }
 
       if (hoveredItem.type === 'keyword') {
-        const kw = hoveredItem.displayText.toLowerCase();
+        if (hoveredItem.product) {
+          const related = products.find(
+            (p) => p.id !== hoveredItem.product!.id && p.category === hoveredItem.product!.category
+          );
+          return related ? [hoveredItem.product, related] : [hoveredItem.product];
+        }
+        const needleKw = hoveredItem.queryValue.toLowerCase();
         const kwProducts = products.filter((p) =>
-          `${p.title} ${p.code} ${p.categoryName} ${p.specs?.map((s) => s.value).join(' ')}`
+          `${p.title} ${p.code} ${p.categoryName} ${p.shortDesc || ''} ${p.specs?.map((s) => `${s.name} ${s.value}`).join(' ') || ''} ${p.highlights?.join(' ') || ''}`
             .toLowerCase()
-            .includes(kw)
+            .includes(needleKw)
         );
         if (kwProducts.length > 0) return kwProducts.slice(0, 2);
       }
