@@ -2,52 +2,22 @@ import { createCatalogDatabase } from '../backend/catalogDatabase.mjs';
 import { existsSync } from 'fs';
 import { join } from 'path';
 
+// STRICT 1:1 EXACT MATCH ONLY (Rule 17)
+// Any video without an exact 1:1 model code in filename must remain unassigned.
 const VIDEO_MAPPINGS = [
-  {
-    videoFile: 'lotus-aspirator-2752.mp4',
-    posterFile: 'lotus-aspirator-2752-poster.jpg',
-    originalName: 'LOTUS ASPİRATOR 2752.mp4',
-    productIds: ['lotus-ctb2752b', 'lotus-ctb2752i', 'lotus-ctb2752k'],
-    title: 'Lotus CTB 2752 Aspirator Video İcmal',
-  },
   {
     videoFile: 'lotus-cooktop-ftb941cmw.mp4',
     posterFile: 'lotus-cooktop-ftb941cmw-poster.jpg',
     originalName: 'LOTUS F-TB941CM(W).mp4',
-    productIds: [
-      'lotus-cooktop-lt-941-cmw',
-      'lotus-cooktop-lt-941-i-nox',
-      'lotus-tb941gcw',
-      'lotus-lt941-inox',
-      'lotus-lt941s-black',
-    ],
-    title: 'Lotus F-TB941CM(W) Bişirmə Paneli Video İcmal',
+    productIds: ['lotus-cooktop-lt-941-cmw'],
+    title: 'Lotus LT-941-CMW / F-TB941CM(W) Bişirmə Paneli Video İcmal',
   },
   {
     videoFile: 'lotus-soba-6450.mp4',
     posterFile: 'lotus-soba-6450-poster.jpg',
     originalName: 'LOTUS SOBA 6450.mp4',
-    productIds: [
-      'lotus-lt645o',
-      'lotus-lt645v-8-program',
-      'lotus-lt6470-8-program',
-      'lotus-cooktop-lt-6454i-nox',
-    ],
-    title: 'Lotus 6450 Soba Video İcmal',
-  },
-  {
-    videoFile: 'lotus-airfry.mp4',
-    posterFile: 'lotus-airfry-poster.jpg',
-    originalName: 'LOTUS airfry.mp4',
-    productIds: ['lotus-lt4545-airfry-bl', 'lotus-lt4545-airfry-inox'],
-    title: 'Lotus LT4545 Airfry Soba Video İcmal',
-  },
-  {
-    videoFile: 'lotus-mikrodalga.mp4',
-    posterFile: 'lotus-mikrodalga-poster.jpg',
-    originalName: 'LOTUS mikrodalğa.mp4',
-    productIds: ['lotus-lts25lmwss'],
-    title: 'Lotus LTS25LMWSS Mikrodalğalı Soba Video İcmal',
+    productIds: ['lotus-lt645o'],
+    title: 'Lotus LT 6450 Soba Video İcmal',
   },
 ];
 
