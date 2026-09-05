@@ -253,4 +253,85 @@ describe('Image Positioning (Focal Point / Alignment) & Pan-Zoom & Visual Crop S
 
     expect(img.src).toContain('ardo-ar6120-white-2.jpg');
   });
+
+  it('supports touch swiping and arrow navigation inside ProductDetailModal stage and Fullscreen Lightbox', () => {
+    render(
+      <ProductDetailModal
+        product={mockProduct}
+        theme={lightTheme}
+        visible={true}
+        onClose={vi.fn()}
+        onShare={vi.fn()}
+        onWhatsApp={vi.fn()}
+        onCall={vi.fn()}
+        onCopyLink={vi.fn()}
+      />
+    );
+
+    // Initial image in detail stage
+    const stage = document.querySelector('.product-detail-image-stage') as HTMLDivElement;
+    expect(stage).toBeTruthy();
+    const stageImg = stage.querySelector('img') as HTMLImageElement;
+    expect(stageImg.src).toContain('ardo-ar6120-white.jpg');
+
+    // Test Arrow button in stage
+    const nextArrow = stage.querySelector('.modal-stage-nav-btn.next') as HTMLButtonElement;
+    expect(nextArrow).toBeTruthy();
+    fireEvent.click(nextArrow);
+
+    // Image in stage updates
+    expect(stageImg.src).toContain('ardo-ar6120-white-2.jpg');
+
+    // Test Touch Swipe Right to go back
+    const createTouch = (x: number, y: number) => ({
+      clientX: x,
+      clientY: y,
+      pageX: x,
+      pageY: y,
+      screenX: x,
+      screenY: y,
+      target: stage,
+      identifier: 0,
+    });
+
+    const tStart = createTouch(100, 100);
+    const tMove = createTouch(200, 100);
+
+    fireEvent.touchStart(stage, { touches: [tStart], targetTouches: [tStart], changedTouches: [tStart] });
+    fireEvent.touchMove(stage, { touches: [tMove], targetTouches: [tMove], changedTouches: [tMove] });
+    fireEvent.touchEnd(stage, { touches: [], targetTouches: [], changedTouches: [tMove] });
+
+    expect(stageImg.src).toContain('ardo-ar6120-white.jpg');
+
+    // Open Fullscreen Lightbox
+    fireEvent.click(stage);
+    const fsContainer = document.querySelector('.zoom-pan-container') as HTMLDivElement;
+    expect(fsContainer).toBeTruthy();
+    const fsImg = fsContainer.querySelector('img') as HTMLImageElement;
+    expect(fsImg.src).toContain('ardo-ar6120-white.jpg');
+
+    // Test Touch Swipe Left in Fullscreen Lightbox
+    const fsStart = createTouch(250, 150);
+    const fsMove = createTouch(150, 150);
+
+    fireEvent.touchStart(fsContainer, { touches: [fsStart], targetTouches: [fsStart], changedTouches: [fsStart] });
+    fireEvent.touchMove(fsContainer, { touches: [fsMove], targetTouches: [fsMove], changedTouches: [fsMove] });
+    fireEvent.touchEnd(fsContainer, { touches: [], targetTouches: [], changedTouches: [fsMove] });
+
+    // Should switch to next image in lightbox
+    expect(fsImg.src).toContain('ardo-ar6120-white-2.jpg');
+
+    // Test Fullscreen Next button (wraps back to index 0)
+    const fsNextBtn = document.querySelector('.fs-lightbox-nav-btn.next') as HTMLButtonElement;
+    expect(fsNextBtn).toBeTruthy();
+    fireEvent.click(fsNextBtn);
+    expect(fsImg.src).toContain('ardo-ar6120-white.jpg');
+
+    // Test Fullscreen Dot click to select index 1
+    const fsDots = document.querySelectorAll('.fs-lightbox-dot');
+    expect(fsDots.length).toBe(2);
+    fireEvent.click(fsDots[1]);
+    expect(fsImg.src).toContain('ardo-ar6120-white-2.jpg');
+  });
 });
+

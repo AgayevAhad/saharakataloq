@@ -1,7 +1,7 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { 
   X, Share2, Copy, Printer, Flame, Phone,
-  ZoomIn, ZoomOut, Maximize2
+  ZoomIn, ZoomOut, Maximize2, ChevronLeft, ChevronRight, Image as ImageIcon
 } from 'lucide-react';
 import { Brand, Product } from '../types/product';
 import { ThemeColors } from '../types/theme';
@@ -41,6 +41,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
+
+  // Touch swipe states for stage & lightbox
+  const [stageTouchStartX, setStageTouchStartX] = useState<number | null>(null);
+  const [stageTouchStartY, setStageTouchStartY] = useState<number | null>(null);
+  const [stageIsSwiping, setStageIsSwiping] = useState(false);
+
+  const [fsTouchStartX, setFsTouchStartX] = useState<number | null>(null);
+  const [fsTouchStartY, setFsTouchStartY] = useState<number | null>(null);
 
   useEffect(() => {
     setActiveMediaIndex(0);
@@ -143,6 +151,34 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
   const activeObjectPosition = (activeMedia as any)?.objectPosition || (product as any)?.imagePosition || 'center';
   const activeFitMode = (activeMedia as any)?.fitMode || (product as any)?.imageFit || 'contain';
 
+  const nextMedia = useCallback((e?: React.MouseEvent | React.TouchEvent) => {
+    if (e) e.stopPropagation();
+    if (mediaItems.length <= 1) return;
+    setActiveMediaIndex((prev) => (prev + 1) % mediaItems.length);
+    setPanPosition({ x: 0, y: 0 });
+    setZoomScale(1);
+  }, [mediaItems.length]);
+
+  const prevMedia = useCallback((e?: React.MouseEvent | React.TouchEvent) => {
+    if (e) e.stopPropagation();
+    if (mediaItems.length <= 1) return;
+    setActiveMediaIndex((prev) => (prev - 1 + mediaItems.length) % mediaItems.length);
+    setPanPosition({ x: 0, y: 0 });
+    setZoomScale(1);
+  }, [mediaItems.length]);
+
+  // Keyboard navigation for Fullscreen Lightbox
+  useEffect(() => {
+    if (!isFullscreenImage) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') nextMedia();
+      else if (e.key === 'ArrowLeft') prevMedia();
+      else if (e.key === 'Escape') setIsFullscreenImage(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFullscreenImage, nextMedia, prevMedia]);
+
   const handlePrint = () => {
     if (typeof window !== 'undefined') {
       window.print();
@@ -175,6 +211,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
     });
   };
 
+  // Fullscreen Mouse Drag Handlers
   const handleMouseDown = (e: React.MouseEvent) => {
     if (zoomScale <= 1) return;
     setIsDragging(true);
@@ -191,21 +228,50 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
 
   const handleMouseUp = () => setIsDragging(false);
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    if (zoomScale <= 1 || e.touches.length !== 1) return;
-    setIsDragging(true);
-    setDragStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+  // Fullscreen Touch Gestures (Swiping when 1x scale, Panning when zoomed > 1x)
+  const handleFsTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1) return;
+    if (zoomScale > 1) {
+      setIsDragging(true);
+      setDragStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+    } else {
+      setFsTouchStartX(e.touches[0].clientX);
+      setFsTouchStartY(e.touches[0].clientY);
+    }
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (!isDragging || zoomScale <= 1 || e.touches.length !== 1) return;
-    const dx = e.touches[0].clientX - dragStart.x;
-    const dy = e.touches[0].clientY - dragStart.y;
-    setPanPosition((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
-    setDragStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+  const handleFsTouchMove = (e: React.TouchEvent) => {
+    if (zoomScale > 1) {
+      if (!isDragging) return;
+      const dx = e.touches[0].clientX - dragStart.x;
+      const dy = e.touches[0].clientY - dragStart.y;
+      setPanPosition((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
+      setDragStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+    }
   };
 
-  const handleTouchEnd = () => setIsDragging(false);
+  const handleFsTouchEnd = (e: React.TouchEvent) => {
+    if (zoomScale > 1) {
+      setIsDragging(false);
+    } else {
+      if (fsTouchStartX !== null && fsTouchStartY !== null) {
+        const touchEndX = e.changedTouches[0].clientX;
+        const touchEndY = e.changedTouches[0].clientY;
+        const diffX = touchEndX - fsTouchStartX;
+        const diffY = touchEndY - fsTouchStartY;
+
+        if (Math.abs(diffX) > 35 && Math.abs(diffX) > Math.abs(diffY) * 1.2 && mediaItems.length > 1) {
+          if (diffX < 0) {
+            nextMedia();
+          } else {
+            prevMedia();
+          }
+        }
+      }
+      setFsTouchStartX(null);
+      setFsTouchStartY(null);
+    }
+  };
 
   const handleWheel = (e: React.WheelEvent) => {
     const delta = e.deltaY < 0 ? 0.25 : -0.25;
@@ -214,6 +280,46 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
       if (next === 1) setPanPosition({ x: 0, y: 0 });
       return next;
     });
+  };
+
+  // Touch Swipe Handlers on Detail Modal Image Stage
+  const handleStageTouchStart = (e: React.TouchEvent) => {
+    if (e.touches.length !== 1 || mediaItems.length <= 1) return;
+    setStageTouchStartX(e.touches[0].clientX);
+    setStageTouchStartY(e.touches[0].clientY);
+    setStageIsSwiping(false);
+  };
+
+  const handleStageTouchMove = (e: React.TouchEvent) => {
+    if (stageTouchStartX === null || stageTouchStartY === null) return;
+    const currentX = e.touches[0].clientX;
+    const currentY = e.touches[0].clientY;
+    const diffX = currentX - stageTouchStartX;
+    const diffY = currentY - stageTouchStartY;
+
+    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 10) {
+      setStageIsSwiping(true);
+    }
+  };
+
+  const handleStageTouchEnd = (e: React.TouchEvent) => {
+    if (stageTouchStartX === null || stageTouchStartY === null) return;
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    const diffX = touchEndX - stageTouchStartX;
+    const diffY = touchEndY - stageTouchStartY;
+
+    if (Math.abs(diffX) > 35 && Math.abs(diffX) > Math.abs(diffY) * 1.2 && mediaItems.length > 1) {
+      if (diffX < 0) {
+        nextMedia();
+      } else {
+        prevMedia();
+      }
+    }
+
+    setStageTouchStartX(null);
+    setStageTouchStartY(null);
+    setTimeout(() => setStageIsSwiping(false), 60);
   };
 
   if (!visible || !product) return null;
@@ -339,7 +445,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
               <div className="product-modal-image-col">
                 <div
                   className="product-detail-image-stage"
-                  onClick={() => activeMedia?.type === 'image' && activeMedia.url && setIsFullscreenImage(true)}
+                  onClick={() => {
+                    if (activeMedia?.type === 'image' && activeMedia.url) {
+                      setIsFullscreenImage(true);
+                    }
+                  }}
+                  onTouchStart={handleStageTouchStart}
+                  onTouchMove={handleStageTouchMove}
+                  onTouchEnd={handleStageTouchEnd}
                   style={{
                     backgroundColor: theme.mode === 'dark' ? '#131926' : '#ffffff',
                     borderColor: theme.border,
@@ -347,6 +460,30 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                   }}
                   title="Tam ekranda böyütmək və sürüşdürmək üçün klikləyin"
                 >
+                  {/* Left & Right Navigation Arrows */}
+                  {mediaItems.length > 1 && (
+                    <>
+                      <button
+                        type="button"
+                        className="modal-stage-nav-btn prev"
+                        onClick={prevMedia}
+                        title="Əvvəlki şəkil"
+                        aria-label="Əvvəlki şəkil"
+                      >
+                        <ChevronLeft size={20} />
+                      </button>
+                      <button
+                        type="button"
+                        className="modal-stage-nav-btn next"
+                        onClick={nextMedia}
+                        title="Növbəti şəkil"
+                        aria-label="Növbəti şəkil"
+                      >
+                        <ChevronRight size={20} />
+                      </button>
+                    </>
+                  )}
+
                   {activeMedia?.type === 'video' ? (
                     <video
                       src={activeMedia.url}
@@ -385,9 +522,18 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                         fontSize: '11px',
                         fontWeight: 800,
                         boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                        zIndex: 8,
                       }}
                     >
                       {product.badgeText}
+                    </div>
+                  )}
+
+                  {/* Multi-Media Counter Badge */}
+                  {mediaItems.length > 1 && (
+                    <div className="modal-stage-counter-badge">
+                      <ImageIcon size={12} />
+                      <span>{activeMediaIndex + 1} / {mediaItems.length}</span>
                     </div>
                   )}
 
@@ -407,6 +553,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                         fontSize: '11px',
                         fontWeight: 700,
                         backdropFilter: 'blur(6px)',
+                        zIndex: 8,
                       }}
                     >
                       <Maximize2 size={13} />
@@ -656,7 +803,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
         </div>
       </div>
 
-      {/* FULLSCREEN ZOOM & PAN LIGHTBOX VIEW */}
+      {/* FULLSCREEN ZOOM & PAN & SWIPE LIGHTBOX VIEW */}
       {isFullscreenImage && (
         <div
           style={{
@@ -672,6 +819,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
             if (e.target === e.currentTarget && !isDragging) setIsFullscreenImage(false);
           }}
         >
+          {/* Top Bar */}
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '14px 20px', borderBottom: '1px solid rgba(255, 255, 255, 0.1)', background: 'rgba(15, 23, 42, 0.6)', zIndex: 30 }}>
             <div style={{ backgroundColor: 'rgba(255, 255, 255, 0.12)', color: '#ffffff', padding: '6px 14px', borderRadius: '8px', fontSize: '13px', fontWeight: 700, backdropFilter: 'blur(8px)' }}>
               {product.code} — {product.title}
@@ -681,6 +829,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
             </button>
           </div>
 
+          {/* Floating Zoom Controls */}
           <div className="zoom-floating-controls" style={{ position: 'absolute', top: '80px', right: '20px', zIndex: 40, display: 'flex', gap: '8px' }}>
             <button type="button" className="zoom-btn" onClick={zoomOut} disabled={zoomScale <= 1} title="Kiçilt (-)"><ZoomOut size={16} /></button>
             <span style={{ color: '#fff', fontSize: '12px', fontWeight: 700 }}>{Math.round(zoomScale * 100)}%</span>
@@ -688,28 +837,90 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
             {zoomScale > 1 && <button type="button" onClick={resetZoom} title="1x Orijinal ölçüyə sıfırla" style={{ cursor: 'pointer', border: 'none', borderRadius: '8px', padding: '4px 8px' }}>1x Sıfırla</button>}
           </div>
 
+          {/* Left & Right Fullscreen Navigation Buttons */}
+          {mediaItems.length > 1 && (
+            <>
+              <button
+                type="button"
+                className="fs-lightbox-nav-btn prev"
+                onClick={prevMedia}
+                title="Əvvəlki şəkil"
+                aria-label="Əvvəlki şəkil"
+              >
+                <ChevronLeft size={26} />
+              </button>
+              <button
+                type="button"
+                className="fs-lightbox-nav-btn next"
+                onClick={nextMedia}
+                title="Növbəti şəkil"
+                aria-label="Növbəti şəkil"
+              >
+                <ChevronRight size={26} />
+              </button>
+            </>
+          )}
+
+          {/* Interactive Zoom, Pan & Touch Swipe Stage */}
           <div
-            className={`zoom-pan-container ${zoomScale > 1 ? 'is-zoomed' : ''}`}
+            className={`zoom-pan-container ${zoomScale > 1 ? 'is-zoomed' : ''} ${isDragging ? 'is-dragging' : ''}`}
             onMouseDown={handleMouseDown} onMouseMove={handleMouseMove} onMouseUp={handleMouseUp} onMouseLeave={handleMouseUp}
-            onTouchStart={handleTouchStart} onTouchMove={handleTouchMove} onTouchEnd={handleTouchEnd} onWheel={handleWheel}
+            onTouchStart={handleFsTouchStart} onTouchMove={handleFsTouchMove} onTouchEnd={handleFsTouchEnd} onWheel={handleWheel}
             onDoubleClick={toggleZoom}
-            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', cursor: isDragging ? 'grabbing' : 'grab' }}
+            style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden', cursor: zoomScale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default' }}
           >
-            <img
-              src={activeMedia?.url || product.image}
-              alt={activeMedia?.alt || product.title}
-              draggable={false}
-              style={{
-                maxWidth: '90vw',
-                maxHeight: '80vh',
-                objectFit: activeFitMode as any,
-                objectPosition: activeObjectPosition,
-                transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoomScale})`,
-                transition: isDragging ? 'none' : 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
-                userSelect: 'none',
-              }}
-            />
+            {activeMedia?.type === 'video' ? (
+              <video
+                src={activeMedia.url}
+                poster={activeMedia.poster}
+                controls
+                playsInline
+                autoPlay
+                style={{ maxWidth: '90vw', maxHeight: '80vh', objectFit: 'contain' }}
+                onClick={(e) => e.stopPropagation()}
+              />
+            ) : (
+              <img
+                src={activeMedia?.url || product.image}
+                alt={activeMedia?.alt || product.title}
+                draggable={false}
+                style={{
+                  maxWidth: '90vw',
+                  maxHeight: '80vh',
+                  objectFit: activeFitMode as any,
+                  objectPosition: activeObjectPosition,
+                  transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoomScale})`,
+                  transition: isDragging ? 'none' : 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                  userSelect: 'none',
+                }}
+              />
+            )}
           </div>
+
+          {/* Bottom Thumbnail / Indicator Bar in Fullscreen */}
+          {mediaItems.length > 1 && (
+            <div className="fs-lightbox-bottom-bar">
+              <div className="fs-lightbox-dots">
+                {mediaItems.map((m, idx) => (
+                  <button
+                    key={m.id || idx}
+                    type="button"
+                    className={`fs-lightbox-dot ${activeMediaIndex === idx ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveMediaIndex(idx);
+                      setPanPosition({ x: 0, y: 0 });
+                      setZoomScale(1);
+                    }}
+                    aria-label={`Şəkil ${idx + 1}`}
+                  />
+                ))}
+              </div>
+              <span className="fs-lightbox-counter-text">
+                {activeMediaIndex + 1} / {mediaItems.length}
+              </span>
+            </div>
+          )}
         </div>
       )}
     </>

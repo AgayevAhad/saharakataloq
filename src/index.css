@@ -4050,4 +4050,173 @@ button, input, textarea, select { font: inherit; }
   }
 }
 
+/* =========================================================================
+   Product Detail Modal & Fullscreen Lightbox Media Swiping & Nav Controls
+   ========================================================================= */
+.product-detail-image-stage {
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.modal-stage-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.72);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 10;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.35);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  opacity: 0.88;
+}
+
+.modal-stage-nav-btn:hover {
+  background: var(--primary, #dc2626);
+  border-color: var(--primary, #dc2626);
+  transform: translateY(-50%) scale(1.1);
+  opacity: 1;
+}
+
+.modal-stage-nav-btn.prev {
+  left: 10px;
+}
+
+.modal-stage-nav-btn.next {
+  right: 10px;
+}
+
+.modal-stage-counter-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(15, 23, 42, 0.75);
+  color: #ffffff;
+  padding: 4px 9px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 750;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  z-index: 10;
+  pointer-events: none;
+}
+
+/* Fullscreen Lightbox Nav Buttons and Bottom Bar */
+.fs-lightbox-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 46px;
+  height: 46px;
+  border-radius: 50%;
+  background: rgba(30, 41, 59, 0.75);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 50;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.fs-lightbox-nav-btn:hover {
+  background: var(--primary, #dc2626);
+  border-color: var(--primary, #dc2626);
+  transform: translateY(-50%) scale(1.1);
+}
+
+.fs-lightbox-nav-btn.prev {
+  left: 16px;
+}
+
+.fs-lightbox-nav-btn.next {
+  right: 16px;
+}
+
+.fs-lightbox-bottom-bar {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: rgba(15, 23, 42, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  padding: 8px 16px;
+  border-radius: 999px;
+  z-index: 50;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+}
+
+.fs-lightbox-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.fs-lightbox-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.35);
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.fs-lightbox-dot.active {
+  width: 20px;
+  background: var(--primary, #dc2626);
+}
+
+.fs-lightbox-counter-text {
+  color: #ffffff;
+  font-size: 12px;
+  font-weight: 750;
+  letter-spacing: 0.5px;
+}
+
+@media (max-width: 768px) {
+  .modal-stage-nav-btn {
+    width: 32px;
+    height: 32px;
+  }
+  .fs-lightbox-nav-btn {
+    width: 40px;
+    height: 40px;
+  }
+  .fs-lightbox-nav-btn.prev {
+    left: 8px;
+  }
+  .fs-lightbox-nav-btn.next {
+    right: 8px;
+  }
+  .fs-lightbox-bottom-bar {
+    bottom: 14px;
+    padding: 6px 12px;
+  }
+}
+
 
