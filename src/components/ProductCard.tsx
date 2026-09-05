@@ -38,61 +38,6 @@ interface ProductCardProps {
   shareButtonText?: string;
 }
 
-// Global Single Mobile Center Focus Coordinator
-let currentActiveMobileCardId: string | null = null;
-const mobileFocusListeners = new Set<(id: string | null) => void>();
-
-const updateActiveMobileCard = (id: string | null) => {
-  if (currentActiveMobileCardId === id) return;
-  currentActiveMobileCardId = id;
-  mobileFocusListeners.forEach((fn) => fn(id));
-};
-
-if (typeof window !== 'undefined') {
-  let scrollTimeout: any = null;
-  let rafId: any = null;
-
-  const performCenterFocusCheck = () => {
-    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || window.innerWidth <= 768;
-    if (!isTouch) {
-      if (currentActiveMobileCardId !== null) updateActiveMobileCard(null);
-      return;
-    }
-
-    const elements = Array.from(document.querySelectorAll('[data-product-card-id]'));
-    if (!elements.length) return;
-
-    const screenCenterY = window.innerHeight / 2;
-    let closestId: string | null = null;
-    let minDistance = Infinity;
-
-    for (const el of elements) {
-      const rect = el.getBoundingClientRect();
-      if (rect.bottom >= window.innerHeight * 0.25 && rect.top <= window.innerHeight * 0.75) {
-        const cardCenterY = rect.top + rect.height / 2;
-        const dist = Math.abs(cardCenterY - screenCenterY);
-        if (dist < minDistance) {
-          minDistance = dist;
-          closestId = el.getAttribute('data-product-card-id');
-        }
-      }
-    }
-
-    updateActiveMobileCard(closestId);
-  };
-
-  const onMobileCenterScroll = () => {
-    if (scrollTimeout) clearTimeout(scrollTimeout);
-    if (rafId) cancelAnimationFrame(rafId);
-
-    scrollTimeout = setTimeout(() => {
-      rafId = requestAnimationFrame(performCenterFocusCheck);
-    }, 140);
-  };
-
-  window.addEventListener('scroll', onMobileCenterScroll, { passive: true });
-}
-
 export const ProductCard: React.FC<ProductCardProps> = ({
   product,
   theme,
@@ -135,21 +80,36 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   const coverImage = imageList[0] || product.image || '';
 
-  // Listen to single mobile center focus
+  // Mobile center focus using native IntersectionObserver (0 main-thread layout thrashing)
   useEffect(() => {
-    const handler = (activeId: string | null) => {
-      const isThisCard = activeId === product.id;
-      setIsMobileFocused(isThisCard);
-      if (!isThisCard) {
-        setHasManuallySwiped(false);
-        setCurrentImageIdx(0);
+    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) return;
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || window.innerWidth <= 768;
+    if (!isTouch || !cardRef.current) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            setIsMobileFocused(true);
+          } else {
+            setIsMobileFocused(false);
+            setHasManuallySwiped(false);
+            setCurrentImageIdx(0);
+          }
+        });
+      },
+      {
+        rootMargin: '-30% 0px -30% 0px',
+        threshold: 0.1,
       }
-    };
-    mobileFocusListeners.add(handler);
+    );
+
+    const currentCard = cardRef.current;
+    observer.observe(currentCard);
     return () => {
-      mobileFocusListeners.delete(handler);
+      observer.disconnect();
     };
-  }, [product.id]);
+  }, []);
 
   const isActive = isHovered || isMobileFocused;
 

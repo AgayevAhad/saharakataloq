@@ -78,13 +78,10 @@ export const FloatingActions: React.FC<FloatingActionsProps> = ({
     if (typeof window !== 'undefined') {
       try {
         window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-      } catch {
-        const anchor = document.getElementById('catalog-top-anchor') || document.body;
-        if (anchor && typeof anchor.scrollIntoView === 'function') {
-          anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        } else {
-          window.scrollTo(0, 0);
-        }
+      } catch {}
+      const anchor = document.getElementById('catalog-top-anchor');
+      if (anchor && typeof anchor.scrollIntoView === 'function') {
+        anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
     }
   };

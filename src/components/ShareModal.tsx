@@ -44,7 +44,8 @@ export const ShareModal: React.FC<ShareModalProps> = ({
       style={{
         position: 'fixed',
         inset: 0,
-        width: '100vw',
+        width: '100%',
+        maxWidth: '100%',
         height: '100dvh',
         backgroundColor: 'rgba(0, 0, 0, 0.85)',
         zIndex: 1000005,
