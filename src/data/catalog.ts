@@ -30,7 +30,7 @@ export const DEFAULT_BRANDS: Brand[] = [
     originCountry: 'Türkiyə',
     manufacturingCountries: ['Türkiyə', 'Çin'],
     description: 'Yüksək keyfiyyətli Lotus məişət texnikası və elektronika məhsulları.',
-    logo: '/media/brands/lotus-mark.svg',
+    logo: '/media/brands/lotus-logo.png',
     active: true,
     comingSoon: false,
   },

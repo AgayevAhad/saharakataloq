@@ -34,6 +34,7 @@ const isAdminPath = () => window.location.pathname.startsWith('/AdministratorNT'
 
 export const App: React.FC = () => {
   const [catalog, setCatalog] = useState<CatalogData>(DEFAULT_CATALOG);
+  const [isLoadingCatalog, setIsLoadingCatalog] = useState(true);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
@@ -76,6 +77,8 @@ export const App: React.FC = () => {
         const fallback = normalizeCatalog(DEFAULT_CATALOG);
         setCatalog(fallback);
         parseDeepLink(fallback.products);
+      } finally {
+        setIsLoadingCatalog(false);
       }
       if (isAdminPath()) {
         try {
@@ -299,111 +302,125 @@ export const App: React.FC = () => {
         filteredCount={filteredProducts.length}
       />
       <main className="catalog-main">
-        <BrandShowcase
-          brands={catalog.brands}
-          products={catalog.products}
-          theme={activeTheme}
-          onSelect={(brandId) => {
-            setSelectedBrand(brandId);
-            setSelectedCategory('all');
-            setTimeout(() => {
-              document.querySelector('.catalog-section')?.scrollIntoView({ behavior: 'smooth' });
-            }, 60);
-          }}
-        />
-        <BannerHero theme={activeTheme} articles={catalog.articles} heroTitle={catalog.settings?.heroBannerTitle} heroSubtitle={catalog.settings?.heroBannerSubtitle} onOpenArticle={openArticle} />
-
-        {isCatalogActive && (
-          <section className="catalog-section">
-            {activeBrandObj ? (
-              <BrandCategoryFilter
-                brand={activeBrandObj}
-                categories={catalog.categories}
-                products={catalog.products}
-                selectedCategory={selectedCategory || 'all'}
-                onSelectCategory={(catId) => setSelectedCategory(catId)}
-                onBackToBrands={() => {
-                  setSelectedBrand(null);
-                  setSelectedCategory(null);
-                  setSearchQuery('');
-                  window.scrollTo({ top: 0, behavior: 'smooth' });
-                }}
-                theme={activeTheme}
-              />
-            ) : (
-              <div className="catalog-section-heading">
-                <div>
-                  <h1 style={{ color: activeTheme.text }}>
-                    {searchQuery
-                      ? `"${searchQuery}" axtarış nəticələri`
-                      : selectedCategory === 'all'
-                      ? (catalog.settings?.catalogHeading || 'Bütün məhsullar (Bütün brendlər)')
-                      : `${catalog.categories.find((item) => item.id === selectedCategory)?.name || 'Məhsullar'} (Bütün brendlər)`}
-                  </h1>
-                  <p style={{ color: activeTheme.textMuted }}>
-                    {catalog.settings?.catalogSubheading || 'Modellərə və texniki xüsusiyyət sahələrinə baxın'}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setSelectedBrand(null);
-                    setSelectedCategory(null);
-                    setSearchQuery('');
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                  }}
-                  className="brand-back-btn"
-                  style={{
-                    borderColor: activeTheme.border,
-                    color: activeTheme.text,
-                    backgroundColor: activeTheme.bgSecondary,
-                  }}
-                >
-                  <ArrowLeft size={15} />
-                  <span>Vitrinə qayıt</span>
-                </button>
-              </div>
+        {isLoadingCatalog ? (
+          <>
+            <BrandShowcaseSkeleton theme={activeTheme} />
+            <BannerHeroSkeleton theme={activeTheme} />
+            {isCatalogActive && (
+              <section className="catalog-section" style={{ marginTop: '16px' }}>
+                <ProductGridSkeleton theme={activeTheme} count={8} />
+              </section>
             )}
+          </>
+        ) : (
+          <>
+            <BrandShowcase
+              brands={catalog.brands}
+              products={catalog.products}
+              theme={activeTheme}
+              onSelect={(brandId) => {
+                setSelectedBrand(brandId);
+                setSelectedCategory('all');
+                setTimeout(() => {
+                  document.querySelector('.catalog-section')?.scrollIntoView({ behavior: 'smooth' });
+                }, 60);
+              }}
+            />
+            <BannerHero theme={activeTheme} articles={catalog.articles} heroTitle={catalog.settings?.heroBannerTitle} heroSubtitle={catalog.settings?.heroBannerSubtitle} onOpenArticle={openArticle} />
 
-            {!filteredProducts.length ? (
-              <div className="empty-catalog" style={{ color: activeTheme.textMuted }}>
-                Axtarışınıza uyğun məhsul tapılmadı.
-                <button
-                  onClick={() => {
-                    setSearchQuery('');
-                    setSelectedCategory('all');
-                    if (selectedBrand) setSelectedBrand(selectedBrand);
-                  }}
-                  style={{ background: activeTheme.primary }}
-                >
-                  Filtrləri sıfırla
-                </button>
-              </div>
-            ) : (
-              <div className="product-grid-container">
-                {filteredProducts.map((product) => {
-                  const brand = catalog.brands.find((item) => item.id === product.brandId);
-                  return (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      theme={activeTheme}
-                      brandName={brand?.name}
-                      brandOrigin={brand?.originCountry ? `${brand.originCountry} brendi` : ''}
-                      whatsappButtonText={catalog.settings?.whatsappButtonText}
-                      callButtonText={catalog.settings?.callButtonText}
-                      shareButtonText={catalog.settings?.shareButtonText}
-                      onSelect={selectProduct}
-                      onShare={(item) => openShare(item)}
-                      onWhatsApp={openWhatsApp}
-                      onCall={openCall}
-                      onCopyLink={copyLink}
-                    />
-                  );
-                })}
-              </div>
+            {isCatalogActive && (
+              <section className="catalog-section">
+                {activeBrandObj ? (
+                  <BrandCategoryFilter
+                    brand={activeBrandObj}
+                    categories={catalog.categories}
+                    products={catalog.products}
+                    selectedCategory={selectedCategory || 'all'}
+                    onSelectCategory={(catId) => setSelectedCategory(catId)}
+                    onBackToBrands={() => {
+                      setSelectedBrand(null);
+                      setSelectedCategory(null);
+                      setSearchQuery('');
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    theme={activeTheme}
+                  />
+                ) : (
+                  <div className="catalog-section-heading">
+                    <div>
+                      <h1 style={{ color: activeTheme.text }}>
+                        {searchQuery
+                          ? `"${searchQuery}" axtarış nəticələri`
+                          : selectedCategory === 'all'
+                          ? (catalog.settings?.catalogHeading || 'Bütün məhsullar (Bütün brendlər)')
+                          : `${catalog.categories.find((item) => item.id === selectedCategory)?.name || 'Məhsullar'} (Bütün brendlər)`}
+                      </h1>
+                      <p style={{ color: activeTheme.textMuted }}>
+                        {catalog.settings?.catalogSubheading || 'Modellərə və texniki xüsusiyyət sahələrinə baxın'}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedBrand(null);
+                        setSelectedCategory(null);
+                        setSearchQuery('');
+                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                      }}
+                      className="brand-back-btn"
+                      style={{
+                        borderColor: activeTheme.border,
+                        color: activeTheme.text,
+                        backgroundColor: activeTheme.bgSecondary,
+                      }}
+                    >
+                      <ArrowLeft size={15} />
+                      <span>Vitrinə qayıt</span>
+                    </button>
+                  </div>
+                )}
+
+                {!filteredProducts.length ? (
+                  <div className="empty-catalog" style={{ color: activeTheme.textMuted }}>
+                    Axtarışınıza uyğun məhsul tapılmadı.
+                    <button
+                      onClick={() => {
+                        setSearchQuery('');
+                        setSelectedCategory('all');
+                        if (selectedBrand) setSelectedBrand(selectedBrand);
+                      }}
+                      style={{ background: activeTheme.primary }}
+                    >
+                      Filtrləri sıfırla
+                    </button>
+                  </div>
+                ) : (
+                  <div className="product-grid-container">
+                    {filteredProducts.map((product) => {
+                      const brand = catalog.brands.find((item) => item.id === product.brandId);
+                      return (
+                        <ProductCard
+                          key={product.id}
+                          product={product}
+                          theme={activeTheme}
+                          brandName={brand?.name}
+                          brandOrigin={brand?.originCountry ? `${brand.originCountry} brendi` : ''}
+                          whatsappButtonText={catalog.settings?.whatsappButtonText}
+                          callButtonText={catalog.settings?.callButtonText}
+                          shareButtonText={catalog.settings?.shareButtonText}
+                          onSelect={selectProduct}
+                          onShare={(item) => openShare(item)}
+                          onWhatsApp={openWhatsApp}
+                          onCall={openCall}
+                          onCopyLink={copyLink}
+                        />
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
             )}
-          </section>
+          </>
         )}
       </main>
       
