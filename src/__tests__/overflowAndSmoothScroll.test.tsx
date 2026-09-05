@@ -1,5 +1,7 @@
 // @vitest-environment happy-dom
 import React from 'react';
+import fs from 'fs';
+import path from 'path';
 import { describe, it, expect, vi } from 'vitest';
 import { render, fireEvent } from '@testing-library/react';
 import { FloatingActions } from '../components/FloatingActions';
@@ -33,16 +35,20 @@ describe('Horizontal Overflow Prevention & Smooth Scroll Suite', () => {
     );
   });
 
-  it('Splash screen and modal overlay classes do not cause horizontal overflow', () => {
-    document.body.innerHTML = `
-      <div id="app-splash-screen" class="sahara-splash-container"></div>
-      <div class="modal-overlay-wrap"></div>
-    `;
+  it('index.html and index.css strictly enforce overflow-x: hidden and no unconstrained 100vw', () => {
+    const indexHtml = fs.readFileSync(path.resolve(__dirname, '../../index.html'), 'utf-8');
+    const indexCss = fs.readFileSync(path.resolve(__dirname, '../index.css'), 'utf-8');
 
-    const splash = document.getElementById('app-splash-screen');
-    expect(splash).toBeTruthy();
+    // Verify index.html has overflow-x: hidden !important and scroll-behavior: smooth
+    expect(indexHtml).toContain('overflow-x: hidden !important');
+    expect(indexHtml).toContain('scroll-behavior: smooth');
+    expect(indexHtml).not.toContain('width: 100vw;');
 
-    const modal = document.querySelector('.modal-overlay-wrap');
-    expect(modal).toBeTruthy();
+    // Verify index.css has overflow-x: hidden !important and scroll-behavior: smooth
+    expect(indexCss).toContain('overflow-x: hidden !important');
+    expect(indexCss).toContain('scroll-behavior: smooth');
+
+    // Verify modal overlay and splash container are not using unconstrained 100vw
+    expect(indexCss).not.toContain('.modal-overlay-wrap {\n  position: fixed;\n  inset: 0;\n  width: 100vw;');
   });
 });

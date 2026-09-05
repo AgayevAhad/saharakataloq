@@ -275,7 +275,7 @@ export const App: React.FC = () => {
 
   const selectedBrandInfo = selectedProduct ? catalog.brands.find((brand) => brand.id === selectedProduct.brandId) : undefined;
   return (
-    <div id="catalog-top-anchor" style={{ backgroundColor: activeTheme.bg, minHeight: '100vh' }}>
+    <div id="catalog-top-anchor" style={{ backgroundColor: activeTheme.bg, minHeight: '100vh', width: '100%', maxWidth: '100%', overflowX: 'hidden' }}>
       <Header
         theme={activeTheme}
         isDarkMode={themeMode === 'dark'}
