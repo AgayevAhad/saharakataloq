@@ -58,13 +58,13 @@ describe('Sahara Electronic - UI Komponentləri və İstifadəçi Qarşılıqlı
     expect(onOpen).toHaveBeenCalled();
   });
 
-  it('axtarış fokusunda maksimum dörd real alternativ göstərir', () => {
+  it('axtarış fokusunda ağıllı alternativ və populyar məhsul təkliflərini göstərir', () => {
     render(<Header theme={lightTheme} isDarkMode={false} onToggleTheme={vi.fn()} selectedCategory="all" onSelectCategory={vi.fn()} selectedBrand="all" onSelectBrand={vi.fn()} brands={DEFAULT_BRANDS} categories={[{ id: 'hood', name: 'Aspiratorlar', slug: 'aspiratorlar', active: true }]} products={[TEST_PRODUCT]} settings={DEFAULT_SETTINGS} searchQuery="" onSearchChange={vi.fn()} onOpenInverterInfo={vi.fn()} onOpenCatalogShare={vi.fn()} totalCount={1} filteredCount={1} />);
     const input = screen.getByLabelText('Məhsul axtarışı');
     fireEvent.focus(input);
-    expect(screen.getByRole('listbox', { name: 'Axtarış təklifləri' })).toBeDefined();
-    expect(screen.getAllByRole('option').length).toBeLessThanOrEqual(4);
-    expect(screen.getByText('ARDO 3000 Aspirator')).toBeDefined();
+    expect(screen.getByRole('listbox', { name: 'Ağıllı axtarış paneli' })).toBeDefined();
+    expect(screen.getByText('Axtarış üzrə nəticə')).toBeDefined();
+    expect(screen.getByText('Populyar məhsullar')).toBeDefined();
   });
 
   it('Header-də Instagram və Facebook keçid düymələri göstərilir', () => {

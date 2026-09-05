@@ -291,6 +291,7 @@ export const App: React.FC = () => {
             setSelectedBrand('all');
           }
         }}
+        onSelectProduct={selectProduct}
         onOpenInverterInfo={() => openArticle()}
         onOpenCatalogShare={() => openShare(null)}
         totalCount={catalog.products.length}
