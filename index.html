@@ -20,6 +20,22 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
 
+    <script>
+      // Immediate theme synchronization before first paint to prevent flashes
+      (function() {
+        try {
+          var saved = localStorage.getItem('sahara_theme_mode');
+          var theme = (saved === 'dark') ? 'dark' : 'light';
+          document.documentElement.setAttribute('data-theme', theme);
+          document.documentElement.classList.add('theme-' + theme);
+          var metaTheme = document.querySelector('meta[name="theme-color"]');
+          if (metaTheme) {
+            metaTheme.setAttribute('content', theme === 'dark' ? '#0d0f14' : '#f8fafc');
+          }
+        } catch(e) {}
+      })();
+    </script>
+
     <style>
       * {
         box-sizing: border-box;
@@ -28,16 +44,61 @@
         -webkit-tap-highlight-color: transparent;
       }
       
+      /* Light Mode Default Variables and Base (Default Catalog Experience) */
+      :root {
+        --splash-bg: radial-gradient(circle at 50% 38%, #ffffff 0%, #f8fafc 55%, #e2e8f0 100%);
+        --splash-body-bg: #f8fafc;
+        --splash-body-color: #0f172a;
+        --splash-glow: radial-gradient(circle, rgba(220, 38, 38, 0.12) 0%, rgba(245, 158, 11, 0.06) 45%, rgba(220, 38, 38, 0) 70%);
+        --splash-logo-bg: #ffffff;
+        --splash-logo-border: rgba(226, 232, 240, 0.95);
+        --splash-logo-shadow: 0 16px 36px rgba(15, 23, 42, 0.08), 0 4px 12px rgba(220, 38, 38, 0.06), inset 0 1px 0 rgba(255, 255, 255, 1);
+        --splash-brand-text: linear-gradient(135deg, #0f172a 30%, #334155 100%);
+        --splash-brand-color: #0f172a;
+        --splash-tagline: #64748b;
+        --splash-loader-track: rgba(15, 23, 42, 0.08);
+        --splash-bar-glow: rgba(220, 38, 38, 0.45);
+        --splash-hint: #64748b;
+        --splash-ring-top: rgba(220, 38, 38, 0.85);
+        --splash-ring-right: rgba(245, 158, 11, 0.7);
+        --scrollbar-track: #f1f5f9;
+        --scrollbar-thumb: #cbd5e1;
+        --scrollbar-thumb-hover: #94a3b8;
+      }
+
+      /* Dark Mode Overrides */
+      html[data-theme="dark"], html.theme-dark {
+        --splash-bg: radial-gradient(circle at 50% 40%, #151a27 0%, #080a0f 100%);
+        --splash-body-bg: #0b0d13;
+        --splash-body-color: #f1f5f9;
+        --splash-glow: radial-gradient(circle, rgba(220, 38, 38, 0.18) 0%, rgba(220, 38, 38, 0) 70%);
+        --splash-logo-bg: rgba(255, 255, 255, 0.04);
+        --splash-logo-border: rgba(255, 255, 255, 0.12);
+        --splash-logo-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        --splash-brand-text: linear-gradient(135deg, #ffffff 40%, #cbd5e1 100%);
+        --splash-brand-color: #ffffff;
+        --splash-tagline: #94a3b8;
+        --splash-loader-track: rgba(255, 255, 255, 0.08);
+        --splash-bar-glow: rgba(220, 38, 38, 0.8);
+        --splash-hint: #64748b;
+        --splash-ring-top: rgba(220, 38, 38, 0.7);
+        --splash-ring-right: rgba(245, 158, 11, 0.5);
+        --scrollbar-track: #0d1117;
+        --scrollbar-thumb: #232936;
+        --scrollbar-thumb-hover: #3b4252;
+      }
+      
       html, body, #root {
         min-height: 100%;
         min-height: 100dvh;
         width: 100%;
         max-width: 100%;
-        background-color: #0b0d13;
-        color: #f1f5f9;
+        background-color: var(--splash-body-bg);
+        color: var(--splash-body-color);
         font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         overflow-x: hidden !important;
         scroll-behavior: smooth;
+        transition: background-color 0.25s ease, color 0.25s ease;
       }
 
       /* Custom Scrollbar */
@@ -46,14 +107,14 @@
         height: 8px;
       }
       ::-webkit-scrollbar-track {
-        background: #0d1117;
+        background: var(--scrollbar-track);
       }
       ::-webkit-scrollbar-thumb {
-        background: #232936;
+        background: var(--scrollbar-thumb);
         border-radius: 4px;
       }
       ::-webkit-scrollbar-thumb:hover {
-        background: #3b4252;
+        background: var(--scrollbar-thumb-hover);
       }
 
       /* Sahara Premium Splash Screen */
@@ -63,7 +124,7 @@
         width: 100%;
         max-width: 100%;
         height: 100dvh;
-        background: radial-gradient(circle at 50% 40%, #151a27 0%, #080a0f 100%);
+        background: var(--splash-bg);
         display: flex;
         align-items: center;
         justify-content: center;
@@ -85,7 +146,7 @@
         width: 420px;
         height: 420px;
         border-radius: 50%;
-        background: radial-gradient(circle, rgba(220, 38, 38, 0.18) 0%, rgba(220, 38, 38, 0) 70%);
+        background: var(--splash-glow);
         filter: blur(40px);
         animation: splashGlowPulse 2.8s ease-in-out infinite alternate;
         pointer-events: none;
@@ -110,10 +171,10 @@
         align-items: center;
         justify-content: center;
         margin-bottom: 22px;
-        background: rgba(255, 255, 255, 0.04);
-        border: 1px solid rgba(255, 255, 255, 0.12);
+        background: var(--splash-logo-bg);
+        border: 1px solid var(--splash-logo-border);
         border-radius: 28px;
-        box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        box-shadow: var(--splash-logo-shadow);
         backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
         animation: splashLogoFloat 3s ease-in-out infinite alternate;
@@ -123,6 +184,11 @@
         width: 78px;
         height: 78px;
         object-fit: contain;
+        filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.12));
+      }
+
+      html[data-theme="dark"] .sahara-splash-logo,
+      html.theme-dark .sahara-splash-logo {
         filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.4));
       }
 
@@ -131,8 +197,8 @@
         inset: -6px;
         border-radius: 34px;
         border: 1.5px solid transparent;
-        border-top-color: rgba(220, 38, 38, 0.7);
-        border-right-color: rgba(245, 158, 11, 0.5);
+        border-top-color: var(--splash-ring-top);
+        border-right-color: var(--splash-ring-right);
         animation: splashRingRotate 3.5s linear infinite;
       }
 
@@ -146,9 +212,9 @@
         font-weight: 800;
         letter-spacing: 0.12em;
         text-transform: uppercase;
-        color: #ffffff;
+        color: var(--splash-brand-color);
         margin-bottom: 6px;
-        background: linear-gradient(135deg, #ffffff 40%, #cbd5e1 100%);
+        background: var(--splash-brand-text);
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
       }
@@ -156,14 +222,14 @@
       .sahara-splash-tagline {
         font-size: 12px;
         font-weight: 500;
-        color: #94a3b8;
+        color: var(--splash-tagline);
         letter-spacing: 0.04em;
       }
 
       .sahara-splash-loader {
         width: 160px;
         height: 3px;
-        background: rgba(255, 255, 255, 0.08);
+        background: var(--splash-loader-track);
         border-radius: 999px;
         overflow: hidden;
         margin-bottom: 12px;
@@ -178,13 +244,13 @@
         width: 45%;
         background: linear-gradient(90deg, #dc2626, #f59e0b);
         border-radius: 999px;
-        box-shadow: 0 0 10px rgba(220, 38, 38, 0.8);
+        box-shadow: 0 0 10px var(--splash-bar-glow);
         animation: splashBarProgress 1.4s ease-in-out infinite alternate;
       }
 
       .sahara-splash-hint {
         font-size: 11px;
-        color: #64748b;
+        color: var(--splash-hint);
         font-weight: 400;
         animation: splashHintPulse 1.8s ease-in-out infinite;
       }

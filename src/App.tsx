@@ -190,6 +190,18 @@ export const App: React.FC = () => {
   }, [catalog.settings?.primaryColor, themeMode]);
 
   useEffect(() => {
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-theme', themeMode);
+      document.documentElement.classList.remove('theme-light', 'theme-dark');
+      document.documentElement.classList.add(`theme-${themeMode}`);
+      const metaTheme = document.querySelector('meta[name="theme-color"]');
+      if (metaTheme) {
+        metaTheme.setAttribute('content', themeMode === 'dark' ? '#0d0f14' : '#f8fafc');
+      }
+    }
+  }, [themeMode]);
+
+  useEffect(() => {
     if (catalog.settings?.siteTitle) {
       document.title = catalog.settings.siteTitle;
     }
