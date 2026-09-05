@@ -260,4 +260,42 @@ describe('SmartSearchOverlay & Multi-Brand Search Tests', () => {
     expect(screen.getByText('Axtarış üzrə nəticə')).toBeDefined();
     expect(screen.getByText('Populyar məhsullar')).toBeDefined();
   });
+
+  it('updates the right preview images and title dynamically when hovering with mouse over suggestions or categories', () => {
+    render(
+      <SmartSearchOverlay
+        visible={true}
+        searchQuery=""
+        onSearchChange={vi.fn()}
+        onClose={vi.fn()}
+        products={mockProducts}
+        categories={mockCategories}
+        brands={mockBrands}
+        theme={lightTheme}
+        isDarkMode={false}
+        onSelectCategory={vi.fn()}
+        onSelectBrand={vi.fn()}
+      />
+    );
+
+    // Initial right title is "Populyar məhsullar"
+    expect(screen.getByText('Populyar məhsullar')).toBeDefined();
+
+    // Hover over an ARDO suggestion item
+    const ardoSuggestion = screen.getAllByText(/ARDO M604B/)[0];
+    fireEvent.mouseEnter(ardoSuggestion.closest('button')!);
+
+    // Right header and product card update to show the hovered item
+    expect(screen.getAllByText('ARDO M604B Quraşdırılan Soba').length).toBeGreaterThan(1);
+
+    // Mouse leave restores back
+    fireEvent.mouseLeave(ardoSuggestion.closest('button')!);
+    expect(screen.getByText('Populyar məhsullar')).toBeDefined();
+
+    // Hover over a category pill
+    const airfryerPill = screen.getAllByText('Fritözlər (Airfryer)')[0];
+    fireEvent.mouseEnter(airfryerPill);
+
+    expect(screen.getByText('Fritözlər (Airfryer) məhsulları')).toBeDefined();
+  });
 });

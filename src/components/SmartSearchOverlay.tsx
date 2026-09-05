@@ -76,7 +76,16 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
   onSelectBrand,
   onSelectProduct,
 }) => {
+  const [hoveredItem, setHoveredItem] = React.useState<SuggestionItem | null>(null);
+  const [hoveredCategoryId, setHoveredCategoryId] = React.useState<string | null>(null);
+
   const needle = searchQuery.trim().toLocaleLowerCase('az');
+
+  // Reset hover state when query changes or overlay closes
+  React.useEffect(() => {
+    setHoveredItem(null);
+    setHoveredCategoryId(null);
+  }, [searchQuery, visible]);
 
   // 1. Dynamic multi-brand suggestions (up to 9 items on desktop, 5 on mobile)
   const suggestions: SuggestionItem[] = useMemo(() => {
@@ -205,10 +214,49 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
     return items;
   }, [needle, products, categories, brands]);
 
-  // 2. Dynamic Popular / Recommended Products (Right column - 2 items)
-  const popularProducts: Product[] = useMemo(() => {
+  // 2. Dynamic Preview & Popular Products (Right column - updates on hover or default query)
+  const displayedProducts: Product[] = useMemo(() => {
     if (!products.length) return [];
 
+    // A. If a suggestion item is hovered with mouse
+    if (hoveredItem) {
+      if (hoveredItem.type === 'product' && hoveredItem.product) {
+        const hoveredProd = hoveredItem.product;
+        // Find a complementary related product (same category or another brand)
+        const complementary = products.find(
+          (p) => p.id !== hoveredProd.id && (p.category === hoveredProd.category || p.brandId !== hoveredProd.brandId)
+        );
+        return complementary ? [hoveredProd, complementary] : [hoveredProd];
+      }
+
+      if (hoveredItem.type === 'category' && hoveredItem.categoryId) {
+        const catProducts = products.filter((p) => p.category === hoveredItem.categoryId);
+        if (catProducts.length > 0) return catProducts.slice(0, 2);
+      }
+
+      if (hoveredItem.type === 'brand' && hoveredItem.brandId) {
+        const brandProducts = products.filter((p) => p.brandId === hoveredItem.brandId);
+        if (brandProducts.length > 0) return brandProducts.slice(0, 2);
+      }
+
+      if (hoveredItem.type === 'keyword') {
+        const kw = hoveredItem.displayText.toLowerCase();
+        const kwProducts = products.filter((p) =>
+          `${p.title} ${p.code} ${p.categoryName} ${p.specs?.map((s) => s.value).join(' ')}`
+            .toLowerCase()
+            .includes(kw)
+        );
+        if (kwProducts.length > 0) return kwProducts.slice(0, 2);
+      }
+    }
+
+    // B. If a category pill at bottom is hovered
+    if (hoveredCategoryId) {
+      const catProducts = products.filter((p) => p.category === hoveredCategoryId);
+      if (catProducts.length > 0) return catProducts.slice(0, 2);
+    }
+
+    // C. Default active query matching or default popular products
     if (needle) {
       const matches = products.filter((p) =>
         `${p.code} ${p.title} ${p.categoryName}`.toLocaleLowerCase('az').includes(needle)
@@ -235,7 +283,28 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
     }
 
     return selection;
-  }, [needle, products]);
+  }, [hoveredItem, hoveredCategoryId, needle, products]);
+
+  // Section title for right column
+  const rightSectionTitle = useMemo(() => {
+    if (hoveredItem) {
+      if (hoveredItem.type === 'product' && hoveredItem.product) {
+        return hoveredItem.product.title;
+      }
+      if (hoveredItem.type === 'category') {
+        return `${hoveredItem.displayText} məhsulları`;
+      }
+      if (hoveredItem.type === 'brand') {
+        return `${hoveredItem.displayText}`;
+      }
+      return `${hoveredItem.displayText} nəticələri`;
+    }
+    if (hoveredCategoryId) {
+      const catObj = categories.find((c) => c.id === hoveredCategoryId);
+      if (catObj) return `${catObj.name} məhsulları`;
+    }
+    return 'Populyar məhsullar';
+  }, [hoveredItem, hoveredCategoryId, categories]);
 
   // 3. Active Categories for Bottom Section
   const activeCategories = useMemo(() => {
@@ -322,11 +391,13 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
               <button
                 key={item.id}
                 type="button"
-                className={`smart-search-item ${idx >= 5 ? 'hide-on-mobile' : ''}`}
+                className={`smart-search-item ${idx >= 5 ? 'hide-on-mobile' : ''} ${hoveredItem?.id === item.id ? 'is-hovered' : ''}`}
                 onClick={() => handleSuggestionClick(item)}
+                onMouseEnter={() => setHoveredItem(item)}
+                onMouseLeave={() => setHoveredItem(null)}
                 style={{ color: theme.text }}
               >
-                <Search className="smart-search-item-icon" size={15} color={theme.textMuted} />
+                <Search className="smart-search-item-icon" size={15} color={hoveredItem?.id === item.id ? theme.primary : theme.textMuted} />
                 <span className="smart-search-item-text">
                   <HighlightedQueryText
                     text={item.displayText}
@@ -350,11 +421,11 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
           </div>
         </div>
 
-        {/* Right Column: Popular / Recommended Products */}
+        {/* Right Column: Popular / Recommended / Hovered Products */}
         <div className="smart-search-right-col" style={{ borderLeftColor: theme.border }}>
           <div className="smart-search-section-header popular-header">
             <span className="smart-search-section-title" style={{ color: theme.textMuted }}>
-              Populyar məhsullar
+              {rightSectionTitle}
             </span>
             <button
               type="button"
@@ -368,7 +439,7 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
           </div>
 
           <div className="smart-search-products-grid">
-            {popularProducts.map((prod) => {
+            {displayedProducts.map((prod) => {
               const prodImg = prod.image || prod.media?.find((m) => m.type === 'image')?.url || '';
               const brandObj = brands.find((b) => b.id === prod.brandId);
 
@@ -442,12 +513,14 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
               <button
                 key={cat.id}
                 type="button"
-                className="smart-search-category-pill"
+                className={`smart-search-category-pill ${hoveredCategoryId === cat.id ? 'is-hovered' : ''}`}
                 onClick={() => handleCategoryPillClick(cat.id)}
+                onMouseEnter={() => setHoveredCategoryId(cat.id)}
+                onMouseLeave={() => setHoveredCategoryId(null)}
                 style={{
-                  backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.7)' : 'rgba(241, 245, 249, 0.9)',
-                  borderColor: theme.border,
-                  color: theme.text,
+                  backgroundColor: hoveredCategoryId === cat.id ? 'rgba(220, 38, 38, 0.12)' : (isDarkMode ? 'rgba(30, 41, 59, 0.7)' : 'rgba(241, 245, 249, 0.9)'),
+                  borderColor: hoveredCategoryId === cat.id ? theme.primary : theme.border,
+                  color: hoveredCategoryId === cat.id ? theme.primary : theme.text,
                 }}
               >
                 {cat.name}
