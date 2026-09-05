@@ -113,22 +113,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   const isActive = isHovered || isMobileFocused;
 
-  const isFirstMediaVideo = product.media?.[0]?.type === 'video';
-
-  // Video Autoplay / Pause
+  // Video Autoplay / Pause: Only decode/play on active hover/focus to prevent CPU/decoder saturation
   useEffect(() => {
     if (!videoItem || !videoRef.current) return;
-    if (isFirstMediaVideo || isActive) {
+    if (isActive) {
       videoRef.current.play().catch(() => {});
     } else {
       videoRef.current.pause();
       videoRef.current.currentTime = 0;
     }
-  }, [isActive, videoItem, isFirstMediaVideo]);
+  }, [isActive, videoItem]);
 
   // Slideshow Cycling on Desktop Hover or Single Focused Mobile Card
   useEffect(() => {
-    if (!isActive || isFirstMediaVideo || videoItem || imageList.length <= 1 || hasManuallySwiped) {
+    if (!isActive || videoItem || imageList.length <= 1 || hasManuallySwiped) {
       if (!hasManuallySwiped && !isActive) setCurrentImageIdx(0);
       return;
     }
@@ -136,7 +134,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       setCurrentImageIdx((prev) => (prev + 1) % imageList.length);
     }, 1600);
     return () => clearInterval(interval);
-  }, [isActive, isFirstMediaVideo, videoItem, imageList.length, hasManuallySwiped]);
+  }, [isActive, videoItem, imageList.length, hasManuallySwiped]);
 
   // Touch Swipe Handlers for Mobile
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -283,8 +281,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             poster={videoItem.poster || coverImage}
             muted
             loop
-            autoPlay={isFirstMediaVideo}
             playsInline
+            preload="none"
             style={{
               position: 'absolute',
               inset: 0,
@@ -292,16 +290,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               height: '100%',
               objectFit: 'contain',
               padding: '8px',
-              opacity: (isFirstMediaVideo || isActive) ? 1 : 0,
-              transition: 'opacity 0.3s ease',
+              opacity: isActive ? 1 : 0,
+              transition: 'opacity 0.25s ease',
               zIndex: 2,
               pointerEvents: 'none',
               borderRadius: '12px 12px 0 0',
             }}
           />
         )}
-
-
 
         {/* Product Image / Slideshow */}
         {coverImage ? (
@@ -320,7 +316,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 objectPosition={cardObjectPosition}
                 spinnerSize={24}
                 style={{
-                  opacity: (isFirstMediaVideo || (isActive && videoItem)) ? 0 : undefined,
+                  opacity: isActive && videoItem ? 0 : undefined,
                 }}
               />
             );
