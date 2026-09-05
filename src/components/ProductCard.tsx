@@ -49,39 +49,45 @@ const updateActiveMobileCard = (id: string | null) => {
 };
 
 if (typeof window !== 'undefined') {
-  let scrollThrottle: any = null;
-  const onMobileCenterScroll = () => {
-    if (scrollThrottle) return;
-    scrollThrottle = setTimeout(() => {
-      scrollThrottle = null;
-      const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || window.innerWidth <= 768;
-      if (!isTouch) {
-        if (currentActiveMobileCardId !== null) updateActiveMobileCard(null);
-        return;
-      }
+  let scrollTimeout: any = null;
+  let rafId: any = null;
 
-      const elements = Array.from(document.querySelectorAll('[data-product-card-id]'));
-      if (!elements.length) return;
+  const performCenterFocusCheck = () => {
+    const isTouch = 'ontouchstart' in window || navigator.maxTouchPoints > 0 || window.innerWidth <= 768;
+    if (!isTouch) {
+      if (currentActiveMobileCardId !== null) updateActiveMobileCard(null);
+      return;
+    }
 
-      const screenCenterY = window.innerHeight / 2;
-      let closestId: string | null = null;
-      let minDistance = Infinity;
+    const elements = Array.from(document.querySelectorAll('[data-product-card-id]'));
+    if (!elements.length) return;
 
-      for (const el of elements) {
-        const rect = el.getBoundingClientRect();
-        // Check if element is within the active middle 50% viewport band
-        if (rect.bottom >= window.innerHeight * 0.25 && rect.top <= window.innerHeight * 0.75) {
-          const cardCenterY = rect.top + rect.height / 2;
-          const dist = Math.abs(cardCenterY - screenCenterY);
-          if (dist < minDistance) {
-            minDistance = dist;
-            closestId = el.getAttribute('data-product-card-id');
-          }
+    const screenCenterY = window.innerHeight / 2;
+    let closestId: string | null = null;
+    let minDistance = Infinity;
+
+    for (const el of elements) {
+      const rect = el.getBoundingClientRect();
+      if (rect.bottom >= window.innerHeight * 0.25 && rect.top <= window.innerHeight * 0.75) {
+        const cardCenterY = rect.top + rect.height / 2;
+        const dist = Math.abs(cardCenterY - screenCenterY);
+        if (dist < minDistance) {
+          minDistance = dist;
+          closestId = el.getAttribute('data-product-card-id');
         }
       }
+    }
 
-      updateActiveMobileCard(closestId);
-    }, 60);
+    updateActiveMobileCard(closestId);
+  };
+
+  const onMobileCenterScroll = () => {
+    if (scrollTimeout) clearTimeout(scrollTimeout);
+    if (rafId) cancelAnimationFrame(rafId);
+
+    scrollTimeout = setTimeout(() => {
+      rafId = requestAnimationFrame(performCenterFocusCheck);
+    }, 140);
   };
 
   window.addEventListener('scroll', onMobileCenterScroll, { passive: true });

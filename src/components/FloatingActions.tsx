@@ -75,28 +75,17 @@ export const FloatingActions: React.FC<FloatingActionsProps> = ({
     e?.preventDefault();
     e?.stopPropagation();
 
-    // 1. Direct anchor scrollIntoView (smoothest and most reliable in modern browsers)
-    const anchor = document.getElementById('catalog-top-anchor') || document.querySelector('header') || document.body;
-    if (anchor && typeof anchor.scrollIntoView === 'function') {
-      anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    }
-
-    // 2. Global window & document scrolling fallbacks
-    try {
-      window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-    } catch {
-      window.scrollTo(0, 0);
-    }
-
-    if (document.documentElement) {
-      document.documentElement.scrollTop = 0;
-    }
-    if (document.body) {
-      document.body.scrollTop = 0;
-    }
-    const root = document.getElementById('root');
-    if (root) {
-      root.scrollTop = 0;
+    if (typeof window !== 'undefined') {
+      try {
+        window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+      } catch {
+        const anchor = document.getElementById('catalog-top-anchor') || document.body;
+        if (anchor && typeof anchor.scrollIntoView === 'function') {
+          anchor.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        } else {
+          window.scrollTo(0, 0);
+        }
+      }
     }
   };
 
