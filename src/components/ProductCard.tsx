@@ -301,33 +301,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           />
         )}
 
-        {/* Video Indicator Badge */}
-        {videoItem && (
-          <div
-            className="card-video-indicator-badge"
-            style={{
-              position: 'absolute',
-              bottom: '10px',
-              left: '10px',
-              zIndex: 6,
-              background: 'rgba(124, 58, 237, 0.9)',
-              color: '#ffffff',
-              padding: '3px 7px',
-              borderRadius: '6px',
-              fontSize: '11px',
-              fontWeight: 800,
-              display: 'flex',
-              alignItems: 'center',
-              gap: '4px',
-              boxShadow: '0 2px 8px rgba(0,0,0,0.3)',
-              pointerEvents: 'none',
-              backdropFilter: 'blur(4px)',
-            }}
-          >
-            <PlayCircle size={12} />
-            <span>{isFirstMediaVideo ? 'Video Qapaq' : 'Video'}</span>
-          </div>
-        )}
+
 
         {/* Product Image / Slideshow */}
         {coverImage ? (
@@ -433,21 +407,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         )}
 
         {/* Video Icon Badge when video is attached */}
-        {videoItem && !isActive && (
+        {videoItem && (
           <div
+            className="card-video-indicator-badge"
             style={{
               position: 'absolute',
               bottom: '8px',
               right: '8px',
-              backgroundColor: 'rgba(0, 0, 0, 0.65)',
+              backgroundColor: 'rgba(0, 0, 0, 0.72)',
               color: '#ffffff',
-              padding: '3px 6px',
+              padding: '3px 7px',
               borderRadius: '6px',
               display: 'flex',
               alignItems: 'center',
               gap: '4px',
-              fontSize: '10px',
-              fontWeight: 700,
+              fontSize: '11px',
+              fontWeight: 800,
               zIndex: 4,
               backdropFilter: 'blur(4px)',
             }}

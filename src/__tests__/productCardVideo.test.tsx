@@ -47,8 +47,9 @@ describe('Product Card Video Motion Cover & Detail Modal Audio Controls', () => 
     expect(videoEl?.getAttribute('src')).toBe('/media/products/videos/lotus-aspirator-2752.mp4');
     expect(videoEl?.getAttribute('poster')).toBe('/media/products/lotus-aspirator-2752.jpg');
 
-    // Video badge indicator
-    expect(screen.getByText(/Video Qapaq/i)).toBeDefined();
+    // Video badge indicator shows clean 'Video' (not 'Video Qapaq')
+    expect(screen.getByText('Video')).toBeDefined();
+    expect(screen.queryByText(/Video Qapaq/i)).toBeNull();
   });
 
   it('plays video muted by default in ProductDetailModal and allows unmuting/muting with audio button', () => {
