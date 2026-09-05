@@ -4254,82 +4254,33 @@ button, input, textarea, select { font: inherit; }
   background-size: 200% 100%;
 }
 
+/* Contrast Shimmer for Dark Brand Cards */
+.brand-showcase-card .skeleton-box {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.07) 25%,
+    rgba(255, 255, 255, 0.22) 50%,
+    rgba(255, 255, 255, 0.07) 75%
+  );
+  background-size: 200% 100%;
+}
+
+.brand-showcase-card .brand-mark-shell .skeleton-box {
+  background: linear-gradient(
+    90deg,
+    rgba(203, 213, 225, 0.6) 25%,
+    rgba(241, 245, 249, 0.95) 50%,
+    rgba(203, 213, 225, 0.6) 75%
+  );
+  background-size: 200% 100%;
+}
+
 .skeleton-card {
   pointer-events: none;
   user-select: none;
   min-height: 380px;
   display: flex;
   flex-direction: column;
-}
-
-.skeleton-media-box {
-  width: 100%;
-  height: 190px;
-  position: relative;
-  border-radius: 12px;
-  overflow: hidden;
-  margin-bottom: 12px;
-}
-
-.skeleton-badge-pill {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-}
-
-.skeleton-card-body {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1;
-}
-
-.skeleton-row-between {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.skeleton-specs-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin: 10px 0;
-}
-
-.skeleton-footer {
-  margin-top: auto;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  padding-top: 10px;
-}
-
-.skeleton-btn-row {
-  display: flex;
-  gap: 8px;
-  justify-content: space-between;
-}
-
-.skeleton-brand-card {
-  pointer-events: none;
-  min-height: 176px;
-  padding: 16px;
-  display: flex;
-  flex-direction: column;
-}
-
-.skeleton-brand-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.skeleton-brand-footer {
-  margin-top: auto;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
 }
 
 .skeleton-hero-card {

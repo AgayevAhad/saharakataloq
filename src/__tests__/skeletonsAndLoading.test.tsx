@@ -29,7 +29,7 @@ describe('Skeleton Loading & Shimmer Animation Suite', () => {
     expect(box.style.borderRadius).toBe('10px');
   });
 
-  it('ProductCardSkeleton renders accessible placeholder card with aria-busy and skeleton classes', () => {
+  it('ProductCardSkeleton renders accessible placeholder card with aria-busy and exact 1:1 structure', () => {
     const { container } = render(<ProductCardSkeleton theme={lightTheme} />);
 
     const card = screen.getByLabelText('Məhsul yüklənir...');
@@ -37,10 +37,9 @@ describe('Skeleton Loading & Shimmer Animation Suite', () => {
     expect(card.getAttribute('aria-busy')).toBe('true');
     expect(card.classList.contains('skeleton-card')).toBe(true);
 
-    // Verify media box and footer placeholders exist
-    expect(container.querySelector('.skeleton-media-box')).toBeTruthy();
-    expect(container.querySelector('.skeleton-card-body')).toBeTruthy();
-    expect(container.querySelector('.skeleton-footer')).toBeTruthy();
+    // Verify media box and content placeholders exist
+    expect(container.querySelector('.product-card-media')).toBeTruthy();
+    expect(container.querySelectorAll('.skeleton-box').length).toBeGreaterThan(5);
   });
 
   it('ProductGridSkeleton renders the specified count of skeleton cards', () => {
@@ -50,7 +49,7 @@ describe('Skeleton Loading & Shimmer Animation Suite', () => {
     expect(cards.length).toBe(6);
   });
 
-  it('BrandShowcaseSkeleton and BannerHeroSkeleton render correctly in light and dark modes', () => {
+  it('BrandShowcaseSkeleton renders exactly 3 brand cards matching ARDO/ARTEL/LOTUS with logo shells and heading', () => {
     const { container: lightContainer } = render(
       <div>
         <BrandShowcaseSkeleton theme={lightTheme} />
@@ -59,8 +58,12 @@ describe('Skeleton Loading & Shimmer Animation Suite', () => {
     );
 
     expect(lightContainer.querySelector('.brand-showcase')).toBeTruthy();
-    expect(lightContainer.querySelector('.skeleton-hero-card')).toBeTruthy();
-    expect(lightContainer.querySelectorAll('.skeleton-brand-card').length).toBe(2);
+    expect(lightContainer.querySelector('.banner-hero-card')).toBeTruthy();
+    // Exactly 3 brand cards in the grid
+    expect(lightContainer.querySelectorAll('.brand-showcase-card').length).toBe(3);
+    // Brand mark shell exists in each card
+    expect(lightContainer.querySelectorAll('.brand-mark-shell').length).toBe(3);
+    expect(lightContainer.querySelectorAll('.brand-card-copy').length).toBe(3);
 
     cleanup();
 
@@ -72,7 +75,7 @@ describe('Skeleton Loading & Shimmer Animation Suite', () => {
     );
 
     expect(darkContainer.querySelector('.brand-showcase')).toBeTruthy();
-    expect(darkContainer.querySelector('.skeleton-hero-card')).toBeTruthy();
+    expect(darkContainer.querySelectorAll('.brand-showcase-card').length).toBe(3);
   });
 
   it('SmartSearchSkeleton renders search suggestions and products placeholders', () => {
@@ -84,3 +87,4 @@ describe('Skeleton Loading & Shimmer Animation Suite', () => {
     expect(container.querySelectorAll('.smart-search-product-card').length).toBe(2);
   });
 });
+
