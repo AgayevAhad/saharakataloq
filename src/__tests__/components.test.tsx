@@ -226,4 +226,30 @@ describe('Sahara Electronic - UI Komponentləri və İstifadəçi Qarşılıqlı
     expect(aside?.classList.contains('is-collapsed')).toBe(true);
     vi.useRealTimers();
   });
+
+  it('FloatingActions yuxarı düyməsi yalnız səhifə aşağı sürüşdürüldükdə (scroll > 280) görünür', () => {
+    const settings = {
+      ...DEFAULT_SETTINGS,
+      phoneNumber: '+994124445566',
+      whatsappNumber: '994501234567',
+    };
+
+    const { container } = render(<FloatingActions settings={settings} theme={lightTheme} showToast={vi.fn()} />);
+    const topBtn = container.querySelector('.floating-top');
+
+    // Initially at scrollY = 0, top button is hidden
+    expect(topBtn?.classList.contains('is-hidden')).toBe(true);
+
+    // Simulate scrolling down past 300px
+    Object.defineProperty(window, 'scrollY', { value: 350, writable: true });
+    fireEvent.scroll(window);
+
+    expect(topBtn?.classList.contains('is-visible')).toBe(true);
+
+    // Scroll back to top
+    Object.defineProperty(window, 'scrollY', { value: 0, writable: true });
+    fireEvent.scroll(window);
+
+    expect(topBtn?.classList.contains('is-hidden')).toBe(true);
+  });
 });
