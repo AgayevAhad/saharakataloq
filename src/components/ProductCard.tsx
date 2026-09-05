@@ -340,17 +340,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             const cardFitMode = activeMediaObj?.fitMode || product.imageFit || 'contain';
 
             return (
-              <img
-                src={currentImgUrl}
-                alt={product.title}
-                loading="lazy"
-                style={{
-                  opacity: isActive && videoItem ? 0 : 1,
-                  objectFit: cardFitMode as any,
-                  objectPosition: cardObjectPosition,
-                  transition: 'opacity 0.25s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
-                }}
-              />
+              <div className="img-shimmer-container">
+                <img
+                  src={currentImgUrl}
+                  alt={product.title}
+                  loading="lazy"
+                  style={{
+                    opacity: isActive && videoItem ? 0 : 1,
+                    objectFit: cardFitMode as any,
+                    objectPosition: cardObjectPosition,
+                    transition: 'opacity 0.25s ease, transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+                  }}
+                />
+              </div>
             );
           })()
         ) : (

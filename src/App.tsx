@@ -20,6 +20,7 @@ import { CatalogAdmin } from './components/CatalogAdmin';
 import { Footer } from './components/Footer';
 import { FloatingActions } from './components/FloatingActions';
 import { BrandCategoryFilter } from './components/BrandCategoryFilter';
+import { BannerHeroSkeleton, BrandShowcaseSkeleton, ProductGridSkeleton } from './components/Skeletons';
 
 const THEME_KEY = 'sahara_theme_mode';
 

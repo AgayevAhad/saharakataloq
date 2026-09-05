@@ -495,16 +495,18 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                       onClick={(event) => event.stopPropagation()}
                     />
                   ) : activeMedia?.url ? (
-                    <img
-                      src={activeMedia.url}
-                      alt={activeMedia.alt || product.title}
-                      style={{
-                        maxWidth: '100%',
-                        maxHeight: '100%',
-                        objectFit: activeFitMode as any,
-                        objectPosition: activeObjectPosition,
-                      }}
-                    />
+                    <div className="img-shimmer-container">
+                      <img
+                        src={activeMedia.url}
+                        alt={activeMedia.alt || product.title}
+                        style={{
+                          maxWidth: '100%',
+                          maxHeight: '100%',
+                          objectFit: activeFitMode as any,
+                          objectPosition: activeObjectPosition,
+                        }}
+                      />
+                    </div>
                   ) : (
                     <div style={{ color: theme.textMuted, fontSize: '13px' }}>Media daha sonra əlavə ediləcək</div>
                   )}

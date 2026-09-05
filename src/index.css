@@ -4219,4 +4219,163 @@ button, input, textarea, select { font: inherit; }
   }
 }
 
+/* =========================================================================
+   Skeleton Loading & Shimmer Animation System
+   ========================================================================= */
+@keyframes shimmerWave {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.skeleton-box {
+  background: linear-gradient(
+    90deg,
+    rgba(226, 232, 240, 0.7) 25%,
+    rgba(241, 245, 249, 0.98) 50%,
+    rgba(226, 232, 240, 0.7) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmerWave 1.6s ease-in-out infinite;
+  display: block;
+}
+
+[data-theme='dark'] .skeleton-box,
+.dark-mode .skeleton-box {
+  background: linear-gradient(
+    90deg,
+    rgba(30, 41, 59, 0.7) 25%,
+    rgba(51, 65, 85, 0.9) 50%,
+    rgba(30, 41, 59, 0.7) 75%
+  );
+  background-size: 200% 100%;
+}
+
+.skeleton-card {
+  pointer-events: none;
+  user-select: none;
+  min-height: 380px;
+  display: flex;
+  flex-direction: column;
+}
+
+.skeleton-media-box {
+  width: 100%;
+  height: 190px;
+  position: relative;
+  border-radius: 12px;
+  overflow: hidden;
+  margin-bottom: 12px;
+}
+
+.skeleton-badge-pill {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+}
+
+.skeleton-card-body {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.skeleton-row-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.skeleton-specs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin: 10px 0;
+}
+
+.skeleton-footer {
+  margin-top: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-top: 10px;
+}
+
+.skeleton-btn-row {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+}
+
+.skeleton-brand-card {
+  pointer-events: none;
+  min-height: 176px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.skeleton-brand-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.skeleton-brand-footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.skeleton-hero-card {
+  pointer-events: none;
+}
+
+/* Image Shimmer Container for lazy loading */
+.img-shimmer-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.img-shimmer-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    rgba(226, 232, 240, 0.6) 25%,
+    rgba(241, 245, 249, 0.9) 50%,
+    rgba(226, 232, 240, 0.6) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmerWave 1.6s ease-in-out infinite;
+  transition: opacity 0.3s ease;
+  z-index: 2;
+  pointer-events: none;
+}
+
+[data-theme='dark'] .img-shimmer-overlay,
+.dark-mode .img-shimmer-overlay {
+  background: linear-gradient(
+    90deg,
+    rgba(30, 41, 59, 0.6) 25%,
+    rgba(51, 65, 85, 0.85) 50%,
+    rgba(30, 41, 59, 0.6) 75%
+  );
+  background-size: 200% 100%;
+}
+
+.img-shimmer-overlay.is-loaded {
+  opacity: 0;
+}
+
 
