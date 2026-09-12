@@ -12,7 +12,6 @@ export const AnimatedBrandRailSkeleton: React.FC<AnimatedBrandRailSkeletonProps>
   className = '',
   cardCount = 10,
 }) => {
-  // Render placeholder cards matching the visible viewport width
   const placeholderCards = Array.from({ length: cardCount }, (_, i) => i);
 
   return (
@@ -20,44 +19,59 @@ export const AnimatedBrandRailSkeleton: React.FC<AnimatedBrandRailSkeletonProps>
       className={`brand-rail-section brand-rail-skeleton ${className}`}
       data-testid="brand-rail-skeleton"
       aria-hidden="true"
-      style={{
-        maxWidth: '100%',
-        overflow: 'hidden',
-      }}
     >
-      <div className="brand-rail-header">
+      <div className="catalog-container">
         <div
-          className="skeleton-box"
+          className="brand-rail-unified-container"
           style={{
-            width: '120px',
-            height: '24px',
-            borderRadius: '6px',
-            backgroundColor: theme.bgSecondary,
+            backgroundColor: theme?.bgCard || '#ffffff',
+            borderColor: theme?.border || '#e2e8f0',
           }}
-        />
-      </div>
-
-      <div className="brand-rail-viewport has-edge-fade">
-        <div className="brand-rail-track-group">
-          {placeholderCards.map((id) => (
+        >
+          <div className="brand-rail-header">
             <div
-              key={`skel-${id}`}
-              className="brand-rail-card brand-rail-skeleton-card"
+              className="skeleton-box"
               style={{
-                backgroundColor: theme.bgSecondary,
-                borderColor: theme.border,
+                width: '90px',
+                height: '18px',
+                borderRadius: '4px',
+                backgroundColor: theme?.bgSecondary || 'rgba(0,0,0,0.06)',
               }}
-            >
-              <div
-                className="skeleton-box"
-                style={{
-                  width: '70%',
-                  height: '20px',
-                  borderRadius: '4px',
-                }}
-              />
+            />
+            <div
+              className="skeleton-box"
+              style={{
+                width: '80px',
+                height: '14px',
+                borderRadius: '4px',
+                backgroundColor: theme?.bgSecondary || 'rgba(0,0,0,0.06)',
+              }}
+            />
+          </div>
+
+          <div className="brand-rail-viewport has-edge-fade">
+            <div className="brand-rail-track-group">
+              {placeholderCards.map((id) => (
+                <div
+                  key={`skel-${id}`}
+                  className="brand-rail-card brand-rail-skeleton-card"
+                  style={{
+                    backgroundColor: theme?.bgSecondary || 'rgba(0,0,0,0.04)',
+                    borderColor: 'transparent',
+                  }}
+                >
+                  <div
+                    className="skeleton-box"
+                    style={{
+                      width: '60px',
+                      height: '14px',
+                      borderRadius: '4px',
+                    }}
+                  />
+                </div>
+              ))}
             </div>
-          ))}
+          </div>
         </div>
       </div>
     </section>

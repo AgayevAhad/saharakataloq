@@ -1,8 +1,14 @@
+---
+trigger: always_on
+---
+
 # Project Rules & Workflow Constraints
 
 ## 1. Branch Strategy & Git Protection
-- **ALWAYS and under all circumstances commit and push changes ONLY to the `dev` branch** (`git push origin dev`).
-- **NEVER commit or push directly to the `main` branch** unless the user explicitly commands to update/push to main.
+- **ALWAYS develop, test, commit, and push Sahara site changes ONLY on the `saharasitedev` branch** (`git push origin saharasitedev`).
+- **NEVER commit, push, merge, rebase, or cherry-pick Sahara site changes into catalog branches, `dev`, `main`, or any other branch.**
+- `saharasitemain` is the stable release branch and may be updated ONLY after the user explicitly approves that specific release.
+- Before changing site files, verify that the current branch is `saharasitedev`; otherwise stop. Never force-push or delete either Sahara site branch without explicit user authorization.
 
 ## 2. No Raw Sample / Example Media on GitHub
 - Raw photo source folders (`Foto/`) and raw example specification files (`File/`) are reference samples and MUST NOT be committed or pushed to GitHub. Keep them ignored in `.gitignore`.

@@ -140,9 +140,9 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   }
                   alt="Sahara Electronics"
                   style={{
-                    height: isCompact ? '36px' : '42px',
+                    height: isCompact ? '40px' : '46px',
                     width: 'auto',
-                    maxWidth: '220px',
+                    maxWidth: '240px',
                     objectFit: 'contain',
                     display: 'block',
                     transition: 'height 0.2s ease',
@@ -399,9 +399,9 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   }
                   alt="Sahara Electronics"
                   style={{
-                    height: '32px',
+                    height: '36px',
                     width: 'auto',
-                    maxWidth: '160px',
+                    maxWidth: '180px',
                     objectFit: 'contain',
                     display: 'block',
                   }}

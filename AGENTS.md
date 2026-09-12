@@ -1,7 +1,7 @@
 # Sahara Kataloq Development Guidelines
 
 ## Critical Rules for Agents
-1. **Strict Dev Branch Rule**: ALWAYS and under all circumstances commit and push changes ONLY to the `dev` branch (`git push origin dev`). NEVER commit or push to `main` without explicit user permission.
+1. **Strict Sahara Site Branch Isolation**: This repository's site work MUST be developed, committed, and pushed ONLY on `saharasitedev` (`git push origin saharasitedev`). NEVER commit, push, merge, rebase, or cherry-pick site changes into catalog branches, `dev`, `main`, or any other branch. `saharasitemain` is release-only and may be updated ONLY after the user explicitly approves that specific release. If the current branch is not `saharasitedev`, stop before making site changes. Never force-push or delete either Sahara site branch without explicit user authorization.
 2. **No Raw Sample / Example Media on GitHub**: Raw reference media folders like `Foto/` and raw sample file dumps (`File/`) are private source examples/assets. They MUST NOT be committed or pushed to GitHub. Always keep them in `.gitignore`. Only production web-optimized catalog assets (inside `public/media/`) should be served.
 3. **Automated Testing**: Always write and execute automated tests for every newly added or modified feature before finishing.
 4. **Sticky Desktop Header**: Keep the header fixed/sticky at the top during scrolling with proper z-index and backdrop blur.

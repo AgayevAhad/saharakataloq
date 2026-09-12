@@ -5377,11 +5377,154 @@ select {
   margin: 0 auto;
   border-width: 1px;
   border-style: solid;
-  border-radius: 16px;
-  padding: clamp(14px, 2.5vw, 24px);
+  border-radius: 20px;
+  padding: clamp(16px, 2.5vw, 28px);
+}
+
+.banner-hero-grid {
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 28px;
+  align-items: center;
+}
+
+.banner-hero-col-left {
   display: flex;
   flex-direction: column;
   gap: 14px;
+}
+
+.banner-hero-col-right {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+}
+
+.banner-hero-showcase-stage {
+  width: 100%;
+  max-width: 440px;
+  height: 250px;
+  border-radius: 20px;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(
+    circle at center,
+    rgba(220, 38, 38, 0.12) 0%,
+    rgba(220, 38, 38, 0.02) 65%,
+    transparent 100%
+  );
+  overflow: hidden;
+  border: 1px solid rgba(220, 38, 38, 0.15);
+}
+
+.banner-hero-showcase-glow {
+  position: absolute;
+  width: 240px;
+  height: 140px;
+  background: radial-gradient(ellipse, rgba(239, 68, 68, 0.3) 0%, transparent 70%);
+  filter: blur(20px);
+  z-index: 1;
+}
+
+.banner-hero-device-frame {
+  width: 270px;
+  height: 155px;
+  background: #0b0f19;
+  border-radius: 12px;
+  border: 3px solid #1f293d;
+  box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.6);
+  position: relative;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 2;
+}
+
+.banner-hero-device-screen {
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(135deg, #111827 0%, #1e1b4b 50%, #450a0a 100%);
+  position: relative;
+  overflow: hidden;
+}
+
+.banner-hero-ribbon-wave {
+  position: absolute;
+  inset: -20px;
+  background: radial-gradient(
+    ellipse at 70% 30%,
+    rgba(239, 68, 68, 0.85) 0%,
+    rgba(185, 28, 28, 0.45) 40%,
+    transparent 75%
+  );
+  filter: blur(8px);
+}
+
+.banner-hero-device-stand {
+  position: absolute;
+  bottom: 36px;
+  width: 54px;
+  height: 5px;
+  background: #334155;
+  border-radius: 3px;
+  z-index: 2;
+}
+
+.banner-hero-script-tag {
+  position: absolute;
+  right: 18px;
+  top: 18px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-family: Outfit, sans-serif;
+  font-size: 13px;
+  font-weight: 700;
+  color: #dc2626;
+  z-index: 3;
+  line-height: 1.2;
+}
+
+.banner-hero-script-tag em {
+  font-family: 'Playfair Display', Georgia, serif;
+  font-style: italic;
+  font-size: 19px;
+  font-weight: 800;
+  color: #ef4444;
+}
+
+.hero-primary-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hero-primary-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.35);
+}
+
+.hero-secondary-btn {
+  border: 1px solid;
+  border-radius: 10px;
+  padding: 10px 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.hero-secondary-btn:hover {
+  background-color: rgba(0, 0, 0, 0.04) !important;
 }
 
 .banner-hero-header-row {
@@ -5429,17 +5572,25 @@ select {
   gap: 4px;
 }
 
+.banner-hero-actions-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 4px;
+}
+
 .banner-hero-title {
   font-family: Outfit, sans-serif;
-  font-size: clamp(17px, 3.5vw, 26px);
+  font-size: clamp(18px, 3.5vw, 28px);
   font-weight: 800;
-  margin: 0;
-  line-height: 1.25;
+  margin: 0 0 4px 0;
+  line-height: 1.2;
 }
 
 .banner-hero-subtitle {
   font-size: clamp(12px, 2.6vw, 14px);
-  margin: 0;
+  margin: 0 0 8px 0;
   line-height: 1.5;
 }
 
@@ -6135,31 +6286,68 @@ select {
 }
 
 /* ==========================================================================
-   Animated Brand Rail – Infinite Marquee & Responsive Styling
+   Animated Brand Rail – Unified Premium Container Ribbon
    ========================================================================== */
 .brand-rail-section {
   width: 100%;
   max-width: 100%;
-  padding: 18px 0;
-  margin-bottom: 20px;
+  padding: 10px 0 20px 0;
   position: relative;
   overflow: hidden;
 }
 
+.brand-rail-unified-container {
+  width: 100%;
+  border-width: 1px;
+  border-style: solid;
+  border-radius: 18px;
+  padding: 12px 22px;
+  box-shadow: 0 2px 12px -2px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition:
+    background-color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
 .brand-rail-header {
-  max-width: 1440px;
-  margin: 0 auto 12px auto;
-  padding: 0 20px;
+  width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  margin-bottom: 4px;
 }
 
 .brand-rail-title {
-  font-size: 18px;
-  font-weight: 750;
-  letter-spacing: -0.01em;
+  font-family: Outfit, sans-serif;
+  font-size: 12.5px;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
   margin: 0;
+  opacity: 0.82;
+}
+
+.brand-rail-view-all-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  font-weight: 600;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+}
+
+.brand-rail-view-all-link:hover {
+  opacity: 1;
+  color: var(--sahara-red, #dc2626) !important;
+  transform: translateX(2px);
 }
 
 .brand-rail-viewport {
@@ -6170,28 +6358,29 @@ select {
   display: flex;
   user-select: none;
   touch-action: pan-y;
+  padding: 2px 0;
 }
 
 .brand-rail-viewport.has-edge-fade {
   mask-image: linear-gradient(
     to right,
     transparent 0%,
-    black 48px,
-    black calc(100% - 48px),
+    black 32px,
+    black calc(100% - 32px),
     transparent 100%
   );
   -webkit-mask-image: linear-gradient(
     to right,
     transparent 0%,
-    black 48px,
-    black calc(100% - 48px),
+    black 32px,
+    black calc(100% - 32px),
     transparent 100%
   );
 }
 
 .brand-rail-track {
   display: flex;
-  gap: 14px;
+  gap: 28px;
   width: max-content;
   will-change: transform;
   animation-timing-function: linear;
@@ -6208,25 +6397,25 @@ select {
 
 .brand-rail-track-group {
   display: flex;
-  gap: 14px;
+  gap: 28px;
   align-items: center;
   flex-shrink: 0;
 }
 
 .brand-rail-card {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 130px;
-  height: 64px;
-  padding: 10px 14px;
-  border-radius: 12px;
-  border: 1px solid;
+  height: 40px;
+  min-width: 80px;
+  padding: 4px 14px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
   flex-shrink: 0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
   transition:
     transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.2s ease,
+    background-color 0.2s ease,
     border-color 0.2s ease;
   overflow: hidden;
 }
@@ -6236,9 +6425,14 @@ select {
 }
 
 .brand-rail-card.is-interactive:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.08);
-  border-color: rgba(220, 38, 38, 0.45) !important;
+  transform: translateY(-1px);
+  background-color: rgba(0, 0, 0, 0.04);
+  border-color: rgba(0, 0, 0, 0.08);
+}
+
+.theme-dark .brand-rail-card.is-interactive:hover {
+  background-color: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.12);
 }
 
 .brand-rail-card.is-interactive:focus-visible {
@@ -6248,43 +6442,52 @@ select {
 
 .brand-rail-card.is-static {
   cursor: default;
-  opacity: 0.92;
+  opacity: 0.85;
 }
 
 .brand-rail-logo-box {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 100%;
   height: 100%;
 }
 
 .brand-rail-logo-img {
-  max-width: 100%;
-  max-height: 100%;
+  max-width: 90px;
+  max-height: 28px;
   object-fit: contain;
+  transition: transform 0.2s ease;
+}
+
+.theme-light .brand-logo-artel {
+  filter: brightness(0);
+}
+
+.theme-dark .brand-logo-artel {
+  filter: brightness(0) invert(1);
 }
 
 .brand-rail-name-text {
+  font-family: Outfit, sans-serif;
   font-size: 13.5px;
-  font-weight: 700;
+  font-weight: 800;
   text-align: center;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  letter-spacing: -0.01em;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: inherit;
+  opacity: 0.88;
+  transition: opacity 0.2s ease;
 }
 
-.brand-rail-fallback-text {
-  font-size: 12px;
-  font-weight: 650;
-  text-align: center;
+.brand-rail-card:hover .brand-rail-name-text {
+  opacity: 1;
 }
 
 .brand-rail-skeleton-card {
-  height: 60px;
-  width: 120px;
-  border-radius: 12px;
+  height: 40px;
+  min-width: 80px;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -6310,22 +6513,28 @@ select {
 }
 
 @media (max-width: 768px) {
-  .brand-rail-header {
-    padding: 0 16px;
-    margin-bottom: 10px;
+  .brand-rail-section {
+    padding: 6px 0 16px 0;
+  }
+  .brand-rail-unified-container {
+    padding: 10px 14px;
+    border-radius: 14px;
   }
   .brand-rail-title {
-    font-size: 16px;
+    font-size: 11.5px;
   }
   .brand-rail-card {
-    width: 98px;
-    height: 52px;
-    padding: 6px 10px;
-    border-radius: 10px;
+    height: 34px;
+    min-width: 68px;
+    padding: 2px 8px;
+  }
+  .brand-rail-logo-img {
+    max-width: 74px;
+    max-height: 22px;
   }
   .brand-rail-track,
   .brand-rail-track-group {
-    gap: 10px;
+    gap: 18px;
   }
   .brand-rail-name-text {
     font-size: 11.5px;
@@ -6334,15 +6543,15 @@ select {
     mask-image: linear-gradient(
       to right,
       transparent 0%,
-      black 24px,
-      black calc(100% - 24px),
+      black 20px,
+      black calc(100% - 20px),
       transparent 100%
     );
     -webkit-mask-image: linear-gradient(
       to right,
       transparent 0%,
-      black 24px,
-      black calc(100% - 24px),
+      black 20px,
+      black calc(100% - 20px),
       transparent 100%
     );
   }

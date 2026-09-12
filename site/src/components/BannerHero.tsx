@@ -113,236 +113,238 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
               : '0 6px 20px rgba(0, 0, 0, 0.05)',
         }}
       >
-        {/* Top Badges & Tagline */}
-        <div className="banner-hero-header-row">
-          <div className="banner-hero-badges">
-            <span
-              className="banner-hero-guarantee-pill"
-              style={{
-                backgroundColor: theme.badgeBg,
-                color: theme.badgeText,
-                borderColor: theme.primaryLight,
-              }}
-            >
-              <Sparkles size={13} color={theme.primary} />
-              <span>Kataloq Platforması</span>
-            </span>
-          </div>
-
-          {activeArticles.length > 1 && (
-            <span className="banner-hero-counter" style={{ color: theme.textMuted }}>
-              Texnologiya bələdçisi ({currentIndex + 1}/{activeArticles.length})
-            </span>
-          )}
-        </div>
-
-        {/* Title & Description */}
-        <div className="banner-hero-text-block">
-          <h1
-            className="banner-hero-title"
-            style={{
-              color: theme.text,
-              fontSize: 'clamp(1.5rem, 3vw, 2.25rem)',
-              fontWeight: 800,
-              lineHeight: 1.2,
-              margin: '0 0 10px 0',
-            }}
-          >
-            {resolvedTitle}
-          </h1>
-          <p
-            className="banner-hero-subtitle"
-            style={{
-              color: theme.textSecondary,
-              fontSize: '14px',
-              lineHeight: 1.6,
-              margin: '0 0 16px 0',
-            }}
-          >
-            {resolvedSubtitle}
-          </p>
-
-          {(onNavigateCatalog || onNavigateContact) && (
-            <div
-              style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}
-              className="banner-hero-actions-row"
-            >
-              {onNavigateCatalog && (
-                <button
-                  type="button"
-                  onClick={onNavigateCatalog}
+        <div className="banner-hero-grid">
+          {/* Left Column: Content & Controls */}
+          <div className="banner-hero-col-left">
+            {/* Top Badges & Tagline */}
+            <div className="banner-hero-header-row">
+              <div className="banner-hero-badges">
+                <span
+                  className="banner-hero-guarantee-pill"
                   style={{
-                    backgroundColor: theme.primary,
-                    color: '#ffffff',
-                    border: 'none',
-                    borderRadius: '10px',
-                    padding: '10px 18px',
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
+                    backgroundColor: theme.badgeBg,
+                    color: theme.badgeText,
+                    borderColor: theme.primaryLight,
                   }}
                 >
-                  Kataloqa bax
-                </button>
-              )}
-              {onNavigateContact && (
-                <button
-                  type="button"
-                  onClick={onNavigateContact}
-                  style={{
-                    backgroundColor: 'transparent',
-                    color: theme.text,
-                    border: `1px solid ${theme.border}`,
-                    borderRadius: '10px',
-                    padding: '10px 18px',
-                    fontSize: '13px',
-                    fontWeight: 600,
-                    cursor: 'pointer',
-                    transition: 'all 0.2s ease',
-                  }}
-                >
-                  Əlaqə saxla
-                </button>
-              )}
-            </div>
-          )}
-        </div>
-
-        {/* Dynamic Interactive Auto-Rotating Technology Carousel Bar */}
-        {currentArticle && (
-          <div
-            className={`tech-spotlight-card ${animating ? 'is-animating' : ''}`}
-            onMouseEnter={() => setIsPaused(true)}
-            onMouseLeave={() => setIsPaused(false)}
-            onClick={() => onOpenArticle(currentArticle)}
-            role="button"
-            tabIndex={0}
-            aria-label={`Texnologiya: ${currentArticle.title}`}
-            style={{
-              backgroundColor: theme.mode === 'dark' ? 'rgba(239, 68, 68, 0.09)' : '#fef2f2',
-              borderColor: theme.mode === 'dark' ? 'rgba(239, 68, 68, 0.22)' : '#fee2e2',
-            }}
-          >
-            <div className="tech-spotlight-main">
-              <div
-                className="tech-spotlight-icon-box"
-                style={{
-                  backgroundColor: theme.mode === 'dark' ? '#2e0e0e' : '#fee2e2',
-                }}
-              >
-                {getArticleIcon(currentArticle.icon, theme.primary, 22)}
+                  <Sparkles size={13} color={theme.primary} />
+                  <span>Kataloq Platforması</span>
+                </span>
               </div>
 
-              <div className="tech-spotlight-content">
-                <div className="tech-spotlight-title-row">
-                  <h3
-                    className="tech-spotlight-title"
-                    style={{
-                      color: theme.mode === 'dark' ? '#fecaca' : '#991b1b',
-                    }}
-                  >
-                    {currentArticle.title}
-                  </h3>
-                  {currentArticle.badge && (
-                    <span
-                      className="tech-spotlight-badge"
+              {activeArticles.length > 1 && (
+                <span className="banner-hero-counter" style={{ color: theme.textMuted }}>
+                  Texnologiya bələdçisi ({currentIndex + 1}/{activeArticles.length})
+                </span>
+              )}
+            </div>
+
+            {/* Title & Description */}
+            <div className="banner-hero-text-block">
+              <h1
+                className="banner-hero-title"
+                style={{
+                  color: theme.text,
+                }}
+              >
+                {resolvedTitle}
+              </h1>
+              <p
+                className="banner-hero-subtitle"
+                style={{
+                  color: theme.textSecondary,
+                }}
+              >
+                {resolvedSubtitle}
+              </p>
+
+              {(onNavigateCatalog || onNavigateContact) && (
+                <div className="banner-hero-actions-row">
+                  {onNavigateCatalog && (
+                    <button
+                      type="button"
+                      onClick={onNavigateCatalog}
+                      className="hero-primary-btn"
                       style={{
                         backgroundColor: theme.primary,
                         color: '#ffffff',
                       }}
                     >
-                      {currentArticle.badge}
-                    </span>
+                      Kataloqa bax
+                    </button>
+                  )}
+                  {onNavigateContact && (
+                    <button
+                      type="button"
+                      onClick={onNavigateContact}
+                      className="hero-secondary-btn"
+                      style={{
+                        backgroundColor: 'transparent',
+                        color: theme.text,
+                        borderColor: theme.border,
+                      }}
+                    >
+                      Əlaqə saxla
+                    </button>
                   )}
                 </div>
-                <p className="tech-spotlight-desc" style={{ color: theme.textSecondary }}>
-                  {currentArticle.subtitle}
-                </p>
-              </div>
+              )}
             </div>
 
-            {/* Actions & Carousel Controls */}
-            <div
-              className="tech-spotlight-actions"
-              style={{
-                borderTopColor: theme.mode === 'dark' ? 'rgba(239, 68, 68, 0.2)' : '#fee2e2',
-              }}
-            >
-              <div className="tech-spotlight-nav-group">
-                {activeArticles.length > 1 && (
-                  <button
-                    type="button"
-                    className="tech-spotlight-nav-btn"
-                    onClick={prevSlide}
-                    title="Əvvəlki texnologiya"
-                    aria-label="Əvvəlki texnologiya"
-                    style={{
-                      background: theme.bgCard,
-                      borderColor: theme.border,
-                      color: theme.text,
-                    }}
-                  >
-                    <ChevronLeft size={16} />
-                  </button>
-                )}
-
-                {activeArticles.length > 1 && (
-                  <button
-                    type="button"
-                    className="tech-spotlight-nav-btn"
-                    onClick={nextSlide}
-                    title="Növbəti texnologiya"
-                    aria-label="Növbəti texnologiya"
-                    style={{
-                      background: theme.bgCard,
-                      borderColor: theme.border,
-                      color: theme.text,
-                    }}
-                  >
-                    <ChevronRight size={16} />
-                  </button>
-                )}
-              </div>
-
+            {/* Dynamic Interactive Auto-Rotating Technology Carousel Bar */}
+            {currentArticle && (
               <div
-                className="tech-spotlight-cta"
+                className={`tech-spotlight-card ${animating ? 'is-animating' : ''}`}
+                onMouseEnter={() => setIsPaused(true)}
+                onMouseLeave={() => setIsPaused(false)}
+                onClick={() => onOpenArticle(currentArticle)}
+                role="button"
+                tabIndex={0}
+                aria-label={`Texnologiya: ${currentArticle.title}`}
                 style={{
-                  backgroundColor: theme.primary,
-                  color: '#ffffff',
+                  backgroundColor: theme.mode === 'dark' ? 'rgba(239, 68, 68, 0.09)' : '#fef2f2',
+                  borderColor: theme.mode === 'dark' ? 'rgba(239, 68, 68, 0.22)' : '#fee2e2',
                 }}
               >
-                <span>Ətraflı Bax</span>
-                <ChevronRight size={14} />
+                <div className="tech-spotlight-main">
+                  <div
+                    className="tech-spotlight-icon-box"
+                    style={{
+                      backgroundColor: theme.mode === 'dark' ? '#2e0e0e' : '#fee2e2',
+                    }}
+                  >
+                    {getArticleIcon(currentArticle.icon, theme.primary, 20)}
+                  </div>
+
+                  <div className="tech-spotlight-content">
+                    <div className="tech-spotlight-title-row">
+                      <h3
+                        className="tech-spotlight-title"
+                        style={{
+                          color: theme.mode === 'dark' ? '#fecaca' : '#991b1b',
+                        }}
+                      >
+                        {currentArticle.title}
+                      </h3>
+                      {currentArticle.badge && (
+                        <span
+                          className="tech-spotlight-badge"
+                          style={{
+                            backgroundColor: theme.primary,
+                            color: '#ffffff',
+                          }}
+                        >
+                          {currentArticle.badge}
+                        </span>
+                      )}
+                    </div>
+                    <p className="tech-spotlight-desc" style={{ color: theme.textSecondary }}>
+                      {currentArticle.subtitle}
+                    </p>
+                  </div>
+                </div>
+
+                <div
+                  className="tech-spotlight-actions"
+                  style={{
+                    borderTopColor: theme.mode === 'dark' ? 'rgba(239, 68, 68, 0.2)' : '#fee2e2',
+                  }}
+                >
+                  <div className="tech-spotlight-nav-group">
+                    {activeArticles.length > 1 && (
+                      <button
+                        type="button"
+                        className="tech-spotlight-nav-btn"
+                        onClick={prevSlide}
+                        title="Əvvəlki texnologiya"
+                        aria-label="Əvvəlki texnologiya"
+                        style={{
+                          background: theme.bgCard,
+                          borderColor: theme.border,
+                          color: theme.text,
+                        }}
+                      >
+                        <ChevronLeft size={16} />
+                      </button>
+                    )}
+
+                    {activeArticles.length > 1 && (
+                      <button
+                        type="button"
+                        className="tech-spotlight-nav-btn"
+                        onClick={nextSlide}
+                        title="Növbəti texnologiya"
+                        aria-label="Növbəti texnologiya"
+                        style={{
+                          background: theme.bgCard,
+                          borderColor: theme.border,
+                          color: theme.text,
+                        }}
+                      >
+                        <ChevronRight size={16} />
+                      </button>
+                    )}
+                  </div>
+
+                  <div
+                    className="tech-spotlight-cta"
+                    style={{
+                      backgroundColor: theme.primary,
+                      color: '#ffffff',
+                    }}
+                  >
+                    <span>Ətraflı Bax</span>
+                    <ChevronRight size={14} />
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Carousel Indicator Dots */}
+            {activeArticles.length > 1 && (
+              <div className="tech-spotlight-dots">
+                {activeArticles.map((art, idx) => (
+                  <button
+                    key={art.id}
+                    type="button"
+                    className="tech-spotlight-dot"
+                    onClick={() => {
+                      setAnimating(true);
+                      setTimeout(() => {
+                        setCurrentIndex(idx);
+                        setAnimating(false);
+                      }, 150);
+                    }}
+                    style={{
+                      width: idx === currentIndex ? '22px' : '8px',
+                      backgroundColor: idx === currentIndex ? theme.primary : theme.border,
+                    }}
+                    aria-label={`Slayd ${idx + 1}: ${art.title}`}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Right Column: Premium Showcase Media Stage Placeholder */}
+          <div className="banner-hero-col-right hide-on-mobile">
+            <div className="banner-hero-showcase-stage">
+              <div className="banner-hero-showcase-glow" />
+              <div className="banner-hero-device-frame">
+                <div className="banner-hero-device-screen">
+                  <div className="banner-hero-device-art">
+                    <div className="banner-hero-ribbon-wave" />
+                  </div>
+                </div>
+                <div className="banner-hero-device-stand" />
+              </div>
+              <div className="banner-hero-script-tag">
+                <span>Daha çox imkan</span>
+                <em>sizə yaxın!</em>
               </div>
             </div>
           </div>
-        )}
-
-        {/* Carousel Indicator Dots */}
-        {activeArticles.length > 1 && (
-          <div className="tech-spotlight-dots">
-            {activeArticles.map((art, idx) => (
-              <button
-                key={art.id}
-                type="button"
-                className="tech-spotlight-dot"
-                onClick={() => {
-                  setAnimating(true);
-                  setTimeout(() => {
-                    setCurrentIndex(idx);
-                    setAnimating(false);
-                  }, 150);
-                }}
-                style={{
-                  width: idx === currentIndex ? '22px' : '8px',
-                  backgroundColor: idx === currentIndex ? theme.primary : theme.border,
-                }}
-                aria-label={`Slayd ${idx + 1}: ${art.title}`}
-              />
-            ))}
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );
