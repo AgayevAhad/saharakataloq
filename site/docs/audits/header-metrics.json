@@ -1,0 +1,47 @@
+{
+  "normal": {
+    "scrollY": 0,
+    "header": {
+      "x": 0,
+      "y": 30,
+      "width": 1440,
+      "height": 108
+    },
+    "logo": {
+      "x": 0,
+      "y": 42,
+      "width": 95.515625,
+      "height": 42
+    },
+    "search": {
+      "x": 360.125,
+      "y": 42,
+      "width": 680,
+      "height": 42
+    },
+    "isCompact": false
+  },
+  "compact": {
+    "scrollY": 300,
+    "header": {
+      "x": 0,
+      "y": 0,
+      "width": 1440,
+      "height": 96
+    },
+    "logo": {
+      "x": 0,
+      "y": 9,
+      "width": 81.875,
+      "height": 36
+    },
+    "search": {
+      "x": 353.296875,
+      "y": 8,
+      "width": 680,
+      "height": 38
+    },
+    "isCompact": true,
+    "megaMenuNavDiff": 0
+  }
+}

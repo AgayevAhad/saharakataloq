@@ -1,0 +1,9 @@
+node_modules/
+dist/
+build/
+coverage/
+public/media/
+data/
+*.sqlite*
+.ladle/
+package-lock.json

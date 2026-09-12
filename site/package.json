@@ -1,0 +1,60 @@
+{
+  "name": "sahara-electronics-site",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build && vite build --ssr src/entry-server.tsx --outDir dist/server",
+    "start": "node --env-file-if-exists=.env server.mjs",
+    "preview": "vite preview",
+    "check:syntax": "node --check server.mjs",
+    "typecheck": "tsc --noEmit",
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,css}\" \"tests/**/*.{ts,mjs}\" \"scripts/**/*.mjs\" \"docs/**/*.md\" \"*.{ts,js,mjs,json}\"",
+    "format": "prettier --write \"src/**/*.{ts,tsx,css}\" \"tests/**/*.{ts,mjs}\" \"scripts/**/*.mjs\" \"docs/**/*.md\" \"*.{ts,js,mjs,json}\"",
+    "lint": "eslint src/ tests/ scripts/ server.mjs vite.config.ts playwright.config.ts eslint.config.js backend/ --max-warnings=0",
+    "stories": "ladle serve",
+    "build:stories": "ladle build",
+    "test": "node scripts/run-tests-with-guard.mjs",
+    "test:vitest": "vitest run",
+    "test:media": "vitest run src/__tests__/mediaHeavy.test.ts",
+    "test:a11y": "vitest run src/__tests__/axeAccessibility.test.tsx",
+    "test:browser": "playwright test",
+    "test:browser:production": "npm run build && playwright test --config=playwright.prod.config.ts",
+    "test:repo-boundary": "node scripts/check-boundary.mjs",
+    "test:all": "npm test && npm run test:browser && npm run test:browser:production && npm run test:repo-boundary",
+    "check:quality": "npm run check:syntax && npm run typecheck && npm run format:check && npm run lint && npm test && npm run test:a11y && npm run test:browser && npm run test:browser:production && npm run build:stories && npm run build && npm run test:repo-boundary"
+  },
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "dependencies": {
+    "lucide-react": "^0.475.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.3/xlsx-0.20.3.tgz"
+  },
+  "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
+    "@ladle/react": "^5.1.1",
+    "@playwright/test": "^1.63.0",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/react": "^16.3.3",
+    "@testing-library/user-event": "^14.6.6",
+    "@types/node": "^26.4.0",
+    "@types/react": "^18.3.18",
+    "@types/react-dom": "^18.3.5",
+    "@vitejs/plugin-react": "^4.3.4",
+    "axe-core": "^4.13.0",
+    "eslint": "^9.39.5",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "happy-dom": "^20.11.12",
+    "prettier": "^3.9.6",
+    "typescript": "^5.7.3",
+    "typescript-eslint": "^8.70.0",
+    "vite": "^6.2.0",
+    "vitest": "^4.1.11",
+    "zod": "^4.5.4"
+  }
+}

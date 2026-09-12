@@ -1,0 +1,1428 @@
+import React, { useState, useMemo, useEffect, useCallback, useRef } from 'react';
+import {
+  X,
+  Share2,
+  Copy,
+  Printer,
+  Flame,
+  Phone,
+  ZoomIn,
+  ZoomOut,
+  Maximize2,
+  ChevronLeft,
+  ChevronRight,
+  Image as ImageIcon,
+  Volume2,
+  VolumeX,
+} from 'lucide-react';
+import { Brand, Product } from '../types/product';
+import { ThemeColors } from '../types/theme';
+import { WhatsAppIcon } from './WhatsAppIcon';
+import { ShimmerImage } from './ShimmerImage';
+import { useHorizontalScroll } from '../hooks/useHorizontalScroll';
+import { pushOverlay, popOverlay, isTopOverlay } from '../utils/backgroundIsolation';
+
+interface ProductDetailModalProps {
+  product: Product | null;
+  brand?: Brand;
+  theme: ThemeColors;
+  visible: boolean;
+  onClose: () => void;
+  onShare: (product: Product) => void;
+  onWhatsApp: (product: Product) => void;
+  onCall: (product: Product) => void;
+  onCopyLink: (product: Product) => void;
+  whatsappButtonText?: string;
+  callButtonText?: string;
+}
+
+export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
+  ({
+    product,
+    brand,
+    theme,
+    visible,
+    onClose,
+    onShare,
+    onWhatsApp,
+    onCall,
+    onCopyLink,
+    whatsappButtonText = 'WhatsApp ilə məlumat al',
+    callButtonText = 'Zəng et',
+  }) => {
+    const [activeTab, setActiveTab] = useState<'specs' | 'tech'>('specs');
+    const [isFullscreenImage, setIsFullscreenImage] = useState(false);
+    const [zoomScale, setZoomScale] = useState(1);
+    const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
+    const [isDragging, setIsDragging] = useState(false);
+    const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+    const [activeMediaIndex, setActiveMediaIndex] = useState(0);
+    const [isVideoMuted, setIsVideoMuted] = useState(true);
+
+    const modalVideoRef = useRef<HTMLVideoElement>(null);
+    const fsVideoRef = useRef<HTMLVideoElement>(null);
+    const backdropRef = useRef<HTMLDivElement>(null);
+    const modalContainerRef = useRef<HTMLDivElement>(null);
+    const previousFocusRef = useRef<HTMLElement | null>(null);
+    const isMountedRef = useRef(true);
+    const swipeTimerRef = useRef<any>(null);
+
+    useEffect(() => {
+      isMountedRef.current = true;
+      return () => {
+        isMountedRef.current = false;
+        if (swipeTimerRef.current) {
+          clearTimeout(swipeTimerRef.current);
+          swipeTimerRef.current = null;
+        }
+      };
+    }, []);
+
+    const onCloseRef = useRef(onClose);
+    useEffect(() => {
+      onCloseRef.current = onClose;
+    }, [onClose]);
+
+    // Focus management and keyboard trap when modal is visible
+    useEffect(() => {
+      if (!visible) return;
+      const instanceId = `product-detail-modal-${product?.id || 'main'}`;
+
+      previousFocusRef.current = document.activeElement as HTMLElement | null;
+      const targetOverlay = backdropRef.current || modalContainerRef.current;
+      if (targetOverlay) {
+        pushOverlay(instanceId, targetOverlay);
+      }
+
+      const timer = setTimeout(() => {
+        if (modalContainerRef.current) {
+          const focusable = modalContainerRef.current.querySelectorAll<HTMLElement>(
+            'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+          );
+          if (focusable.length > 0) {
+            focusable[0].focus({ preventScroll: true });
+          } else {
+            modalContainerRef.current.focus({ preventScroll: true });
+          }
+        }
+      }, 50);
+
+      const handleTrapKeyDown = (e: KeyboardEvent) => {
+        if (!isTopOverlay(instanceId)) return;
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          e.stopPropagation();
+          e.stopImmediatePropagation();
+          onCloseRef.current();
+          return;
+        }
+
+        if (e.key === 'Tab' && modalContainerRef.current) {
+          const focusable = Array.from(
+            modalContainerRef.current.querySelectorAll<HTMLElement>(
+              'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'
+            )
+          ).filter((el) => !el.hasAttribute('disabled') && el.offsetParent !== null);
+
+          if (focusable.length === 0) return;
+
+          const first = focusable[0];
+          const last = focusable[focusable.length - 1];
+
+          if (e.shiftKey) {
+            if (
+              document.activeElement === first ||
+              !modalContainerRef.current.contains(document.activeElement)
+            ) {
+              e.preventDefault();
+              last.focus();
+            }
+          } else {
+            if (
+              document.activeElement === last ||
+              !modalContainerRef.current.contains(document.activeElement)
+            ) {
+              e.preventDefault();
+              first.focus();
+            }
+          }
+        }
+      };
+
+      window.addEventListener('keydown', handleTrapKeyDown);
+      return () => {
+        clearTimeout(timer);
+        window.removeEventListener('keydown', handleTrapKeyDown);
+        popOverlay(instanceId);
+        if (previousFocusRef.current && typeof previousFocusRef.current.focus === 'function') {
+          previousFocusRef.current.focus({ preventScroll: true });
+        }
+      };
+    }, [visible, product?.id]);
+
+    // Reset video mute state to true whenever modal opens or product changes (Səssiz video by default)
+    useEffect(() => {
+      if (visible) {
+        setIsVideoMuted(true);
+        if (modalVideoRef.current) modalVideoRef.current.muted = true;
+        if (fsVideoRef.current) fsVideoRef.current.muted = true;
+      }
+    }, [visible, product?.id]);
+
+    const toggleVideoMute = (e?: React.MouseEvent) => {
+      e?.stopPropagation();
+      setIsVideoMuted((prev) => {
+        const next = !prev;
+        if (modalVideoRef.current) modalVideoRef.current.muted = next;
+        if (fsVideoRef.current) fsVideoRef.current.muted = next;
+        return next;
+      });
+    };
+
+    // Touch swipe states for stage & lightbox
+    const [stageTouchStartX, setStageTouchStartX] = useState<number | null>(null);
+    const [stageTouchStartY, setStageTouchStartY] = useState<number | null>(null);
+    const [_stageIsSwiping, setStageIsSwiping] = useState(false);
+
+    const [fsTouchStartX, setFsTouchStartX] = useState<number | null>(null);
+    const [fsTouchStartY, setFsTouchStartY] = useState<number | null>(null);
+
+    useEffect(() => {
+      setActiveMediaIndex(0);
+      setIsFullscreenImage(false);
+      setZoomScale(1);
+      setPanPosition({ x: 0, y: 0 });
+      setIsDragging(false);
+    }, [product?.id]);
+
+    // Prevent background scroll when modal or fullscreen image is open
+    useEffect(() => {
+      if (visible || isFullscreenImage) {
+        document.body.style.overflow = 'hidden';
+      } else {
+        document.body.style.overflow = '';
+      }
+      return () => {
+        document.body.style.overflow = '';
+      };
+    }, [visible, isFullscreenImage]);
+
+    // Reset zoom and pan on close
+    useEffect(() => {
+      if (!isFullscreenImage) {
+        setZoomScale(1);
+        setPanPosition({ x: 0, y: 0 });
+        setIsDragging(false);
+      }
+    }, [isFullscreenImage]);
+
+    // Group specs with useMemo
+    const specGroups = useMemo(() => {
+      if (!product) return {};
+      const groups: { [key: string]: typeof product.specs } = {};
+      product.specs.forEach((item) => {
+        const group = item.group || 'Əsas';
+        if (!groups[group]) {
+          groups[group] = [];
+        }
+        groups[group].push(item);
+      });
+      return groups;
+    }, [product]);
+
+    const mediaItems = useMemo(() => {
+      if (!product) return [];
+      const items: Array<{
+        id: string;
+        url: string;
+        type?: 'image' | 'video';
+        alt?: string;
+        poster?: string;
+        objectPosition?: string;
+        fitMode?: string;
+      }> = [];
+      const seen = new Set<string>();
+
+      if (product.media && product.media.length) {
+        product.media.forEach((m, idx) => {
+          if (m.url && !seen.has(m.url)) {
+            seen.add(m.url);
+            items.push({
+              id: m.id || `media-${idx}`,
+              url: m.url,
+              type: m.type || 'image',
+              alt: m.alt || product.title,
+              poster: m.poster,
+              objectPosition: m.objectPosition || product.imagePosition || 'center',
+              fitMode: m.fitMode || product.imageFit || 'contain',
+            });
+          }
+        });
+      }
+
+      if (product.image && !seen.has(product.image)) {
+        seen.add(product.image);
+        items.push({
+          id: `main-${product.id}`,
+          url: product.image,
+          type: 'image',
+          alt: product.title,
+          objectPosition: product.imagePosition || 'center',
+          fitMode: product.imageFit || 'contain',
+        });
+      }
+
+      if (product.gallery && product.gallery.length) {
+        product.gallery.forEach((url, idx) => {
+          if (url && !seen.has(url)) {
+            seen.add(url);
+            items.push({
+              id: `gal-${idx}`,
+              url,
+              type: 'image',
+              alt: product.title,
+              objectPosition: 'center',
+              fitMode: 'contain',
+            });
+          }
+        });
+      }
+
+      return items.length
+        ? items
+        : [{ id: 'empty', url: '', type: 'image' as const, alt: product?.title || '' }];
+    }, [product]);
+
+    const activeMedia = mediaItems[Math.min(activeMediaIndex, Math.max(0, mediaItems.length - 1))];
+
+    const activeObjectPosition =
+      (activeMedia as any)?.objectPosition || (product as any)?.imagePosition || 'center';
+    const activeFitMode = (activeMedia as any)?.fitMode || (product as any)?.imageFit || 'contain';
+
+    const nextMedia = useCallback(
+      (e?: React.MouseEvent | React.TouchEvent) => {
+        if (e) e.stopPropagation();
+        if (mediaItems.length <= 1) return;
+        setActiveMediaIndex((prev) => (prev + 1) % mediaItems.length);
+        setPanPosition({ x: 0, y: 0 });
+        setZoomScale(1);
+      },
+      [mediaItems.length]
+    );
+
+    const prevMedia = useCallback(
+      (e?: React.MouseEvent | React.TouchEvent) => {
+        if (e) e.stopPropagation();
+        if (mediaItems.length <= 1) return;
+        setActiveMediaIndex((prev) => (prev - 1 + mediaItems.length) % mediaItems.length);
+        setPanPosition({ x: 0, y: 0 });
+        setZoomScale(1);
+      },
+      [mediaItems.length]
+    );
+
+    // Keyboard navigation for Fullscreen Lightbox
+    useEffect(() => {
+      if (!isFullscreenImage) return;
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'ArrowRight') nextMedia();
+        else if (e.key === 'ArrowLeft') prevMedia();
+        else if (e.key === 'Escape') setIsFullscreenImage(false);
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => window.removeEventListener('keydown', handleKeyDown);
+    }, [isFullscreenImage, nextMedia, prevMedia]);
+
+    const handlePrint = () => {
+      if (typeof window !== 'undefined') {
+        window.print();
+      }
+    };
+
+    const zoomIn = () => {
+      setZoomScale((prev) => Math.min(4, Number((prev + 0.5).toFixed(1))));
+    };
+
+    const zoomOut = () => {
+      setZoomScale((prev) => {
+        const next = Math.max(1, Number((prev - 0.5).toFixed(1)));
+        if (next === 1) setPanPosition({ x: 0, y: 0 });
+        return next;
+      });
+    };
+
+    const resetZoom = () => {
+      setZoomScale(1);
+      setPanPosition({ x: 0, y: 0 });
+      setIsDragging(false);
+    };
+
+    const toggleZoom = () => {
+      setZoomScale((prev) => {
+        if (prev === 1) return 2;
+        setPanPosition({ x: 0, y: 0 });
+        return 1;
+      });
+    };
+
+    // Fullscreen Mouse Drag Handlers
+    const handleMouseDown = (e: React.MouseEvent) => {
+      if (zoomScale <= 1) return;
+      setIsDragging(true);
+      setDragStart({ x: e.clientX, y: e.clientY });
+    };
+
+    const handleMouseMove = (e: React.MouseEvent) => {
+      if (!isDragging || zoomScale <= 1) return;
+      const dx = e.clientX - dragStart.x;
+      const dy = e.clientY - dragStart.y;
+      setPanPosition((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
+      setDragStart({ x: e.clientX, y: e.clientY });
+    };
+
+    const handleMouseUp = () => setIsDragging(false);
+
+    // Fullscreen Touch Gestures (Swiping when 1x scale, Panning when zoomed > 1x)
+    const handleFsTouchStart = (e: React.TouchEvent) => {
+      if (e.touches.length !== 1) return;
+      if (zoomScale > 1) {
+        setIsDragging(true);
+        setDragStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+      } else {
+        setFsTouchStartX(e.touches[0].clientX);
+        setFsTouchStartY(e.touches[0].clientY);
+      }
+    };
+
+    const handleFsTouchMove = (e: React.TouchEvent) => {
+      if (zoomScale > 1) {
+        if (!isDragging) return;
+        const dx = e.touches[0].clientX - dragStart.x;
+        const dy = e.touches[0].clientY - dragStart.y;
+        setPanPosition((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
+        setDragStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+      }
+    };
+
+    const handleFsTouchEnd = (e: React.TouchEvent) => {
+      if (zoomScale > 1) {
+        setIsDragging(false);
+      } else {
+        if (fsTouchStartX !== null && fsTouchStartY !== null) {
+          const touchEndX = e.changedTouches[0].clientX;
+          const touchEndY = e.changedTouches[0].clientY;
+          const diffX = touchEndX - fsTouchStartX;
+          const diffY = touchEndY - fsTouchStartY;
+
+          if (
+            Math.abs(diffX) > 35 &&
+            Math.abs(diffX) > Math.abs(diffY) * 1.2 &&
+            mediaItems.length > 1
+          ) {
+            if (diffX < 0) {
+              nextMedia();
+            } else {
+              prevMedia();
+            }
+          }
+        }
+        setFsTouchStartX(null);
+        setFsTouchStartY(null);
+      }
+    };
+
+    const handleWheel = (e: React.WheelEvent) => {
+      const delta = e.deltaY < 0 ? 0.25 : -0.25;
+      setZoomScale((prev) => {
+        const next = Math.max(1, Math.min(4, Number((prev + delta).toFixed(2))));
+        if (next === 1) setPanPosition({ x: 0, y: 0 });
+        return next;
+      });
+    };
+
+    // Touch Swipe Handlers on Detail Modal Image Stage
+    const handleStageTouchStart = (e: React.TouchEvent) => {
+      if (e.touches.length !== 1 || mediaItems.length <= 1) return;
+      setStageTouchStartX(e.touches[0].clientX);
+      setStageTouchStartY(e.touches[0].clientY);
+      setStageIsSwiping(false);
+    };
+
+    const handleStageTouchMove = (e: React.TouchEvent) => {
+      if (stageTouchStartX === null || stageTouchStartY === null) return;
+      const currentX = e.touches[0].clientX;
+      const currentY = e.touches[0].clientY;
+      const diffX = currentX - stageTouchStartX;
+      const diffY = currentY - stageTouchStartY;
+
+      if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 10) {
+        setStageIsSwiping(true);
+      }
+    };
+
+    const handleStageTouchEnd = (e: React.TouchEvent) => {
+      if (stageTouchStartX === null || stageTouchStartY === null) return;
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+      const diffX = touchEndX - stageTouchStartX;
+      const diffY = touchEndY - stageTouchStartY;
+
+      if (
+        Math.abs(diffX) > 35 &&
+        Math.abs(diffX) > Math.abs(diffY) * 1.2 &&
+        mediaItems.length > 1
+      ) {
+        if (diffX < 0) {
+          nextMedia();
+        } else {
+          prevMedia();
+        }
+      }
+
+      setStageTouchStartX(null);
+      setStageTouchStartY(null);
+      if (swipeTimerRef.current) {
+        clearTimeout(swipeTimerRef.current);
+      }
+      swipeTimerRef.current = setTimeout(() => {
+        if (isMountedRef.current) {
+          setStageIsSwiping(false);
+        }
+        swipeTimerRef.current = null;
+      }, 60);
+    };
+
+    const {
+      containerRef: mediaStripRef,
+      scrollItemIntoView: scrollMediaIntoView,
+      dragProps: mediaStripDragProps,
+      hasMoved: mediaStripHasMoved,
+    } = useHorizontalScroll({
+      activeSelector: '.product-media-strip button.active',
+      activeDependency: activeMediaIndex,
+    });
+
+    if (!visible || !product) return null;
+
+    return (
+      <>
+        <div
+          ref={backdropRef}
+          className="modal-overlay-wrap modal-backdrop-anim product-detail-modal-overlay"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) onClose();
+          }}
+        >
+          <div
+            ref={modalContainerRef}
+            tabIndex={-1}
+            className="modal-content-card modal-dialog-anim"
+            style={{
+              backgroundColor: theme.bgCard,
+              borderColor: theme.border,
+              boxShadow:
+                theme.mode === 'dark'
+                  ? '0 25px 50px -12px rgba(0, 0, 0, 0.85)'
+                  : '0 20px 40px -10px rgba(0, 0, 0, 0.25)',
+            }}
+          >
+            {/* Modal Sticky Header */}
+            <div
+              className="modal-header-sticky"
+              style={{
+                backgroundColor: theme.bgSecondary,
+                borderBottom: `1px solid ${theme.border}`,
+              }}
+            >
+              <div
+                style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}
+              >
+                <span
+                  style={{
+                    backgroundColor: theme.primary,
+                    color: '#ffffff',
+                    fontSize: '12px',
+                    fontWeight: 800,
+                    padding: '4px 8px',
+                    borderRadius: '6px',
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
+                  }}
+                >
+                  {product.code}
+                </span>
+                <span
+                  style={{
+                    color: theme.textMuted,
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {product.categoryName}
+                </span>
+              </div>
+
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+                <button
+                  onClick={handlePrint}
+                  style={{
+                    background: theme.bgCard,
+                    border: `1px solid ${theme.border}`,
+                    padding: '6px 8px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    color: theme.text,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  title="Çap et / PDF Saxla"
+                >
+                  <Printer size={16} />
+                </button>
+
+                <button
+                  type="button"
+                  className="modal-share-btn"
+                  onClick={() => onShare(product)}
+                  style={{
+                    background: theme.bgCard,
+                    border: `1px solid ${theme.border}`,
+                    padding: '6px 8px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    color: theme.primary,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  title="Paylaş"
+                  aria-label="Paylaş"
+                >
+                  <Share2 size={16} />
+                </button>
+
+                <button
+                  onClick={onClose}
+                  style={{
+                    backgroundColor: theme.primary,
+                    border: 'none',
+                    padding: '7px 12px',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    color: '#ffffff',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontWeight: 800,
+                    gap: '5px',
+                    fontSize: '13px',
+                    boxShadow: '0 2px 8px rgba(220, 38, 38, 0.35)',
+                  }}
+                >
+                  <X size={16} />
+                  <span>Bağla</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Scrollable Body */}
+            <div className="modal-body-scroll">
+              <div className="product-detail-modal-layout">
+                {/* Sol Tərəf: Geniş və Ön Planda Olan Şəkil Kartı */}
+                <div className="product-modal-image-col">
+                  <div
+                    className="product-detail-image-stage"
+                    onClick={() => {
+                      if (activeMedia?.type === 'image' && activeMedia.url) {
+                        setIsFullscreenImage(true);
+                      }
+                    }}
+                    onTouchStart={handleStageTouchStart}
+                    onTouchMove={handleStageTouchMove}
+                    onTouchEnd={handleStageTouchEnd}
+                    style={{
+                      backgroundColor: theme.mode === 'dark' ? '#131926' : '#ffffff',
+                      borderColor: theme.border,
+                      cursor: activeMedia?.type === 'image' ? 'zoom-in' : 'default',
+                    }}
+                    title="Tam ekranda böyütmək və sürüşdürmək üçün klikləyin"
+                  >
+                    {/* Left & Right Navigation Arrows */}
+                    {mediaItems.length > 1 && (
+                      <>
+                        <button
+                          type="button"
+                          className="modal-stage-nav-btn prev"
+                          onClick={prevMedia}
+                          title="Əvvəlki şəkil"
+                          aria-label="Əvvəlki şəkil"
+                        >
+                          <ChevronLeft size={20} />
+                        </button>
+                        <button
+                          type="button"
+                          className="modal-stage-nav-btn next"
+                          onClick={nextMedia}
+                          title="Növbəti şəkil"
+                          aria-label="Növbəti şəkil"
+                        >
+                          <ChevronRight size={20} />
+                        </button>
+                      </>
+                    )}
+
+                    {activeMedia?.type === 'video' ? (
+                      <div
+                        style={{
+                          position: 'relative',
+                          width: '100%',
+                          height: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          backgroundColor: '#000000',
+                        }}
+                        onClick={(event) => event.stopPropagation()}
+                      >
+                        <video
+                          ref={modalVideoRef}
+                          src={activeMedia.url}
+                          poster={activeMedia.poster}
+                          controls
+                          playsInline
+                          autoPlay
+                          muted={isVideoMuted}
+                          preload="metadata"
+                          style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                        />
+                        {/* Floating Səs (Audio / Mute) Düyməsi */}
+                        <button
+                          type="button"
+                          className="modal-video-audio-toggle-btn"
+                          onClick={toggleVideoMute}
+                          style={{
+                            position: 'absolute',
+                            bottom: '50px',
+                            left: '12px',
+                            zIndex: 12,
+                            background: isVideoMuted ? 'rgba(15, 23, 42, 0.88)' : theme.primary,
+                            color: '#ffffff',
+                            border: '1px solid rgba(255, 255, 255, 0.3)',
+                            padding: '6px 12px',
+                            borderRadius: '24px',
+                            fontSize: '12px',
+                            fontWeight: 800,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 14px rgba(0,0,0,0.45)',
+                            backdropFilter: 'blur(8px)',
+                            transition: 'all 0.2s ease',
+                          }}
+                          title={
+                            isVideoMuted
+                              ? 'Səsi Açmaq üçün klikləyin'
+                              : 'Səsi Bağlamaq üçün klikləyin'
+                          }
+                          aria-label={isVideoMuted ? 'Səsi Aç' : 'Səsi Bağla'}
+                        >
+                          {isVideoMuted ? <VolumeX size={15} /> : <Volume2 size={15} />}
+                          <span>{isVideoMuted ? 'Səsi Aç' : 'Səsi Bağla'}</span>
+                        </button>
+
+                        {/* Fullscreen Trigger on Video */}
+                        <button
+                          type="button"
+                          className="modal-video-fs-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setIsFullscreenImage(true);
+                          }}
+                          style={{
+                            position: 'absolute',
+                            bottom: '50px',
+                            right: '12px',
+                            zIndex: 12,
+                            background: 'rgba(15, 23, 42, 0.88)',
+                            color: '#ffffff',
+                            border: '1px solid rgba(255, 255, 255, 0.3)',
+                            padding: '6px 12px',
+                            borderRadius: '24px',
+                            fontSize: '12px',
+                            fontWeight: 700,
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 14px rgba(0,0,0,0.45)',
+                            backdropFilter: 'blur(8px)',
+                          }}
+                          title="Tam Ekran Rejiminə Keç"
+                        >
+                          <Maximize2 size={14} />
+                          <span>Tam Ekran</span>
+                        </button>
+                      </div>
+                    ) : activeMedia?.url ? (
+                      <ShimmerImage
+                        src={activeMedia.url}
+                        alt={activeMedia.alt || product.title}
+                        objectFit={activeFitMode as any}
+                        objectPosition={activeObjectPosition}
+                        spinnerSize={28}
+                        containerStyle={{ width: '100%', height: '100%' }}
+                      />
+                    ) : (
+                      <div style={{ color: theme.textMuted, fontSize: '13px' }}>
+                        Media daha sonra əlavə ediləcək
+                      </div>
+                    )}
+
+                    {product.badgeText && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          top: '12px',
+                          left: '12px',
+                          backgroundColor: theme.primary,
+                          color: '#ffffff',
+                          padding: '4px 10px',
+                          borderRadius: '8px',
+                          fontSize: '11px',
+                          fontWeight: 800,
+                          boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                          zIndex: 8,
+                        }}
+                      >
+                        {product.badgeText}
+                      </div>
+                    )}
+
+                    {/* Multi-Media Counter Badge */}
+                    {mediaItems.length > 1 && (
+                      <div className="modal-stage-counter-badge">
+                        <ImageIcon size={12} />
+                        <span>
+                          {activeMediaIndex + 1} / {mediaItems.length}
+                        </span>
+                      </div>
+                    )}
+
+                    {activeMedia?.type === 'image' && activeMedia.url && (
+                      <div
+                        style={{
+                          position: 'absolute',
+                          bottom: '12px',
+                          right: '12px',
+                          backgroundColor: 'rgba(0, 0, 0, 0.72)',
+                          color: '#ffffff',
+                          padding: '5px 10px',
+                          borderRadius: '8px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '5px',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          backdropFilter: 'blur(6px)',
+                          zIndex: 8,
+                        }}
+                      >
+                        <Maximize2 size={13} />
+                        <span>Tam Ekran Bax</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {mediaItems.length > 1 && (
+                    <div
+                      ref={mediaStripRef}
+                      {...mediaStripDragProps}
+                      className="product-media-strip no-scrollbar"
+                      style={{ cursor: 'grab' }}
+                    >
+                      {mediaItems.map((media, index) => (
+                        <button
+                          key={media.id}
+                          className={activeMediaIndex === index ? 'active' : ''}
+                          onClick={(e) => {
+                            if (mediaStripHasMoved()) return;
+                            scrollMediaIntoView(e);
+                            setActiveMediaIndex(index);
+                          }}
+                          style={{
+                            borderColor: activeMediaIndex === index ? theme.primary : theme.border,
+                            background: theme.bgSecondary,
+                          }}
+                        >
+                          {media.type === 'video' ? (
+                            <span>▶ Video</span>
+                          ) : (
+                            <ShimmerImage
+                              src={media.url}
+                              alt={media.alt || `${product.title} ${index + 1}`}
+                              objectFit={(media as any).fitMode || 'contain'}
+                              objectPosition={(media as any).objectPosition || 'center'}
+                              spinnerSize={14}
+                              containerStyle={{ width: '100%', height: '100%' }}
+                            />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Origin & Warranty Banner */}
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      backgroundColor: theme.bgSecondary,
+                      border: `1px solid ${theme.border}`,
+                      padding: '10px 14px',
+                      borderRadius: '12px',
+                    }}
+                  >
+                    <span style={{ fontSize: '22px' }}>{brand?.id === 'lotus' ? '🌐' : '🇮🇹'}</span>
+                    <div style={{ flex: 1 }}>
+                      <div style={{ color: theme.text, fontSize: '13px', fontWeight: 700 }}>
+                        {brand?.name || product.brandId.toUpperCase()}
+                        {brand?.originCountry ? ` — ${brand.originCountry} brendi` : ''}
+                      </div>
+                      <div style={{ color: theme.textMuted, fontSize: '11px' }}>
+                        {product.manufacturingCountry
+                          ? `İstehsal: ${product.manufacturingCountry}`
+                          : 'Kataloq Modeli'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Sağ Tərəf: İncə və Aydın Detal & Əlaqə Paneli */}
+                <div className="product-modal-info-col">
+                  <div>
+                    <h2
+                      style={{
+                        fontFamily: 'Outfit, sans-serif',
+                        fontSize: '20px',
+                        fontWeight: 800,
+                        color: theme.text,
+                        lineHeight: '26px',
+                        marginBottom: '8px',
+                      }}
+                    >
+                      {product.title}
+                    </h2>
+                    {product.shortDesc && (
+                      <p
+                        style={{
+                          fontSize: '13px',
+                          color: theme.textSecondary,
+                          lineHeight: '19px',
+                          marginBottom: '12px',
+                        }}
+                      >
+                        {product.shortDesc}
+                      </p>
+                    )}
+
+                    {product.price !== undefined && (
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'baseline',
+                          gap: '10px',
+                          marginBottom: '14px',
+                        }}
+                      >
+                        <span style={{ fontSize: '24px', fontWeight: 900, color: theme.text }}>
+                          {product.price} {product.currency || '₼'}
+                        </span>
+                        {product.oldPrice && product.oldPrice > product.price && (
+                          <span
+                            style={{
+                              fontSize: '15px',
+                              color: theme.textMuted,
+                              textDecoration: 'line-through',
+                            }}
+                          >
+                            {product.oldPrice} {product.currency || '₼'}
+                          </span>
+                        )}
+                      </div>
+                    )}
+
+                    {product.highlights && product.highlights.length > 0 && (
+                      <div
+                        style={{
+                          backgroundColor: theme.bgSecondary,
+                          border: `1px solid ${theme.border}`,
+                          padding: '12px 14px',
+                          borderRadius: '12px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '6px',
+                          marginBottom: '14px',
+                        }}
+                      >
+                        <div style={{ color: theme.text, fontSize: '12px', fontWeight: 800 }}>
+                          Əsas Üstünlüklər:
+                        </div>
+                        {product.highlights.map((h, i) => (
+                          <div
+                            key={i}
+                            style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                          >
+                            <Flame size={13} color={theme.primary} />
+                            <span style={{ color: theme.textSecondary, fontSize: '12px' }}>
+                              {h}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '10px',
+                      marginTop: 'auto',
+                    }}
+                  >
+                    <button
+                      onClick={() => onWhatsApp(product)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        backgroundColor: '#15803d',
+                        color: '#ffffff',
+                        border: 'none',
+                        padding: '12px',
+                        borderRadius: '12px',
+                        fontSize: '14px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 14px rgba(21, 128, 61, 0.28)',
+                        transition: 'transform 0.15s ease',
+                      }}
+                    >
+                      <WhatsAppIcon size={20} color="#ffffff" />
+                      <span>{whatsappButtonText}</span>
+                    </button>
+
+                    <button
+                      onClick={() => onCall(product)}
+                      className="modal-call-button"
+                      style={{
+                        backgroundColor: theme.primary,
+                        padding: '12px',
+                        borderRadius: '12px',
+                        fontSize: '14px',
+                        fontWeight: 700,
+                      }}
+                    >
+                      <Phone size={18} />
+                      <span>{callButtonText}</span>
+                    </button>
+
+                    <button
+                      onClick={() => onCopyLink(product)}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        backgroundColor: theme.bgSecondary,
+                        border: `1px solid ${theme.border}`,
+                        color: theme.mode === 'dark' ? '#f87171' : '#b91c1c',
+                        padding: '10px',
+                        borderRadius: '12px',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <Copy size={14} />
+                      <span>Məhsul linki kopyala</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div
+                style={{
+                  display: 'flex',
+                  gap: '12px',
+                  borderBottom: `1px solid ${theme.border}`,
+                  marginBottom: '12px',
+                }}
+              >
+                <button
+                  onClick={() => setActiveTab('specs')}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    borderBottom: `2px solid ${activeTab === 'specs' ? theme.primary : 'transparent'}`,
+                    padding: '8px 4px',
+                    color: activeTab === 'specs' ? theme.primary : theme.textMuted,
+                    fontSize: '13px',
+                    fontWeight: activeTab === 'specs' ? 700 : 500,
+                    cursor: 'pointer',
+                  }}
+                >
+                  Texniki Xüsusiyyətlər
+                </button>
+              </div>
+
+              {activeTab === 'specs' && (
+                <div>
+                  {Object.entries(specGroups).map(([groupName, items]) => (
+                    <div key={groupName} style={{ marginBottom: '14px' }}>
+                      <div
+                        style={{
+                          color: theme.primary,
+                          fontSize: '11px',
+                          fontWeight: 800,
+                          letterSpacing: '0.5px',
+                          textTransform: 'uppercase',
+                          marginBottom: '6px',
+                        }}
+                      >
+                        {groupName}
+                      </div>
+                      <div
+                        style={{
+                          backgroundColor: theme.bgSecondary,
+                          border: `1px solid ${theme.border}`,
+                          borderRadius: '10px',
+                          overflow: 'hidden',
+                        }}
+                      >
+                        {items.map((item, idx) => (
+                          <div
+                            key={item.id || idx}
+                            style={{
+                              display: 'flex',
+                              flexDirection: 'row',
+                              justifyContent: 'space-between',
+                              alignItems: 'center',
+                              padding: '8px 12px',
+                              borderBottom:
+                                idx < items.length - 1 ? `1px solid ${theme.border}` : 'none',
+                              backgroundColor:
+                                idx % 2 === 0
+                                  ? 'transparent'
+                                  : theme.mode === 'dark'
+                                    ? '#101726'
+                                    : '#ffffff',
+                            }}
+                          >
+                            <div style={{ flex: '1.2', paddingRight: '8px' }}>
+                              <div style={{ color: theme.text, fontSize: '12px', fontWeight: 600 }}>
+                                {item.name}
+                              </div>
+                              {item.description && (
+                                <div
+                                  style={{
+                                    color: theme.textMuted,
+                                    fontSize: '10px',
+                                    marginTop: '1px',
+                                  }}
+                                >
+                                  {item.description}
+                                </div>
+                              )}
+                            </div>
+                            <div style={{ flex: '1', textAlign: 'right' }}>
+                              <span
+                                style={{
+                                  color: item.value
+                                    ? theme.mode === 'dark'
+                                      ? '#38bdf8'
+                                      : '#0284c7'
+                                    : theme.textMuted,
+                                  fontSize: '12px',
+                                  fontWeight: 600,
+                                }}
+                              >
+                                {item.value ? item.value : '[Qeyd edilməyib]'}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* FULLSCREEN ZOOM & PAN & SWIPE LIGHTBOX VIEW */}
+        {isFullscreenImage && (
+          <div
+            style={{
+              position: 'fixed',
+              inset: 0,
+              zIndex: 120,
+              backgroundColor: 'rgba(5, 7, 12, 0.96)',
+              backdropFilter: 'blur(16px)',
+              display: 'flex',
+              flexDirection: 'column',
+            }}
+            onClick={(e) => {
+              if (e.target === e.currentTarget && !isDragging) setIsFullscreenImage(false);
+            }}
+          >
+            {/* Top Bar */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                padding: '14px 20px',
+                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+                background: 'rgba(15, 23, 42, 0.6)',
+                zIndex: 30,
+              }}
+            >
+              <div
+                style={{
+                  backgroundColor: 'rgba(255, 255, 255, 0.12)',
+                  color: '#ffffff',
+                  padding: '6px 14px',
+                  borderRadius: '8px',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  backdropFilter: 'blur(8px)',
+                }}
+              >
+                {product.code} — {product.title}
+              </div>
+              <button
+                onClick={() => setIsFullscreenImage(false)}
+                style={{
+                  backgroundColor: theme.primary,
+                  border: 'none',
+                  color: '#ffffff',
+                  padding: '8px 16px',
+                  borderRadius: '8px',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '13px',
+                  fontWeight: 800,
+                }}
+              >
+                <X size={18} /> <span>Bağla</span>
+              </button>
+            </div>
+
+            {/* Floating Zoom Controls */}
+            <div
+              className="zoom-floating-controls"
+              style={{
+                position: 'absolute',
+                top: '80px',
+                right: '20px',
+                zIndex: 40,
+                display: 'flex',
+                gap: '8px',
+              }}
+            >
+              <button
+                type="button"
+                className="zoom-btn"
+                onClick={zoomOut}
+                disabled={zoomScale <= 1}
+                title="Kiçilt (-)"
+              >
+                <ZoomOut size={16} />
+              </button>
+              <span style={{ color: '#fff', fontSize: '12px', fontWeight: 700 }}>
+                {Math.round(zoomScale * 100)}%
+              </span>
+              <button
+                type="button"
+                className="zoom-btn"
+                onClick={zoomIn}
+                disabled={zoomScale >= 4}
+                title="Böyüt (+)"
+              >
+                <ZoomIn size={16} />
+              </button>
+              {zoomScale > 1 && (
+                <button
+                  type="button"
+                  onClick={resetZoom}
+                  title="1x Orijinal ölçüyə sıfırla"
+                  style={{
+                    cursor: 'pointer',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '4px 8px',
+                  }}
+                >
+                  1x Sıfırla
+                </button>
+              )}
+            </div>
+
+            {/* Left & Right Fullscreen Navigation Buttons */}
+            {mediaItems.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  className="fs-lightbox-nav-btn prev"
+                  onClick={prevMedia}
+                  title="Əvvəlki şəkil"
+                  aria-label="Əvvəlki şəkil"
+                >
+                  <ChevronLeft size={26} />
+                </button>
+                <button
+                  type="button"
+                  className="fs-lightbox-nav-btn next"
+                  onClick={nextMedia}
+                  title="Növbəti şəkil"
+                  aria-label="Növbəti şəkil"
+                >
+                  <ChevronRight size={26} />
+                </button>
+              </>
+            )}
+
+            {/* Interactive Zoom, Pan & Touch Swipe Stage */}
+            <div
+              className={`zoom-pan-container ${zoomScale > 1 ? 'is-zoomed' : ''} ${isDragging ? 'is-dragging' : ''}`}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUp}
+              onMouseLeave={handleMouseUp}
+              onTouchStart={handleFsTouchStart}
+              onTouchMove={handleFsTouchMove}
+              onTouchEnd={handleFsTouchEnd}
+              onWheel={handleWheel}
+              onDoubleClick={toggleZoom}
+              style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+                cursor: zoomScale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
+              }}
+            >
+              {activeMedia?.type === 'video' ? (
+                <div
+                  style={{
+                    position: 'relative',
+                    maxWidth: '90vw',
+                    maxHeight: '80vh',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <video
+                    ref={fsVideoRef}
+                    src={activeMedia.url}
+                    poster={activeMedia.poster}
+                    controls
+                    playsInline
+                    autoPlay
+                    muted={isVideoMuted}
+                    style={{ maxWidth: '90vw', maxHeight: '80vh', objectFit: 'contain' }}
+                  />
+                  {/* Floating Sound Toggle Button in Lightbox */}
+                  <button
+                    type="button"
+                    className="fs-video-audio-toggle-btn"
+                    onClick={toggleVideoMute}
+                    style={{
+                      position: 'absolute',
+                      bottom: '60px',
+                      left: '16px',
+                      zIndex: 50,
+                      background: isVideoMuted ? 'rgba(15, 23, 42, 0.9)' : theme.primary,
+                      color: '#ffffff',
+                      border: '1px solid rgba(255, 255, 255, 0.3)',
+                      padding: '8px 16px',
+                      borderRadius: '30px',
+                      fontSize: '13px',
+                      fontWeight: 800,
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '7px',
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 18px rgba(0,0,0,0.5)',
+                      backdropFilter: 'blur(10px)',
+                    }}
+                    title={isVideoMuted ? 'Səsi Aç' : 'Səsi Bağla'}
+                  >
+                    {isVideoMuted ? <VolumeX size={17} /> : <Volume2 size={17} />}
+                    <span>{isVideoMuted ? 'Səsi Aç' : 'Səsi Bağla'}</span>
+                  </button>
+                </div>
+              ) : (
+                <ShimmerImage
+                  src={activeMedia?.url || product.image}
+                  alt={activeMedia?.alt || product.title}
+                  draggable={false}
+                  style={{
+                    maxWidth: '90vw',
+                    maxHeight: '80vh',
+                    objectFit: activeFitMode as any,
+                    objectPosition: activeObjectPosition,
+                    transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoomScale})`,
+                    transition: isDragging
+                      ? 'none'
+                      : 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                    userSelect: 'none',
+                  }}
+                />
+              )}
+            </div>
+
+            {/* Bottom Thumbnail / Indicator Bar in Fullscreen */}
+            {mediaItems.length > 1 && (
+              <div className="fs-lightbox-bottom-bar">
+                <div className="fs-lightbox-dots">
+                  {mediaItems.map((m, idx) => (
+                    <button
+                      key={m.id || idx}
+                      type="button"
+                      className={`fs-lightbox-dot ${activeMediaIndex === idx ? 'active' : ''}`}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setActiveMediaIndex(idx);
+                        setPanPosition({ x: 0, y: 0 });
+                        setZoomScale(1);
+                      }}
+                      aria-label={`Şəkil ${idx + 1}`}
+                    />
+                  ))}
+                </div>
+                <span className="fs-lightbox-counter-text">
+                  {activeMediaIndex + 1} / {mediaItems.length}
+                </span>
+              </div>
+            )}
+          </div>
+        )}
+      </>
+    );
+  }
+);

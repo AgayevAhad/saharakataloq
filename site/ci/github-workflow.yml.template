@@ -1,0 +1,65 @@
+name: Sahara Electronics Site Quality CI
+
+# IMPORTANT NOTE:
+# This workflow template is ready for GitHub Actions execution.
+# To activate it at the root repository level, copy this file to .github/workflows/ci.yml
+# once root write permission is approved by the project owner.
+
+on:
+  push:
+    branches: [saharasitedev]
+  pull_request:
+    branches: [saharasitedev]
+
+jobs:
+  quality-gate:
+    name: Lint, Typecheck, Test & Quality Gate
+    runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./site
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js Runtime
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: 'npm'
+          cache-dependency-path: site/package-lock.json
+
+      - name: Install Dependencies
+        run: npm ci
+
+      - name: Prettier Format Check
+        run: npm run format:check
+
+      - name: ESLint Code Quality
+        run: npm run lint
+
+      - name: TypeScript Typecheck
+        run: npm run typecheck
+
+      - name: Unit & Integration Tests (with Zero-DB Guard)
+        run: npm test
+
+      - name: Component Accessibility Tests (axe-core)
+        run: npm run test:a11y
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps chromium
+
+      - name: Real Browser & Screenshot Visual Regression Tests
+        run: npm run test:browser
+
+      - name: Ladle Component Stories Build
+        run: npm run build:stories
+
+      - name: Production Webpack/Vite Build
+        run: npm run build
+
+      - name: Monorepo Boundary Guard Verification
+        run: npm run test:repo-boundary
