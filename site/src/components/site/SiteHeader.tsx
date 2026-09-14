@@ -113,7 +113,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
             'padding 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, background-color 0.2s ease',
         }}
       >
-        <div className="catalog-container">
+        <div className="catalog-container" style={{ padding: '0 clamp(24px, 4vw, 56px)' }}>
           {/* Desktop Layout (> 768px) */}
           <div
             className="site-header-desktop-row"
@@ -121,8 +121,8 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              padding: isCompact ? '10px 0' : '14px 0',
-              gap: '24px',
+              padding: isCompact ? '10px 0' : '16px 0',
+              gap: '20px',
             }}
           >
             {/* Logo */}
@@ -147,9 +147,9 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   }
                   alt="Sahara Electronics"
                   style={{
-                    height: isCompact ? '38px' : '44px',
+                    height: isCompact ? '46px' : '56px',
                     width: 'auto',
-                    maxWidth: '220px',
+                    maxWidth: '280px',
                     objectFit: 'contain',
                     display: 'block',
                     transition: 'height 0.2s ease',
@@ -158,11 +158,12 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               </button>
             </div>
 
-            {/* Center: Long, Sleek Smart Search Trigger matching siteUI.png */}
+            {/* Center: Long, Sleek Smart Search Trigger */}
             <div
               style={{
                 flex: 1,
-                maxWidth: '660px',
+                maxWidth: '920px',
+                margin: '0 12px',
                 position: 'relative',
               }}
               className="header-search-wrap"
@@ -173,23 +174,23 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 data-testid="header-search-trigger"
                 style={{
                   width: '100%',
-                  height: '42px',
+                  height: '44px',
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
-                  padding: '0 18px',
+                  padding: '0 20px',
                   borderRadius: '999px',
                   backgroundColor: themeMode === 'dark' ? '#121824' : '#f8fafc',
                   border: `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : '#e2e8f0'}`,
                   color: theme.textMuted,
-                  fontSize: '13px',
+                  fontSize: '13.5px',
                   cursor: 'pointer',
                   textAlign: 'left',
                   transition: 'all 0.2s ease',
                 }}
                 aria-label="Axtarış pəncərəsini aç"
               >
-                <Search size={16} style={{ color: theme.textMuted, flexShrink: 0 }} />
+                <Search size={17} style={{ color: theme.textMuted, flexShrink: 0 }} />
                 <span
                   style={{
                     flex: 1,
@@ -393,9 +394,9 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   }
                   alt="Sahara Electronics"
                   style={{
-                    height: '32px',
+                    height: '36px',
                     width: 'auto',
-                    maxWidth: '150px',
+                    maxWidth: '180px',
                     objectFit: 'contain',
                     display: 'block',
                   }}
@@ -543,26 +544,27 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
           </div>
         </div>
 
-        {/* Secondary Navigation Row (Desktop: = Kateqoriyalar + Clean Category Links) */}
+        {/* Secondary Navigation Row (Desktop: = Kateqoriyalar + Site Page Links; No separating top line) */}
         <div
           ref={secondaryNavRef}
           className="header-secondary-nav hide-on-mobile"
           style={{
             position: 'relative',
-            borderTop: `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.06)'}`,
-            padding: '8px 0',
+            borderTop: 'none',
+            padding: '6px 0 10px',
           }}
         >
           <div
             className="catalog-container"
             style={{
+              padding: '0 clamp(24px, 4vw, 56px)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'flex-start',
-              gap: '24px',
+              gap: '28px',
             }}
           >
-            {/* Left: = Kateqoriyalar Trigger matching siteUI.png */}
+            {/* Left: = Kateqoriyalar Trigger */}
             <button
               ref={megaMenuBtnRef}
               type="button"
@@ -575,7 +577,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 color: theme.text,
                 border: 'none',
                 padding: '4px 0',
-                fontSize: '13.5px',
+                fontSize: '14px',
                 fontWeight: 700,
                 display: 'inline-flex',
                 alignItems: 'center',
@@ -585,16 +587,16 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 flexShrink: 0,
               }}
             >
-              <Menu size={16} />
+              <Menu size={17} />
               <span>Kateqoriyalar</span>
             </button>
 
-            {/* Horizontal Links matching siteUI.png */}
+            {/* General Site Navigation Links */}
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '20px',
+                gap: '22px',
                 overflowX: 'auto',
                 whiteSpace: 'nowrap',
                 WebkitOverflowScrolling: 'touch',
@@ -602,33 +604,30 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 flex: 1,
               }}
             >
-              {activeCategories.slice(0, 8).map((cat) => {
-                return (
-                  <button
-                    key={cat.id}
-                    type="button"
-                    onClick={() => {
-                      setIsMegaMenuOpen(false);
-                      onNavigate('catalog', cat.id);
-                    }}
-                    style={{
-                      background: 'transparent',
-                      border: 'none',
-                      padding: '4px 0',
-                      fontSize: '13px',
-                      fontWeight: 500,
-                      color: theme.text,
-                      cursor: 'pointer',
-                      transition: 'color 0.15s ease',
-                      flexShrink: 0,
-                    }}
-                    onMouseEnter={(e) => (e.currentTarget.style.color = '#e31e24')}
-                    onMouseLeave={(e) => (e.currentTarget.style.color = theme.text)}
-                  >
-                    {cat.name}
-                  </button>
-                );
-              })}
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMegaMenuOpen(false);
+                  onNavigate('home');
+                }}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  padding: '4px 0',
+                  fontSize: '13.5px',
+                  fontWeight: currentRoute === 'home' ? 700 : 500,
+                  color: currentRoute === 'home' ? '#e31e24' : theme.text,
+                  cursor: 'pointer',
+                  transition: 'color 0.15s ease',
+                  flexShrink: 0,
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#e31e24')}
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.color = currentRoute === 'home' ? '#e31e24' : theme.text)
+                }
+              >
+                Ana Səhifə
+              </button>
 
               <button
                 type="button"
@@ -640,17 +639,94 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   background: 'transparent',
                   border: 'none',
                   padding: '4px 0',
-                  fontSize: '13px',
-                  fontWeight: 500,
+                  fontSize: '13.5px',
+                  fontWeight: currentRoute === 'brands' ? 700 : 500,
                   color: currentRoute === 'brands' ? '#e31e24' : theme.text,
                   cursor: 'pointer',
                   transition: 'color 0.15s ease',
                   flexShrink: 0,
                 }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = '#e31e24')}
-                onMouseLeave={(e) => (e.currentTarget.style.color = theme.text)}
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.color = currentRoute === 'brands' ? '#e31e24' : theme.text)
+                }
               >
                 Brendlər
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMegaMenuOpen(false);
+                  onNavigate('stores');
+                }}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  padding: '4px 0',
+                  fontSize: '13.5px',
+                  fontWeight: currentRoute === 'stores' ? 700 : 500,
+                  color: currentRoute === 'stores' ? '#e31e24' : theme.text,
+                  cursor: 'pointer',
+                  transition: 'color 0.15s ease',
+                  flexShrink: 0,
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#e31e24')}
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.color = currentRoute === 'stores' ? '#e31e24' : theme.text)
+                }
+              >
+                Mağazalarımız
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMegaMenuOpen(false);
+                  onNavigate('services');
+                }}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  padding: '4px 0',
+                  fontSize: '13.5px',
+                  fontWeight: currentRoute === 'services' ? 700 : 500,
+                  color: currentRoute === 'services' ? '#e31e24' : theme.text,
+                  cursor: 'pointer',
+                  transition: 'color 0.15s ease',
+                  flexShrink: 0,
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#e31e24')}
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.color = currentRoute === 'services' ? '#e31e24' : theme.text)
+                }
+              >
+                Servis və Zəmanət
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMegaMenuOpen(false);
+                  onNavigate('support');
+                }}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  padding: '4px 0',
+                  fontSize: '13.5px',
+                  fontWeight: currentRoute === 'support' ? 700 : 500,
+                  color: currentRoute === 'support' ? '#e31e24' : theme.text,
+                  cursor: 'pointer',
+                  transition: 'color 0.15s ease',
+                  flexShrink: 0,
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#e31e24')}
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.color = currentRoute === 'support' ? '#e31e24' : theme.text)
+                }
+              >
+                Müştəri Dəstəyi
               </button>
 
               <button
@@ -663,8 +739,8 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   background: 'transparent',
                   border: 'none',
                   padding: '4px 0',
-                  fontSize: '13px',
-                  fontWeight: 500,
+                  fontSize: '13.5px',
+                  fontWeight: 600,
                   color: '#e31e24',
                   cursor: 'pointer',
                   display: 'inline-flex',
