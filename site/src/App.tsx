@@ -960,7 +960,6 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
       >
         {isLoadingCatalog ? (
           <>
-            <BrandShowcaseSkeleton theme={activeTheme} />
             <BannerHeroSkeleton theme={activeTheme} />
             {isCatalogActive && (
               <section className="catalog-section" style={{ marginTop: '16px' }}>

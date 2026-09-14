@@ -1,50 +1,46 @@
-import React from 'react';
-import { MapPin, Phone, Mail, Clock, ExternalLink, ArrowUp } from 'lucide-react';
-import { WhatsAppIcon } from './WhatsAppIcon';
-import { SaharaLogo } from './SaharaLogo';
-import { OfficialInstagramIcon, OfficialFacebookIcon } from './SocialIcons';
+import React, { useState, useMemo } from 'react';
+import { ArrowUp, ArrowRight, Instagram, Facebook, Youtube, MapPin, Phone, ExternalLink } from 'lucide-react';
 import { CatalogCategory, CatalogSettings } from '../types/product';
 import { ThemeColors } from '../types/theme';
+import { WhatsAppIcon } from './WhatsAppIcon';
 import { phoneHref, whatsappHref } from '../utils/contact';
 
 interface FooterProps {
   settings: CatalogSettings;
-  categories: CatalogCategory[];
+  categories?: CatalogCategory[];
   theme: ThemeColors;
   onSelectCategory?: (categoryId: string) => void;
+  onNavigate?: (route: string) => void;
 }
 
 export const Footer: React.FC<FooterProps> = ({
   settings,
-  categories,
+  categories: _categories,
   theme,
-  onSelectCategory,
+  onSelectCategory: _onSelectCategory,
+  onNavigate,
 }) => {
-  const companyName = settings.companyName || 'Sahara Electronics';
-  const address = settings.address || '';
-  const email = settings.email || '';
-  const workingHours = settings.workingHours || '';
-  const locationNote = settings.locationNote || '';
+  const [emailInput, setEmailInput] = useState('');
+  const [isSubscribed, setIsSubscribed] = useState(false);
 
-  const _mapHref =
-    settings.mapUrl ||
-    (address
-      ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`
-      : undefined);
-  const waHref = whatsappHref(settings.whatsappNumber, 'Salam, Sahara Electronics!');
+  const address = settings?.address || '';
+  const workingHours = settings?.workingHours || '';
+  const locationNote = settings?.locationNote || '';
+
+  const waHref = whatsappHref(settings?.whatsappNumber, 'Salam, Sahara Electronics!');
 
   const phoneList =
-    Array.isArray(settings.phoneNumbers) && settings.phoneNumbers.length
+    Array.isArray(settings?.phoneNumbers) && settings.phoneNumbers.length
       ? settings.phoneNumbers.filter(Boolean)
-      : settings.phoneNumber
+      : settings?.phoneNumber
         ? [settings.phoneNumber]
         : [];
 
-  const addressList = React.useMemo(() => {
-    if (settings.addresses && settings.addresses.length > 1) {
+  const addressList = useMemo(() => {
+    if (settings?.addresses && settings.addresses.length > 1) {
       return settings.addresses;
     }
-    if (settings.addresses && settings.addresses.length === 1) {
+    if (settings?.addresses && settings.addresses.length === 1) {
       return [
         {
           ...settings.addresses[0],
@@ -52,7 +48,7 @@ export const Footer: React.FC<FooterProps> = ({
         },
       ];
     }
-    if (settings.address) {
+    if (settings?.address) {
       return [
         {
           id: 'single',
@@ -64,526 +60,504 @@ export const Footer: React.FC<FooterProps> = ({
         },
       ];
     }
-    return [
-      {
-        id: 'empty',
-        title: 'Mağaza Ünvanı',
-        address: 'Ünvan məlumatı tezliklə əlavə ediləcək',
-        mapUrl: undefined,
-        workingHours: settings.workingHours,
-        note: undefined,
-      },
-    ];
+    return [];
   }, [
-    settings.addresses,
-    settings.address,
-    settings.mapUrl,
-    settings.workingHours,
-    settings.locationNote,
+    settings?.addresses,
+    settings?.address,
+    settings?.mapUrl,
+    settings?.workingHours,
+    settings?.locationNote,
     workingHours,
     locationNote,
   ]);
 
+  const handleSubscribe = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!emailInput.trim()) return;
+    setIsSubscribed(true);
+    setEmailInput('');
+    setTimeout(() => setIsSubscribed(false), 4000);
+  };
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
     <footer
-      className="catalog-footer-enhanced"
+      className="catalog-footer-enhanced site-footer-v2"
       style={{
-        backgroundColor: theme.bgSecondary,
-        borderTop: `1px solid ${theme.border}`,
+        backgroundColor: theme.mode === 'dark' ? '#090d13' : '#ffffff',
+        borderTop: `1px solid ${theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : '#eaecf0'}`,
         color: theme.text,
-        padding: '40px 20px 24px 20px',
+        padding: '56px 20px 24px 20px',
         marginTop: '40px',
         width: '100%',
       }}
     >
       <div
-        className="footer-content-grid"
+        className="catalog-container"
         style={{
           maxWidth: '1280px',
           margin: '0 auto',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
-          gap: '32px',
-          marginBottom: '32px',
         }}
       >
-        {/* Column 1: Brand & About */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <SaharaLogo className="footer-sahara-logo" isDark={theme.mode === 'dark'} />
+        {/* Main 5-Column Grid matching siteUI.png */}
+        <div
+          className="footer-grid-5col"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '36px',
+            marginBottom: '40px',
+          }}
+        >
+          {/* Column 1: Brand & Slogan */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+              <img
+                src={theme.mode === 'dark' ? '/media/SaharaLogo-dark.png' : '/media/SaharaLogo.png'}
+                alt="Sahara Electronics"
+                style={{ height: '42px', width: 'auto', objectFit: 'contain' }}
+              />
+            </div>
+            <p
+              style={{
+                color: theme.textMuted || '#64748b',
+                fontSize: '13.5px',
+                lineHeight: '20px',
+                margin: 0,
+                maxWidth: '220px',
+              }}
+            >
+              Texnologiya
+              <br />
+              həyatınızı daha gözəl edir.
+            </p>
           </div>
-          <p style={{ color: theme.textSecondary, fontSize: '13px', lineHeight: '22px' }}>
-            {locationNote ||
-              'Eviniz və mətbəxiniz üçün premium keyfiyyətli məişət texnikasının kataloq platforması.'}
-          </p>
-          <div
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              backgroundColor: theme.badgeBg,
-              border: `1px solid ${theme.primaryLight}`,
-              padding: '6px 12px',
-              borderRadius: '8px',
-              width: 'fit-content',
-              fontSize: '11px',
-              fontWeight: 700,
-              color: theme.badgeText,
-            }}
-          >
-            <span>Kataloq & Məsləhət Platforması</span>
-          </div>
-        </div>
 
-        {/* Column 2: Address & Location (Supports Multiple Showrooms / Stores) */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-          <h3
-            style={{
-              fontFamily: 'Outfit, sans-serif',
-              fontSize: '16px',
-              fontWeight: 800,
-              color: theme.text,
-              letterSpacing: '0.5px',
-            }}
-          >
-            {addressList.length > 1 ? 'Mağaza və Filiallarımız' : 'Ünvan və Lokasiya'}
-          </h3>
-
-          {addressList.map((addr, idx) => {
-            const currentMapHref =
-              addr.mapUrl ||
-              (addr.address
-                ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr.address)}`
-                : undefined);
-            return (
-              <div
-                key={addr.id || idx}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  gap: '4px',
-                  paddingBottom: idx < addressList.length - 1 ? '10px' : '0',
-                  borderBottom:
-                    idx < addressList.length - 1 ? `1px dashed ${theme.border}` : 'none',
-                }}
-              >
-                {addr.title && addressList.length > 1 && (
-                  <strong style={{ fontSize: '13px', color: theme.primary, fontWeight: 750 }}>
-                    {addr.title}
-                  </strong>
-                )}
-                {currentMapHref ? (
-                  <a
-                    href={currentMapHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    title="Xəritədə açmaq üçün toxunun"
-                    style={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: '8px',
-                      textDecoration: 'none',
-                      color: 'inherit',
-                      cursor: 'pointer',
-                      borderRadius: '8px',
-                      padding: '2px 0',
-                      transition: 'opacity 0.2s ease',
-                    }}
-                  >
-                    <MapPin
-                      size={16}
-                      color={theme.primary}
-                      style={{ flexShrink: 0, marginTop: '2px' }}
-                    />
-                    <div>
-                      <div
-                        style={{
-                          fontSize: '13px',
-                          fontWeight: 600,
-                          color: theme.text,
-                          lineHeight: '18px',
-                        }}
-                      >
-                        {addr.address}
-                      </div>
-                      {addr.note && (
-                        <div
-                          style={{
-                            fontSize: '11px',
-                            color: theme.mode === 'dark' ? '#cbd5e1' : '#334155',
-                            marginTop: '2px',
-                          }}
-                        >
-                          {addr.note}
-                        </div>
-                      )}
-                      <div
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          color: theme.mode === 'dark' ? '#f87171' : '#b91c1c',
-                          fontSize: '11px',
-                          fontWeight: 700,
-                          marginTop: '4px',
-                        }}
-                      >
-                        <span>Xəritədə aç</span>
-                        <ExternalLink size={11} />
-                      </div>
-                    </div>
-                  </a>
-                ) : (
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'flex-start',
-                      gap: '8px',
-                      padding: '2px 0',
-                    }}
-                  >
-                    <MapPin
-                      size={16}
-                      color={theme.primary}
-                      style={{ flexShrink: 0, marginTop: '2px' }}
-                    />
-                    <div>
-                      <div
-                        style={{
-                          fontSize: '13px',
-                          fontWeight: 600,
-                          color: theme.text,
-                          lineHeight: '18px',
-                        }}
-                      >
-                        {addr.address}
-                      </div>
-                      {addr.note && (
-                        <div
-                          style={{
-                            fontSize: '11px',
-                            color: theme.mode === 'dark' ? '#cbd5e1' : '#334155',
-                            marginTop: '2px',
-                          }}
-                        >
-                          {addr.note}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {addr.workingHours && (
-                  <div
-                    style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}
-                  >
-                    <Clock
-                      size={14}
-                      color={theme.mode === 'dark' ? '#f87171' : '#b91c1c'}
-                      style={{ flexShrink: 0 }}
-                    />
-                    <span
-                      style={{
-                        fontSize: '11px',
-                        color: theme.mode === 'dark' ? '#cbd5e1' : '#334155',
-                      }}
-                    >
-                      {addr.workingHours}
-                    </span>
-                  </div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-
-        {/* Column 3: Contact Channels & Social Media */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <h3
-            style={{
-              fontFamily: 'Outfit, sans-serif',
-              fontSize: '16px',
-              fontWeight: 800,
-              color: theme.text,
-              letterSpacing: '0.5px',
-            }}
-          >
-            Əlaqə və Sosial Şəbəkələr
-          </h3>
-
-          {/* WhatsApp */}
-          {settings.whatsappNumber && waHref ? (
-            <a
-              href={waHref}
-              target="_blank"
-              rel="noopener noreferrer"
+          {/* Column 2: Şirkət */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <h4
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
+                fontSize: '14px',
+                fontWeight: 800,
                 color: theme.text,
-                textDecoration: 'none',
-                fontSize: '13px',
-                fontWeight: 600,
+                margin: '0 0 4px 0',
+                fontFamily: 'Outfit, sans-serif',
               }}
             >
-              <div
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '8px',
-                  backgroundColor:
-                    theme.mode === 'dark' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(21, 128, 61, 0.12)',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                }}
-              >
-                <WhatsAppIcon size={16} color={theme.mode === 'dark' ? '#4ade80' : '#15803d'} />
-              </div>
-              <div>
-                <div style={{ fontSize: '11px', color: theme.textMuted }}>WhatsApp:</div>
-                <span
-                  style={{ color: theme.mode === 'dark' ? '#4ade80' : '#15803d', fontWeight: 700 }}
-                >
-                  {settings.whatsappNumber}
-                </span>
-              </div>
-            </a>
-          ) : null}
-
-          {/* Multiple Phone Calls */}
-          {phoneList.map((ph, idx) => {
-            const pHref = phoneHref(ph);
-            if (!pHref) return null;
-            return (
-              <a
-                key={idx}
-                href={pHref}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '10px',
-                  color: theme.text,
-                  textDecoration: 'none',
-                  fontSize: '13px',
-                  fontWeight: 600,
-                }}
-              >
-                <div
-                  style={{
-                    width: '32px',
-                    height: '32px',
-                    borderRadius: '8px',
-                    backgroundColor: theme.badgeBg,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                  }}
-                >
-                  <Phone size={15} color={theme.primary} />
-                </div>
-                <div>
-                  <div style={{ fontSize: '11px', color: theme.textMuted }}>
-                    Əlaqə telefonu {phoneList.length > 1 ? `#${idx + 1}` : ''}:
-                  </div>
-                  <span
-                    style={{
-                      color: theme.mode === 'dark' ? '#f87171' : '#b91c1c',
-                      fontWeight: 700,
-                    }}
-                  >
-                    {ph}
-                  </span>
-                </div>
-              </a>
-            );
-          })}
-
-          {/* Instagram with Official SVG Icon */}
-          {settings.instagramUrl ? (
-            <a
-              href={settings.instagramUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                color: theme.text,
-                textDecoration: 'none',
-                fontSize: '13px',
-                fontWeight: 600,
-              }}
-            >
-              <OfficialInstagramIcon size={26} />
-              <div>
-                <div style={{ fontSize: '11px', color: theme.textMuted }}>Instagram:</div>
-                <span
-                  style={{ color: theme.mode === 'dark' ? '#f472b6' : '#9d174d', fontWeight: 700 }}
-                >
-                  {settings.instagramUsername || '@sahara.electronics'}
-                </span>
-              </div>
-            </a>
-          ) : null}
-
-          {/* Facebook with Official SVG Icon */}
-          {settings.facebookUrl ? (
-            <a
-              href={settings.facebookUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                color: theme.text,
-                textDecoration: 'none',
-                fontSize: '13px',
-                fontWeight: 600,
-              }}
-            >
-              <OfficialFacebookIcon size={26} />
-              <div>
-                <div style={{ fontSize: '11px', color: theme.textMuted }}>Facebook:</div>
-                <span
-                  style={{ color: theme.mode === 'dark' ? '#60a5fa' : '#1d4ed8', fontWeight: 700 }}
-                >
-                  {settings.facebookUsername || 'Sahara Electronics'}
-                </span>
-              </div>
-            </a>
-          ) : null}
-
-          {/* Email */}
-          {email ? (
-            <a
-              href={`mailto:${email}`}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px',
-                color: theme.textSecondary,
-                textDecoration: 'none',
-                fontSize: '12px',
-              }}
-            >
-              <div
-                style={{
-                  width: '32px',
-                  height: '32px',
-                  borderRadius: '8px',
-                  backgroundColor: theme.bgCard,
-                  border: `1px solid ${theme.border}`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  flexShrink: 0,
-                }}
-              >
-                <Mail size={15} color={theme.textSecondary} />
-              </div>
-              <div>
-                <div style={{ fontSize: '11px', color: theme.textMuted }}>E-poçt:</div>
-                <span style={{ color: theme.text, fontWeight: 600 }}>{email}</span>
-              </div>
-            </a>
-          ) : null}
-        </div>
-
-        {/* Column 4: Quick Categories */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-          <h3
-            style={{
-              fontFamily: 'Outfit, sans-serif',
-              fontSize: '16px',
-              fontWeight: 800,
-              color: theme.text,
-              letterSpacing: '0.5px',
-            }}
-          >
-            Məhsul Kateqoriyaları
-          </h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {categories.slice(0, 6).map((cat) => (
+              Şirkət
+            </h4>
+            {[
+              { label: 'Haqqımızda', route: 'about' },
+              { label: 'Mağazalar', route: 'stores' },
+              { label: 'Karyera', route: 'careers' },
+              { label: 'Əlaqə', route: 'support' },
+            ].map((link, idx) => (
               <button
-                key={cat.id}
-                onClick={() => onSelectCategory?.(cat.id)}
+                key={idx}
+                type="button"
+                onClick={() => (onNavigate ? onNavigate(link.route) : null)}
                 style={{
-                  background: 'none',
+                  background: 'transparent',
                   border: 'none',
-                  color: theme.textSecondary,
-                  fontSize: '13px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
                   padding: 0,
-                  transition: 'color 0.2s ease',
+                  textAlign: 'left',
+                  color: theme.textMuted || '#64748b',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'color 0.15s ease',
                 }}
-                onMouseEnter={(e) => (e.currentTarget.style.color = theme.primary)}
-                onMouseLeave={(e) => (e.currentTarget.style.color = theme.textSecondary)}
+                className="footer-nav-link"
               >
-                {cat.name}
+                {link.label}
               </button>
             ))}
           </div>
+
+          {/* Column 3: Müştəri üçün */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <h4
+              style={{
+                fontSize: '14px',
+                fontWeight: 800,
+                color: theme.text,
+                margin: '0 0 4px 0',
+                fontFamily: 'Outfit, sans-serif',
+              }}
+            >
+              Müştəri üçün
+            </h4>
+            {[
+              { label: 'Çatdırılma', route: 'services' },
+              { label: 'Zəmanət', route: 'services' },
+              { label: 'Qaytarma', route: 'support' },
+              { label: 'Tez-tez verilən suallar', route: 'support' },
+            ].map((link, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => (onNavigate ? onNavigate(link.route) : null)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  padding: 0,
+                  textAlign: 'left',
+                  color: theme.textMuted || '#64748b',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'color 0.15s ease',
+                }}
+                className="footer-nav-link"
+              >
+                {link.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Column 4: Kömək */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <h4
+              style={{
+                fontSize: '14px',
+                fontWeight: 800,
+                color: theme.text,
+                margin: '0 0 4px 0',
+                fontFamily: 'Outfit, sans-serif',
+              }}
+            >
+              Kömək
+            </h4>
+            {[
+              { label: 'İstifadə şərtləri', route: 'terms' },
+              { label: 'Məxfilik siyasəti', route: 'privacy' },
+            ].map((link, idx) => (
+              <button
+                key={idx}
+                type="button"
+                onClick={() => (onNavigate ? onNavigate(link.route) : null)}
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  padding: 0,
+                  textAlign: 'left',
+                  color: theme.textMuted || '#64748b',
+                  fontSize: '13px',
+                  fontWeight: 500,
+                  cursor: 'pointer',
+                  transition: 'color 0.15s ease',
+                }}
+                className="footer-nav-link"
+              >
+                {link.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Column 5: Yeniliklərdən xəbərdar olun */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            <h4
+              style={{
+                fontSize: '14px',
+                fontWeight: 800,
+                color: theme.text,
+                margin: '0 0 4px 0',
+                fontFamily: 'Outfit, sans-serif',
+              }}
+            >
+              Yeniliklərdən xəbərdar olun
+            </h4>
+
+            <form
+              onSubmit={handleSubscribe}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                width: '100%',
+              }}
+            >
+              <input
+                type="email"
+                value={emailInput}
+                onChange={(e) => setEmailInput(e.target.value)}
+                placeholder="E-poçt ünvanınız"
+                style={{
+                  flex: 1,
+                  height: '40px',
+                  borderRadius: '8px',
+                  border: `1px solid ${theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : '#cbd5e1'}`,
+                  backgroundColor: theme.mode === 'dark' ? '#161d2b' : '#f8fafc',
+                  color: theme.text,
+                  padding: '0 12px',
+                  fontSize: '13px',
+                  outline: 'none',
+                }}
+                required
+              />
+              <button
+                type="submit"
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '8px',
+                  backgroundColor: '#e31e24',
+                  color: '#ffffff',
+                  border: 'none',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  flexShrink: 0,
+                  transition: 'transform 0.15s ease',
+                }}
+                aria-label="Abunə ol"
+              >
+                <ArrowRight size={16} />
+              </button>
+            </form>
+
+            {isSubscribed && (
+              <span style={{ fontSize: '12px', color: '#16a34a', fontWeight: 600 }}>
+                ✓ Uğurla abunə oldunuz!
+              </span>
+            )}
+
+            {/* Social Icons */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginTop: '6px' }}>
+              <a
+                href="https://facebook.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: theme.textMuted || '#64748b', transition: 'color 0.15s ease' }}
+                aria-label="Facebook"
+              >
+                <Facebook size={18} />
+              </a>
+              <a
+                href="https://instagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: theme.textMuted || '#64748b', transition: 'color 0.15s ease' }}
+                aria-label="Instagram"
+              >
+                <Instagram size={18} />
+              </a>
+              <a
+                href="https://youtube.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: theme.textMuted || '#64748b', transition: 'color 0.15s ease' }}
+                aria-label="YouTube"
+              >
+                <Youtube size={18} />
+              </a>
+            </div>
+          </div>
         </div>
-      </div>
 
-      {/* Bottom Copyright Row */}
-      <div
-        style={{
-          maxWidth: '1280px',
-          margin: '0 auto',
-          paddingTop: '20px',
-          borderTop: `1px solid ${theme.border}`,
-          display: 'flex',
-          flexWrap: 'wrap',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '12px',
-          fontSize: '12px',
-          color: theme.textMuted,
-        }}
-      >
-        <p>
-          © {new Date().getFullYear()} {companyName}.{' '}
-          {settings.footerCopyright || 'Bütün hüquqlar qorunur.'}
-        </p>
+        {/* Showroom Addresses & Contact Row when configured */}
+        {(addressList.length > 0 || phoneList.length > 0 || waHref || settings?.instagramUsername || settings?.facebookUsername) && (
+          <div
+            className="footer-showrooms-contact-row"
+            style={{
+              borderTop: `1px solid ${theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : '#f1f5f9'}`,
+              paddingTop: '24px',
+              paddingBottom: '24px',
+              display: 'flex',
+              flexWrap: 'wrap',
+              gap: '24px',
+              justifyContent: 'space-between',
+            }}
+          >
+            {/* Showrooms & Addresses */}
+            {addressList.length > 0 && (
+              <div style={{ flex: '1 1 300px' }}>
+                <h4
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: 800,
+                    color: theme.text,
+                    margin: '0 0 10px 0',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                  }}
+                >
+                  <MapPin size={15} color="#e31e24" />
+                  <span>{addressList.length > 1 ? 'Mağaza və Filiallarımız' : 'Ünvan və Lokasiya'}</span>
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {addressList.length > 1 ? (
+                    addressList.map((addr, idx) => (
+                      <div key={idx} style={{ fontSize: '12.5px', color: theme.textMuted || '#64748b' }}>
+                        <span style={{ fontWeight: 700, color: theme.text }}>{addr.title || `Filial ${idx + 1}`}</span>
+                        <span>: </span>
+                        <span>{addr.address}</span>
+                        {addr.mapUrl && (
+                          <a
+                            href={addr.mapUrl}
+                            title="Xəritədə açmaq üçün toxunun"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{ marginLeft: '6px', color: '#e31e24', display: 'inline-flex', alignItems: 'center' }}
+                          >
+                            <ExternalLink size={11} />
+                          </a>
+                        )}
+                      </div>
+                    ))
+                  ) : (
+                    <div style={{ fontSize: '12.5px', color: theme.textMuted || '#64748b' }}>
+                      <span>{addressList[0].address}</span>
+                      <a
+                        href={addressList[0].mapUrl || 'https://maps.google.com'}
+                        title="Xəritədə açmaq üçün toxunun"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        style={{ marginLeft: '6px', color: '#e31e24', display: 'inline-flex', alignItems: 'center' }}
+                      >
+                        <ExternalLink size={11} />
+                      </a>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
 
-        <button
-          type="button"
-          onClick={() => {
-            window.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-            if (document.documentElement)
-              document.documentElement.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-            if (document.body) document.body.scrollTo({ top: 0, left: 0, behavior: 'smooth' });
-          }}
+            {/* Direct Contacts, Socials & WhatsApp */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+              {settings?.instagramUsername && (
+                <a
+                  href={settings.instagramUrl || `https://instagram.com/${settings.instagramUsername.replace('@', '')}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '12.5px',
+                    fontWeight: 700,
+                    color: theme.text,
+                    textDecoration: 'none',
+                  }}
+                >
+                  <Instagram size={15} color="#e1306c" />
+                  <span>{settings.instagramUsername}</span>
+                </a>
+              )}
+
+              {settings?.facebookUsername && (
+                <a
+                  href={settings.facebookUrl || 'https://facebook.com'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '12.5px',
+                    fontWeight: 700,
+                    color: theme.text,
+                    textDecoration: 'none',
+                  }}
+                >
+                  <Facebook size={15} color="#1877f2" />
+                  <span>{settings.facebookUsername}</span>
+                </a>
+              )}
+
+              {settings?.whatsappNumber && waHref && (
+                <a
+                  href={waHref}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '12.5px',
+                    fontWeight: 700,
+                    color: '#16a34a',
+                    textDecoration: 'none',
+                  }}
+                >
+                  <WhatsAppIcon size={16} color="#16a34a" />
+                  <span>{settings.whatsappNumber}</span>
+                </a>
+              )}
+
+              {phoneList.map((ph, idx) => (
+                <a
+                  key={idx}
+                  href={phoneHref(ph)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '12.5px',
+                    fontWeight: 700,
+                    color: theme.text,
+                    textDecoration: 'none',
+                  }}
+                >
+                  <Phone size={14} color="#e31e24" />
+                  <span>{ph}</span>
+                </a>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Sub-Footer Row */}
+        <div
           style={{
-            display: 'inline-flex',
+            borderTop: `1px solid ${theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : '#f1f5f9'}`,
+            paddingTop: '20px',
+            display: 'flex',
             alignItems: 'center',
-            gap: '6px',
-            background: theme.bgCard,
-            border: `1px solid ${theme.border}`,
-            color: theme.text,
-            padding: '6px 12px',
-            borderRadius: '8px',
-            fontSize: '12px',
-            fontWeight: 700,
-            cursor: 'pointer',
-            transition: 'all 0.2s ease',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: '12px',
+            fontSize: '12.5px',
+            color: theme.textMuted || '#94a3b8',
           }}
         >
-          <span>{settings.scrollTopButtonText || 'Səhifənin Başına Qayıt'}</span>
-          <ArrowUp size={14} color={theme.primary} />
-        </button>
+          <div>© {new Date().getFullYear()} Sahara Electronics. Bütün hüquqlar qorunur.</div>
 
-        <p>
-          {settings.footerAbout ||
-            'Sahara Electronics ARDO, Lotus və Artel məhsullarının kataloq platformasıdır.'}
-        </p>
+          <div
+            style={{
+              fontFamily: "'Playfair Display', Georgia, serif",
+              fontStyle: 'italic',
+              fontSize: '14px',
+              color: theme.mode === 'dark' ? '#cbd5e1' : '#475569',
+            }}
+          >
+            Daha çox imkan, hər zaman sizinlə!
+          </div>
+
+          <button
+            type="button"
+            onClick={scrollToTop}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              color: theme.textMuted || '#64748b',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              fontSize: '12px',
+              fontWeight: 600,
+            }}
+          >
+            <span>Yuxarı</span>
+            <ArrowUp size={13} />
+          </button>
+        </div>
       </div>
     </footer>
   );

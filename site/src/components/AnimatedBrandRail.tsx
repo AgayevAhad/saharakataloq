@@ -125,7 +125,7 @@ export const AnimatedBrandRail: React.FC<AnimatedBrandRailProps> = ({
               src={item.brandLogo}
               alt={displayName}
               objectFit="contain"
-              className={`brand-rail-logo-img ${item.brandSlug === 'artel' ? 'brand-logo-artel' : ''}`}
+              className={`brand-rail-logo-img brand-logo-${item.brandSlug || item.brandId}`}
               width={90}
               height={30}
               fallback={<span className="brand-rail-name-text">{displayName}</span>}

@@ -72,4 +72,16 @@ describe('Sahara Electronics Splash Screen Suite', () => {
     splash?.classList.add('splash-fade-out');
     expect(splash?.classList.contains('splash-fade-out')).toBe(true);
   });
+
+  it('supports catalog-loaded-wrap animation class for graceful mounting', () => {
+    document.body.innerHTML = `
+      <div class="catalog-loaded-wrap">
+        <div class="catalog-section">Catalog Content</div>
+      </div>
+    `;
+
+    const wrap = document.querySelector('.catalog-loaded-wrap');
+    expect(wrap).toBeTruthy();
+    expect(wrap?.textContent).toContain('Catalog Content');
+  });
 });

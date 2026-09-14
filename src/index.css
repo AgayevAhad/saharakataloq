@@ -61,7 +61,8 @@ h1, h2, h3, h4, .font-heading {
 }
 
 /* RESPONSIVE PRODUCT GRID */
-.product-grid-container {
+.product-grid-container,
+.home-featured-grid {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   gap: 16px;
@@ -72,21 +73,24 @@ h1, h2, h3, h4, .font-heading {
 }
 
 @media (min-width: 540px) {
-  .product-grid-container {
+  .product-grid-container,
+  .home-featured-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: 16px;
   }
 }
 
 @media (min-width: 900px) {
-  .product-grid-container {
+  .product-grid-container,
+  .home-featured-grid {
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 20px;
   }
 }
 
 @media (min-width: 1280px) {
-  .product-grid-container {
+  .product-grid-container,
+  .home-featured-grid {
     grid-template-columns: repeat(4, minmax(0, 1fr));
     gap: 24px;
   }
@@ -4384,6 +4388,24 @@ button, input, textarea, select { font: inherit; }
   border-radius: 8px;
   padding: 12px;
 }
+
+/* Seamless Catalog Transition */
+@keyframes catalogContentFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.catalog-loaded-wrap {
+  animation: catalogContentFadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  will-change: opacity, transform;
+}
+
 
 
 

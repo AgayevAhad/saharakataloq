@@ -411,8 +411,11 @@ export class BrandRailService {
       .all(limit);
   }
 
-  rollback(revisionId, actor = 'admin') {
-    const rev = this.db.prepare('SELECT * FROM brand_rail_revisions WHERE id = ?').get(revisionId);
+  rollback(revisionIdOrVersion, actor = 'admin') {
+    let rev = this.db.prepare('SELECT * FROM brand_rail_revisions WHERE id = ?').get(revisionIdOrVersion);
+    if (!rev && (typeof revisionIdOrVersion === 'number' || !isNaN(Number(revisionIdOrVersion)))) {
+      rev = this.db.prepare('SELECT * FROM brand_rail_revisions WHERE version = ? ORDER BY created_at DESC LIMIT 1').get(Number(revisionIdOrVersion));
+    }
     if (!rev) {
       const err = new Error('NOT_FOUND: Reviziya tapılmadı.');
       err.statusCode = 404;

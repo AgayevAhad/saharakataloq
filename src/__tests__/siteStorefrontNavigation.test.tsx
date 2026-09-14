@@ -1,0 +1,294 @@
+// @vitest-environment happy-dom
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import React from 'react';
+import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { App } from '../App';
+import { DEFAULT_CATALOG } from '../data/catalog';
+import { Product } from '../types/product';
+import { lightTheme } from '../types/theme';
+import { TopServiceBar } from '../components/site/TopServiceBar';
+import { MegaMenu } from '../components/site/MegaMenu';
+import { SaharaMatchModal } from '../components/site/SaharaMatchModal';
+import { MobileBottomNav } from '../components/site/MobileBottomNav';
+import { BrandsPage } from '../pages/BrandsPage';
+import { ServicesPage } from '../pages/ServicesPage';
+import { StoresPage } from '../pages/StoresPage';
+import { ComparePage } from '../pages/ComparePage';
+import { SupportPage } from '../pages/SupportPage';
+
+const mockProducts: Product[] = [
+  {
+    id: 'ardo-cooktop-1',
+    code: 'HA-60',
+    title: 'ARDO Qaz Paneli HA-60',
+    category: 'cooktop',
+    categoryName: 'Bişirmə paneli',
+    brandId: 'ardo',
+    image: '/media/ardo.png',
+    shortDesc: 'Qaz plitəsi',
+    price: 350,
+    currency: 'AZN',
+    status: 'published',
+    highlights: ['4 qaz gözü', 'Sabaf brülör'],
+    specs: [{ id: '1', name: 'Göz sayı', value: '4' }],
+    media: [{ id: 'm1', type: 'image', url: '/media/ardo.png' }],
+    badgeText: 'Yeni',
+  },
+  {
+    id: 'ardo-oven-1',
+    code: 'OV-60',
+    title: 'ARDO Quraşdırılan Soba OV-60',
+    category: 'oven',
+    categoryName: 'Soba',
+    brandId: 'ardo',
+    image: '/media/oven.png',
+    shortDesc: 'Elektrik soba',
+    price: 550,
+    currency: 'AZN',
+    status: 'published',
+    highlights: ['65L həcm', 'A sinfi'],
+    specs: [{ id: '1', name: 'Həcm', value: '65L' }],
+    media: [{ id: 'm2', type: 'image', url: '/media/oven.png' }],
+  },
+];
+
+const mockCatalog = {
+  ...DEFAULT_CATALOG,
+  products: mockProducts,
+};
+
+// Mock catalogApi
+vi.mock('../services/catalogApi', () => ({
+  catalogApi: {
+    getCatalog: vi.fn().mockImplementation(() => Promise.resolve(mockCatalog)),
+    getAdminData: vi.fn().mockResolvedValue(null),
+    track: vi.fn(),
+  },
+}));
+
+describe('Sahara Electronics Site Storefront Navigation & Components', () => {
+  beforeEach(() => {
+    localStorage.clear();
+    window.history.pushState({}, '', '/');
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  describe('TopServiceBar', () => {
+    it('renders contact numbers and showroom link correctly', () => {
+      const handleNavigate = vi.fn();
+      render(
+        <TopServiceBar
+          settings={DEFAULT_CATALOG.settings}
+          theme={lightTheme}
+          onNavigate={handleNavigate}
+        />
+      );
+
+      expect(screen.getByText(/3 İlədək Rəsmi Zəmanət/i)).toBeDefined();
+      expect(screen.getByText(/Servis & Sifariş İzləmə/i)).toBeDefined();
+      
+      fireEvent.click(screen.getByText(/Servis & Sifariş İzləmə/i));
+      expect(handleNavigate).toHaveBeenCalledWith('support');
+    });
+  });
+
+  describe('MegaMenu', () => {
+    it('renders categories and brand lists when open', () => {
+      const handleSelectCategory = vi.fn();
+      const handleSelectBrand = vi.fn();
+      const handleNavigate = vi.fn();
+      const handleClose = vi.fn();
+
+      render(
+        <MegaMenu
+          isOpen={true}
+          onClose={handleClose}
+          categories={DEFAULT_CATALOG.categories}
+          brands={DEFAULT_CATALOG.brands}
+          theme={lightTheme}
+          onSelectCategory={handleSelectCategory}
+          onSelectBrand={handleSelectBrand}
+          onNavigate={handleNavigate}
+        />
+      );
+
+      expect(screen.getByText(/Quraşdırılan Mətbəx/i)).toBeDefined();
+      expect(screen.getByText(/Rəsmi Brendlər/i)).toBeDefined();
+      expect(screen.getByText(/ARDO/i)).toBeDefined();
+    });
+  });
+
+  describe('MobileBottomNav', () => {
+    it('renders 5 primary navigation tabs and triggers callbacks', () => {
+      const handleNavigate = vi.fn();
+      const handleOpenSearch = vi.fn();
+
+      render(
+        <MobileBottomNav
+          currentRoute="home"
+          onNavigate={handleNavigate}
+          onOpenSearch={handleOpenSearch}
+          comparisonCount={2}
+          theme={lightTheme}
+        />
+      );
+
+      expect(screen.getByText('Ana Səhifə')).toBeDefined();
+      expect(screen.getByText('Kataloq')).toBeDefined();
+      expect(screen.getByText('Axtarış')).toBeDefined();
+      expect(screen.getByText('Müqayisə')).toBeDefined();
+      expect(screen.getByText('Salonlar')).toBeDefined();
+      expect(screen.getByText('2')).toBeDefined(); // Comparison badge count
+
+      fireEvent.click(screen.getByText('Kataloq'));
+      expect(handleNavigate).toHaveBeenCalledWith('catalog');
+
+      fireEvent.click(screen.getByText('Axtarış'));
+      expect(handleOpenSearch).toHaveBeenCalled();
+    });
+  });
+
+  describe('SaharaMatchModal', () => {
+    it('allows completing step questions to find matching products', () => {
+      const handleSelectProduct = vi.fn();
+      const handleClose = vi.fn();
+
+      render(
+        <SaharaMatchModal
+          isOpen={true}
+          onClose={handleClose}
+          products={mockProducts}
+          theme={lightTheme}
+          onSelectProduct={handleSelectProduct}
+        />
+      );
+
+      expect(screen.getByText(/Sahara Match — Ağıllı Seçim Köməkçisi/i)).toBeDefined();
+      expect(screen.getByText(/Hansı kateqoriyada texnika axtarırsınız\?/i)).toBeDefined();
+
+      // Step 1: Select category option
+      const categoryOption = screen.getByText(/Qaz & Elektrik Plitəsi/i);
+      fireEvent.click(categoryOption);
+
+      // Verify question changed to step 2
+      expect(screen.getByText(/İstifadə intensivliyi və ailə üzvlərinin sayı/i)).toBeDefined();
+    });
+  });
+
+  describe('Pages Rendering', () => {
+    it('BrandsPage renders brand cards and origin information', () => {
+      const handleNavigate = vi.fn();
+      render(
+        <BrandsPage
+          brands={DEFAULT_CATALOG.brands}
+          products={mockProducts}
+          theme={lightTheme}
+          onNavigate={handleNavigate}
+        />
+      );
+
+      expect(screen.getByText(/Rəsmi Elektronika və Məişət Texnikası Brendləri/i)).toBeDefined();
+      expect(screen.getByText('ARDO')).toBeDefined();
+      expect(screen.getByText('LOTUS')).toBeDefined();
+      expect(screen.getByText('ARTEL')).toBeDefined();
+    });
+
+    it('ServicesPage renders Sahara Care service benefits and warranty terms', () => {
+      const handleWhatsApp = vi.fn();
+      const handleCall = vi.fn();
+
+      render(
+        <ServicesPage
+          settings={DEFAULT_CATALOG.settings}
+          theme={lightTheme}
+          onWhatsApp={handleWhatsApp}
+          onCall={handleCall}
+        />
+      );
+
+      expect(screen.getByText(/Sahara Care — Zəmanət, Quraşdırma və Servis Mərkəzi/i)).toBeDefined();
+      expect(screen.getByText(/3 İlə Qədər Rəsmi Zəmanət/i)).toBeDefined();
+    });
+
+    it('StoresPage renders showroom locations and working hours', () => {
+      const handleWhatsApp = vi.fn();
+      const handleCall = vi.fn();
+
+      render(
+        <StoresPage
+          settings={DEFAULT_CATALOG.settings}
+          theme={lightTheme}
+          onWhatsApp={handleWhatsApp}
+          onCall={handleCall}
+        />
+      );
+
+      expect(screen.getByText(/Sərgi Salonları, Filiallar və Əlaqə/i)).toBeDefined();
+    });
+
+    it('ComparePage renders comparison table when products are passed', () => {
+      const handleRemove = vi.fn();
+      const handleClear = vi.fn();
+      const handleSelect = vi.fn();
+      const handleNavigate = vi.fn();
+
+      render(
+        <ComparePage
+          comparisonProducts={mockProducts}
+          theme={lightTheme}
+          onRemoveFromCompare={handleRemove}
+          onClearCompare={handleClear}
+          onSelectProduct={handleSelect}
+          onNavigate={handleNavigate}
+        />
+      );
+
+      expect(screen.getByText(/Məhsul Müqayisəsi/i)).toBeDefined();
+      expect(screen.getByText(/Yalnız Fərqləri Göstər/i)).toBeDefined();
+    });
+
+    it('ComparePage renders empty state when no products selected', () => {
+      const handleNavigate = vi.fn();
+      render(
+        <ComparePage
+          comparisonProducts={[]}
+          theme={lightTheme}
+          onRemoveFromCompare={vi.fn()}
+          onClearCompare={vi.fn()}
+          onSelectProduct={vi.fn()}
+          onNavigate={handleNavigate}
+        />
+      );
+
+      expect(screen.getByText(/Müqayisə Siyahısı Boşdur/i)).toBeDefined();
+      fireEvent.click(screen.getByText(/Məhsullara Bax/i));
+      expect(handleNavigate).toHaveBeenCalledWith('catalog');
+    });
+
+    it('SupportPage renders FAQs and interactive inquiry form', () => {
+      render(
+        <SupportPage
+          settings={DEFAULT_CATALOG.settings}
+          theme={lightTheme}
+          onWhatsApp={vi.fn()}
+          onCall={vi.fn()}
+        />
+      );
+
+      expect(screen.getByText(/Müştəri Dəstəyi, FAQ & Servis İzləmə/i)).toBeDefined();
+      expect(screen.getByText(/Tez-Tez Verilən Suallar/i)).toBeDefined();
+    });
+  });
+
+  describe('Full App Integration', () => {
+    it('renders app shell cleanly in site mode without throwing', async () => {
+      render(<App />);
+      await waitFor(() => {
+        expect(document.querySelector('#catalog-top-anchor')).toBeDefined();
+      });
+    });
+  });
+});

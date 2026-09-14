@@ -73,13 +73,13 @@ describe('App Product Click and Modal Integration E2E Test', () => {
 
     // Wait for catalog to render
     await waitFor(() => {
-      expect(screen.getAllByText('ARDO').length).toBeGreaterThan(0);
+      expect(screen.getAllByRole('button', { name: /ARDO/i }).length).toBeGreaterThan(0);
     });
 
-    // Find and click on the ARDO brand card in BrandShowcase
-    const ardoBrandCard = screen.getByRole('button', { name: /ARDO məhsullarına bax/i });
-    expect(ardoBrandCard).not.toBeNull();
-    fireEvent.click(ardoBrandCard);
+    // Find and click on the ARDO brand in AnimatedBrandRail
+    const ardoBrandBtn = screen.getAllByRole('button', { name: /ARDO/i })[0];
+    expect(ardoBrandBtn).not.toBeNull();
+    fireEvent.click(ardoBrandBtn);
 
     // Wait for product cards to render
     await waitFor(() => {

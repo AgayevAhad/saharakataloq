@@ -129,14 +129,16 @@
         align-items: center;
         justify-content: center;
         z-index: 999999;
-        transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1), transform 0.5s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.5s;
+        transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1), filter 0.75s cubic-bezier(0.16, 1, 0.3, 1), visibility 0.75s;
         overflow: hidden;
         user-select: none;
+        will-change: opacity, transform, filter;
       }
 
       .sahara-splash-container.splash-fade-out {
         opacity: 0;
-        transform: scale(1.04);
+        transform: scale(1.02);
+        filter: blur(6px);
         pointer-events: none;
         visibility: hidden;
       }

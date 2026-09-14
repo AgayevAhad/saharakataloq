@@ -6453,18 +6453,29 @@ select {
 }
 
 .brand-rail-logo-img {
-  max-width: 90px;
-  max-height: 28px;
+  max-width: 96px;
+  max-height: 26px;
   object-fit: contain;
-  transition: transform 0.2s ease;
+  transition: transform 0.2s ease, opacity 0.2s ease, filter 0.2s ease;
 }
 
-.theme-light .brand-logo-artel {
+.theme-light .brand-rail-logo-img:not(.brand-logo-ardo):not(.brand-logo-lotus) {
+  filter: brightness(0.12);
+  opacity: 0.85;
+}
+
+.theme-light .brand-rail-logo-img:not(.brand-logo-ardo):not(.brand-logo-lotus):hover {
   filter: brightness(0);
+  opacity: 1;
 }
 
-.theme-dark .brand-logo-artel {
+.theme-dark .brand-rail-logo-img:not(.brand-logo-ardo):not(.brand-logo-lotus) {
   filter: brightness(0) invert(1);
+  opacity: 0.82;
+}
+
+.theme-dark .brand-rail-logo-img:not(.brand-logo-ardo):not(.brand-logo-lotus):hover {
+  opacity: 1;
 }
 
 .brand-rail-name-text {

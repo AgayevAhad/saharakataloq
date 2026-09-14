@@ -1,5 +1,5 @@
-import React from 'react';
-import { Sparkles, ArrowRight, ChevronRight } from 'lucide-react';
+import React, { useState, useMemo } from 'react';
+import { ChevronRight } from 'lucide-react';
 import {
   Brand,
   CatalogCategory,
@@ -9,16 +9,14 @@ import {
   BrandRailData,
 } from '../types/product';
 import { ThemeColors } from '../types/theme';
-import { BrandShowcase } from '../components/BrandShowcase';
 import { BannerHero } from '../components/BannerHero';
 import { AnimatedBrandRail } from '../components/AnimatedBrandRail';
 import { AnimatedBrandRailSkeleton } from '../components/AnimatedBrandRailSkeleton';
 import { VisualCategoryCards } from '../components/VisualCategoryCards';
 import { ThematicShowcase } from '../components/ThematicShowcase';
+import { FeaturedProductCard } from '../components/FeaturedProductCard';
+import { SpecialDiscountBanner } from '../components/SpecialDiscountBanner';
 import { TrustHighlights } from '../components/TrustHighlights';
-import { ProductCard } from '../components/ProductCard';
-import { Button } from '../components/ui/Button';
-import { featureFlags } from '../utils/featureFlags';
 
 interface HomePageProps {
   brands: Brand[];
@@ -39,8 +37,18 @@ interface HomePageProps {
   onCopyLink: (product: Product) => void;
 }
 
+const FEATURED_TABS = [
+  { id: 'all', name: 'Hamısı' },
+  { id: 'tv', name: 'Televizor' },
+  { id: 'notebook', name: 'Notebook' },
+  { id: 'tablet', name: 'Planşet' },
+  { id: 'washer', name: 'Paltaryuyan' },
+  { id: 'refrigerator', name: 'Soyuducu' },
+  { id: 'air_conditioner', name: 'Kondisioner' },
+];
+
 export const HomePage: React.FC<HomePageProps> = ({
-  brands,
+  brands: _brands,
   categories,
   products,
   articles,
@@ -50,24 +58,43 @@ export const HomePage: React.FC<HomePageProps> = ({
   theme,
   onNavigate,
   onSelectProduct,
-  onOpenSaharaMatch,
+  onOpenSaharaMatch: _onOpenSaharaMatch,
   onOpenArticle,
-  onWhatsApp,
-  onCall,
-  onShare,
-  onCopyLink,
+  onWhatsApp: _onWhatsApp,
+  onCall: _onCall,
+  onShare: _onShare,
+  onCopyLink: _onCopyLink,
 }) => {
-  const publishedProducts = products.filter((p) => p.status === 'published');
-  const featuredProducts = publishedProducts
-    .filter((p) => p.isFeatured || p.status === 'published')
-    .slice(0, 8);
+  const [selectedTab, setSelectedTab] = useState('all');
+
+  const publishedProducts = useMemo(() => {
+    return products.filter((p) => p.status === 'published');
+  }, [products]);
+
+  const filteredFeaturedProducts = useMemo(() => {
+    if (selectedTab === 'all') {
+      return publishedProducts.slice(0, 12);
+    }
+    const filtered = publishedProducts.filter((p) => {
+      const pCat = (p.category || '').toLowerCase();
+      const pTitle = (p.title || '').toLowerCase();
+      if (selectedTab === 'tv') return pCat.includes('tv') || pTitle.includes('tv') || pTitle.includes('televizor');
+      if (selectedTab === 'notebook') return pCat.includes('laptop') || pCat.includes('notebook') || pTitle.includes('notebook');
+      if (selectedTab === 'tablet') return pCat.includes('tablet') || pCat.includes('planşet');
+      if (selectedTab === 'washer') return pCat.includes('washer') || pCat.includes('paltaryuyan');
+      if (selectedTab === 'refrigerator') return pCat.includes('fridge') || pCat.includes('refrigerator') || pCat.includes('soyuducu');
+      if (selectedTab === 'air_conditioner') return pCat.includes('conditioner') || pCat.includes('kondisioner');
+      return pCat === selectedTab;
+    });
+    return filtered.length > 0 ? filtered.slice(0, 12) : publishedProducts.slice(0, 6);
+  }, [publishedProducts, selectedTab]);
 
   return (
     <div
       className="home-page-container"
-      style={{ display: 'flex', flexDirection: 'column', gap: '36px', paddingBottom: '40px' }}
+      style={{ display: 'flex', flexDirection: 'column', gap: '32px', paddingBottom: '48px' }}
     >
-      {/* 4. Multi-Brand Neutral Hero Banner */}
+      {/* 1. Hero Banner */}
       <BannerHero
         theme={theme}
         articles={articles}
@@ -78,7 +105,23 @@ export const HomePage: React.FC<HomePageProps> = ({
         onNavigateContact={() => onNavigate('support')}
       />
 
-      {/* 4.5. Animated Brand Rail */}
+      {/* 2. Visual Category Cards */}
+      <VisualCategoryCards
+        categories={categories}
+        products={products}
+        theme={theme}
+        onSelectCategory={(catId) => onNavigate('catalog', catId)}
+        onViewAll={() => onNavigate('catalog')}
+      />
+
+      {/* 3. 3 Promo Feature Cards ("Eviniz üçün ən yaxşı seçim" trio) */}
+      <ThematicShowcase
+        categories={categories}
+        theme={theme}
+        onNavigateCategory={(catId) => onNavigate('catalog', catId)}
+      />
+
+      {/* 4. Brand Logos Carousel / Marquee Rail */}
       {isLoadingRail ||
       (typeof window !== 'undefined' &&
         (new URLSearchParams(window.location.search).get('skeleton') === 'true' ||
@@ -88,172 +131,124 @@ export const HomePage: React.FC<HomePageProps> = ({
         <AnimatedBrandRail
           data={brandRail}
           theme={theme}
-          onNavigateBrand={(slug) => onNavigate('brand', slug)}
+          onNavigateBrand={(slug) => onNavigate(slug ? 'brand' : 'brands', slug)}
         />
       )}
 
-      {/* 5. Visual Category Cards Carousel / Grid */}
-      <VisualCategoryCards
-        categories={categories}
-        products={products}
-        theme={theme}
-        onSelectCategory={(catId) => onNavigate('catalog', catId)}
-        onViewAll={() => onNavigate('catalog')}
-      />
-
-      {/* 6. Curated Thematic Showcase Trio (Fail-closed: completely hidden if no verified CMS items) */}
-      <ThematicShowcase
-        categories={categories}
-        theme={theme}
-        onNavigateCategory={(catId) => onNavigate('catalog', catId)}
-      />
-
-      {/* 7. Brand Registry Showcase Dock */}
-      <BrandShowcase
-        brands={brands}
-        products={products}
-        theme={theme}
-        onSelect={(brandId) => onNavigate('catalog', brandId)}
-      />
-
-      {/* Interactive Sahara Match Banner (Feature Flagged) */}
-      {featureFlags.isEnabled('enableSaharaMatch') && (
-        <section className="catalog-container" aria-label="Ağıllı Seçim">
-          <div
-            style={{
-              background:
-                theme.mode === 'dark'
-                  ? 'linear-gradient(135deg, rgba(220, 38, 38, 0.25) 0%, rgba(15, 23, 42, 0.95) 100%)'
-                  : 'linear-gradient(135deg, #fff1f2 0%, #ffffff 100%)',
-              border: `1.5px solid ${theme.mode === 'dark' ? 'rgba(220, 38, 38, 0.4)' : '#fecdd3'}`,
-              borderRadius: '20px',
-              padding: '24px 28px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              flexWrap: 'wrap',
-              gap: '16px',
-              boxShadow: '0 10px 28px -4px rgba(220, 38, 38, 0.08)',
-            }}
-          >
-            <div style={{ maxWidth: '580px' }}>
-              <div
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '3px 8px',
-                  borderRadius: '999px',
-                  backgroundColor: 'rgba(220, 38, 38, 0.12)',
-                  color: '#dc2626',
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  marginBottom: '8px',
-                }}
-              >
-                <Sparkles size={13} />
-                <span>Ağıllı Məhsul Seçimi</span>
-              </div>
-              <h2
-                style={{
-                  fontSize: '18px',
-                  fontWeight: 800,
-                  color: theme.text,
-                  marginBottom: '6px',
-                }}
-              >
-                Məkanınıza və ailənizə ən uyğun modeli tapa bilmirsiniz?
-              </h2>
-              <p style={{ fontSize: '13px', color: theme.textMuted, margin: 0, lineHeight: 1.4 }}>
-                Sahara Match ilə cəmi 3 sadə suala cavab verin, ehtiyaclarınıza cavab verən
-                modelləri dərhal tövsiyə edək.
-              </p>
-            </div>
-
-            <Button
-              size="md"
-              variant="primary"
-              onClick={onOpenSaharaMatch}
-              rightIcon={<ArrowRight size={15} />}
-            >
-              Seçimə Başla
-            </Button>
-          </div>
-        </section>
-      )}
-
-      {/* 8. Featured Products Showcase Grid */}
-      <section className="catalog-container" aria-label="Seçilmiş Modellər">
+      {/* 5. Featured Products Section ("Seçilmiş məhsullar") */}
+      <section className="catalog-container featured-products-section" aria-label="Seçilmiş Məhsullar">
+        {/* Section Header with inline Category Filter Tabs */}
         <div
+          className="featured-section-header"
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            marginBottom: '16px',
+            flexWrap: 'wrap',
+            gap: '16px',
+            marginBottom: '20px',
           }}
         >
-          <div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
             <h2
               style={{
-                fontSize: 'clamp(1.125rem, 2vw, 1.375rem)',
-                fontWeight: 800,
+                fontSize: 'clamp(1.25rem, 2.2vw, 1.5rem)',
+                fontWeight: 900,
                 color: theme.text,
                 margin: 0,
+                fontFamily: 'Outfit, -apple-system, sans-serif',
+                letterSpacing: '-0.02em',
               }}
             >
-              Seçilmiş Modellər
+              Seçilmiş məhsullar
             </h2>
-            <p style={{ fontSize: '13px', color: theme.textMuted, margin: '3px 0 0 0' }}>
-              Təsdiqlənmiş kataloq modelləri və texniki parametrlər
-            </p>
+
+            {/* Horizontal Filter Tabs */}
+            <div
+              className="featured-filter-tabs hide-on-mobile"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                overflowX: 'auto',
+                scrollbarWidth: 'none',
+              }}
+            >
+              {FEATURED_TABS.map((tab) => {
+                const isActive = selectedTab === tab.id;
+                return (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setSelectedTab(tab.id)}
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      padding: '4px 10px',
+                      borderRadius: '6px',
+                      fontSize: '13px',
+                      fontWeight: isActive ? 800 : 500,
+                      color: isActive ? '#e31e24' : theme.textMuted || '#64748b',
+                      cursor: 'pointer',
+                      borderBottom: isActive ? '2px solid #e31e24' : '2px solid transparent',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    {tab.name}
+                  </button>
+                );
+              })}
+            </div>
           </div>
+
           <button
             type="button"
             onClick={() => onNavigate('catalog')}
             style={{
               background: 'transparent',
               border: 'none',
-              color: theme.primary,
-              fontWeight: 700,
+              color: '#e31e24',
+              fontWeight: 800,
               fontSize: '13px',
               cursor: 'pointer',
               display: 'inline-flex',
               alignItems: 'center',
               gap: '4px',
-              padding: '4px 8px',
-              borderRadius: '6px',
+              padding: '4px 6px',
             }}
           >
-            <span>Kataloqa keç</span>
+            <span>Hamısına bax</span>
             <ChevronRight size={14} />
           </button>
         </div>
 
-        <div className="home-featured-grid">
-          {featuredProducts.map((product) => {
-            const brand = brands.find((b) => b.id === product.brandId);
-            return (
-              <ProductCard
-                key={product.id}
-                product={product}
-                brandName={brand?.name}
-                brandOrigin={brand?.originCountry ? `${brand.originCountry} brendi` : ''}
-                whatsappButtonText={settings?.whatsappButtonText}
-                callButtonText={settings?.callButtonText}
-                shareButtonText={settings?.shareButtonText}
-                theme={theme}
-                onSelect={onSelectProduct}
-                onShare={onShare}
-                onWhatsApp={onWhatsApp}
-                onCall={onCall}
-                onCopyLink={onCopyLink}
-              />
-            );
-          })}
+        {/* 6-Column Responsive Product Grid */}
+        <div
+          className="featured-products-grid"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
+            gap: '16px',
+          }}
+        >
+          {filteredFeaturedProducts.map((product) => (
+            <FeaturedProductCard
+              key={product.id}
+              product={product}
+              theme={theme}
+              onSelect={onSelectProduct}
+            />
+          ))}
         </div>
       </section>
 
-      {/* 10. Verified Services & Trust Highlights (Fail-closed: completely hidden if no verified items) */}
+      {/* 6. Special Discount Promo Banner ("Xüsusi endirimlər sizi gözləyir!") */}
+      <SpecialDiscountBanner
+        theme={theme}
+        onNavigateDiscounts={() => onNavigate('catalog', 'discounts')}
+      />
+
+      {/* 7. Trust Highlights / USP Bar */}
       <TrustHighlights theme={theme} />
     </div>
   );

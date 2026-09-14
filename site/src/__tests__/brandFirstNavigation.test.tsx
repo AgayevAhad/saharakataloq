@@ -170,14 +170,13 @@ describe('Brand-First Interactive Navigation & Contextual Filter Suite', () => {
     expect(onBackToBrands).toHaveBeenCalled();
   });
 
-  it('Initial landing view does NOT dump product cards until brand/category selected', async () => {
+  it('Initial landing view renders curated home structure without legacy brand family dock', async () => {
     const { queryByText } = render(<App />);
 
-    // Brand showcase is visible
-    expect(queryByText('Məhsul ailələrimizi kəşf edin')).toBeDefined();
+    // Brand showcase ("Məhsul ailələrimizi kəşf edin") is cleanly removed from home page
+    expect(queryByText('Məhsul ailələrimizi kəşf edin')).toBeNull();
 
-    // On fresh landing with no selection, catalog-section product grid is clean
-    const productGrid = document.querySelector('.product-grid-container');
-    expect(productGrid).toBeNull();
+    // Featured section and curated components are active
+    expect(queryByText('Seçilmiş məhsullar')).toBeDefined();
   });
 });

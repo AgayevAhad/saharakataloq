@@ -2135,6 +2135,35 @@ const server = http.createServer(async (req, res) => {
       }
     }
 
+    if (path === '/api/admin/brand-rail/rollback' && req.method === 'POST') {
+      const session = requireAdmin(req, res);
+      if (!session) return;
+      if (!verifyCsrf(req, res, session)) return;
+      try {
+        const body = await parseJsonBody(req);
+        const versionOrId = body.version || body.revisionId;
+        if (!versionOrId) {
+          return send(res, 400, { error: 'INVALID_REQUEST', message: 'Reviziya və ya versiya nömrəsi tələb olunur.' });
+        }
+        const brandRailService = new BrandRailService(draftDb, publicDb);
+        const result = brandRailService.rollback(versionOrId, session.username || 'admin');
+        const userAgent = req.headers['user-agent'] || '';
+        await logAdminAction(draftDb, {
+          actor: session.username || 'admin',
+          action: 'rollback',
+          title: 'Brend lenti əvvəlki versiyaya qaytarıldı',
+          details: `Versiya: ${versionOrId}`,
+          ipAddress: session.ip,
+          userAgent,
+          status: 'success',
+        });
+        return send(res, 200, { ok: true, ...result });
+      } catch (err) {
+        const status = err.statusCode || 500;
+        return send(res, status, { error: 'BRAND_RAIL_ROLLBACK_ERROR', message: err.message });
+      }
+    }
+
     if (
       path.startsWith('/api/admin/products/') &&
       req.method === 'GET' &&
