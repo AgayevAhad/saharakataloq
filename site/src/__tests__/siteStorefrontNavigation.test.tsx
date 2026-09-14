@@ -123,36 +123,30 @@ describe('Sahara Electronics Site Storefront Navigation & Components', () => {
   });
 
   describe('MobileBottomNav', () => {
-    it('renders 5 primary navigation tabs and triggers callbacks', () => {
+    it('renders 4 primary navigation tabs and triggers callbacks', () => {
       const handleNavigate = vi.fn();
-      const handleOpenSearch = vi.fn();
 
-      featureFlags.setFlag('enableCompare', true);
       render(
         <MobileBottomNav
           currentRoute="home"
           onNavigate={handleNavigate}
-          onOpenSearch={handleOpenSearch}
-          comparisonCount={2}
           theme={lightTheme}
         />
       );
 
       expect(screen.getByText('Ana Səhifə')).toBeDefined();
-      expect(screen.getByText('Kataloq')).toBeDefined();
-      expect(screen.getByText('Axtarış')).toBeDefined();
-      expect(screen.getByText('Müqayisə')).toBeDefined();
-      expect(screen.getByText('Salonlar')).toBeDefined();
-      expect(screen.getByText('2')).toBeDefined(); // Comparison badge count
+      expect(screen.getByText('Kateqoriyalar')).toBeDefined();
+      expect(screen.getByText('Səbət')).toBeDefined();
+      expect(screen.getByText('Profil')).toBeDefined();
 
-      fireEvent.click(screen.getByText('Kataloq'));
+      fireEvent.click(screen.getByText('Kateqoriyalar'));
       expect(handleNavigate).toHaveBeenCalledWith('catalog');
 
-      fireEvent.click(screen.getByText('Axtarış'));
-      expect(handleOpenSearch).toHaveBeenCalled();
-      featureFlags.resetToDefaults();
+      fireEvent.click(screen.getByText('Profil'));
+      expect(handleNavigate).toHaveBeenCalledWith('favorites');
     });
   });
+
 
   describe('SaharaMatchModal', () => {
     it('allows completing step questions to find matching products', () => {

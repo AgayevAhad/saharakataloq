@@ -1,28 +1,23 @@
 import React from 'react';
-import { Home, Grid, Search, Scale, MapPin } from 'lucide-react';
+import { Home, Layers, ShoppingCart, User } from 'lucide-react';
 import { ThemeColors, DESIGN_TOKENS } from '../../types/theme';
-import { featureFlags } from '../../utils/featureFlags';
 
 interface MobileBottomNavProps {
   currentRoute: string;
   onNavigate: (route: string) => void;
-  onOpenSearch: () => void;
-  comparisonCount: number;
+  onOpenSearch?: () => void;
+  comparisonCount?: number;
   theme: ThemeColors;
 }
 
 export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   currentRoute,
   onNavigate,
-  onOpenSearch,
-  comparisonCount,
   theme,
 }) => {
-  const showCompare = featureFlags.isEnabled('enableCompare');
-
   return (
     <nav
-      className="mobile-bottom-nav no-print"
+      className="mobile-bottom-nav no-print hide-on-desktop"
       role="navigation"
       aria-label="Mobil alt naviqasiya"
       style={{
@@ -31,7 +26,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         left: 0,
         right: 0,
         backgroundColor:
-          theme.mode === 'dark' ? 'rgba(13, 17, 23, 0.95)' : 'rgba(255, 255, 255, 0.96)',
+          theme.mode === 'dark' ? 'rgba(11, 15, 23, 0.95)' : 'rgba(255, 255, 255, 0.96)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
         borderTop: `1px solid ${theme.border}`,
@@ -47,6 +42,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           justifyContent: 'space-around',
         }}
       >
+        {/* 1. Ana Səhifə */}
         <button
           type="button"
           onClick={() => onNavigate('home')}
@@ -58,9 +54,9 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             flexDirection: 'column',
             alignItems: 'center',
             gap: '3px',
-            color: currentRoute === 'home' ? theme.primary : theme.textMuted,
+            color: currentRoute === 'home' ? '#e31e24' : theme.textMuted,
             fontSize: '11px',
-            fontWeight: currentRoute === 'home' ? 700 : 500,
+            fontWeight: currentRoute === 'home' ? 800 : 500,
             cursor: 'pointer',
             padding: '4px 8px',
           }}
@@ -69,6 +65,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           <span>Ana Səhifə</span>
         </button>
 
+        {/* 2. Kateqoriyalar */}
         <button
           type="button"
           onClick={() => onNavigate('catalog')}
@@ -80,21 +77,67 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             flexDirection: 'column',
             alignItems: 'center',
             gap: '3px',
-            color: currentRoute === 'catalog' ? theme.primary : theme.textMuted,
+            color: currentRoute === 'catalog' ? '#e31e24' : theme.textMuted,
             fontSize: '11px',
-            fontWeight: currentRoute === 'catalog' ? 700 : 500,
+            fontWeight: currentRoute === 'catalog' ? 800 : 500,
             cursor: 'pointer',
             padding: '4px 8px',
           }}
         >
-          <Grid size={20} />
-          <span>Kataloq</span>
+          <Layers size={20} />
+          <span>Kateqoriyalar</span>
         </button>
 
+        {/* 3. Səbət */}
         <button
           type="button"
-          onClick={onOpenSearch}
-          className="mobile-nav-item"
+          onClick={() => onNavigate('catalog')}
+          className={`mobile-nav-item ${currentRoute === 'cart' ? 'active' : ''}`}
+          style={{
+            position: 'relative',
+            background: 'transparent',
+            border: 'none',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '3px',
+            color: currentRoute === 'cart' ? '#e31e24' : theme.textMuted,
+            fontSize: '11px',
+            fontWeight: currentRoute === 'cart' ? 800 : 500,
+            cursor: 'pointer',
+            padding: '4px 8px',
+          }}
+        >
+          <div style={{ position: 'relative' }}>
+            <ShoppingCart size={20} />
+            <span
+              style={{
+                position: 'absolute',
+                top: '-4px',
+                right: '-6px',
+                backgroundColor: '#e31e24',
+                color: '#ffffff',
+                fontSize: '9px',
+                fontWeight: 800,
+                width: '14px',
+                height: '14px',
+                borderRadius: '50%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+            >
+              0
+            </span>
+          </div>
+          <span>Səbət</span>
+        </button>
+
+        {/* 4. Profil */}
+        <button
+          type="button"
+          onClick={() => onNavigate('favorites')}
+          className={`mobile-nav-item ${currentRoute === 'favorites' ? 'active' : ''}`}
           style={{
             background: 'transparent',
             border: 'none',
@@ -102,85 +145,18 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             flexDirection: 'column',
             alignItems: 'center',
             gap: '3px',
-            color: theme.textMuted,
+            color: currentRoute === 'favorites' ? '#e31e24' : theme.textMuted,
             fontSize: '11px',
-            fontWeight: 500,
+            fontWeight: currentRoute === 'favorites' ? 800 : 500,
             cursor: 'pointer',
             padding: '4px 8px',
           }}
         >
-          <Search size={20} />
-          <span>Axtarış</span>
-        </button>
-
-        {showCompare && (
-          <button
-            type="button"
-            onClick={() => onNavigate('compare')}
-            className={`mobile-nav-item ${currentRoute === 'compare' ? 'active' : ''}`}
-            style={{
-              position: 'relative',
-              background: 'transparent',
-              border: 'none',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              gap: '3px',
-              color: currentRoute === 'compare' ? theme.primary : theme.textMuted,
-              fontSize: '11px',
-              fontWeight: currentRoute === 'compare' ? 700 : 500,
-              cursor: 'pointer',
-              padding: '4px 8px',
-            }}
-          >
-            <Scale size={20} />
-            <span>Müqayisə</span>
-            {comparisonCount > 0 && (
-              <span
-                style={{
-                  position: 'absolute',
-                  top: '0px',
-                  right: '12px',
-                  backgroundColor: theme.primary,
-                  color: '#ffffff',
-                  fontSize: '9px',
-                  fontWeight: 800,
-                  width: '16px',
-                  height: '16px',
-                  borderRadius: '50%',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
-              >
-                {comparisonCount}
-              </span>
-            )}
-          </button>
-        )}
-
-        <button
-          type="button"
-          onClick={() => onNavigate('stores')}
-          className={`mobile-nav-item ${currentRoute === 'stores' ? 'active' : ''}`}
-          style={{
-            background: 'transparent',
-            border: 'none',
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            gap: '3px',
-            color: currentRoute === 'stores' ? theme.primary : theme.textMuted,
-            fontSize: '11px',
-            fontWeight: currentRoute === 'stores' ? 700 : 500,
-            cursor: 'pointer',
-            padding: '4px 8px',
-          }}
-        >
-          <MapPin size={20} />
-          <span>Salonlar</span>
+          <User size={20} />
+          <span>Profil</span>
         </button>
       </div>
     </nav>
   );
 };
+

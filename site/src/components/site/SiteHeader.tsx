@@ -9,6 +9,11 @@ import {
   MapPin,
   ChevronDown,
   Layers,
+  ShoppingCart,
+  User,
+  Home,
+  Menu,
+  Tag,
 } from 'lucide-react';
 import { Brand, CatalogCategory, Product, CatalogSettings } from '../../types/product';
 import { ThemeColors, DESIGN_TOKENS } from '../../types/theme';
@@ -78,14 +83,13 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
       }
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
-    // Check initial scroll position
     handleScroll();
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
   // Sorted active categories for secondary navigation bar
   const activeCategories = [...categories]
-    .filter((c) => c.active)
+    .filter((c) => c.active !== false)
     .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
 
   return (
@@ -116,7 +120,13 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
           {/* Desktop Layout (> 768px) */}
           <div
             className="site-header-desktop-row"
-            style={{ padding: isCompact ? '8px 0' : '12px 0' }}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              padding: isCompact ? '8px 0' : '12px 0',
+              gap: '16px',
+            }}
           >
             {/* Logo */}
             <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
@@ -140,9 +150,9 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   }
                   alt="Sahara Electronics"
                   style={{
-                    height: isCompact ? '40px' : '46px',
+                    height: isCompact ? '38px' : '44px',
                     width: 'auto',
-                    maxWidth: '240px',
+                    maxWidth: '220px',
                     objectFit: 'contain',
                     display: 'block',
                     transition: 'height 0.2s ease',
@@ -155,10 +165,8 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
             <div
               style={{
                 flex: 1,
-                maxWidth: '680px',
-                minWidth: '260px',
-                marginLeft: '24px',
-                marginRight: '20px',
+                maxWidth: '620px',
+                minWidth: '240px',
                 position: 'relative',
               }}
               className="header-search-wrap"
@@ -173,7 +181,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
-                  padding: '0 18px',
+                  padding: '0 16px',
                   borderRadius: '999px',
                   backgroundColor: themeMode === 'dark' ? '#161d2b' : '#f8fafc',
                   border: `1px solid ${theme.border}`,
@@ -185,7 +193,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 }}
                 aria-label="Axtarış pəncərəsini aç"
               >
-                <Search size={16} style={{ color: theme.primary, flexShrink: 0 }} />
+                <Search size={16} style={{ color: '#e31e24', flexShrink: 0 }} />
                 <span
                   style={{
                     flex: 1,
@@ -212,17 +220,44 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               </button>
             </div>
 
-            {/* Right Action Icons & Utilities */}
+            {/* Right Action Icons & Utilities matching siteUI.png */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+              {/* Location Badge: 📍 Bakı */}
+              <button
+                type="button"
+                onClick={() => (onOpenDrawer ? onOpenDrawer() : onNavigate('stores'))}
+                data-testid="drawer-trigger"
+                className="header-location-btn"
+                style={{
+                  background: themeMode === 'dark' ? '#161d2b' : '#f1f5f9',
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: '10px',
+                  padding: '8px 12px',
+                  color: theme.text,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '12.5px',
+                  fontWeight: 600,
+                }}
+                aria-label="Şəhər seçimi: Bakı"
+                title="Sərgi salonları və ünvanlar"
+              >
+                <MapPin size={15} style={{ color: '#e31e24' }} />
+                <span>Bakı</span>
+              </button>
+
+              {/* Sahara Match AI trigger */}
               {featureFlags.isEnabled('enableSaharaMatch') && (
                 <button
                   type="button"
                   onClick={onOpenSaharaMatch}
                   className="sahara-match-header-btn"
                   style={{
-                    backgroundColor: 'rgba(220, 38, 38, 0.1)',
-                    color: '#dc2626',
-                    border: '1px solid rgba(220, 38, 38, 0.25)',
+                    backgroundColor: 'rgba(227, 30, 36, 0.1)',
+                    color: '#e31e24',
+                    border: '1px solid rgba(227, 30, 36, 0.25)',
                     borderRadius: '10px',
                     padding: '8px 12px',
                     fontSize: '12px',
@@ -237,32 +272,6 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   <span>Sahara Match</span>
                 </button>
               )}
-
-              {/* Sərgi Salonları Button */}
-              <button
-                type="button"
-                onClick={() => (onOpenDrawer ? onOpenDrawer() : onNavigate('stores'))}
-                data-testid="drawer-trigger"
-                className="drawer-trigger-btn"
-                style={{
-                  background: themeMode === 'dark' ? '#161d2b' : '#f1f5f9',
-                  border: `1px solid ${theme.border}`,
-                  borderRadius: '10px',
-                  padding: '8px 12px',
-                  color: theme.text,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  fontSize: '12px',
-                  fontWeight: 600,
-                }}
-                aria-label="Sərgi salonları və ünvanlar"
-                title="Sərgi salonları və ünvanlar"
-              >
-                <MapPin size={16} style={{ color: theme.primary }} />
-                <span>Salonlar</span>
-              </button>
 
               {/* Compare Button */}
               {featureFlags.isEnabled('enableCompare') && (
@@ -290,7 +299,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                         position: 'absolute',
                         top: '-4px',
                         right: '-4px',
-                        backgroundColor: theme.primary,
+                        backgroundColor: '#e31e24',
                         color: '#ffffff',
                         fontSize: '10px',
                         fontWeight: 800,
@@ -308,51 +317,104 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 </button>
               )}
 
-              {/* Favorites Button */}
-              {featureFlags.isEnabled('enableFavorites') && (
-                <button
-                  type="button"
-                  onClick={() => onNavigate('favorites')}
-                  style={{
-                    position: 'relative',
-                    background: themeMode === 'dark' ? '#161d2b' : '#f1f5f9',
-                    border: `1px solid ${theme.border}`,
-                    borderRadius: '10px',
-                    padding: '8px',
-                    color: theme.text,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                  aria-label="Seçilmiş Məhsullar"
-                >
-                  <Heart size={18} />
-                  {favoritesCount > 0 && (
-                    <span
-                      style={{
-                        position: 'absolute',
-                        top: '-4px',
-                        right: '-4px',
-                        backgroundColor: '#ef4444',
-                        color: '#ffffff',
-                        fontSize: '10px',
-                        fontWeight: 800,
-                        width: '18px',
-                        height: '18px',
-                        borderRadius: '50%',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                      }}
-                    >
-                      {favoritesCount}
-                    </span>
-                  )}
-                </button>
-              )}
+              {/* Favorites / Wishlist Button 🤍 */}
+              <button
+                type="button"
+                onClick={() => onNavigate('favorites')}
+                style={{
+                  position: 'relative',
+                  background: themeMode === 'dark' ? '#161d2b' : '#f1f5f9',
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: '10px',
+                  padding: '8px',
+                  color: theme.text,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                aria-label="Seçilmiş Məhsullar"
+              >
+                <Heart size={18} color={favoritesCount > 0 ? '#ef4444' : 'currentColor'} fill={favoritesCount > 0 ? '#ef4444' : 'none'} />
+                {favoritesCount > 0 && (
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: '-4px',
+                      right: '-4px',
+                      backgroundColor: '#ef4444',
+                      color: '#ffffff',
+                      fontSize: '10px',
+                      fontWeight: 800,
+                      width: '18px',
+                      height: '18px',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {favoritesCount}
+                  </span>
+                )}
+              </button>
 
-              {/* Theme Toggle */}
+              {/* Shopping Cart Button 🛒 (0) */}
+              <button
+                type="button"
+                onClick={() => onNavigate('catalog')}
+                style={{
+                  position: 'relative',
+                  background: themeMode === 'dark' ? '#161d2b' : '#f1f5f9',
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: '10px',
+                  padding: '8px 12px',
+                  color: theme.text,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '12.5px',
+                  fontWeight: 600,
+                }}
+                aria-label="Səbət"
+              >
+                <ShoppingCart size={17} />
+                <span
+                  style={{
+                    backgroundColor: '#e31e24',
+                    color: '#ffffff',
+                    fontSize: '10px',
+                    fontWeight: 800,
+                    padding: '1px 6px',
+                    borderRadius: '10px',
+                  }}
+                >
+                  0
+                </span>
+              </button>
+
+              {/* Profile Button 👤 */}
+              <button
+                type="button"
+                onClick={() => onNavigate('favorites')}
+                style={{
+                  background: themeMode === 'dark' ? '#161d2b' : '#f1f5f9',
+                  border: `1px solid ${theme.border}`,
+                  borderRadius: '10px',
+                  padding: '8px',
+                  color: theme.text,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+                aria-label="İstifadəçi Profili"
+              >
+                <User size={18} />
+              </button>
+
+              {/* Theme Toggle ☀️ / 🌙 */}
               <button
                 type="button"
                 onClick={onToggleTheme}
@@ -376,7 +438,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
 
           {/* Mobile Layout (<= 768px) */}
           <div className="site-header-mobile-layout">
-            {/* Row 1: Large crisp mobile logo & utility buttons */}
+            {/* Row 1: Logo + 📍 Bakı + 🤍 Wishlist + Theme Toggle */}
             <div className="site-header-mobile-top-row">
               <button
                 type="button"
@@ -399,9 +461,9 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   }
                   alt="Sahara Electronics"
                   style={{
-                    height: '36px',
+                    height: '34px',
                     width: 'auto',
-                    maxWidth: '180px',
+                    maxWidth: '160px',
                     objectFit: 'contain',
                     display: 'block',
                   }}
@@ -409,37 +471,51 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               </button>
 
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                {/* Mobile Drawer Menu Trigger */}
+                {/* Mobile Location Badge: 📍 Bakı */}
                 <button
-                  ref={mobileMenuBtnRef}
                   type="button"
-                  onClick={() => setIsMobileDrawerOpen((prev) => !prev)}
-                  aria-expanded={isMobileDrawerOpen}
-                  aria-label="Kateqoriyalar menyusu"
-                  data-testid="mobile-menu-trigger"
+                  onClick={() => (onOpenDrawer ? onOpenDrawer() : onNavigate('stores'))}
+                  data-testid="drawer-trigger-mobile"
                   style={{
-                    backgroundColor: isMobileDrawerOpen
-                      ? theme.primary
-                      : themeMode === 'dark'
-                        ? '#1e293b'
-                        : '#f1f5f9',
-                    color: isMobileDrawerOpen ? '#ffffff' : theme.text,
-                    border: `1px solid ${isMobileDrawerOpen ? theme.primary : theme.border}`,
+                    background: themeMode === 'dark' ? '#161d2b' : '#f1f5f9',
+                    border: `1px solid ${theme.border}`,
                     borderRadius: '8px',
-                    padding: '6px 10px',
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    display: 'inline-flex',
+                    padding: '6px 8px',
+                    color: theme.text,
+                    cursor: 'pointer',
+                    display: 'flex',
                     alignItems: 'center',
                     gap: '4px',
-                    cursor: 'pointer',
+                    fontSize: '11px',
+                    fontWeight: 700,
                   }}
+                  aria-label="Sərgi salonları"
                 >
-                  <Layers size={14} />
-                  <span>Menyu</span>
+                  <MapPin size={13} style={{ color: '#e31e24' }} />
+                  <span>Bakı</span>
                 </button>
 
-                {/* Theme Toggle */}
+                {/* Mobile Favorites Button 🤍 */}
+                <button
+                  type="button"
+                  onClick={() => onNavigate('favorites')}
+                  style={{
+                    background: themeMode === 'dark' ? '#161d2b' : '#f1f5f9',
+                    border: `1px solid ${theme.border}`,
+                    borderRadius: '8px',
+                    padding: '6px 8px',
+                    color: favoritesCount > 0 ? '#ef4444' : theme.text,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                  aria-label="Seçilmişlər"
+                >
+                  <Heart size={16} fill={favoritesCount > 0 ? '#ef4444' : 'none'} />
+                </button>
+
+                {/* Mobile Theme Toggle */}
                 <button
                   type="button"
                   onClick={onToggleTheme}
@@ -458,27 +534,6 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 >
                   {themeMode === 'dark' ? <Sun size={16} /> : <Moon size={16} />}
                 </button>
-
-                {/* Showrooms / Stores Trigger */}
-                <button
-                  type="button"
-                  onClick={() => (onOpenDrawer ? onOpenDrawer() : onNavigate('stores'))}
-                  data-testid="drawer-trigger-mobile"
-                  style={{
-                    background: themeMode === 'dark' ? '#161d2b' : '#f1f5f9',
-                    border: `1px solid ${theme.border}`,
-                    borderRadius: '8px',
-                    padding: '6px 8px',
-                    color: theme.primary,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                  aria-label="Sərgi salonları"
-                >
-                  <MapPin size={16} />
-                </button>
               </div>
             </div>
 
@@ -487,7 +542,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               <button
                 type="button"
                 onClick={onOpenSearchModal}
-                data-testid="header-search-trigger"
+                data-testid="header-search-trigger-mobile"
                 style={{
                   width: '100%',
                   display: 'flex',
@@ -504,7 +559,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 }}
                 aria-label="Axtarış pəncərəsini aç"
               >
-                <Search size={14} style={{ color: theme.primary, flexShrink: 0 }} />
+                <Search size={14} style={{ color: '#e31e24', flexShrink: 0 }} />
                 <span
                   style={{
                     flex: 1,
@@ -520,7 +575,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
           </div>
         </div>
 
-        {/* Secondary Navigation Row (Desktop: Categories from DB) */}
+        {/* Secondary Navigation Row (Desktop: = Kateqoriyalar Red Button + Category Links) */}
         <div
           ref={secondaryNavRef}
           className="header-secondary-nav hide-on-mobile"
@@ -529,7 +584,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
             borderTop: `1px solid ${theme.border}`,
             backgroundColor:
               themeMode === 'dark' ? 'rgba(11, 15, 23, 0.7)' : 'rgba(248, 250, 252, 0.9)',
-            padding: '4px 0',
+            padding: '5px 0',
           }}
         >
           <div
@@ -541,12 +596,12 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               gap: '16px',
             }}
           >
-            {/* Left: MegaMenu Trigger + Category Quick Tabs */}
+            {/* Left: = Kateqoriyalar Red Trigger + Dynamic Quick Category Links */}
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '16px',
+                gap: '14px',
                 overflowX: 'auto',
                 whiteSpace: 'nowrap',
                 WebkitOverflowScrolling: 'touch',
@@ -554,7 +609,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 flex: 1,
               }}
             >
-              {/* Mega-Menu Trigger Button */}
+              {/* Red '= Kateqoriyalar' Button */}
               <button
                 ref={megaMenuBtnRef}
                 type="button"
@@ -563,29 +618,27 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 aria-controls="mega-menu-overlay"
                 className="mega-menu-trigger-btn"
                 style={{
-                  backgroundColor: isMegaMenuOpen
-                    ? theme.primary
-                    : themeMode === 'dark'
-                      ? '#1e293b'
-                      : '#f1f5f9',
-                  color: isMegaMenuOpen ? '#ffffff' : theme.text,
-                  border: `1px solid ${isMegaMenuOpen ? theme.primary : theme.border}`,
+                  backgroundColor: '#e31e24',
+                  color: '#ffffff',
+                  border: 'none',
                   borderRadius: '8px',
-                  padding: '6px 12px',
+                  padding: '7px 14px',
                   fontSize: '13px',
-                  fontWeight: 700,
+                  fontWeight: 800,
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '6px',
+                  gap: '8px',
                   cursor: 'pointer',
                   transition: 'all 0.2s ease',
+                  boxShadow: '0 2px 8px rgba(227, 30, 36, 0.25)',
                   flexShrink: 0,
                 }}
               >
-                <Layers size={15} />
+                <Menu size={16} color="#ffffff" />
                 <span>Kateqoriyalar</span>
                 <ChevronDown
-                  size={13}
+                  size={14}
+                  color="#ffffff"
                   style={{
                     transform: isMegaMenuOpen ? 'rotate(180deg)' : 'rotate(0deg)',
                     transition: 'transform 0.2s ease',
@@ -593,7 +646,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 />
               </button>
 
-              {/* Dynamic DB Categories */}
+              {/* Dynamic DB Categories matching siteUI.png links */}
               {activeCategories.slice(0, 8).map((cat) => {
                 return (
                   <button
@@ -606,14 +659,16 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                     style={{
                       background: 'transparent',
                       border: 'none',
-                      padding: '8px 4px',
+                      padding: '6px 4px',
                       fontSize: '13px',
                       fontWeight: 600,
                       color: theme.text,
                       cursor: 'pointer',
-                      transition: 'all 0.15s ease',
+                      transition: 'color 0.15s ease',
                       flexShrink: 0,
                     }}
+                    onMouseEnter={(e) => (e.currentTarget.style.color = '#e31e24')}
+                    onMouseLeave={(e) => (e.currentTarget.style.color = theme.text)}
                   >
                     {cat.name}
                   </button>
@@ -621,12 +676,12 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               })}
             </div>
 
-            {/* Right: Quick Links */}
+            {/* Right: Brendlər & Endirimlər */}
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '14px',
+                gap: '16px',
                 flexShrink: 0,
               }}
             >
@@ -639,9 +694,9 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  fontSize: '12px',
-                  fontWeight: currentRoute === 'brands' ? 700 : 500,
-                  color: currentRoute === 'brands' ? theme.primary : theme.textMuted,
+                  fontSize: '13px',
+                  fontWeight: currentRoute === 'brands' ? 800 : 600,
+                  color: currentRoute === 'brands' ? '#e31e24' : theme.text,
                   cursor: 'pointer',
                 }}
               >
@@ -652,36 +707,22 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 type="button"
                 onClick={() => {
                   setIsMegaMenuOpen(false);
-                  onNavigate('services');
+                  onNavigate('catalog', 'discounts');
                 }}
                 style={{
                   background: 'transparent',
                   border: 'none',
-                  fontSize: '12px',
-                  fontWeight: currentRoute === 'services' ? 700 : 500,
-                  color: currentRoute === 'services' ? theme.primary : theme.textMuted,
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  color: '#e31e24',
                   cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '4px',
                 }}
               >
-                Xidmətlər
-              </button>
-
-              <button
-                type="button"
-                onClick={() => {
-                  setIsMegaMenuOpen(false);
-                  onNavigate('stores');
-                }}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  fontSize: '12px',
-                  fontWeight: currentRoute === 'stores' ? 700 : 500,
-                  color: currentRoute === 'stores' ? theme.primary : theme.textMuted,
-                  cursor: 'pointer',
-                }}
-              >
-                Sərgi Salonları
+                <Tag size={13} />
+                <span>Endirimlər</span>
               </button>
             </div>
           </div>
@@ -702,7 +743,22 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
         </div>
       </header>
 
-      {/* Mobile Category & Navigation Drawer (rendered on mobile when Menyu clicked) */}
+      {/* Mobile Category & Navigation Drawer (rendered on mobile when Menyu/Kateqoriyalar clicked) */}
+      <MobileCategoryDrawer
+        isOpen={isMobileDrawerOpen}
+        onClose={() => setIsMobileDrawerOpen(false)}
+        categories={categories}
+        brands={brands}
+        products={products}
+        theme={theme}
+        themeMode={themeMode}
+        onSelectCategory={(catId) => onNavigate('catalog', catId)}
+        onSelectBrand={(brandId) => onNavigate('catalog', brandId)}
+        onNavigate={onNavigate}
+        triggerRef={mobileMenuBtnRef}
+      />
+
+      {/* Mobile Category & Navigation Drawer (rendered on mobile when Menyu/Kateqoriyalar clicked) */}
       <MobileCategoryDrawer
         isOpen={isMobileDrawerOpen}
         onClose={() => setIsMobileDrawerOpen(false)}
@@ -719,3 +775,5 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
     </>
   );
 };
+
+

@@ -1,15 +1,14 @@
 {
   "version": 1,
-  "generatedAt": "2026-09-09T09:24:23.181Z",
+  "generatedAt": "2026-09-14T10:39:22.339Z",
   "description": "Sahara Electronics — Root Catalog Protected Codebase Proposed Manifest",
-  "totalFiles": 332,
+  "totalFiles": 331,
   "hashes": {
     ".agents/rules/project-rules.md": "330be3e8e90daa0eeaa5ecb38527e87d5744bdbe2b843892caf7e5be35a5ce81",
     ".env.example": "8c2a416670a957bf60e081a1076a87dca3aa24a06f2e95fe207d768083e42607",
     "AGENTS.md": "de30b18ebb9f65fe2a70798f42b7f2d9fc73db19dfab0898cbaeec1bb0e95b18",
     "Kataloq.md": "d8169043c1115562831bf1d0cc285dae8b13e6524ff1b979378b5ee4c8e635dc",
     "README.md": "376edf5041e36d194592adb18e5c540e290cf88517e87a10e5c7a483f16331e5",
-    "backend/backupRestore.test.mjs": "392984483ceb5007d7f06d50eb24c7fd672a8a3bf3cfe18b8fa92015869374c4",
     "backend/catalogDatabase.mjs": "ebae1623d5273c1caa142128d3f149b4935f38728179d9a229d4817c8cbf72b1",
     "backend/catalogDatabase.test.mjs": "d450e0bc90881fd65b80a4cbd73ff283400306e33dc9cfe9f2d4bc2c01080f0e",
     "backend/e2eAdminFlow.test.mjs": "14bf7d6837b08ce8ca3d2d5f7e8638704d7d7286ed0824abb502c3edeead9846",

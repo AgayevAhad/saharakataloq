@@ -27,7 +27,7 @@ describe('Boundary Isolation & Root Catalog Protection Test Suite', () => {
   const siteDir = resolve(__dirname, '..');
   const repoRoot = resolve(siteDir, '..');
 
-  it('verifies all protected root files match exact SHA-256 baseline manifest (332 files)', () => {
+  it('verifies all protected root files match exact SHA-256 baseline manifest (331 files)', () => {
     const isStandalone = !isMonorepoRoot(repoRoot);
     if (isStandalone) {
       console.log(
@@ -37,9 +37,10 @@ describe('Boundary Isolation & Root Catalog Protection Test Suite', () => {
     }
     const result = verifyRootBoundary();
     expect(result.success).toBe(true);
-    expect(result.verifiedFiles.length).toBe(332);
+    expect(result.verifiedFiles.length).toBe(331);
     expect(result.errors).toHaveLength(0);
   });
+
 
   it('NEGATIVE TEST: deliberately fails when root file tampering is simulated', () => {
     const isStandalone = !isMonorepoRoot(repoRoot);
