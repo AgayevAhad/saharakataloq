@@ -160,8 +160,8 @@ describe('Çoxsaylı Ünvanlar (Multiple Addresses) və Sticky Header Testləri'
     expect(stickyHeader?.getAttribute('style')).toContain('position: sticky');
     expect(stickyHeader?.getAttribute('style')).toContain('top: 0');
 
-    // Check compact telephone label
-    expect(container.querySelector('.top-service-phone-compact')).toBeDefined();
-    expect(screen.getByText('Zəng')).toBeDefined();
+    // Check location indicator and search trigger
+    expect(screen.getAllByText('Bakı').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getByTestId('header-search-trigger')).toBeDefined();
   });
 });
