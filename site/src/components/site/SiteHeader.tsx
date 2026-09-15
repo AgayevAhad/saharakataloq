@@ -227,22 +227,13 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   alignItems: 'center',
                   gap: '12px',
                   padding: '0 18px',
-                  borderRadius: isSearchExpanded ? '16px 16px 0 0' : '999px',
-                  backgroundColor: isSearchExpanded
-                    ? themeMode === 'dark'
-                      ? 'rgba(18, 24, 36, 0.88)'
-                      : 'rgba(255, 255, 255, 0.90)'
-                    : themeMode === 'dark'
-                      ? '#121824'
-                      : '#f8fafc',
+                  borderRadius: '999px',
+                  backgroundColor: themeMode === 'dark' ? '#121824' : '#f8fafc',
                   border: isSearchExpanded
                     ? '1px solid #e31e24'
                     : `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : '#e2e8f0'}`,
-                  borderBottom: isSearchExpanded ? 'none' : undefined,
-                  boxShadow: isSearchExpanded ? '0 -2px 10px rgba(0, 0, 0, 0.05)' : 'none',
-                  backdropFilter: isSearchExpanded ? 'blur(28px) saturate(190%)' : 'none',
-                  WebkitBackdropFilter: isSearchExpanded ? 'blur(28px) saturate(190%)' : 'none',
-                  transition: 'border-radius 0.15s ease, background-color 0.15s ease, border-color 0.15s ease',
+                  boxShadow: isSearchExpanded ? '0 0 0 1px rgba(227, 30, 36, 0.15)' : 'none',
+                  transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
                 }}
                 className={`header-search-input-box ${isSearchExpanded ? 'is-focused' : ''}`}
                 onClick={() => {
@@ -339,28 +330,6 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   </span>
                 )}
               </div>
-
-              {/* Directly Attached Expanding Dropdown Panel */}
-              <SmartSearchOverlay
-                visible={isSearchExpanded}
-                inline={true}
-                searchQuery={searchQuery}
-                onSearchChange={onSearchChange}
-                onClose={() => setIsSearchExpanded(false)}
-                products={products}
-                categories={categories}
-                brands={brands}
-                theme={theme}
-                isDarkMode={themeMode === 'dark'}
-                onSelectCategory={(catId) => {
-                  setIsSearchExpanded(false);
-                  onNavigate('catalog', typeof catId === 'string' ? catId : (catId as any));
-                }}
-                onSelectBrand={(brandId) => {
-                  setIsSearchExpanded(false);
-                  onNavigate('catalog', brandId);
-                }}
-              />
             </div>
 
             {/* Right Action Icons & Utilities matching siteUI.png */}
@@ -515,6 +484,42 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
             </div>
           </div>
 
+          {/* Desktop In-Panel Expanded Search Section: Physically expands header and slides secondary navigation down */}
+          {isSearchExpanded && (
+            <div
+              className="desktop-header-search-expand-wrap hide-on-mobile"
+              style={{
+                width: '100%',
+                maxHeight: 'calc(100vh - 180px)',
+                overflowY: 'auto',
+                padding: '4px 0 16px',
+                animation: 'smartSearchSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+              }}
+            >
+              <SmartSearchOverlay
+                visible={true}
+                inline={true}
+                embeddedInHeader={true}
+                searchQuery={searchQuery}
+                onSearchChange={onSearchChange}
+                onClose={() => setIsSearchExpanded(false)}
+                products={products}
+                categories={categories}
+                brands={brands}
+                theme={theme}
+                isDarkMode={themeMode === 'dark'}
+                onSelectCategory={(catId) => {
+                  setIsSearchExpanded(false);
+                  onNavigate('catalog', typeof catId === 'string' ? catId : (catId as any));
+                }}
+                onSelectBrand={(brandId) => {
+                  setIsSearchExpanded(false);
+                  onNavigate('catalog', brandId);
+                }}
+              />
+            </div>
+          )}
+
           {/* Mobile Layout (<= 768px) matching siteUI.png */}
           <div className="site-header-mobile-layout">
             {/* Row 1: Logo + 📍 Bakı + 🤍 Wishlist + 🛒 Cart + Theme Toggle */}
@@ -668,22 +673,13 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   alignItems: 'center',
                   gap: '8px',
                   padding: '8px 14px',
-                  borderRadius: isSearchExpanded ? '14px 14px 0 0' : '999px',
-                  backgroundColor: isSearchExpanded
-                    ? themeMode === 'dark'
-                      ? 'rgba(18, 24, 36, 0.88)'
-                      : 'rgba(255, 255, 255, 0.90)'
-                    : themeMode === 'dark'
-                      ? '#121824'
-                      : '#f8fafc',
+                  borderRadius: '999px',
+                  backgroundColor: themeMode === 'dark' ? '#121824' : '#f8fafc',
                   border: isSearchExpanded
                     ? '1px solid #e31e24'
                     : `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : '#e2e8f0'}`,
-                  borderBottom: isSearchExpanded ? 'none' : undefined,
-                  boxShadow: isSearchExpanded ? '0 -2px 10px rgba(0, 0, 0, 0.05)' : 'none',
-                  backdropFilter: isSearchExpanded ? 'blur(28px) saturate(190%)' : 'none',
-                  WebkitBackdropFilter: isSearchExpanded ? 'blur(28px) saturate(190%)' : 'none',
-                  transition: 'border-radius 0.15s ease, background-color 0.15s ease, border-color 0.15s ease',
+                  boxShadow: isSearchExpanded ? '0 0 0 1px rgba(227, 30, 36, 0.15)' : 'none',
+                  transition: 'border-color 0.15s ease, box-shadow 0.15s ease',
                 }}
                 onClick={() => {
                   setIsSearchExpanded(true);
@@ -753,29 +749,43 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   </button>
                 )}
               </div>
-
-              {/* Mobile Attached Dropdown */}
-              <SmartSearchOverlay
-                visible={isSearchExpanded}
-                inline={true}
-                searchQuery={searchQuery}
-                onSearchChange={onSearchChange}
-                onClose={() => setIsSearchExpanded(false)}
-                products={products}
-                categories={categories}
-                brands={brands}
-                theme={theme}
-                isDarkMode={themeMode === 'dark'}
-                onSelectCategory={(catId) => {
-                  setIsSearchExpanded(false);
-                  onNavigate('catalog', typeof catId === 'string' ? catId : (catId as any));
-                }}
-                onSelectBrand={(brandId) => {
-                  setIsSearchExpanded(false);
-                  onNavigate('catalog', brandId);
-                }}
-              />
             </div>
+
+            {/* Mobile In-Panel Expanded Search Section */}
+            {isSearchExpanded && (
+              <div
+                className="mobile-header-search-expand-wrap"
+                style={{
+                  width: '100%',
+                  maxHeight: 'calc(100vh - 160px)',
+                  overflowY: 'auto',
+                  padding: '6px 0 10px',
+                  animation: 'smartSearchSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+                }}
+              >
+                <SmartSearchOverlay
+                  visible={true}
+                  inline={true}
+                  embeddedInHeader={true}
+                  searchQuery={searchQuery}
+                  onSearchChange={onSearchChange}
+                  onClose={() => setIsSearchExpanded(false)}
+                  products={products}
+                  categories={categories}
+                  brands={brands}
+                  theme={theme}
+                  isDarkMode={themeMode === 'dark'}
+                  onSelectCategory={(catId) => {
+                    setIsSearchExpanded(false);
+                    onNavigate('catalog', typeof catId === 'string' ? catId : (catId as any));
+                  }}
+                  onSelectBrand={(brandId) => {
+                    setIsSearchExpanded(false);
+                    onNavigate('catalog', brandId);
+                  }}
+                />
+              </div>
+            )}
           </div>
         </div>
 

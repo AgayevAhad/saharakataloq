@@ -22,6 +22,7 @@ interface SmartSearchOverlayProps {
   triggerRef?: React.RefObject<HTMLElement | null>;
   isLoading?: boolean;
   inline?: boolean;
+  embeddedInHeader?: boolean;
 }
 
 interface SuggestionItem {
@@ -84,6 +85,7 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
   triggerRef,
   isLoading = false,
   inline = false,
+  embeddedInHeader = false,
 }) => {
   const [hoveredItem, setHoveredItem] = useState<SuggestionItem | null>(null);
   const [hoveredCategoryId, setHoveredCategoryId] = useState<string | null>(null);
@@ -710,6 +712,34 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
   );
 
   if (!visible) return null;
+
+  if (embeddedInHeader) {
+    return (
+      <div
+        ref={modalRef}
+        className="smart-search-overlay smart-search-inline-dropdown smart-search-embedded-panel"
+        role="region"
+        aria-label="Axtarış paneli"
+        style={{
+          position: 'relative',
+          width: '100%',
+          maxWidth: '100%',
+          backgroundColor: 'transparent',
+          backdropFilter: 'none',
+          WebkitBackdropFilter: 'none',
+          borderRadius: '16px',
+          border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)'}`,
+          color: theme.text,
+          boxShadow: 'none',
+          overflow: 'hidden',
+          padding: '8px 12px 14px',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {renderDropdownBody()}
+      </div>
+    );
+  }
 
   if (inline) {
     return (
