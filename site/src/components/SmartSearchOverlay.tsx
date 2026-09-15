@@ -537,7 +537,7 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
             display: 'flex',
             alignItems: 'center',
             gap: '12px',
-            padding: '14px 18px',
+            padding: '12px 18px',
             borderBottom: `1px solid ${theme.border}`,
             position: 'relative',
           }}
@@ -550,17 +550,17 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
               alignItems: 'center',
               gap: '10px',
               backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.8)' : 'rgba(241, 245, 249, 0.9)',
-              border: isInputFocused ? '1px solid #dc2626' : `1px solid ${theme.border}`,
+              border: isInputFocused ? '1px solid #e31e24' : `1px solid ${theme.border}`,
               borderRadius: '999px',
               padding: '9px 16px',
               transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
-              boxShadow: isInputFocused ? '0 0 0 2px rgba(220, 38, 38, 0.12)' : 'none',
+              boxShadow: isInputFocused ? '0 0 0 1px rgba(227, 30, 36, 0.15)' : 'none',
             }}
           >
             <Search
               size={18}
               style={{
-                color: searchQuery.trim().length > 0 ? '#dc2626' : theme.textMuted,
+                color: searchQuery.trim().length > 0 ? '#e31e24' : (theme.textMuted || '#94a3b8'),
                 transition: 'color 0.2s ease',
                 flexShrink: 0,
               }}
@@ -595,7 +595,7 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
                 size={16}
                 className="img-spin"
                 style={{
-                  color: '#dc2626',
+                  color: '#e31e24',
                   animation: 'imgSpinAnim 0.8s linear infinite',
                   flexShrink: 0,
                 }}
