@@ -47,7 +47,8 @@ async function run() {
     });
 
     const page = await context.newPage();
-    await page.goto('http://localhost:3040', { waitUntil: 'networkidle' });
+    await page.goto('http://localhost:3040', { waitUntil: 'domcontentloaded', timeout: 15000 });
+    await page.waitForTimeout(1200);
 
     // Set theme in localStorage if needed and reload or toggle
     if (t.isDark) {
@@ -56,14 +57,16 @@ async function run() {
         document.documentElement.classList.add('dark');
         document.documentElement.setAttribute('data-theme', 'dark');
       });
-      await page.reload({ waitUntil: 'networkidle' });
+      await page.reload({ waitUntil: 'domcontentloaded', timeout: 15000 });
+      await page.waitForTimeout(1000);
     } else {
       await page.evaluate(() => {
         localStorage.setItem('sahara_theme_mode', 'light');
         document.documentElement.classList.remove('dark');
         document.documentElement.setAttribute('data-theme', 'light');
       });
-      await page.reload({ waitUntil: 'networkidle' });
+      await page.reload({ waitUntil: 'domcontentloaded', timeout: 15000 });
+      await page.waitForTimeout(1000);
     }
 
     await page.waitForTimeout(600);

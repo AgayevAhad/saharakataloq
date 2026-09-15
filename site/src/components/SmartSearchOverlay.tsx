@@ -499,9 +499,9 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
         position: 'fixed',
         inset: 0,
         zIndex: DESIGN_TOKENS.zIndex.modal,
-        backgroundColor: 'rgba(0, 0, 0, 0.65)',
-        backdropFilter: 'none',
-        WebkitBackdropFilter: 'none',
+        backgroundColor: 'rgba(0, 0, 0, 0.45)',
+        backdropFilter: 'blur(16px)',
+        WebkitBackdropFilter: 'blur(16px)',
         display: 'flex',
         alignItems: 'flex-start',
         justifyContent: 'center',
@@ -518,7 +518,7 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
         aria-label="Ağıllı axtarış paneli"
         style={{
           width: '100%',
-          maxWidth: '820px',
+          maxWidth: '920px',
           backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.98)' : 'rgba(255, 255, 255, 0.98)',
           borderColor: theme.border,
           color: theme.text,
@@ -535,7 +535,7 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
             display: 'flex',
             alignItems: 'center',
             gap: '12px',
-            padding: '12px 16px',
+            padding: '14px 18px',
             borderBottom: `1px solid ${theme.border}`,
             position: 'relative',
           }}
@@ -548,34 +548,21 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
               alignItems: 'center',
               gap: '10px',
               backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.8)' : 'rgba(241, 245, 249, 0.9)',
-              border: isInputFocused ? '2px solid #dc2626' : `1px solid ${theme.border}`,
-              borderRadius: '10px',
-              padding: '8px 14px',
+              border: isInputFocused ? '1px solid #dc2626' : `1px solid ${theme.border}`,
+              borderRadius: '999px',
+              padding: '9px 16px',
               transition: 'border-color 0.2s ease, box-shadow 0.2s ease',
-              boxShadow: isInputFocused ? '0 0 0 3px rgba(220, 38, 38, 0.15)' : 'none',
+              boxShadow: isInputFocused ? '0 0 0 2px rgba(220, 38, 38, 0.12)' : 'none',
             }}
           >
-            {isLoading ? (
-              <Loader2
-                size={18}
-                className="smart-search-spinner"
-                style={{
-                  color: '#dc2626',
-                  animation: 'imgSpinAnim 0.8s linear infinite',
-                  flexShrink: 0,
-                }}
-                aria-label="Axtarılır..."
-              />
-            ) : (
-              <Search
-                size={18}
-                style={{
-                  color: searchQuery.trim() || isInputFocused ? '#dc2626' : theme.textMuted,
-                  transition: 'color 0.2s ease',
-                  flexShrink: 0,
-                }}
-              />
-            )}
+            <Search
+              size={18}
+              style={{
+                color: searchQuery.trim().length > 0 ? '#dc2626' : theme.textMuted,
+                transition: 'color 0.2s ease',
+                flexShrink: 0,
+              }}
+            />
 
             <input
               ref={inputRef}
@@ -599,6 +586,20 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
                 width: '100%',
               }}
             />
+
+            {/* Right side: Red spinning loader when typing or loading */}
+            {(searchQuery.trim().length > 0 || isLoading) && (
+              <Loader2
+                size={16}
+                className="img-spin"
+                style={{
+                  color: '#dc2626',
+                  animation: 'imgSpinAnim 0.8s linear infinite',
+                  flexShrink: 0,
+                }}
+                aria-label="Axtarılır..."
+              />
+            )}
 
             {searchQuery && (
               <button

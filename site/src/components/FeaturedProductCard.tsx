@@ -49,19 +49,17 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
       className="featured-product-card product-card"
       onClick={() => onSelect(product)}
       style={{
-        backgroundColor: theme.mode === 'dark' ? '#11141a' : '#ffffff',
-        border: `1px solid ${theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : '#eaecf0'}`,
+        backgroundColor: '#ffffff',
+        border: 'none',
         borderRadius: '16px',
-        padding: '14px',
+        padding: '20px 24px',
+        minHeight: '339px',
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
         cursor: 'pointer',
-        boxShadow:
-          theme.mode === 'dark'
-            ? '0 6px 18px -3px rgba(0, 0, 0, 0.35)'
-            : '0 4px 14px -3px rgba(0, 0, 0, 0.04)',
-        transition: 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
+        transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease',
       }}
       role="button"
       tabIndex={0}
@@ -78,8 +76,8 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
           display: 'flex',
           justifyContent: 'flex-end',
           position: 'absolute',
-          top: '12px',
-          right: '12px',
+          top: '16px',
+          right: '16px',
           zIndex: 3,
         }}
       >
@@ -91,50 +89,63 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
             border: 'none',
             cursor: 'pointer',
             padding: '4px',
-            color: isFavorite ? '#ef4444' : theme.textMuted || '#94a3b8',
+            color: isFavorite ? '#ef4444' : '#94a3b8',
             transition: 'transform 0.15s ease, color 0.15s ease',
           }}
           aria-label={isFavorite ? 'Sevimlilərdən çıxar' : 'Sevimlilərə əlavə et'}
         >
-          <Heart size={18} fill={isFavorite ? '#ef4444' : 'none'} />
+          <Heart size={20} fill={isFavorite ? '#ef4444' : 'none'} />
         </button>
       </div>
 
-      {/* Product Image Stage */}
+      {/* Product Image Stage with Hover Zoom */}
       <div
+        className="featured-product-img-box"
         style={{
           width: '100%',
-          height: '140px',
-          borderRadius: '10px',
-          backgroundColor: theme.mode === 'dark' ? '#0a0d13' : '#f8fafc',
+          height: '190px',
+          borderRadius: '12px',
+          backgroundColor: '#ffffff',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: '12px',
+          marginBottom: '16px',
           overflow: 'hidden',
           padding: '8px',
         }}
       >
-        <ShimmerImage
-          src={coverImage}
-          alt={product.title}
+        <div
+          className="featured-product-img-inner"
           style={{
             width: '100%',
             height: '100%',
-            objectFit: 'contain',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
-        />
+        >
+          <ShimmerImage
+            src={coverImage}
+            alt={product.title}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+            }}
+          />
+        </div>
       </div>
 
       {/* Product Title */}
       <div
         style={{
-          fontSize: '13px',
+          fontSize: '14px',
           fontWeight: 700,
-          color: theme.text,
-          lineHeight: 1.35,
-          marginBottom: '12px',
-          minHeight: '35px',
+          color: '#0f172a',
+          lineHeight: 1.4,
+          marginBottom: '14px',
+          minHeight: '40px',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
           display: '-webkit-box',
@@ -157,9 +168,9 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
       >
         <span
           style={{
-            fontSize: '15px',
+            fontSize: '17px',
             fontWeight: 900,
-            color: theme.text,
+            color: '#0f172a',
             fontFamily: 'Outfit, -apple-system, sans-serif',
           }}
         >
@@ -170,9 +181,9 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
           type="button"
           onClick={handleCartClick}
           style={{
-            width: '32px',
-            height: '32px',
-            borderRadius: '8px',
+            width: '36px',
+            height: '36px',
+            borderRadius: '10px',
             backgroundColor: '#e31e24',
             color: '#ffffff',
             border: 'none',
@@ -187,7 +198,7 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
           aria-label="Səbətə əlavə et"
           title="Səbətə əlavə et"
         >
-          <ShoppingCart size={15} color="#ffffff" />
+          <ShoppingCart size={17} color="#ffffff" />
         </button>
       </div>
     </div>

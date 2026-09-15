@@ -318,25 +318,28 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         onSelect(product);
       }}
       style={{
-        backgroundColor: theme.bgCard,
-        border: `1px solid ${theme.border}`,
-        borderRadius: '14px',
+        backgroundColor: '#ffffff',
+        border: 'none',
+        borderRadius: '16px',
         display: 'flex',
         flexDirection: 'column',
         height: '100%',
         cursor: 'pointer',
         boxShadow: isActive
-          ? `0 14px 34px -10px ${theme.mode === 'dark' ? 'rgba(0,0,0,0.7)' : 'rgba(0,0,0,0.18)'}`
-          : `0 2px 8px -2px ${theme.mode === 'dark' ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.06)'}`,
+          ? '0 12px 32px rgba(0, 0, 0, 0.09)'
+          : '0 4px 20px rgba(0, 0, 0, 0.05)',
+        transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease',
       }}
     >
       {/* Product Image / Video Frame Container with Touch Swiping */}
       <div
         className="product-card-img-wrap product-card-media"
         style={{
-          backgroundColor: theme.mode === 'dark' ? '#0c101a' : '#f8fafc',
+          backgroundColor: '#ffffff',
           cursor: 'pointer',
           position: 'relative',
+          borderRadius: '16px 16px 0 0',
+          overflow: 'hidden',
         }}
         onClick={() => onSelect(product)}
         onTouchStart={handleTouchStart}
@@ -724,7 +727,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
 const styles: Record<string, React.CSSProperties> = {
   cardContent: {
-    padding: '16px',
+    padding: '20px 24px',
     flex: 1,
     display: 'flex',
     flexDirection: 'column',

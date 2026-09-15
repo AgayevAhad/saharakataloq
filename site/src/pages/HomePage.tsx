@@ -222,13 +222,13 @@ export const HomePage: React.FC<HomePageProps> = ({
           </button>
         </div>
 
-        {/* 6-Column Responsive Product Grid */}
+        {/* Responsive Product Grid */}
         <div
           className="featured-products-grid"
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))',
-            gap: '16px',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+            gap: '24px',
           }}
         >
           {filteredFeaturedProducts.map((product) => (

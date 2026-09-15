@@ -213,21 +213,18 @@ export const VisualCategoryCards: React.FC<VisualCategoryCardsProps> = ({
               className={`visual-category-card ${isSelected ? 'is-selected' : ''}`}
               style={{
                 flexShrink: 0,
-                width: '140px',
-                backgroundColor: isSelected
-                  ? theme.mode === 'dark'
-                    ? 'rgba(220, 38, 38, 0.18)'
-                    : '#fee2e2'
-                  : theme.bgCard,
-                border: `1.5px solid ${isSelected ? theme.primary : theme.border}`,
-                borderRadius: '14px',
-                padding: '12px 10px',
+                width: '160px',
+                backgroundColor: isSelected ? '#fee2e2' : '#ffffff',
+                border: isSelected ? '1.5px solid #dc2626' : 'none',
+                borderRadius: '16px',
+                padding: '20px 24px',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
                 textAlign: 'center',
                 cursor: 'pointer',
-                transition: 'all 0.2s ease',
+                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
+                transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease',
                 scrollSnapAlign: 'start',
                 position: 'relative',
               }}
@@ -235,41 +232,54 @@ export const VisualCategoryCards: React.FC<VisualCategoryCardsProps> = ({
             >
               {/* Category Visual Media Box */}
               <div
+                className="visual-category-img-box"
                 style={{
-                  width: '72px',
-                  height: '72px',
-                  borderRadius: '10px',
-                  backgroundColor: theme.mode === 'dark' ? '#0f172a' : '#f8fafc',
+                  width: '90px',
+                  height: '90px',
+                  borderRadius: '12px',
+                  backgroundColor: '#ffffff',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  marginBottom: '8px',
+                  marginBottom: '12px',
                   overflow: 'hidden',
                   padding: '4px',
                 }}
               >
-                {cat.imageUrl ? (
-                  <ShimmerImage
-                    src={cat.imageUrl}
-                    alt={cat.name}
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'contain',
-                    }}
-                  />
-                ) : (
-                  getCategoryIcon(cat.icon, cat.id, 28, theme.primary)
-                )}
+                <div
+                  className="visual-category-img-inner"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
+                  }}
+                >
+                  {cat.imageUrl ? (
+                    <ShimmerImage
+                      src={cat.imageUrl}
+                      alt={cat.name}
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'contain',
+                      }}
+                    />
+                  ) : (
+                    getCategoryIcon(cat.icon, cat.id, 32, '#dc2626')
+                  )}
+                </div>
               </div>
 
               {/* Category Name & Count */}
               <div
                 style={{
                   fontWeight: 700,
-                  fontSize: '13px',
-                  color: isSelected ? theme.primary : theme.text,
-                  lineHeight: 1.2,
+                  fontSize: '13.5px',
+                  color: isSelected ? '#dc2626' : '#0f172a',
+                  lineHeight: 1.3,
                   marginBottom: '4px',
                   overflow: 'hidden',
                   textOverflow: 'ellipsis',
@@ -283,9 +293,9 @@ export const VisualCategoryCards: React.FC<VisualCategoryCardsProps> = ({
               </div>
               <div
                 style={{
-                  fontSize: '11px',
+                  fontSize: '12px',
                   fontWeight: 600,
-                  color: theme.textMuted,
+                  color: '#64748b',
                 }}
               >
                 {cat.count} Model

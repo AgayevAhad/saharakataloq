@@ -121,16 +121,22 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
               : '0 12px 32px -6px rgba(0, 0, 0, 0.08)',
         }}
       >
-        {/* Full-Bleed Background Image */}
-        <div
+        {/* Full-Bleed Video Background (Videosahara) with Fallback Poster Image */}
+        <video
+          src="/media/Videosahara.mp4"
+          poster="/media/hero-livingroom.jpg"
+          autoPlay
+          muted
+          loop
+          playsInline
           style={{
             position: 'absolute',
             inset: 0,
+            width: '100%',
+            height: '100%',
+            objectFit: 'cover',
+            objectPosition: 'right center',
             zIndex: 0,
-            backgroundImage: `url(/media/hero-livingroom.jpg)`,
-            backgroundPosition: 'right center',
-            backgroundSize: 'cover',
-            backgroundRepeat: 'no-repeat',
           }}
         />
 
