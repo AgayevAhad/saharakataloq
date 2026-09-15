@@ -4,9 +4,9 @@
   "description": "Sahara Electronics — Root Catalog Protected Codebase Proposed Manifest",
   "totalFiles": 331,
   "hashes": {
-    ".agents/rules/project-rules.md": "330be3e8e90daa0eeaa5ecb38527e87d5744bdbe2b843892caf7e5be35a5ce81",
+    ".agents/rules/project-rules.md": "91be51c664adaf4b46a97d75cbd0c51f38a989b17378a4e940cb567ec108d2d5",
     ".env.example": "8c2a416670a957bf60e081a1076a87dca3aa24a06f2e95fe207d768083e42607",
-    "AGENTS.md": "de30b18ebb9f65fe2a70798f42b7f2d9fc73db19dfab0898cbaeec1bb0e95b18",
+    "AGENTS.md": "1c6392e34fae72e143e78247fe6213b2876d829b958a385f916f49c20e8f5e47",
     "Kataloq.md": "d8169043c1115562831bf1d0cc285dae8b13e6524ff1b979378b5ee4c8e635dc",
     "README.md": "376edf5041e36d194592adb18e5c540e290cf88517e87a10e5c7a483f16331e5",
     "backend/catalogDatabase.mjs": "ebae1623d5273c1caa142128d3f149b4935f38728179d9a229d4817c8cbf72b1",

@@ -13,22 +13,24 @@ interface FeaturedProductCardProps {
 
 export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
   product,
-  theme,
+  theme: _theme,
   onSelect,
   onAddToCart,
 }) => {
   const [isFavorite, setIsFavorite] = useState(false);
+  const [isHovered, setIsHovered] = useState(false);
 
   const rawPrice = product.price ?? (product as any).priceCash;
-  const displayPrice = rawPrice
-    ? `${Number(rawPrice).toLocaleString('az-AZ')} ₼`
-    : '1,299 ₼';
+  const displayPrice =
+    rawPrice !== undefined && rawPrice !== null && Number(rawPrice) > 0
+      ? `${Number(rawPrice).toLocaleString('az-AZ')} ₼`
+      : null;
 
   const coverImage =
     product.image ||
     (Array.isArray(product.gallery) && product.gallery[0]) ||
     (Array.isArray(product.media) && product.media.find((m) => m.type === 'image')?.url) ||
-    '/media/products/lotus-tv-43lt2025.jpg';
+    '';
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -46,8 +48,10 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
 
   return (
     <div
-      className="featured-product-card product-card"
+      className={`featured-product-card product-card ${isHovered ? 'is-card-hovered' : ''}`}
       onClick={() => onSelect(product)}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
       style={{
         backgroundColor: '#ffffff',
         border: 'none',
@@ -61,8 +65,11 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
         flexDirection: 'column',
         position: 'relative',
         cursor: 'pointer',
-        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
+        boxShadow: isHovered
+          ? '0 12px 32px rgba(0, 0, 0, 0.12)'
+          : '0 4px 20px rgba(0, 0, 0, 0.05)',
         transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease',
+        overflow: 'hidden',
       }}
       role="button"
       tabIndex={0}
@@ -73,48 +80,98 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
         }
       }}
     >
-      {/* Top Row: Favorite Heart Button */}
+      {/* Top Right: Heart/Favorite Button (Appears on Hover or if Favorited) */}
       <div
+        className="card-hover-heart"
         style={{
-          display: 'flex',
-          justifyContent: 'flex-end',
           position: 'absolute',
-          top: '16px',
-          right: '16px',
-          zIndex: 3,
+          top: '14px',
+          right: '14px',
+          zIndex: 6,
+          opacity: isHovered || isFavorite ? 1 : 0,
+          pointerEvents: isHovered || isFavorite ? 'auto' : 'none',
+          transform: isHovered || isFavorite ? 'scale(1)' : 'scale(0.85)',
+          transition: 'opacity 0.2s ease, transform 0.2s ease',
         }}
       >
         <button
           type="button"
           onClick={handleFavoriteClick}
           style={{
-            background: 'transparent',
-            border: 'none',
+            width: '34px',
+            height: '34px',
+            borderRadius: '50%',
+            backgroundColor: 'rgba(255, 255, 255, 0.95)',
+            border: '1px solid rgba(226, 232, 240, 0.9)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
             cursor: 'pointer',
-            padding: '4px',
+            padding: 0,
+            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
             color: isFavorite ? '#ef4444' : '#94a3b8',
-            transition: 'transform 0.15s ease, color 0.15s ease',
+            transition: 'transform 0.15s ease, color 0.15s ease, background-color 0.15s ease',
           }}
           aria-label={isFavorite ? 'Sevimlilərdən çıxar' : 'Sevimlilərə əlavə et'}
         >
-          <Heart size={20} fill={isFavorite ? '#ef4444' : 'none'} />
+          <Heart size={18} fill={isFavorite ? '#ef4444' : 'none'} color={isFavorite ? '#ef4444' : '#64748b'} />
         </button>
       </div>
 
-      {/* Product Image Stage with Hover Zoom */}
+      {/* Floating Bottom Right: Red Cart Button (Appears on Hover) */}
+      <div
+        className="card-hover-cart"
+        style={{
+          position: 'absolute',
+          bottom: '70px',
+          right: '16px',
+          zIndex: 6,
+          opacity: isHovered ? 1 : 0,
+          pointerEvents: isHovered ? 'auto' : 'none',
+          transform: isHovered ? 'scale(1)' : 'scale(0.85)',
+          transition: 'opacity 0.2s ease, transform 0.2s ease',
+        }}
+      >
+        <button
+          type="button"
+          onClick={handleCartClick}
+          style={{
+            width: '38px',
+            height: '38px',
+            borderRadius: '12px',
+            backgroundColor: '#dc2626',
+            color: '#ffffff',
+            border: 'none',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 4px 14px rgba(220, 38, 38, 0.4)',
+            transition: 'transform 0.15s ease, background-color 0.15s ease',
+          }}
+          aria-label="Səbətə əlavə et"
+          title="Səbətə əlavə et"
+        >
+          <ShoppingCart size={18} color="#ffffff" />
+        </button>
+      </div>
+
+      {/* Maximized Product Image Stage */}
       <div
         className="featured-product-img-box"
         style={{
           width: '100%',
-          height: '190px',
+          flex: 1,
+          minHeight: '215px',
+          maxHeight: '235px',
           borderRadius: '12px',
           backgroundColor: '#ffffff',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          marginBottom: '16px',
           overflow: 'hidden',
-          padding: '8px',
+          padding: '4px',
+          position: 'relative',
         }}
       >
         <div
@@ -125,85 +182,79 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            transform: isHovered ? 'scale(1.08)' : 'scale(1)',
             transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         >
-          <ShimmerImage
-            src={coverImage}
-            alt={product.title}
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-            }}
-          />
+          {coverImage ? (
+            <ShimmerImage
+              src={coverImage}
+              alt={product.title}
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain',
+              }}
+            />
+          ) : (
+            <div
+              style={{
+                width: '100%',
+                height: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#94a3b8',
+                fontSize: '13px',
+              }}
+            >
+              Şəkil yoxdur
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Product Title */}
-      <div
-        style={{
-          fontSize: '14px',
-          fontWeight: 700,
-          color: '#0f172a',
-          lineHeight: 1.4,
-          marginBottom: '14px',
-          minHeight: '40px',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          display: '-webkit-box',
-          WebkitLineClamp: 2,
-          WebkitBoxOrient: 'vertical',
-        }}
-      >
-        {product.title}
-      </div>
-
-      {/* Bottom Row: Price & Red Cart Button */}
+      {/* Product Title and Price Row */}
       <div
         style={{
           marginTop: 'auto',
+          paddingTop: '8px',
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          gap: '8px',
+          flexDirection: 'column',
+          gap: '3px',
         }}
       >
-        <span
+        <div
           style={{
-            fontSize: '17px',
-            fontWeight: 900,
+            fontSize: '14px',
+            fontWeight: 700,
             color: '#0f172a',
-            fontFamily: 'Outfit, -apple-system, sans-serif',
+            lineHeight: 1.35,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+            display: '-webkit-box',
+            WebkitLineClamp: 2,
+            WebkitBoxOrient: 'vertical',
+            minHeight: '38px',
           }}
         >
-          {displayPrice}
-        </span>
+          {product.title}
+        </div>
 
-        <button
-          type="button"
-          onClick={handleCartClick}
-          style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: '10px',
-            backgroundColor: '#e31e24',
-            color: '#ffffff',
-            border: 'none',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(227, 30, 36, 0.35)',
-            transition: 'transform 0.15s ease, background-color 0.15s ease',
-            flexShrink: 0,
-          }}
-          aria-label="Səbətə əlavə et"
-          title="Səbətə əlavə et"
-        >
-          <ShoppingCart size={17} color="#ffffff" />
-        </button>
+        {displayPrice && (
+          <div
+            style={{
+              fontSize: '16.5px',
+              fontWeight: 900,
+              color: '#0f172a',
+              fontFamily: 'Outfit, -apple-system, sans-serif',
+            }}
+          >
+            {displayPrice}
+          </div>
+        )}
       </div>
     </div>
   );
 };
+

@@ -27,3 +27,8 @@ trigger: always_on
 ## 6. Admin Panel Synchronization & UX Quality
 - Any new catalog feature, field, setting, brand, address, or model change MUST be fully supported and synchronized in the Admin Panel with intuitive UI, proper contrast, and end-to-end functionality.
 - Admin Panel components must maintain strong color contrasts, reliable modal dialogs, and support both CSV and Excel (.xlsx) data exchanges.
+
+## 7. Splash Screen & SSR Freshness Synchronization
+- The initial splash screen (`#app-splash-screen`) and SSR rendering state MUST strictly match the latest active design tokens, theme modes (Light & Dark), and brand identity (Sahara spiral mark, Outfit typography).
+- On browser refresh or initial load, stale/deprecated layout structures, old promo placeholders, or obsolete catalog information MUST NEVER flash or be visible before hydration. The server ISR cache and client hydration MUST immediately deliver the freshest live catalog state.
+
