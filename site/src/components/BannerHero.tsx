@@ -52,6 +52,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
   const [animating, setAnimating] = useState(false);
   const isMountedRef = useRef(true);
   const animTimeoutRef = useRef<any>(null);
+  const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
     isMountedRef.current = true;
@@ -123,12 +124,18 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
       >
         {/* Full-Bleed Video Background (Videosahara) with Fallback Poster Image */}
         <video
+          ref={videoRef}
           src="/media/Videosahara.mp4"
           poster="/media/hero-livingroom.jpg"
           autoPlay
           muted
           loop
           playsInline
+          onTimeUpdate={() => {
+            if (videoRef.current && videoRef.current.currentTime >= 20) {
+              videoRef.current.currentTime = 0;
+            }
+          }}
           style={{
             position: 'absolute',
             inset: 0,

@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowUp, ArrowRight, Instagram, Facebook, Youtube, MapPin, Phone, ExternalLink } from 'lucide-react';
+import { ArrowUp, ArrowRight, Instagram, Facebook, Youtube, MapPin, Phone, Mail, ExternalLink } from 'lucide-react';
 import { CatalogCategory, CatalogSettings } from '../types/product';
 import { ThemeColors } from '../types/theme';
 import { WhatsAppIcon } from './WhatsAppIcon';
@@ -325,42 +325,11 @@ export const Footer: React.FC<FooterProps> = ({
                 ✓ Uğurla abunə oldunuz!
               </span>
             )}
-
-            {/* Social Icons */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '14px', marginTop: '6px' }}>
-              <a
-                href="https://facebook.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: theme.textMuted || '#64748b', transition: 'color 0.15s ease' }}
-                aria-label="Facebook"
-              >
-                <Facebook size={18} />
-              </a>
-              <a
-                href="https://instagram.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: theme.textMuted || '#64748b', transition: 'color 0.15s ease' }}
-                aria-label="Instagram"
-              >
-                <Instagram size={18} />
-              </a>
-              <a
-                href="https://youtube.com"
-                target="_blank"
-                rel="noopener noreferrer"
-                style={{ color: theme.textMuted || '#64748b', transition: 'color 0.15s ease' }}
-                aria-label="YouTube"
-              >
-                <Youtube size={18} />
-              </a>
-            </div>
           </div>
         </div>
 
         {/* Showroom Addresses & Contact Row when configured */}
-        {(addressList.length > 0 || phoneList.length > 0 || waHref || settings?.instagramUsername || settings?.facebookUsername) && (
+        {(addressList.length > 0 || phoneList.length > 0 || waHref || settings?.instagramUsername || settings?.facebookUsername || settings?.email) && (
           <div
             className="footer-showrooms-contact-row"
             style={{
@@ -487,6 +456,24 @@ export const Footer: React.FC<FooterProps> = ({
                 >
                   <WhatsAppIcon size={16} color="#16a34a" />
                   <span>{settings.whatsappNumber}</span>
+                </a>
+              )}
+
+              {(settings?.email || !phoneList.length) && (
+                <a
+                  href={`mailto:${settings?.email || 'info@saharaelectronics.az'}`}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '12.5px',
+                    fontWeight: 700,
+                    color: theme.text,
+                    textDecoration: 'none',
+                  }}
+                >
+                  <Mail size={14} color="#e31e24" />
+                  <span>{settings?.email || 'info@saharaelectronics.az'}</span>
                 </a>
               )}
 

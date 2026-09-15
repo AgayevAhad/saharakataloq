@@ -12,7 +12,7 @@ export const SpecialDiscountBanner: React.FC<SpecialDiscountBannerProps> = ({
   onNavigateDiscounts,
 }) => {
   return (
-    <section className="catalog-container special-discount-section" aria-label="Xüsusi Endirimlər">
+    <section className="catalog-container special-discount-section scroll-reveal-item" aria-label="Xüsusi Endirimlər">
       <div
         className="special-discount-card"
         style={{
@@ -99,34 +99,6 @@ export const SpecialDiscountBanner: React.FC<SpecialDiscountBannerProps> = ({
             <span>Endirimlərə bax</span>
             <ArrowRight size={15} />
           </button>
-        </div>
-
-        {/* Right 3D Appliance Imagery on Desktop */}
-        <div
-          style={{
-            position: 'relative',
-            zIndex: 2,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'flex-end',
-            flex: 1,
-            minWidth: '280px',
-            maxHeight: '180px',
-          }}
-          className="hide-on-mobile"
-        >
-          <img
-            src="/media/promo-discount.jpg"
-            alt="Sahara Xüsusi Endirimlər"
-            style={{
-              maxHeight: '180px',
-              width: 'auto',
-              borderRadius: '16px',
-              objectFit: 'contain',
-              boxShadow: '0 8px 24px rgba(0, 0, 0, 0.3)',
-              border: '1px solid rgba(255, 255, 255, 0.2)',
-            }}
-          />
         </div>
       </div>
     </section>

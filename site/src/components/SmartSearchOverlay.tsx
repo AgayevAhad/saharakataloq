@@ -499,13 +499,11 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
         position: 'fixed',
         inset: 0,
         zIndex: DESIGN_TOKENS.zIndex.modal,
-        backgroundColor: 'rgba(0, 0, 0, 0.45)',
-        backdropFilter: 'blur(16px)',
-        WebkitBackdropFilter: 'blur(16px)',
+        backgroundColor: 'rgba(0, 0, 0, 0.15)',
         display: 'flex',
         alignItems: 'flex-start',
         justifyContent: 'center',
-        padding: '24px 16px',
+        padding: '16px',
         overflowY: 'auto',
         WebkitOverflowScrolling: 'touch',
       }}
@@ -519,12 +517,16 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
         style={{
           width: '100%',
           maxWidth: '920px',
-          backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.98)' : 'rgba(255, 255, 255, 0.98)',
-          borderColor: theme.border,
+          backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.94)' : 'rgba(255, 255, 255, 0.94)',
+          backdropFilter: 'blur(24px)',
+          WebkitBackdropFilter: 'blur(24px)',
+          borderRadius: '20px',
+          border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(226, 232, 240, 0.85)'}`,
           color: theme.text,
           boxShadow: isDarkMode
             ? '0 24px 60px rgba(0, 0, 0, 0.75)'
-            : '0 24px 60px rgba(0, 0, 0, 0.18)',
+            : '0 24px 60px rgba(0, 0, 0, 0.14)',
+          overflow: 'hidden',
         }}
         onClick={(e) => e.stopPropagation()}
       >

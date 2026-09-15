@@ -17,6 +17,7 @@ import { ThematicShowcase } from '../components/ThematicShowcase';
 import { FeaturedProductCard } from '../components/FeaturedProductCard';
 import { SpecialDiscountBanner } from '../components/SpecialDiscountBanner';
 import { TrustHighlights } from '../components/TrustHighlights';
+import { useScrollReveal } from '../hooks/useScrollReveal';
 
 interface HomePageProps {
   brands: Brand[];
@@ -88,6 +89,8 @@ export const HomePage: React.FC<HomePageProps> = ({
     });
     return filtered.length > 0 ? filtered.slice(0, 12) : publishedProducts.slice(0, 6);
   }, [publishedProducts, selectedTab]);
+
+  useScrollReveal([filteredFeaturedProducts, selectedTab]);
 
   return (
     <div

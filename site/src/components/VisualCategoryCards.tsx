@@ -210,7 +210,7 @@ export const VisualCategoryCards: React.FC<VisualCategoryCardsProps> = ({
               key={cat.id}
               type="button"
               onClick={(e) => handleCategoryClick(cat.id, e)}
-              className={`visual-category-card ${isSelected ? 'is-selected' : ''}`}
+              className={`visual-category-card scroll-reveal-item ${isSelected ? 'is-selected' : ''}`}
               style={{
                 flexShrink: 0,
                 width: '339px',

@@ -48,7 +48,7 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
 
   return (
     <div
-      className={`featured-product-card product-card ${isHovered ? 'is-card-hovered' : ''}`}
+      className={`featured-product-card product-card scroll-reveal-item ${isHovered ? 'is-card-hovered' : ''}`}
       onClick={() => onSelect(product)}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
