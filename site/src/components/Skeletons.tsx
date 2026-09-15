@@ -1,6 +1,7 @@
 import React from 'react';
 import { Sparkles } from 'lucide-react';
 import { ThemeColors } from '../types/theme';
+import { AnimatedBrandRailSkeleton } from './AnimatedBrandRailSkeleton';
 
 interface SkeletonProps {
   theme: ThemeColors;
@@ -538,7 +539,7 @@ export const FeaturedProductCardSkeleton: React.FC<SkeletonProps> = ({ theme }) 
         backgroundColor: '#ffffff',
         border: 'none',
         borderRadius: '16px',
-        padding: '20px 24px',
+        padding: '16px 20px',
         width: '100%',
         maxWidth: '339px',
         height: '339px',
@@ -622,7 +623,7 @@ export const VisualCategoryCardsSkeleton: React.FC<SkeletonProps> = ({ theme }) 
               backgroundColor: '#ffffff',
               border: 'none',
               borderRadius: '16px',
-              padding: '20px 24px',
+              padding: '16px 20px',
               display: 'flex',
               flexDirection: 'column',
               alignItems: 'center',
@@ -675,6 +676,7 @@ export const SiteHomePageSkeleton: React.FC<SkeletonProps> = ({ theme }) => {
       aria-busy="true"
     >
       <BannerHeroSkeleton theme={theme} />
+      <AnimatedBrandRailSkeleton theme={theme} cardCount={10} />
       <VisualCategoryCardsSkeleton theme={theme} />
       <section className="catalog-container featured-products-section">
         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>

@@ -105,16 +105,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         onNavigateContact={() => onNavigate('support')}
       />
 
-      {/* 2. Visual Category Cards */}
-      <VisualCategoryCards
-        categories={categories}
-        products={products}
-        theme={theme}
-        onSelectCategory={(catId) => onNavigate('catalog', catId)}
-        onViewAll={() => onNavigate('catalog')}
-      />
-
-      {/* 3. Brand Logos Carousel / Marquee Rail */}
+      {/* 2. Brand Logos Carousel / Marquee Rail */}
       {isLoadingRail ||
       (typeof window !== 'undefined' &&
         (new URLSearchParams(window.location.search).get('skeleton') === 'true' ||
@@ -127,6 +118,15 @@ export const HomePage: React.FC<HomePageProps> = ({
           onNavigateBrand={(slug) => onNavigate(slug ? 'brand' : 'brands', slug)}
         />
       )}
+
+      {/* 3. Visual Category Cards */}
+      <VisualCategoryCards
+        categories={categories}
+        products={products}
+        theme={theme}
+        onSelectCategory={(catId) => onNavigate('catalog', catId)}
+        onViewAll={() => onNavigate('catalog')}
+      />
 
       {/* 4. Featured Products Section ("Seçilmiş məhsullar") */}
       <section className="catalog-container featured-products-section" aria-label="Seçilmiş Məhsullar">

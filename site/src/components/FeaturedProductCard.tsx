@@ -56,7 +56,7 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
         backgroundColor: '#ffffff',
         border: 'none',
         borderRadius: '16px',
-        padding: '20px 24px',
+        padding: '16px 20px',
         width: '100%',
         maxWidth: '339px',
         height: '339px',

@@ -218,7 +218,7 @@ export const VisualCategoryCards: React.FC<VisualCategoryCardsProps> = ({
                 backgroundColor: '#ffffff',
                 border: 'none',
                 borderRadius: '16px',
-                padding: '20px 24px',
+                padding: '16px 20px',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
