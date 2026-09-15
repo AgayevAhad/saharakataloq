@@ -530,42 +530,172 @@ export const MobileBottomNavSkeleton: React.FC<SkeletonProps> = ({ theme }) => {
   );
 };
 
-export const FooterSkeleton: React.FC<SkeletonProps> = ({ theme }) => {
+export const FeaturedProductCardSkeleton: React.FC<SkeletonProps> = ({ theme }) => {
   return (
-    <footer
-      className="catalog-footer-enhanced skeleton-footer"
+    <div
+      className="featured-product-card skeleton-card"
       style={{
-        backgroundColor: theme.bgSecondary,
-        borderTop: `1px solid ${theme.border}`,
-        padding: '40px 20px 24px 20px',
-        marginTop: '40px',
-        minHeight: '260px',
+        backgroundColor: '#ffffff',
+        border: 'none',
+        borderRadius: '16px',
+        padding: '20px 24px',
+        width: '100%',
+        maxWidth: '339px',
+        height: '339px',
+        boxSizing: 'border-box',
+        display: 'flex',
+        flexDirection: 'column',
+        position: 'relative',
+        boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
+        overflow: 'hidden',
       }}
       aria-busy="true"
+      aria-label="Məhsul yüklənir..."
     >
+      {/* Product Image Stage */}
       <div
-        className="footer-content-grid"
         style={{
-          maxWidth: '1280px',
-          margin: '0 auto',
-          display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
-          gap: '32px',
-          marginBottom: '32px',
+          width: '100%',
+          flex: 1,
+          minHeight: '215px',
+          maxHeight: '235px',
+          borderRadius: '12px',
+          backgroundColor: '#f8fafc',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: '12px',
         }}
       >
-        {[1, 2, 3, 4].map((col) => (
+        <SkeletonBox width="65%" height="80%" borderRadius="10px" />
+      </div>
+
+      {/* Title and Price */}
+      <div
+        style={{
+          marginTop: 'auto',
+          paddingTop: '8px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '6px',
+        }}
+      >
+        <SkeletonBox width="85%" height="16px" borderRadius="4px" />
+        <SkeletonBox width="45%" height="18px" borderRadius="4px" />
+      </div>
+    </div>
+  );
+};
+
+export const VisualCategoryCardsSkeleton: React.FC<SkeletonProps> = ({ theme }) => {
+  return (
+    <section className="catalog-container visual-categories-section" aria-busy="true">
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginBottom: '16px',
+        }}
+      >
+        <div>
+          <SkeletonBox width="180px" height="24px" borderRadius="6px" style={{ marginBottom: '6px' }} />
+          <SkeletonBox width="140px" height="14px" borderRadius="4px" />
+        </div>
+      </div>
+
+      <div
+        style={{
+          display: 'flex',
+          gap: '12px',
+          overflowX: 'hidden',
+          paddingBottom: '8px',
+        }}
+      >
+        {[1, 2, 3, 4].map((idx) => (
           <div
-            key={`foot-col-${col}`}
-            style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
+            key={`cat-skel-${idx}`}
+            style={{
+              flexShrink: 0,
+              width: '339px',
+              height: '339px',
+              backgroundColor: '#ffffff',
+              border: 'none',
+              borderRadius: '16px',
+              padding: '20px 24px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              boxSizing: 'border-box',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
+            }}
           >
-            <SkeletonBox width="130px" height="20px" borderRadius="6px" />
-            <SkeletonBox width="85%" height="14px" borderRadius="4px" />
-            <SkeletonBox width="70%" height="14px" borderRadius="4px" />
-            <SkeletonBox width="60%" height="14px" borderRadius="4px" />
+            <div
+              style={{
+                width: '100%',
+                flex: 1,
+                minHeight: '215px',
+                maxHeight: '235px',
+                borderRadius: '12px',
+                backgroundColor: '#f8fafc',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '12px',
+              }}
+            >
+              <SkeletonBox width="60%" height="75%" borderRadius="10px" />
+            </div>
+            <div
+              style={{
+                marginTop: 'auto',
+                paddingTop: '8px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '6px',
+                width: '100%',
+              }}
+            >
+              <SkeletonBox width="60%" height="16px" borderRadius="4px" />
+              <SkeletonBox width="35%" height="13px" borderRadius="4px" />
+            </div>
           </div>
         ))}
       </div>
-    </footer>
+    </section>
   );
 };
+
+export const SiteHomePageSkeleton: React.FC<SkeletonProps> = ({ theme }) => {
+  return (
+    <div
+      className="home-page-container"
+      style={{ display: 'flex', flexDirection: 'column', gap: '32px', paddingBottom: '48px' }}
+      aria-busy="true"
+    >
+      <BannerHeroSkeleton theme={theme} />
+      <VisualCategoryCardsSkeleton theme={theme} />
+      <section className="catalog-container featured-products-section">
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px' }}>
+          <SkeletonBox width="200px" height="26px" borderRadius="6px" />
+          <SkeletonBox width="100px" height="20px" borderRadius="6px" />
+        </div>
+        <div
+          className="featured-products-grid"
+          style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(339px, 1fr))',
+            gap: '24px',
+            justifyItems: 'center',
+          }}
+        >
+          {[1, 2, 3, 4, 5, 6].map((i) => (
+            <FeaturedProductCardSkeleton key={`feat-skel-${i}`} theme={theme} />
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+};
+

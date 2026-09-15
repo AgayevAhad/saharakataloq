@@ -213,9 +213,10 @@ export const VisualCategoryCards: React.FC<VisualCategoryCardsProps> = ({
               className={`visual-category-card ${isSelected ? 'is-selected' : ''}`}
               style={{
                 flexShrink: 0,
-                width: '160px',
-                backgroundColor: isSelected ? '#fee2e2' : '#ffffff',
-                border: isSelected ? '1.5px solid #dc2626' : 'none',
+                width: '339px',
+                height: '339px',
+                backgroundColor: '#ffffff',
+                border: 'none',
                 borderRadius: '16px',
                 padding: '20px 24px',
                 display: 'flex',
@@ -223,10 +224,14 @@ export const VisualCategoryCards: React.FC<VisualCategoryCardsProps> = ({
                 alignItems: 'center',
                 textAlign: 'center',
                 cursor: 'pointer',
-                boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
+                boxShadow: isSelected
+                  ? '0 12px 32px rgba(220, 38, 38, 0.15)'
+                  : '0 4px 20px rgba(0, 0, 0, 0.05)',
                 transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease',
                 scrollSnapAlign: 'start',
                 position: 'relative',
+                boxSizing: 'border-box',
+                overflow: 'hidden',
               }}
               aria-pressed={isSelected}
             >
@@ -234,16 +239,18 @@ export const VisualCategoryCards: React.FC<VisualCategoryCardsProps> = ({
               <div
                 className="visual-category-img-box"
                 style={{
-                  width: '90px',
-                  height: '90px',
+                  width: '100%',
+                  flex: 1,
+                  minHeight: '215px',
+                  maxHeight: '235px',
                   borderRadius: '12px',
                   backgroundColor: '#ffffff',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  marginBottom: '12px',
                   overflow: 'hidden',
                   padding: '4px',
+                  position: 'relative',
                 }}
               >
                 <div
@@ -268,7 +275,7 @@ export const VisualCategoryCards: React.FC<VisualCategoryCardsProps> = ({
                       }}
                     />
                   ) : (
-                    getCategoryIcon(cat.icon, cat.id, 32, '#dc2626')
+                    getCategoryIcon(cat.icon, cat.id, 48, '#dc2626')
                   )}
                 </div>
               </div>
@@ -276,29 +283,36 @@ export const VisualCategoryCards: React.FC<VisualCategoryCardsProps> = ({
               {/* Category Name & Count */}
               <div
                 style={{
-                  fontWeight: 700,
-                  fontSize: '13.5px',
-                  color: isSelected ? '#dc2626' : '#0f172a',
-                  lineHeight: 1.3,
-                  marginBottom: '4px',
-                  overflow: 'hidden',
-                  textOverflow: 'ellipsis',
-                  display: '-webkit-box',
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical',
+                  marginTop: 'auto',
+                  paddingTop: '8px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '3px',
                   width: '100%',
                 }}
               >
-                {cat.name}
-              </div>
-              <div
-                style={{
-                  fontSize: '12px',
-                  fontWeight: 600,
-                  color: '#64748b',
-                }}
-              >
-                {cat.count} Model
+                <div
+                  style={{
+                    fontSize: '15px',
+                    fontWeight: 700,
+                    color: isSelected ? '#dc2626' : '#0f172a',
+                    lineHeight: 1.35,
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                  }}
+                >
+                  {cat.name}
+                </div>
+                <div
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: 600,
+                    color: '#64748b',
+                  }}
+                >
+                  {cat.count} Model
+                </div>
               </div>
             </button>
           );

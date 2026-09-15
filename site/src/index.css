@@ -6651,6 +6651,35 @@ select {
   transform: scale(1.08) !important;
 }
 
+.visual-category-card {
+  width: 339px !important;
+  max-width: 339px !important;
+  height: 339px !important;
+  min-height: 339px !important;
+  max-height: 339px !important;
+  padding: 20px 24px !important;
+  background-color: #ffffff !important;
+  border: none !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease !important;
+  box-sizing: border-box !important;
+}
+
+.visual-category-card:hover {
+  transform: translateY(-4px) !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12) !important;
+}
+
+.visual-category-card .visual-category-img-inner {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.visual-category-card:hover .visual-category-img-inner {
+  transform: scale(1.08) !important;
+}
+
+
 /* Mobile Bottom Dock Visibility */
 @media (min-width: 769px) {
   .hide-on-desktop {

@@ -39,6 +39,7 @@ import {
   BannerHeroSkeleton,
   BrandShowcaseSkeleton,
   ProductGridSkeleton,
+  SiteHomePageSkeleton,
 } from './components/Skeletons';
 import { Breadcrumbs } from './components/Breadcrumbs';
 import { featureFlags } from './utils/featureFlags';
@@ -265,17 +266,14 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
                 () => {
                   splash.remove();
                 },
-                isTestEnv ? 0 : 800
+                isTestEnv ? 0 : 500
               );
             }
           }
-        }, splashDismissDelay);
-
-        setTimeout(() => {
           if (isMounted) {
             setIsLoadingCatalog(false);
           }
-        }, splashDismissDelay + shimmerHoldTime);
+        }, splashDismissDelay);
       }
     };
     init();
@@ -958,7 +956,7 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
         className="catalog-main"
         style={{ minHeight: 'calc(100vh - 400px)', paddingBottom: isSiteMode ? '80px' : '0' }}
       >
-        {isLoadingCatalog ? (
+        {isLoadingCatalog && !isSiteMode ? (
           <>
             <BannerHeroSkeleton theme={activeTheme} />
             {isCatalogActive && (
@@ -969,20 +967,24 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
           </>
         ) : isSiteMode ? (
           <div className="site-page-container">
-            {currentRoute !== 'home' && (
-              <div className="catalog-container" style={{ padding: '0 16px' }}>
-                <Breadcrumbs items={breadcrumbsList} />
-              </div>
-            )}
-            {currentRoute === 'home' && (
-              <HomePage
-                brands={catalog.brands}
-                categories={catalog.categories}
-                products={catalog.products}
-                articles={catalog.articles}
-                settings={catalog.settings}
-                brandRail={catalog.brandRail}
-                isLoadingRail={isLoadingCatalog}
+            {isLoadingCatalog && currentRoute === 'home' ? (
+              <SiteHomePageSkeleton theme={activeTheme} />
+            ) : (
+              <>
+                {currentRoute !== 'home' && (
+                  <div className="catalog-container" style={{ padding: '0 16px' }}>
+                    <Breadcrumbs items={breadcrumbsList} />
+                  </div>
+                )}
+                {currentRoute === 'home' && (
+                  <HomePage
+                    brands={catalog.brands}
+                    categories={catalog.categories}
+                    products={catalog.products}
+                    articles={catalog.articles}
+                    settings={catalog.settings}
+                    brandRail={catalog.brandRail}
+                    isLoadingRail={isLoadingCatalog}
                 theme={activeTheme}
                 onNavigate={handleNavigate}
                 onSelectProduct={selectProduct}
@@ -1046,6 +1048,8 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
             )}
             {currentRoute === '404' && (
               <NotFoundPage theme={activeTheme} onNavigate={handleNavigate} />
+            )}
+              </>
             )}
           </div>
         ) : (
