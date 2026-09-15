@@ -206,8 +206,16 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               gap: '20px',
             }}
           >
-            {/* Logo */}
-            <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0, minWidth: isCompact ? '160px' : '200px' }}>
+            {/* Logo: Smoothly enlarges and centers with subtle top/bottom balance when search expands */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                flexShrink: 0,
+                minWidth: isSearchExpanded ? '220px' : isCompact ? '160px' : '200px',
+                transition: 'min-width 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
+              }}
+            >
               <button
                 type="button"
                 onClick={() => onNavigate('home')}
@@ -219,6 +227,9 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   alignItems: 'center',
                   padding: 0,
                   flexShrink: 0,
+                  transform: isSearchExpanded ? 'scale(1.22) translateY(6px)' : 'scale(1) translateY(0)',
+                  transformOrigin: 'left center',
+                  transition: 'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
                 }}
                 aria-label="Sahara Electronics Əsas Səhifə"
               >
@@ -228,12 +239,12 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   }
                   alt="Sahara Electronics"
                   style={{
-                    height: isCompact ? '46px' : '56px',
+                    height: isSearchExpanded ? '64px' : isCompact ? '46px' : '56px',
                     width: 'auto',
-                    maxWidth: '280px',
+                    maxWidth: '300px',
                     objectFit: 'contain',
                     display: 'block',
-                    transition: 'height 0.2s ease',
+                    transition: 'height 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
                   }}
                 />
               </button>
