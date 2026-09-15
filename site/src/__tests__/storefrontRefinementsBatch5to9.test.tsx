@@ -86,4 +86,50 @@ describe('Storefront Refinements (Items 5, 6, 7, 8, 9)', () => {
     expect(previewPanel).toBeTruthy();
     expect(screen.getByText(/Rəsmi Tərəfdaş Brendlərimiz/i)).toBeTruthy();
   });
+
+  it('Item 8 (Search): SiteHeader axtarış inputuna toxunduqda panel genişlənir və daxili dropdown açılır', () => {
+    const categories = [{ id: 'cat-1', name: 'Soyuducular', active: true, count: 5 }];
+    const brands = [{ id: 'brand-1', name: 'ARDO', active: true }];
+    const products = [
+      {
+        id: 'p-1',
+        title: 'ARDO Soyuducu 123',
+        brandId: 'brand-1',
+        categoryId: 'cat-1',
+        published: true,
+      },
+    ];
+
+    const handleSearchChange = vi.fn();
+
+    const { container } = render(
+      <SiteHeader
+        currentRoute="home"
+        onNavigate={() => {}}
+        categories={categories as any}
+        brands={brands as any}
+        products={products as any}
+        theme={lightTheme}
+        themeMode="light"
+        onToggleTheme={() => {}}
+        searchQuery="ARDO"
+        onSearchChange={handleSearchChange}
+        onOpenSearchModal={() => {}}
+        comparisonCount={0}
+        favoritesCount={0}
+        onOpenSaharaMatch={() => {}}
+      />
+    );
+
+    const input = container.querySelector('[data-testid="header-search-input"]') as HTMLInputElement;
+    expect(input).toBeTruthy();
+
+    // Focus on the search input
+    fireEvent.focus(input);
+
+    // Expanding dropdown is rendered inline right under header
+    const inlineDropdown = container.querySelector('.smart-search-inline-dropdown');
+    expect(inlineDropdown).toBeTruthy();
+    expect(screen.getAllByText(/ARDO Soyuducu 123/i).length).toBeGreaterThan(0);
+  });
 });

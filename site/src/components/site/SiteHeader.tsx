@@ -21,12 +21,15 @@ import {
   Wrench,
   CheckCircle2,
   Percent,
+  X,
+  Loader2,
 } from 'lucide-react';
 import { Brand, CatalogCategory, Product, CatalogSettings } from '../../types/product';
 import { ThemeColors, DESIGN_TOKENS } from '../../types/theme';
 import { TopServiceBar } from './TopServiceBar';
 import { MegaMenu } from './MegaMenu';
 import { MobileCategoryDrawer } from './MobileCategoryDrawer';
+import { SmartSearchOverlay } from '../SmartSearchOverlay';
 import { featureFlags } from '../../utils/featureFlags';
 
 interface SiteHeaderProps {
@@ -59,7 +62,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
   themeMode,
   onToggleTheme,
   searchQuery,
-  onSearchChange: _onSearchChange,
+  onSearchChange,
   onOpenSearchModal,
   comparisonCount,
   favoritesCount,
@@ -69,11 +72,33 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const [isCompact, setIsCompact] = useState(false);
+  const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [hoveredNavTab, setHoveredNavTab] = useState<string | null>(null);
   const hoverNavTimeoutRef = useRef<any>(null);
   const megaMenuBtnRef = useRef<HTMLButtonElement>(null);
   const mobileMenuBtnRef = useRef<HTMLButtonElement>(null);
   const secondaryNavRef = useRef<HTMLDivElement>(null);
+  const desktopSearchInputRef = useRef<HTMLInputElement>(null);
+  const mobileSearchInputRef = useRef<HTMLInputElement>(null);
+  const searchWrapRef = useRef<HTMLDivElement>(null);
+
+  // ⌘K / Ctrl+K and Escape keyboard listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setIsSearchExpanded(true);
+        setTimeout(() => desktopSearchInputRef.current?.focus(), 50);
+      } else if (e.key === 'Escape' && isSearchExpanded) {
+        e.preventDefault();
+        setIsSearchExpanded(false);
+        desktopSearchInputRef.current?.blur();
+        mobileSearchInputRef.current?.blur();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isSearchExpanded]);
 
   const handleNavMouseEnter = (tab: string) => {
     if (hoverNavTimeoutRef.current) clearTimeout(hoverNavTimeoutRef.current);
@@ -179,19 +204,19 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               </button>
             </div>
 
-            {/* Center: Long, Sleek Smart Search Trigger */}
+            {/* Center: Long, Sleek Smart Search Input with Attached Expanding Dropdown */}
             <div
+              ref={searchWrapRef}
               style={{
                 flex: 1,
                 maxWidth: '920px',
                 margin: '0 12px',
                 position: 'relative',
+                zIndex: isSearchExpanded ? DESIGN_TOKENS.zIndex.modal + 1 : 2,
               }}
               className="header-search-wrap"
             >
-              <button
-                type="button"
-                onClick={onOpenSearchModal}
+              <div
                 data-testid="header-search-trigger"
                 style={{
                   width: '100%',
@@ -199,44 +224,141 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
-                  padding: '0 20px',
-                  borderRadius: '999px',
-                  backgroundColor: themeMode === 'dark' ? '#121824' : '#f8fafc',
-                  border: `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : '#e2e8f0'}`,
-                  color: theme.textMuted,
-                  fontSize: '13.5px',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  transition: 'all 0.2s ease',
+                  padding: '0 18px',
+                  borderRadius: isSearchExpanded ? '16px 16px 0 0' : '999px',
+                  backgroundColor: isSearchExpanded
+                    ? themeMode === 'dark'
+                      ? 'rgba(18, 24, 36, 0.94)'
+                      : 'rgba(248, 250, 252, 0.94)'
+                    : themeMode === 'dark'
+                      ? '#121824'
+                      : '#f8fafc',
+                  border: isSearchExpanded
+                    ? '1px solid #e31e24'
+                    : `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : '#e2e8f0'}`,
+                  borderBottom: isSearchExpanded ? 'none' : undefined,
+                  boxShadow: isSearchExpanded ? '0 -2px 10px rgba(0, 0, 0, 0.05)' : 'none',
+                  backdropFilter: isSearchExpanded ? 'blur(28px)' : 'none',
+                  WebkitBackdropFilter: isSearchExpanded ? 'blur(28px)' : 'none',
+                  transition: 'border-radius 0.15s ease, background-color 0.15s ease, border-color 0.15s ease',
                 }}
-                aria-label="Axtarış pəncərəsini aç"
+                className={`header-search-input-box ${isSearchExpanded ? 'is-focused' : ''}`}
+                onClick={() => {
+                  setIsSearchExpanded(true);
+                  desktopSearchInputRef.current?.focus();
+                }}
               >
-                <Search size={17} style={{ color: theme.textMuted, flexShrink: 0 }} />
-                <span
+                <Search
+                  size={17}
                   style={{
-                    flex: 1,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
-                    color: theme.textMuted,
-                  }}
-                >
-                  {searchQuery || 'Məhsul, marka və ya model axtarın...'}
-                </span>
-                <span
-                  style={{
-                    fontSize: '11px',
-                    padding: '2px 8px',
-                    borderRadius: '6px',
-                    backgroundColor: themeMode === 'dark' ? '#1f2937' : '#e2e8f0',
-                    color: theme.text,
-                    fontWeight: 600,
+                    color:
+                      searchQuery.trim().length > 0 ? '#e31e24' : theme.textMuted || '#94a3b8',
+                    transition: 'color 0.2s ease',
                     flexShrink: 0,
                   }}
-                >
-                  ⌘K
-                </span>
-              </button>
+                />
+
+                <input
+                  ref={desktopSearchInputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  onFocus={() => setIsSearchExpanded(true)}
+                  placeholder="Məhsul, marka və ya model axtarın..."
+                  data-testid="header-search-input"
+                  aria-label="Məhsul, marka və ya model axtarın"
+                  style={{
+                    flex: 1,
+                    border: 'none',
+                    outline: 'none',
+                    background: 'transparent',
+                    color: theme.text,
+                    fontSize: '13.5px',
+                    fontWeight: 500,
+                    fontFamily: 'inherit',
+                    width: '100%',
+                  }}
+                />
+
+                {/* Spinning red loader when typing or loading */}
+                {searchQuery.trim().length > 0 && (
+                  <Loader2
+                    size={16}
+                    className="img-spin"
+                    style={{
+                      color: '#e31e24',
+                      animation: 'imgSpinAnim 0.8s linear infinite',
+                      flexShrink: 0,
+                    }}
+                    aria-label="Axtarılır..."
+                  />
+                )}
+
+                {/* Clear search query button */}
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSearchChange('');
+                      desktopSearchInputRef.current?.focus();
+                    }}
+                    aria-label="Axtarışı təmizlə"
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      padding: '2px',
+                      color: theme.textMuted,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderRadius: '50%',
+                    }}
+                  >
+                    <X size={15} />
+                  </button>
+                )}
+
+                {/* ⌘K Shortcut badge when empty */}
+                {!searchQuery && (
+                  <span
+                    style={{
+                      fontSize: '11px',
+                      padding: '2px 8px',
+                      borderRadius: '6px',
+                      backgroundColor: themeMode === 'dark' ? '#1f2937' : '#e2e8f0',
+                      color: theme.text,
+                      fontWeight: 600,
+                      flexShrink: 0,
+                    }}
+                  >
+                    ⌘K
+                  </span>
+                )}
+              </div>
+
+              {/* Directly Attached Expanding Dropdown Panel */}
+              <SmartSearchOverlay
+                visible={isSearchExpanded}
+                inline={true}
+                searchQuery={searchQuery}
+                onSearchChange={onSearchChange}
+                onClose={() => setIsSearchExpanded(false)}
+                products={products}
+                categories={categories}
+                brands={brands}
+                theme={theme}
+                isDarkMode={themeMode === 'dark'}
+                onSelectCategory={(catId) => {
+                  setIsSearchExpanded(false);
+                  onNavigate('catalog', typeof catId === 'string' ? catId : (catId as any));
+                }}
+                onSelectBrand={(brandId) => {
+                  setIsSearchExpanded(false);
+                  onNavigate('catalog', brandId);
+                }}
+              />
             </div>
 
             {/* Right Action Icons & Utilities matching siteUI.png */}
@@ -527,11 +649,16 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               </div>
             </div>
 
-            {/* Row 2: Search Trigger Bar */}
-            <div className="site-header-mobile-search-row" style={{ paddingBottom: '10px' }}>
-              <button
-                type="button"
-                onClick={onOpenSearchModal}
+            {/* Row 2: Search Input & Attached Expanding Dropdown (Mobile) */}
+            <div
+              className="site-header-mobile-search-row"
+              style={{
+                position: 'relative',
+                paddingBottom: '10px',
+                zIndex: isSearchExpanded ? DESIGN_TOKENS.zIndex.modal + 1 : 2,
+              }}
+            >
+              <div
                 data-testid="header-search-trigger-mobile"
                 style={{
                   width: '100%',
@@ -539,28 +666,113 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   alignItems: 'center',
                   gap: '8px',
                   padding: '8px 14px',
-                  borderRadius: '999px',
-                  backgroundColor: themeMode === 'dark' ? '#121824' : '#f8fafc',
-                  border: `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : '#e2e8f0'}`,
-                  color: theme.textMuted,
-                  fontSize: '12.5px',
-                  cursor: 'pointer',
-                  textAlign: 'left',
+                  borderRadius: isSearchExpanded ? '14px 14px 0 0' : '999px',
+                  backgroundColor: isSearchExpanded
+                    ? themeMode === 'dark'
+                      ? 'rgba(18, 24, 36, 0.94)'
+                      : 'rgba(248, 250, 252, 0.94)'
+                    : themeMode === 'dark'
+                      ? '#121824'
+                      : '#f8fafc',
+                  border: isSearchExpanded
+                    ? '1px solid #e31e24'
+                    : `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : '#e2e8f0'}`,
+                  borderBottom: isSearchExpanded ? 'none' : undefined,
+                  boxShadow: isSearchExpanded ? '0 -2px 10px rgba(0, 0, 0, 0.05)' : 'none',
+                  backdropFilter: isSearchExpanded ? 'blur(28px)' : 'none',
+                  WebkitBackdropFilter: isSearchExpanded ? 'blur(28px)' : 'none',
+                  transition: 'border-radius 0.15s ease, background-color 0.15s ease, border-color 0.15s ease',
                 }}
-                aria-label="Axtarış pəncərəsini aç"
+                onClick={() => {
+                  setIsSearchExpanded(true);
+                  mobileSearchInputRef.current?.focus();
+                }}
               >
-                <Search size={14} style={{ color: theme.textMuted, flexShrink: 0 }} />
-                <span
+                <Search
+                  size={14}
+                  style={{
+                    color:
+                      searchQuery.trim().length > 0 ? '#e31e24' : theme.textMuted || '#94a3b8',
+                    transition: 'color 0.2s ease',
+                    flexShrink: 0,
+                  }}
+                />
+                <input
+                  ref={mobileSearchInputRef}
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => onSearchChange(e.target.value)}
+                  onFocus={() => setIsSearchExpanded(true)}
+                  placeholder="Məhsul, marka və ya model axtarın..."
+                  data-testid="header-search-input-mobile"
+                  aria-label="Məhsul axtarın"
                   style={{
                     flex: 1,
-                    overflow: 'hidden',
-                    textOverflow: 'ellipsis',
-                    whiteSpace: 'nowrap',
+                    border: 'none',
+                    outline: 'none',
+                    background: 'transparent',
+                    color: theme.text,
+                    fontSize: '12.5px',
+                    fontWeight: 500,
+                    fontFamily: 'inherit',
+                    width: '100%',
                   }}
-                >
-                  {searchQuery || 'Məhsul axtarın...'}
-                </span>
-              </button>
+                />
+                {searchQuery.trim().length > 0 && (
+                  <Loader2
+                    size={14}
+                    className="img-spin"
+                    style={{
+                      color: '#e31e24',
+                      animation: 'imgSpinAnim 0.8s linear infinite',
+                      flexShrink: 0,
+                    }}
+                  />
+                )}
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onSearchChange('');
+                      mobileSearchInputRef.current?.focus();
+                    }}
+                    aria-label="Axtarışı təmizlə"
+                    style={{
+                      background: 'transparent',
+                      border: 'none',
+                      padding: '2px',
+                      color: theme.textMuted,
+                      cursor: 'pointer',
+                      display: 'flex',
+                    }}
+                  >
+                    <X size={14} />
+                  </button>
+                )}
+              </div>
+
+              {/* Mobile Attached Dropdown */}
+              <SmartSearchOverlay
+                visible={isSearchExpanded}
+                inline={true}
+                searchQuery={searchQuery}
+                onSearchChange={onSearchChange}
+                onClose={() => setIsSearchExpanded(false)}
+                products={products}
+                categories={categories}
+                brands={brands}
+                theme={theme}
+                isDarkMode={themeMode === 'dark'}
+                onSelectCategory={(catId) => {
+                  setIsSearchExpanded(false);
+                  onNavigate('catalog', typeof catId === 'string' ? catId : (catId as any));
+                }}
+                onSelectBrand={(brandId) => {
+                  setIsSearchExpanded(false);
+                  onNavigate('catalog', brandId);
+                }}
+              />
             </div>
           </div>
         </div>
@@ -1087,20 +1299,20 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
         triggerRef={mobileMenuBtnRef}
       />
 
-      {/* Mobile Category & Navigation Drawer (rendered on mobile when Menyu/Kateqoriyalar clicked) */}
-      <MobileCategoryDrawer
-        isOpen={isMobileDrawerOpen}
-        onClose={() => setIsMobileDrawerOpen(false)}
-        categories={categories}
-        brands={brands}
-        products={products}
-        theme={theme}
-        themeMode={themeMode}
-        onSelectCategory={(catId) => onNavigate('catalog', catId)}
-        onSelectBrand={(brandId) => onNavigate('catalog', brandId)}
-        onNavigate={onNavigate}
-        triggerRef={mobileMenuBtnRef}
-      />
+      {/* Search Dropdown Clickaway Backdrop */}
+      {isSearchExpanded && (
+        <div
+          className="header-search-clickaway"
+          onClick={() => setIsSearchExpanded(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: DESIGN_TOKENS.zIndex.modal,
+            backgroundColor: 'rgba(0, 0, 0, 0.15)',
+            backdropFilter: 'none',
+          }}
+        />
+      )}
     </>
   );
 };

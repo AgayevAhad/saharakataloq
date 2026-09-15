@@ -21,6 +21,7 @@ interface SmartSearchOverlayProps {
   onSelectProduct?: (product: Product) => void;
   triggerRef?: React.RefObject<HTMLElement | null>;
   isLoading?: boolean;
+  inline?: boolean;
 }
 
 interface SuggestionItem {
@@ -82,6 +83,7 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
   onSelectProduct,
   triggerRef,
   isLoading = false,
+  inline = false,
 }) => {
   const [hoveredItem, setHoveredItem] = useState<SuggestionItem | null>(null);
   const [hoveredCategoryId, setHoveredCategoryId] = useState<string | null>(null);
@@ -127,7 +129,7 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
 
   // Focus trap, autofocus, and Escape handler
   useEffect(() => {
-    if (!visible) return;
+    if (!visible || inline) return;
 
     // Save previous active element to return focus on close
     previouslyFocusedElementRef.current =
@@ -188,7 +190,7 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
         target.focus();
       }
     };
-  }, [visible, triggerRef]);
+  }, [visible, triggerRef, inline]);
 
   // Reset hover state when query changes or overlay closes
   useEffect(() => {
@@ -484,7 +486,265 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
     inputRef.current?.focus();
   };
 
+  const renderDropdownBody = () => (
+    <>
+      {/* Top 2-Column Section */}
+      <div className="smart-search-main-grid">
+        {/* Left Column: Search Suggestions / Keywords */}
+        <div className="smart-search-left-col">
+          <div className="smart-search-section-header">
+            <span className="smart-search-section-title" style={{ color: theme.textMuted }}>
+              Axtarış üzrə nəticə
+            </span>
+          </div>
+
+          <div className="smart-search-suggestions-list">
+            {suggestions.slice(0, 9).map((item, idx) => (
+              <button
+                key={item.id}
+                type="button"
+                className={`smart-search-item ${idx >= 5 ? 'hide-on-mobile' : ''} ${hoveredItem?.id === item.id ? 'is-hovered' : ''}`}
+                onClick={() => handleSuggestionClick(item)}
+                onMouseEnter={() => setHoveredItem(item)}
+                onMouseLeave={() => setHoveredItem(null)}
+                style={{ color: theme.text }}
+              >
+                <div className="smart-search-item-left">
+                  <Search
+                    size={14}
+                    className="smart-search-item-icon"
+                    style={{ color: theme.textMuted }}
+                  />
+                  <span className="smart-search-item-text">
+                    <HighlightedQueryText
+                      text={item.displayText}
+                      query={searchQuery}
+                      highlightColor={theme.primary}
+                    />
+                  </span>
+                </div>
+                {item.categoryName && (
+                  <span className="smart-search-item-badge" style={{ color: theme.textMuted }}>
+                    {item.categoryName}
+                  </span>
+                )}
+                <ChevronRight
+                  size={13}
+                  className="smart-search-item-arrow"
+                  style={{ color: theme.textMuted }}
+                />
+              </button>
+            ))}
+
+            {suggestions.length === 0 && (
+              <div className="smart-search-empty" style={{ color: theme.textMuted }}>
+                Axtarışa uyğun nəticə tapılmadı.
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Right Column: Popular / Recommended / Hovered Products (NO PRICES) */}
+        <div className="smart-search-right-col" style={{ borderLeftColor: theme.border }}>
+          <div className="smart-search-section-header popular-header">
+            <span className="smart-search-section-title" style={{ color: theme.textMuted }}>
+              {rightSectionTitle}
+            </span>
+            <button
+              type="button"
+              className="smart-search-show-all-btn"
+              onClick={handleShowAll}
+              style={{ color: theme.primary }}
+            >
+              <span>Hamısını göstər</span>
+              <ChevronRight size={12} />
+            </button>
+          </div>
+
+          <div className="smart-search-products-grid">
+            {displayedProducts.map((prod) => {
+              const prodImg =
+                prod.image ||
+                prod.gallery?.find((g) => Boolean(g)) ||
+                prod.media?.find((m) => m.type === 'image')?.url ||
+                '';
+              const brandObj = activeBrands.find((b) => b.id === prod.brandId);
+
+              return (
+                <div
+                  key={prod.id}
+                  className="smart-search-product-card"
+                  onClick={() => handleProductCardClick(prod)}
+                  style={{
+                    backgroundColor: isDarkMode
+                      ? 'rgba(30, 41, 59, 0.6)'
+                      : 'rgba(248, 250, 252, 0.8)',
+                    borderColor: theme.border,
+                  }}
+                >
+                  <div
+                    className="smart-search-img-box"
+                    style={{ backgroundColor: isDarkMode ? '#0f172a' : '#ffffff' }}
+                  >
+                    {prodImg ? (
+                      <ShimmerImage
+                        src={prodImg}
+                        alt={prod.title}
+                        loading="lazy"
+                        objectFit="contain"
+                        spinnerSize={18}
+                        containerStyle={{ width: '100%', height: '100%' }}
+                        className="smart-search-prod-img"
+                      />
+                    ) : (
+                      <div className="smart-search-placeholder-img">
+                        <div
+                          style={{
+                            width: '40px',
+                            height: '40px',
+                            borderRadius: '10px',
+                            background:
+                              'linear-gradient(135deg, rgba(220,38,38,0.1), rgba(220,38,38,0.05))',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                        >
+                          <span
+                            style={{ fontSize: '16px', fontWeight: 800, color: theme.primary }}
+                          >
+                            {brandObj?.name?.slice(0, 1) || 'S'}
+                          </span>
+                        </div>
+                      </div>
+                    )}
+                    {brandObj && (
+                      <span
+                        className="smart-search-brand-tag"
+                        style={{ backgroundColor: theme.primary, color: '#fff' }}
+                      >
+                        {brandObj.name}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="smart-search-card-info">
+                    <h4
+                      className="smart-search-card-title"
+                      style={{ color: theme.text }}
+                      title={prod.title}
+                    >
+                      {prod.title}
+                    </h4>
+
+                    {prod.categoryName && (
+                      <span className="smart-search-card-cat" style={{ color: theme.textMuted }}>
+                        {prod.categoryName}
+                      </span>
+                    )}
+
+                    <div className="smart-search-card-action">
+                      <span
+                        style={{
+                          color: theme.primary,
+                          fontWeight: 700,
+                          fontSize: '12px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '4px',
+                        }}
+                      >
+                        Ətraflı bax <ArrowRight size={12} />
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* Bottom Section: Categories */}
+      {categoryPills.length > 0 && (
+        <div className="smart-search-categories-section" style={{ borderTopColor: theme.border }}>
+          <span className="smart-search-section-title" style={{ color: theme.textMuted }}>
+            Kateqoriyalar
+          </span>
+          <div
+            ref={searchCatRef}
+            {...dragProps}
+            className="smart-search-categories-row no-scrollbar"
+            style={{ cursor: 'grab' }}
+          >
+            {categoryPills.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                className={`smart-search-category-pill ${hoveredCategoryId === cat.id ? 'is-hovered' : ''}`}
+                onClick={(e) => {
+                  if (hasMoved()) return;
+                  scrollItemIntoView(e);
+                  handleCategoryPillClick(cat.id);
+                }}
+                onMouseEnter={() => setHoveredCategoryId(cat.id)}
+                onMouseLeave={() => setHoveredCategoryId(null)}
+                style={{
+                  backgroundColor:
+                    hoveredCategoryId === cat.id
+                      ? 'rgba(220, 38, 38, 0.12)'
+                      : isDarkMode
+                        ? 'rgba(30, 41, 59, 0.7)'
+                        : 'rgba(241, 245, 249, 0.9)',
+                  borderColor: hoveredCategoryId === cat.id ? theme.primary : theme.border,
+                  color: hoveredCategoryId === cat.id ? theme.primary : theme.text,
+                }}
+              >
+                {cat.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+    </>
+  );
+
   if (!visible) return null;
+
+  if (inline) {
+    return (
+      <div
+        ref={modalRef}
+        className="smart-search-overlay smart-search-inline-dropdown"
+        role="region"
+        aria-label="Axtarış paneli"
+        style={{
+          position: 'absolute',
+          top: '100%',
+          left: 0,
+          right: 0,
+          width: '100%',
+          maxWidth: '100%',
+          zIndex: DESIGN_TOKENS.zIndex.modal + 2,
+          backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.94)' : 'rgba(255, 255, 255, 0.94)',
+          backdropFilter: 'blur(28px)',
+          WebkitBackdropFilter: 'blur(28px)',
+          borderRadius: '0 0 20px 20px',
+          border: '1px solid #e31e24',
+          borderTop: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)'}`,
+          color: theme.text,
+          boxShadow: isDarkMode
+            ? '0 24px 60px rgba(0, 0, 0, 0.85)'
+            : '0 24px 60px rgba(0, 0, 0, 0.18)',
+          overflow: 'hidden',
+          animation: 'smartSearchSlideDown 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        {renderDropdownBody()}
+      </div>
+    );
+  }
 
   return (
     <div
@@ -503,7 +763,7 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
         display: 'flex',
         alignItems: 'flex-start',
         justifyContent: 'center',
-        padding: '16px',
+        padding: '10px 16px',
         overflowY: 'auto',
         WebkitOverflowScrolling: 'touch',
       }}
@@ -661,224 +921,7 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
           </button>
         </div>
 
-        {/* Top 2-Column Section */}
-        <div className="smart-search-main-grid">
-          {/* Left Column: Search Suggestions / Keywords */}
-          <div className="smart-search-left-col">
-            <div className="smart-search-section-header">
-              <span className="smart-search-section-title" style={{ color: theme.textMuted }}>
-                Axtarış üzrə nəticə
-              </span>
-            </div>
-
-            <div className="smart-search-suggestions-list">
-              {suggestions.slice(0, 9).map((item, idx) => (
-                <button
-                  key={item.id}
-                  type="button"
-                  className={`smart-search-item ${idx >= 5 ? 'hide-on-mobile' : ''} ${hoveredItem?.id === item.id ? 'is-hovered' : ''}`}
-                  onClick={() => handleSuggestionClick(item)}
-                  onMouseEnter={() => setHoveredItem(item)}
-                  onMouseLeave={() => setHoveredItem(null)}
-                  style={{ color: theme.text }}
-                >
-                  <div className="smart-search-item-left">
-                    <Search
-                      size={14}
-                      className="smart-search-item-icon"
-                      style={{ color: theme.textMuted }}
-                    />
-                    <span className="smart-search-item-text">
-                      <HighlightedQueryText
-                        text={item.displayText}
-                        query={searchQuery}
-                        highlightColor={theme.primary}
-                      />
-                    </span>
-                  </div>
-                  {item.categoryName && (
-                    <span className="smart-search-item-badge" style={{ color: theme.textMuted }}>
-                      {item.categoryName}
-                    </span>
-                  )}
-                  <ChevronRight
-                    size={13}
-                    className="smart-search-item-arrow"
-                    style={{ color: theme.textMuted }}
-                  />
-                </button>
-              ))}
-
-              {suggestions.length === 0 && (
-                <div className="smart-search-empty" style={{ color: theme.textMuted }}>
-                  Axtarışa uyğun nəticə tapılmadı.
-                </div>
-              )}
-            </div>
-          </div>
-
-          {/* Right Column: Popular / Recommended / Hovered Products (NO PRICES) */}
-          <div className="smart-search-right-col" style={{ borderLeftColor: theme.border }}>
-            <div className="smart-search-section-header popular-header">
-              <span className="smart-search-section-title" style={{ color: theme.textMuted }}>
-                {rightSectionTitle}
-              </span>
-              <button
-                type="button"
-                className="smart-search-show-all-btn"
-                onClick={handleShowAll}
-                style={{ color: theme.primary }}
-              >
-                <span>Hamısını göstər</span>
-                <ChevronRight size={12} />
-              </button>
-            </div>
-
-            <div className="smart-search-products-grid">
-              {displayedProducts.map((prod) => {
-                const prodImg =
-                  prod.image ||
-                  prod.gallery?.find((g) => Boolean(g)) ||
-                  prod.media?.find((m) => m.type === 'image')?.url ||
-                  '';
-                const brandObj = activeBrands.find((b) => b.id === prod.brandId);
-
-                return (
-                  <div
-                    key={prod.id}
-                    className="smart-search-product-card"
-                    onClick={() => handleProductCardClick(prod)}
-                    style={{
-                      backgroundColor: isDarkMode
-                        ? 'rgba(30, 41, 59, 0.6)'
-                        : 'rgba(248, 250, 252, 0.8)',
-                      borderColor: theme.border,
-                    }}
-                  >
-                    <div
-                      className="smart-search-img-box"
-                      style={{ backgroundColor: isDarkMode ? '#0f172a' : '#ffffff' }}
-                    >
-                      {prodImg ? (
-                        <ShimmerImage
-                          src={prodImg}
-                          alt={prod.title}
-                          loading="lazy"
-                          objectFit="contain"
-                          spinnerSize={18}
-                          containerStyle={{ width: '100%', height: '100%' }}
-                          className="smart-search-prod-img"
-                        />
-                      ) : (
-                        <div className="smart-search-placeholder-img">
-                          <div
-                            style={{
-                              width: '40px',
-                              height: '40px',
-                              borderRadius: '10px',
-                              background:
-                                'linear-gradient(135deg, rgba(220,38,38,0.1), rgba(220,38,38,0.05))',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                          >
-                            <span
-                              style={{ fontSize: '16px', fontWeight: 800, color: theme.primary }}
-                            >
-                              {brandObj?.name?.slice(0, 1) || 'S'}
-                            </span>
-                          </div>
-                        </div>
-                      )}
-                      {brandObj && (
-                        <span
-                          className="smart-search-brand-tag"
-                          style={{ backgroundColor: theme.primary, color: '#fff' }}
-                        >
-                          {brandObj.name}
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="smart-search-card-info">
-                      <h4
-                        className="smart-search-card-title"
-                        style={{ color: theme.text }}
-                        title={prod.title}
-                      >
-                        {prod.title}
-                      </h4>
-
-                      {prod.categoryName && (
-                        <span className="smart-search-card-cat" style={{ color: theme.textMuted }}>
-                          {prod.categoryName}
-                        </span>
-                      )}
-
-                      <div className="smart-search-card-action">
-                        <span
-                          style={{
-                            color: theme.primary,
-                            fontWeight: 700,
-                            fontSize: '12px',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                          }}
-                        >
-                          Ətraflı bax <ArrowRight size={12} />
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* Bottom Section: Categories */}
-        {categoryPills.length > 0 && (
-          <div className="smart-search-categories-section" style={{ borderTopColor: theme.border }}>
-            <span className="smart-search-section-title" style={{ color: theme.textMuted }}>
-              Kateqoriyalar
-            </span>
-            <div
-              ref={searchCatRef}
-              {...dragProps}
-              className="smart-search-categories-row no-scrollbar"
-              style={{ cursor: 'grab' }}
-            >
-              {categoryPills.map((cat) => (
-                <button
-                  key={cat.id}
-                  type="button"
-                  className={`smart-search-category-pill ${hoveredCategoryId === cat.id ? 'is-hovered' : ''}`}
-                  onClick={(e) => {
-                    if (hasMoved()) return;
-                    scrollItemIntoView(e);
-                    handleCategoryPillClick(cat.id);
-                  }}
-                  onMouseEnter={() => setHoveredCategoryId(cat.id)}
-                  onMouseLeave={() => setHoveredCategoryId(null)}
-                  style={{
-                    backgroundColor:
-                      hoveredCategoryId === cat.id
-                        ? 'rgba(220, 38, 38, 0.12)'
-                        : isDarkMode
-                          ? 'rgba(30, 41, 59, 0.7)'
-                          : 'rgba(241, 245, 249, 0.9)',
-                    borderColor: hoveredCategoryId === cat.id ? theme.primary : theme.border,
-                    color: hoveredCategoryId === cat.id ? theme.primary : theme.text,
-                  }}
-                >
-                  {cat.name}
-                </button>
-              ))}
-            </div>
-          </div>
-        )}
+        {renderDropdownBody()}
       </div>
     </div>
   );
