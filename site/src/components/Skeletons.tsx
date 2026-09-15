@@ -558,7 +558,7 @@ export const FeaturedProductCardSkeleton: React.FC<SkeletonProps> = ({ theme }) 
         style={{
           width: '100%',
           flex: 1,
-          minHeight: '255px',
+          minHeight: '265px',
           maxHeight: '275px',
           borderRadius: '12px',
           backgroundColor: '#f8fafc',
@@ -575,14 +575,14 @@ export const FeaturedProductCardSkeleton: React.FC<SkeletonProps> = ({ theme }) 
       <div
         style={{
           marginTop: 'auto',
-          paddingTop: '4px',
+          paddingTop: '2px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '4px',
+          gap: '2px',
         }}
       >
-        <SkeletonBox width="85%" height="15px" borderRadius="4px" />
-        <SkeletonBox width="45%" height="16px" borderRadius="4px" />
+        <SkeletonBox width="85%" height="14px" borderRadius="4px" />
+        <SkeletonBox width="45%" height="15px" borderRadius="4px" />
       </div>
     </div>
   );
@@ -635,7 +635,7 @@ export const VisualCategoryCardsSkeleton: React.FC<SkeletonProps> = ({ theme }) 
               style={{
                 width: '100%',
                 flex: 1,
-                minHeight: '255px',
+                minHeight: '265px',
                 maxHeight: '275px',
                 borderRadius: '12px',
                 backgroundColor: '#f8fafc',
@@ -650,15 +650,15 @@ export const VisualCategoryCardsSkeleton: React.FC<SkeletonProps> = ({ theme }) 
             <div
               style={{
                 marginTop: 'auto',
-                paddingTop: '4px',
+                paddingTop: '2px',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: '4px',
+                gap: '2px',
                 width: '100%',
               }}
             >
-              <SkeletonBox width="60%" height="15px" borderRadius="4px" />
+              <SkeletonBox width="60%" height="14px" borderRadius="4px" />
               <SkeletonBox width="35%" height="12px" borderRadius="4px" />
             </div>
           </div>

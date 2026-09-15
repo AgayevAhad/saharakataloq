@@ -241,7 +241,7 @@ export const VisualCategoryCards: React.FC<VisualCategoryCardsProps> = ({
                 style={{
                   width: '100%',
                   flex: 1,
-                  minHeight: '255px',
+                  minHeight: '265px',
                   maxHeight: '275px',
                   borderRadius: '12px',
                   backgroundColor: '#ffffff',
@@ -250,6 +250,7 @@ export const VisualCategoryCards: React.FC<VisualCategoryCardsProps> = ({
                   justifyContent: 'center',
                   overflow: 'hidden',
                   padding: 0,
+                  margin: 0,
                   position: 'relative',
                 }}
               >
@@ -284,31 +285,33 @@ export const VisualCategoryCards: React.FC<VisualCategoryCardsProps> = ({
               <div
                 style={{
                   marginTop: 'auto',
-                  paddingTop: '4px',
+                  paddingTop: '2px',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '2px',
+                  gap: '1px',
                   width: '100%',
                 }}
               >
                 <div
                   style={{
-                    fontSize: '14px',
+                    fontSize: '13.5px',
                     fontWeight: 700,
                     color: isSelected ? '#dc2626' : '#0f172a',
-                    lineHeight: 1.25,
+                    lineHeight: 1.2,
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
                   }}
+                  title={cat.name}
                 >
                   {cat.name}
                 </div>
                 <div
                   style={{
-                    fontSize: '12px',
+                    fontSize: '11.5px',
                     fontWeight: 600,
                     color: '#64748b',
+                    lineHeight: 1.2,
                   }}
                 >
                   {cat.count} Model

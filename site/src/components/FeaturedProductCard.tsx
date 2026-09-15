@@ -85,8 +85,8 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
         className="card-hover-heart"
         style={{
           position: 'absolute',
-          top: '14px',
-          right: '14px',
+          top: '10px',
+          right: '10px',
           zIndex: 6,
           opacity: isHovered || isFavorite ? 1 : 0,
           pointerEvents: isHovered || isFavorite ? 'auto' : 'none',
@@ -123,8 +123,8 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
         className="card-hover-cart"
         style={{
           position: 'absolute',
-          bottom: '42px',
-          right: '12px',
+          bottom: '38px',
+          right: '10px',
           zIndex: 6,
           opacity: isHovered ? 1 : 0,
           pointerEvents: isHovered ? 'auto' : 'none',
@@ -162,7 +162,7 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
         style={{
           width: '100%',
           flex: 1,
-          minHeight: '255px',
+          minHeight: '265px',
           maxHeight: '275px',
           borderRadius: '12px',
           backgroundColor: '#ffffff',
@@ -171,6 +171,7 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
           justifyContent: 'center',
           overflow: 'hidden',
           padding: 0,
+          margin: 0,
           position: 'relative',
         }}
       >
@@ -218,23 +219,24 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
       <div
         style={{
           marginTop: 'auto',
-          paddingTop: '4px',
+          paddingTop: '2px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '2px',
+          gap: '1px',
           width: '100%',
         }}
       >
         <div
           style={{
-            fontSize: '13.5px',
+            fontSize: '13px',
             fontWeight: 700,
             color: '#0f172a',
-            lineHeight: 1.25,
+            lineHeight: 1.2,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
           }}
+          title={product.title}
         >
           {product.title}
         </div>
@@ -242,9 +244,10 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
         {displayPrice && (
           <div
             style={{
-              fontSize: '15px',
+              fontSize: '14.5px',
               fontWeight: 900,
               color: '#0f172a',
+              lineHeight: 1.2,
               fontFamily: 'Outfit, -apple-system, sans-serif',
             }}
           >
