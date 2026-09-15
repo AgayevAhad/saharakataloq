@@ -147,14 +147,16 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
           position: 'sticky',
           top: 0,
           backgroundColor:
-            themeMode === 'dark' ? 'rgba(8, 12, 18, 0.98)' : 'rgba(255, 255, 255, 0.98)',
-          backdropFilter: 'blur(16px)',
-          WebkitBackdropFilter: 'blur(16px)',
+            themeMode === 'dark' ? 'rgba(8, 12, 18, 0.88)' : 'rgba(255, 255, 255, 0.88)',
+          backdropFilter: 'blur(24px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(24px) saturate(180%)',
           borderBottom: `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0'}`,
           boxShadow: isCompact
             ? '0 4px 20px rgba(0, 0, 0, 0.1)'
             : 'none',
-          zIndex: DESIGN_TOKENS.zIndex.sticky,
+          zIndex: isSearchExpanded || isMegaMenuOpen || hoveredNavTab
+            ? DESIGN_TOKENS.zIndex.modal + 15
+            : DESIGN_TOKENS.zIndex.sticky,
           transition:
             'padding 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, background-color 0.2s ease',
         }}
@@ -228,8 +230,8 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   borderRadius: isSearchExpanded ? '16px 16px 0 0' : '999px',
                   backgroundColor: isSearchExpanded
                     ? themeMode === 'dark'
-                      ? 'rgba(18, 24, 36, 0.94)'
-                      : 'rgba(248, 250, 252, 0.94)'
+                      ? 'rgba(18, 24, 36, 0.88)'
+                      : 'rgba(255, 255, 255, 0.90)'
                     : themeMode === 'dark'
                       ? '#121824'
                       : '#f8fafc',
@@ -238,8 +240,8 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                     : `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : '#e2e8f0'}`,
                   borderBottom: isSearchExpanded ? 'none' : undefined,
                   boxShadow: isSearchExpanded ? '0 -2px 10px rgba(0, 0, 0, 0.05)' : 'none',
-                  backdropFilter: isSearchExpanded ? 'blur(28px)' : 'none',
-                  WebkitBackdropFilter: isSearchExpanded ? 'blur(28px)' : 'none',
+                  backdropFilter: isSearchExpanded ? 'blur(28px) saturate(190%)' : 'none',
+                  WebkitBackdropFilter: isSearchExpanded ? 'blur(28px) saturate(190%)' : 'none',
                   transition: 'border-radius 0.15s ease, background-color 0.15s ease, border-color 0.15s ease',
                 }}
                 className={`header-search-input-box ${isSearchExpanded ? 'is-focused' : ''}`}
@@ -669,8 +671,8 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   borderRadius: isSearchExpanded ? '14px 14px 0 0' : '999px',
                   backgroundColor: isSearchExpanded
                     ? themeMode === 'dark'
-                      ? 'rgba(18, 24, 36, 0.94)'
-                      : 'rgba(248, 250, 252, 0.94)'
+                      ? 'rgba(18, 24, 36, 0.88)'
+                      : 'rgba(255, 255, 255, 0.90)'
                     : themeMode === 'dark'
                       ? '#121824'
                       : '#f8fafc',
@@ -679,8 +681,8 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                     : `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : '#e2e8f0'}`,
                   borderBottom: isSearchExpanded ? 'none' : undefined,
                   boxShadow: isSearchExpanded ? '0 -2px 10px rgba(0, 0, 0, 0.05)' : 'none',
-                  backdropFilter: isSearchExpanded ? 'blur(28px)' : 'none',
-                  WebkitBackdropFilter: isSearchExpanded ? 'blur(28px)' : 'none',
+                  backdropFilter: isSearchExpanded ? 'blur(28px) saturate(190%)' : 'none',
+                  WebkitBackdropFilter: isSearchExpanded ? 'blur(28px) saturate(190%)' : 'none',
                   transition: 'border-radius 0.15s ease, background-color 0.15s ease, border-color 0.15s ease',
                 }}
                 onClick={() => {
@@ -1006,7 +1008,11 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               }}
               onMouseLeave={handleNavMouseLeave}
               style={{
-                backgroundColor: themeMode === 'dark' ? 'rgba(15, 23, 42, 0.96)' : 'rgba(255, 255, 255, 0.96)',
+                backgroundColor: themeMode === 'dark' ? 'rgba(15, 23, 42, 0.88)' : 'rgba(255, 255, 255, 0.90)',
+                backdropFilter: 'blur(28px) saturate(190%)',
+                WebkitBackdropFilter: 'blur(28px) saturate(190%)',
+                borderBottom: `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(226, 232, 240, 0.85)'}`,
+                boxShadow: themeMode === 'dark' ? '0 24px 48px -8px rgba(0, 0, 0, 0.7)' : '0 20px 44px -8px rgba(0, 0, 0, 0.12)',
                 padding: '20px 0 24px',
               }}
             >

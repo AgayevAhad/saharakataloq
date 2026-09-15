@@ -6753,16 +6753,18 @@ select {
   left: 0;
   right: 0;
   z-index: var(--z-overlay, 100);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-bottom: 1px solid rgba(226, 232, 240, 0.8);
-  box-shadow: 0 16px 36px -6px rgba(0, 0, 0, 0.08);
+  background-color: rgba(255, 255, 255, 0.88);
+  backdrop-filter: blur(28px) saturate(190%) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
+  border-bottom: 1px solid rgba(226, 232, 240, 0.85);
+  box-shadow: 0 20px 44px -6px rgba(0, 0, 0, 0.12);
   animation: headerNavSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .theme-dark .header-nav-preview-panel {
-  border-bottom-color: rgba(255, 255, 255, 0.1);
-  box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.5);
+  background-color: rgba(15, 23, 42, 0.88);
+  border-bottom-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 24px 48px -8px rgba(0, 0, 0, 0.6);
 }
 
 @keyframes headerNavSlideDown {

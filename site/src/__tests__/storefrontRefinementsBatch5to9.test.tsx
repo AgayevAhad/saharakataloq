@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, within } from '@testing-library/react';
 import { BannerHero } from '../components/BannerHero';
 import { SpecialDiscountBanner } from '../components/SpecialDiscountBanner';
 import { Footer } from '../components/Footer';
@@ -128,8 +128,52 @@ describe('Storefront Refinements (Items 5, 6, 7, 8, 9)', () => {
     fireEvent.focus(input);
 
     // Expanding dropdown is rendered inline right under header
-    const inlineDropdown = container.querySelector('.smart-search-inline-dropdown');
+    const inlineDropdown = container.querySelector('.smart-search-inline-dropdown') as HTMLElement;
     expect(inlineDropdown).toBeTruthy();
     expect(screen.getAllByText(/ARDO Soyuducu 123/i).length).toBeGreaterThan(0);
+
+    // Header has elevated z-index above clickaway backdrop
+    const headerEl = container.querySelector('header') as HTMLElement;
+    expect(headerEl.style.zIndex).toBe('125');
+
+    // Dropdown items are clickable and trigger navigation
+    const resultItem = screen.getAllByText(/ARDO Soyuducu 123/i)[0];
+    fireEvent.click(resultItem);
+  });
+
+  it('Secondary navigation hover expands preview panel with frosted glass blur', () => {
+    const categories = [{ id: 'cat-1', name: 'Soyuducular', slug: 'soyuducular', active: true, sortOrder: 1 }];
+    const brands = [{ id: 'ardo', name: 'ARDO', slug: 'ardo', active: true }];
+
+    const { container } = render(
+      <SiteHeader
+        currentRoute="home"
+        onNavigate={() => {}}
+        categories={categories as any}
+        brands={brands as any}
+        products={[]}
+        theme={lightTheme}
+        themeMode="light"
+        onToggleTheme={() => {}}
+        searchQuery=""
+        onSearchChange={() => {}}
+        onOpenSearchModal={() => {}}
+        comparisonCount={0}
+        favoritesCount={0}
+        onOpenSaharaMatch={() => {}}
+      />
+    );
+
+    // Find Brendlər nav button inside secondary nav and hover
+    const secNav = container.querySelector('.header-secondary-nav') as HTMLElement;
+    const brandsNavBtn = Array.from(secNav.querySelectorAll('button')).find((b) => b.textContent?.trim() === 'Brendlər') as HTMLElement;
+    expect(brandsNavBtn).toBeTruthy();
+    fireEvent.mouseEnter(brandsNavBtn);
+
+    // Expanding preview panel appears
+    const navPanel = container.querySelector('.header-nav-preview-panel') as HTMLElement;
+    expect(navPanel).toBeTruthy();
+    expect(within(navPanel).getByText('Rəsmi Tərəfdaş Brendlərimiz')).toBeTruthy();
+    expect(navPanel.style.backdropFilter).toContain('blur');
   });
 });
