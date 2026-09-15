@@ -723,8 +723,8 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
         style={{
           position: 'relative',
           width: '100%',
-          maxWidth: '920px',
-          margin: '0 auto',
+          maxWidth: '100%',
+          margin: 0,
           backgroundColor: 'transparent',
           backdropFilter: 'none',
           WebkitBackdropFilter: 'none',

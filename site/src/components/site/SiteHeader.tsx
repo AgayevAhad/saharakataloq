@@ -81,6 +81,39 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
   const desktopSearchInputRef = useRef<HTMLInputElement>(null);
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
   const searchWrapRef = useRef<HTMLDivElement>(null);
+  const [searchBoxBounds, setSearchBoxBounds] = useState<{ left: number; width: number } | null>(null);
+
+  // Dynamically measure search input pill bounds relative to catalog container for exact 1:1 alignment
+  useEffect(() => {
+    if (!isSearchExpanded) return;
+    const updateBounds = () => {
+      if (searchWrapRef.current) {
+        const parent = searchWrapRef.current.parentElement;
+        if (parent) {
+          const parentRect = parent.getBoundingClientRect();
+          const selfRect = searchWrapRef.current.getBoundingClientRect();
+          setSearchBoxBounds({
+            left: Math.max(0, selfRect.left - parentRect.left),
+            width: selfRect.width,
+          });
+        }
+      }
+    };
+    updateBounds();
+    const timer = setTimeout(updateBounds, 30);
+    const ro = typeof ResizeObserver !== 'undefined'
+      ? new ResizeObserver(() => updateBounds())
+      : null;
+    if (searchWrapRef.current && ro) {
+      ro.observe(searchWrapRef.current);
+    }
+    window.addEventListener('resize', updateBounds, { passive: true });
+    return () => {
+      clearTimeout(timer);
+      if (ro) ro.disconnect();
+      window.removeEventListener('resize', updateBounds);
+    };
+  }, [isSearchExpanded, isCompact]);
 
   // ⌘K / Ctrl+K and Escape keyboard listener
   useEffect(() => {
@@ -174,7 +207,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
             }}
           >
             {/* Logo */}
-            <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', flexShrink: 0, minWidth: isCompact ? '160px' : '200px' }}>
               <button
                 type="button"
                 onClick={() => onNavigate('home')}
@@ -333,7 +366,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
             </div>
 
             {/* Right Action Icons & Utilities matching siteUI.png */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0, minWidth: '240px', justifyContent: 'flex-end' }}>
               {/* Location: 📍 Bakı */}
               <button
                 type="button"
@@ -484,41 +517,50 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
             </div>
           </div>
 
-          {/* Desktop In-Panel Expanded Search Section: Physically expands header and slides secondary navigation down */}
+          {/* Desktop In-Panel Expanded Search Section: Exactly aligned 1:1 with search input above */}
           {isSearchExpanded && (
             <div
               className="desktop-header-search-expand-wrap hide-on-mobile"
               style={{
                 width: '100%',
-                maxWidth: '920px',
-                margin: '0 auto',
                 maxHeight: 'calc(100vh - 180px)',
                 overflowY: 'auto',
-                padding: '4px 0 16px',
+                padding: '2px 0 16px',
+                position: 'relative',
                 animation: 'smartSearchSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
               }}
             >
-              <SmartSearchOverlay
-                visible={true}
-                inline={true}
-                embeddedInHeader={true}
-                searchQuery={searchQuery}
-                onSearchChange={onSearchChange}
-                onClose={() => setIsSearchExpanded(false)}
-                products={products}
-                categories={categories}
-                brands={brands}
-                theme={theme}
-                isDarkMode={themeMode === 'dark'}
-                onSelectCategory={(catId) => {
-                  setIsSearchExpanded(false);
-                  onNavigate('catalog', typeof catId === 'string' ? catId : (catId as any));
+              <div
+                style={{
+                  marginLeft: searchBoxBounds ? `${searchBoxBounds.left}px` : 'auto',
+                  marginRight: searchBoxBounds ? 'auto' : 'auto',
+                  width: searchBoxBounds ? `${searchBoxBounds.width}px` : '100%',
+                  maxWidth: '920px',
+                  boxSizing: 'border-box',
                 }}
-                onSelectBrand={(brandId) => {
-                  setIsSearchExpanded(false);
-                  onNavigate('catalog', brandId);
-                }}
-              />
+              >
+                <SmartSearchOverlay
+                  visible={true}
+                  inline={true}
+                  embeddedInHeader={true}
+                  searchQuery={searchQuery}
+                  onSearchChange={onSearchChange}
+                  onClose={() => setIsSearchExpanded(false)}
+                  products={products}
+                  categories={categories}
+                  brands={brands}
+                  theme={theme}
+                  isDarkMode={themeMode === 'dark'}
+                  onSelectCategory={(catId) => {
+                    setIsSearchExpanded(false);
+                    onNavigate('catalog', typeof catId === 'string' ? catId : (catId as any));
+                  }}
+                  onSelectBrand={(brandId) => {
+                    setIsSearchExpanded(false);
+                    onNavigate('catalog', brandId);
+                  }}
+                />
+              </div>
             </div>
           )}
 
