@@ -206,14 +206,18 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               gap: '20px',
             }}
           >
-            {/* Logo: Smoothly enlarges and centers with subtle top/bottom balance when search expands */}
+            {/* Logo: Smoothly enlarges, centers horizontally with 40/60 vertical balance and discovery tagline */}
             <div
               style={{
                 display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
+                justifyContent: 'center',
                 flexShrink: 0,
-                minWidth: isSearchExpanded ? '220px' : isCompact ? '160px' : '200px',
-                transition: 'min-width 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
+                minWidth: isSearchExpanded ? '250px' : isCompact ? '160px' : '200px',
+                paddingTop: isSearchExpanded ? '8px' : '0',
+                paddingBottom: isSearchExpanded ? '14px' : '0',
+                transition: 'min-width 0.28s cubic-bezier(0.16, 1, 0.3, 1), padding 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
               }}
             >
               <button
@@ -224,11 +228,13 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   border: 'none',
                   cursor: 'pointer',
                   display: 'flex',
+                  flexDirection: 'column',
                   alignItems: 'center',
+                  justifyContent: 'center',
                   padding: 0,
                   flexShrink: 0,
-                  transform: isSearchExpanded ? 'scale(1.22) translateY(6px)' : 'scale(1) translateY(0)',
-                  transformOrigin: 'left center',
+                  transform: isSearchExpanded ? 'scale(1.32) translateY(2px)' : 'scale(1) translateY(0)',
+                  transformOrigin: 'center center',
                   transition: 'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
                 }}
                 aria-label="Sahara Electronics Əsas Səhifə"
@@ -239,15 +245,39 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   }
                   alt="Sahara Electronics"
                   style={{
-                    height: isSearchExpanded ? '64px' : isCompact ? '46px' : '56px',
+                    height: isSearchExpanded ? '66px' : isCompact ? '46px' : '56px',
                     width: 'auto',
                     maxWidth: '300px',
                     objectFit: 'contain',
                     display: 'block',
+                    margin: '0 auto',
                     transition: 'height 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
                   }}
                 />
               </button>
+
+              {/* Discovery Tagline under Logo when search is open */}
+              {isSearchExpanded && (
+                <div
+                  style={{
+                    marginTop: '8px',
+                    fontSize: '11.5px',
+                    fontWeight: 600,
+                    color: themeMode === 'dark' ? '#94a3b8' : '#64748b',
+                    textAlign: 'center',
+                    letterSpacing: '0.02em',
+                    animation: 'smartSearchFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
+                    pointerEvents: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: '5px',
+                  }}
+                >
+                  <span style={{ color: '#e31e24', fontSize: '12px' }}>✨</span>
+                  <span>Arzuladığınız texnologiyanı asanlıqla kəşf edin</span>
+                </div>
+              )}
             </div>
 
             {/* Center: Long, Sleek Smart Search Input with Attached Expanding Dropdown */}
