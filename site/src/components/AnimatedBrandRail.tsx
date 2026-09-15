@@ -146,68 +146,72 @@ export const AnimatedBrandRail: React.FC<AnimatedBrandRailProps> = ({
       data-testid="animated-brand-rail"
       data-reduced-motion={isReducedMotion ? 'true' : 'false'}
       aria-label={settings.title || 'Brendlər'}
+      style={{ width: '100%', padding: '4px 0 12px 0' }}
     >
-      <div className="catalog-container">
-        <div
-          className="brand-rail-unified-container"
-          style={{
-            backgroundColor: theme?.bgCard || '#ffffff',
-            borderColor: theme?.border || '#e2e8f0',
-          }}
-        >
-          {/* Header Row with title & link */}
-          <div className="brand-rail-header">
-            <h2 className="brand-rail-title" style={{ color: theme?.text }}>
-              {settings.title || 'Brendlər'}
-            </h2>
-            {onNavigateBrand && (
-              <button
-                type="button"
-                className="brand-rail-view-all-link"
-                onClick={() => onNavigateBrand('')}
-                style={{ color: theme?.textMuted || '#64748b' }}
-              >
-                <span>Bütün brendlər</span>
-                <ArrowRight size={13} />
-              </button>
-            )}
-          </div>
-
-          {/* Marquee Viewport with Edge Masks */}
-          <div
-            ref={containerRef}
-            className={`brand-rail-viewport ${settings.edgeFade ? 'has-edge-fade' : ''} ${
-              isReducedMotion ? 'is-reduced-motion' : ''
-            }`}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => setIsHovered(false)}
-            onFocus={() => setIsFocused(true)}
-            onBlur={() => setIsFocused(false)}
-            onTouchStart={handleTouchStart}
-            onTouchMove={handleTouchMove}
-            onTouchEnd={handleTouchEnd}
-            data-testid="brand-rail-viewport"
-          >
-            <div
-              className={`brand-rail-track ${settings.direction === 'right' ? 'direction-right' : 'direction-left'}`}
-              style={{
-                animationDuration: `${speedDuration}s`,
-                animationPlayState: isPaused ? 'paused' : 'running',
-              }}
-              data-testid="brand-rail-track"
+      <div
+        className="brand-rail-unified-container brand-rail-fullwidth"
+        style={{
+          backgroundColor: theme?.bgCard || '#ffffff',
+          borderColor: theme?.border || '#e2e8f0',
+          borderRadius: 0,
+          borderLeft: 'none',
+          borderRight: 'none',
+          width: '100%',
+          padding: '10px 0',
+        }}
+      >
+        {/* Header Row with title & link */}
+        <div className="brand-rail-header" style={{ padding: '0 24px', boxSizing: 'border-box' }}>
+          <h2 className="brand-rail-title" style={{ color: theme?.text }}>
+            {settings.title || 'Brendlər'}
+          </h2>
+          {onNavigateBrand && (
+            <button
+              type="button"
+              className="brand-rail-view-all-link"
+              onClick={() => onNavigateBrand('')}
+              style={{ color: theme?.textMuted || '#64748b' }}
             >
-              {/* Primary Track */}
-              <div className="brand-rail-track-group">
-                {enabledItems.map((item) => renderBrandCard(item, false))}
-              </div>
+              <span>Bütün brendlər</span>
+              <ArrowRight size={13} />
+            </button>
+          )}
+        </div>
 
-              {/* Seamless Duplicate Track for Infinite Loop (hidden from assistive tech) */}
-              {!isReducedMotion && (
-                <div className="brand-rail-track-group" aria-hidden="true">
-                  {enabledItems.map((item) => renderBrandCard(item, true))}
-                </div>
-              )}
+        {/* Marquee Viewport with Edge Masks */}
+        <div
+          ref={containerRef}
+          className={`brand-rail-viewport ${settings.edgeFade ? 'has-edge-fade' : ''} ${
+            isReducedMotion ? 'is-reduced-motion' : ''
+          }`}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+          data-testid="brand-rail-viewport"
+        >
+          <div
+            className={`brand-rail-track ${settings.direction === 'right' ? 'direction-right' : 'direction-left'}`}
+            style={{
+              animationDuration: `${speedDuration}s`,
+              animationPlayState: isPaused ? 'paused' : 'running',
+            }}
+            data-testid="brand-rail-track"
+          >
+            {/* Primary Track */}
+            <div className="brand-rail-track-group">
+              {enabledItems.map((item) => renderBrandCard(item, false))}
             </div>
+
+            {/* Seamless Duplicate Track for Infinite Loop (hidden from assistive tech) */}
+            {!isReducedMotion && (
+              <div className="brand-rail-track-group" aria-hidden="true">
+                {enabledItems.map((item) => renderBrandCard(item, true))}
+              </div>
+            )}
           </div>
         </div>
       </div>

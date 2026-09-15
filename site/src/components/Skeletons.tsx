@@ -558,31 +558,31 @@ export const FeaturedProductCardSkeleton: React.FC<SkeletonProps> = ({ theme }) 
         style={{
           width: '100%',
           flex: 1,
-          minHeight: '215px',
-          maxHeight: '235px',
+          minHeight: '255px',
+          maxHeight: '275px',
           borderRadius: '12px',
           backgroundColor: '#f8fafc',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          padding: '12px',
+          padding: 0,
         }}
       >
-        <SkeletonBox width="65%" height="80%" borderRadius="10px" />
+        <SkeletonBox width="70%" height="85%" borderRadius="10px" />
       </div>
 
       {/* Title and Price */}
       <div
         style={{
           marginTop: 'auto',
-          paddingTop: '8px',
+          paddingTop: '4px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '6px',
+          gap: '4px',
         }}
       >
-        <SkeletonBox width="85%" height="16px" borderRadius="4px" />
-        <SkeletonBox width="45%" height="18px" borderRadius="4px" />
+        <SkeletonBox width="85%" height="15px" borderRadius="4px" />
+        <SkeletonBox width="45%" height="16px" borderRadius="4px" />
       </div>
     </div>
   );
@@ -635,31 +635,31 @@ export const VisualCategoryCardsSkeleton: React.FC<SkeletonProps> = ({ theme }) 
               style={{
                 width: '100%',
                 flex: 1,
-                minHeight: '215px',
-                maxHeight: '235px',
+                minHeight: '255px',
+                maxHeight: '275px',
                 borderRadius: '12px',
                 backgroundColor: '#f8fafc',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                padding: '12px',
+                padding: 0,
               }}
             >
-              <SkeletonBox width="60%" height="75%" borderRadius="10px" />
+              <SkeletonBox width="65%" height="80%" borderRadius="10px" />
             </div>
             <div
               style={{
                 marginTop: 'auto',
-                paddingTop: '8px',
+                paddingTop: '4px',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: '6px',
+                gap: '4px',
                 width: '100%',
               }}
             >
-              <SkeletonBox width="60%" height="16px" borderRadius="4px" />
-              <SkeletonBox width="35%" height="13px" borderRadius="4px" />
+              <SkeletonBox width="60%" height="15px" borderRadius="4px" />
+              <SkeletonBox width="35%" height="12px" borderRadius="4px" />
             </div>
           </div>
         ))}

@@ -241,15 +241,15 @@ export const VisualCategoryCards: React.FC<VisualCategoryCardsProps> = ({
                 style={{
                   width: '100%',
                   flex: 1,
-                  minHeight: '215px',
-                  maxHeight: '235px',
+                  minHeight: '255px',
+                  maxHeight: '275px',
                   borderRadius: '12px',
                   backgroundColor: '#ffffff',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   overflow: 'hidden',
-                  padding: '4px',
+                  padding: 0,
                   position: 'relative',
                 }}
               >
@@ -284,19 +284,19 @@ export const VisualCategoryCards: React.FC<VisualCategoryCardsProps> = ({
               <div
                 style={{
                   marginTop: 'auto',
-                  paddingTop: '8px',
+                  paddingTop: '4px',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '3px',
+                  gap: '2px',
                   width: '100%',
                 }}
               >
                 <div
                   style={{
-                    fontSize: '15px',
+                    fontSize: '14px',
                     fontWeight: 700,
                     color: isSelected ? '#dc2626' : '#0f172a',
-                    lineHeight: 1.35,
+                    lineHeight: 1.25,
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
                     whiteSpace: 'nowrap',
@@ -306,7 +306,7 @@ export const VisualCategoryCards: React.FC<VisualCategoryCardsProps> = ({
                 </div>
                 <div
                   style={{
-                    fontSize: '13px',
+                    fontSize: '12px',
                     fontWeight: 600,
                     color: '#64748b',
                   }}

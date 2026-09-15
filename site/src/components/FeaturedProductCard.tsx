@@ -123,8 +123,8 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
         className="card-hover-cart"
         style={{
           position: 'absolute',
-          bottom: '70px',
-          right: '16px',
+          bottom: '42px',
+          right: '12px',
           zIndex: 6,
           opacity: isHovered ? 1 : 0,
           pointerEvents: isHovered ? 'auto' : 'none',
@@ -136,9 +136,9 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
           type="button"
           onClick={handleCartClick}
           style={{
-            width: '38px',
-            height: '38px',
-            borderRadius: '12px',
+            width: '36px',
+            height: '36px',
+            borderRadius: '10px',
             backgroundColor: '#dc2626',
             color: '#ffffff',
             border: 'none',
@@ -152,7 +152,7 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
           aria-label="Səbətə əlavə et"
           title="Səbətə əlavə et"
         >
-          <ShoppingCart size={18} color="#ffffff" />
+          <ShoppingCart size={17} color="#ffffff" />
         </button>
       </div>
 
@@ -162,15 +162,15 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
         style={{
           width: '100%',
           flex: 1,
-          minHeight: '215px',
-          maxHeight: '235px',
+          minHeight: '255px',
+          maxHeight: '275px',
           borderRadius: '12px',
           backgroundColor: '#ffffff',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
           overflow: 'hidden',
-          padding: '4px',
+          padding: 0,
           position: 'relative',
         }}
       >
@@ -218,24 +218,22 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
       <div
         style={{
           marginTop: 'auto',
-          paddingTop: '8px',
+          paddingTop: '4px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '3px',
+          gap: '2px',
+          width: '100%',
         }}
       >
         <div
           style={{
-            fontSize: '14px',
+            fontSize: '13.5px',
             fontWeight: 700,
             color: '#0f172a',
-            lineHeight: 1.35,
+            lineHeight: 1.25,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
-            display: '-webkit-box',
-            WebkitLineClamp: 2,
-            WebkitBoxOrient: 'vertical',
-            minHeight: '38px',
+            whiteSpace: 'nowrap',
           }}
         >
           {product.title}
@@ -244,7 +242,7 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
         {displayPrice && (
           <div
             style={{
-              fontSize: '16.5px',
+              fontSize: '15px',
               fontWeight: 900,
               color: '#0f172a',
               fontFamily: 'Outfit, -apple-system, sans-serif',
