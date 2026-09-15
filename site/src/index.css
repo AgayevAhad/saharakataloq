@@ -6468,9 +6468,18 @@ select {
 }
 
 .theme-dark .brand-rail-card {
-  background-color: #131926;
-  border-color: rgba(255, 255, 255, 0.08);
+  background-color: #1e293b;
+  border-color: rgba(255, 255, 255, 0.12);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.theme-dark .brand-rail-card .brand-rail-name-text {
+  color: #f8fafc;
+  opacity: 1;
+}
+
+.theme-dark .brand-rail-card svg text {
+  fill: #f8fafc !important;
 }
 
 .brand-rail-card.is-interactive:hover {
@@ -6592,36 +6601,21 @@ select {
 }
 
 /* =========================================================================
-   Featured Products Grid (6 Columns Desktop, 2 Columns Mobile - 1:1 siteUI.png)
+   Featured Products Grid (339px x 339px Product Cards - 1:1 Matching)
    ========================================================================= */
 .featured-products-grid {
   display: grid;
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(339px, 339px)) !important;
+  gap: 24px !important;
   width: 100%;
+  justify-content: center;
 }
 
-@media (min-width: 1200px) {
+@media (max-width: 768px) {
   .featured-products-grid {
-    grid-template-columns: repeat(6, 1fr) !important;
-  }
-}
-
-@media (min-width: 960px) and (max-width: 1199px) {
-  .featured-products-grid {
-    grid-template-columns: repeat(4, 1fr) !important;
-  }
-}
-
-@media (min-width: 640px) and (max-width: 959px) {
-  .featured-products-grid {
-    grid-template-columns: repeat(3, 1fr) !important;
-  }
-}
-
-@media (max-width: 639px) {
-  .featured-products-grid {
-    grid-template-columns: repeat(2, 1fr) !important;
-    gap: 10px;
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 339px), 1fr)) !important;
+    gap: 16px !important;
+    justify-content: center;
   }
 
   .home-page-container {
@@ -6630,13 +6624,31 @@ select {
 }
 
 .featured-product-card {
-  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, border-color 0.2s ease;
+  width: 100% !important;
+  max-width: 339px !important;
+  height: 339px !important;
+  min-height: 339px !important;
+  max-height: 339px !important;
+  padding: 20px 24px !important;
+  background-color: #ffffff !important;
+  border: none !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease !important;
+  box-sizing: border-box !important;
 }
 
 .featured-product-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 10px 24px -4px rgba(0, 0, 0, 0.12) !important;
-  border-color: rgba(227, 30, 36, 0.4) !important;
+  transform: translateY(-4px) !important;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12) !important;
+}
+
+.featured-product-card .featured-product-img-inner {
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.featured-product-card:hover .featured-product-img-inner {
+  transform: scale(1.08) !important;
 }
 
 /* Mobile Bottom Dock Visibility */

@@ -114,14 +114,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         onViewAll={() => onNavigate('catalog')}
       />
 
-      {/* 3. 3 Promo Feature Cards ("Eviniz üçün ən yaxşı seçim" trio) */}
-      <ThematicShowcase
-        categories={categories}
-        theme={theme}
-        onNavigateCategory={(catId) => onNavigate('catalog', catId)}
-      />
-
-      {/* 4. Brand Logos Carousel / Marquee Rail */}
+      {/* 3. Brand Logos Carousel / Marquee Rail */}
       {isLoadingRail ||
       (typeof window !== 'undefined' &&
         (new URLSearchParams(window.location.search).get('skeleton') === 'true' ||
@@ -135,7 +128,7 @@ export const HomePage: React.FC<HomePageProps> = ({
         />
       )}
 
-      {/* 5. Featured Products Section ("Seçilmiş məhsullar") */}
+      {/* 4. Featured Products Section ("Seçilmiş məhsullar") */}
       <section className="catalog-container featured-products-section" aria-label="Seçilmiş Məhsullar">
         {/* Section Header with inline Category Filter Tabs */}
         <div
@@ -227,8 +220,9 @@ export const HomePage: React.FC<HomePageProps> = ({
           className="featured-products-grid"
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fill, minmax(339px, 1fr))',
             gap: '24px',
+            justifyItems: 'center',
           }}
         >
           {filteredFeaturedProducts.map((product) => (

@@ -3,7 +3,13 @@ import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, copyFileSync } from 'node:fs';
 import { resolve, join } from 'node:path';
 
-const AUDIT_DIR = resolve('site/docs/audits');
+import { fileURLToPath } from 'node:url';
+import { dirname } from 'node:path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const SITE_ROOT = resolve(__dirname, '..');
+const AUDIT_DIR = resolve(SITE_ROOT, 'docs/audits');
 const ARTIFACT_DIR = '/home/oni10/.gemini/antigravity-ide/brain/e89daea5-35f8-44c6-bba6-cc53a9325666';
 
 if (!existsSync(AUDIT_DIR)) mkdirSync(AUDIT_DIR, { recursive: true });
@@ -11,7 +17,7 @@ if (!existsSync(AUDIT_DIR)) mkdirSync(AUDIT_DIR, { recursive: true });
 async function run() {
   console.log('🚀 Starting site dev server...');
   const server = spawn('node', ['server.mjs'], {
-    cwd: resolve('site'),
+    cwd: SITE_ROOT,
     env: { ...process.env, PORT: '3040', NODE_ENV: 'production' },
     stdio: 'pipe',
   });
