@@ -723,16 +723,17 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
         style={{
           position: 'relative',
           width: '100%',
-          maxWidth: '100%',
+          maxWidth: '920px',
+          margin: '0 auto',
           backgroundColor: 'transparent',
           backdropFilter: 'none',
           WebkitBackdropFilter: 'none',
-          borderRadius: '16px',
-          border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)'}`,
+          borderRadius: 0,
+          border: 'none',
           color: theme.text,
           boxShadow: 'none',
           overflow: 'hidden',
-          padding: '8px 12px 14px',
+          padding: '4px 0 14px',
         }}
         onClick={(e) => e.stopPropagation()}
       >

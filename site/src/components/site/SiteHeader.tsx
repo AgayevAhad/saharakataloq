@@ -490,6 +490,8 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               className="desktop-header-search-expand-wrap hide-on-mobile"
               style={{
                 width: '100%',
+                maxWidth: '920px',
+                margin: '0 auto',
                 maxHeight: 'calc(100vh - 180px)',
                 overflowY: 'auto',
                 padding: '4px 0 16px',
