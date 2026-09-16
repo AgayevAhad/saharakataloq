@@ -205,9 +205,8 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               : themeMode === 'dark' ? 'rgba(8, 12, 18, 0.88)' : 'rgba(255, 255, 255, 0.88)',
           backdropFilter: 'blur(28px) saturate(190%)',
           WebkitBackdropFilter: 'blur(28px) saturate(190%)',
-          borderBottom: hoveredNavTab
-            ? 'none'
-            : `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0'}`,
+          border: 'none',
+          borderBottom: 'none',
           boxShadow: isCompact && !hoveredNavTab
             ? '0 4px 20px rgba(0, 0, 0, 0.1)'
             : 'none',

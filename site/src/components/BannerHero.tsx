@@ -104,22 +104,20 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
   };
 
   return (
-    <div className="banner-hero-wrapper catalog-container" style={{ padding: '16px 0 0' }}>
+    <div className="banner-hero-wrapper catalog-container" style={{ padding: '8px 0 16px' }}>
       <div
         className="banner-hero-card"
         style={{
-          borderRadius: '28px',
+          borderRadius: '0',
           overflow: 'hidden',
           position: 'relative',
-          minHeight: '520px',
+          minHeight: '560px',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
           border: 'none',
-          boxShadow:
-            theme.mode === 'dark'
-              ? '0 24px 70px -12px rgba(0, 0, 0, 0.75)'
-              : '0 20px 50px -10px rgba(0, 0, 0, 0.07)',
+          boxShadow: 'none',
+          backgroundColor: 'transparent',
         }}
       >
         {/* Full-Bleed Expanded Video Background (Videosahara) with Soft Edge-Fade Masking */}
@@ -142,12 +140,12 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
             width: '100%',
             height: '100%',
             objectFit: 'cover',
-            objectPosition: 'center center',
+            objectPosition: '65% center',
             zIndex: 0,
             maskImage:
-              'radial-gradient(ellipse 90% 88% at 65% 50%, black 45%, rgba(0, 0, 0, 0.75) 68%, transparent 98%)',
+              'radial-gradient(ellipse 92% 88% at 68% 50%, black 30%, rgba(0, 0, 0, 0.65) 60%, transparent 95%), linear-gradient(to right, transparent 0%, black 24%, black 86%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)',
             WebkitMaskImage:
-              'radial-gradient(ellipse 90% 88% at 65% 50%, black 45%, rgba(0, 0, 0, 0.75) 68%, transparent 98%)',
+              'radial-gradient(ellipse 92% 88% at 68% 50%, black 30%, rgba(0, 0, 0, 0.65) 60%, transparent 95%), linear-gradient(to right, transparent 0%, black 24%, black 86%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)',
           }}
         />
 
@@ -157,10 +155,11 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
             position: 'absolute',
             inset: 0,
             zIndex: 1,
+            pointerEvents: 'none',
             background:
               theme.mode === 'dark'
-                ? 'linear-gradient(90deg, rgba(8, 12, 18, 0.95) 0%, rgba(8, 12, 18, 0.80) 36%, rgba(8, 12, 18, 0.20) 66%, transparent 100%)'
-                : 'linear-gradient(90deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.82) 36%, rgba(255, 255, 255, 0.20) 66%, transparent 100%)',
+                ? 'linear-gradient(90deg, rgba(8, 12, 18, 0.98) 0%, rgba(8, 12, 18, 0.85) 34%, rgba(8, 12, 18, 0.15) 64%, transparent 100%)'
+                : 'linear-gradient(90deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.88) 34%, rgba(255, 255, 255, 0.15) 64%, transparent 100%)',
           }}
         />
 
@@ -173,8 +172,8 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
             pointerEvents: 'none',
             background:
               theme.mode === 'dark'
-                ? 'linear-gradient(to bottom, rgba(8, 12, 18, 0.5) 0%, transparent 14%, transparent 86%, rgba(8, 12, 18, 0.6) 100%), linear-gradient(to right, rgba(8, 12, 18, 0.4) 0%, transparent 18%, transparent 82%, rgba(8, 12, 18, 0.5) 100%)'
-                : 'linear-gradient(to bottom, rgba(255, 255, 255, 0.5) 0%, transparent 14%, transparent 86%, rgba(255, 255, 255, 0.6) 100%), linear-gradient(to right, rgba(255, 255, 255, 0.4) 0%, transparent 18%, transparent 82%, rgba(255, 255, 255, 0.5) 100%)',
+                ? 'linear-gradient(to bottom, rgba(8, 12, 18, 0.6) 0%, transparent 12%, transparent 88%, rgba(8, 12, 18, 0.7) 100%), linear-gradient(to right, rgba(8, 12, 18, 0.5) 0%, transparent 16%, transparent 84%, rgba(8, 12, 18, 0.6) 100%)'
+                : 'linear-gradient(to bottom, rgba(255, 255, 255, 0.6) 0%, transparent 12%, transparent 88%, rgba(255, 255, 255, 0.7) 100%), linear-gradient(to right, rgba(255, 255, 255, 0.5) 0%, transparent 16%, transparent 84%, rgba(255, 255, 255, 0.6) 100%)',
           }}
         />
 

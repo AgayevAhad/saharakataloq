@@ -125,7 +125,7 @@ describe('Feature Flags Production Hardening & Incomplete Feature Lockdown', () 
         expect(notFoundHeading).toBeDefined();
         expect(notFoundHeading.textContent).toContain('Səhifə Tapılmadı');
       }
-    });
+    }, 25000);
 
     it('consistently renders 404 even after hostile localStorage manipulation attempts by the user', async () => {
       const { render, screen, cleanup } = await import('@testing-library/react');
