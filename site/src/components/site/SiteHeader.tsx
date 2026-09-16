@@ -205,7 +205,8 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
         style={{
           position: 'sticky',
           top: 0,
-          backgroundColor: themeMode === 'dark' ? '#080c12' : '#ffffff',
+          backgroundColor:
+            themeMode === 'dark' ? 'rgba(8, 12, 18, 0.88)' : 'rgba(255, 255, 255, 0.88)',
           backdropFilter: 'blur(28px) saturate(190%)',
           WebkitBackdropFilter: 'blur(28px) saturate(190%)',
           border: 'none',
@@ -1542,6 +1543,25 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
             )}
           </div>
         </div>
+      )}
+
+      {/* Page Backdrop Blur when any nav tab preview panel is active */}
+      {hoveredNavTab && hoveredNavTab !== 'home' && (
+        <div
+          className="header-nav-backdrop"
+          onClick={() => setHoveredNavTab(null)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: DESIGN_TOKENS.zIndex.modal + 10,
+            backgroundColor: themeMode === 'dark' ? 'rgba(0, 0, 0, 0.45)' : 'rgba(0, 0, 0, 0.2)',
+            backdropFilter: 'blur(10px) saturate(140%)',
+            WebkitBackdropFilter: 'blur(10px) saturate(140%)',
+            animation: 'fadeIn 0.2s ease forwards',
+            pointerEvents: 'none',
+          }}
+          aria-hidden="true"
+        />
       )}
 
 
