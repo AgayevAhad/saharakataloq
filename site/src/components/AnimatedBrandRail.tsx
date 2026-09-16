@@ -100,8 +100,30 @@ const PARTNER_PRIORITY: string[] = [
   'hoffmann',
 ];
 
+const EXCLUDED_BRAND_SLUGS = new Set([
+  'everest',
+  'ficher',
+  'finlux',
+  'goldmaster',
+  'hailang',
+  'hayland',
+  'konka',
+  'konko',
+  'lanova',
+  'mgi',
+  'neos',
+  'pozis',
+  'regal',
+  'rokos',
+  'skyworth',
+  'tesla',
+  'vegas',
+  'winsor',
+]);
+
 const resolveBrandLogo = (item: BrandRailItem): string => {
   const slug = (item.brandSlug || item.brandId || '').toLowerCase();
+  if (EXCLUDED_BRAND_SLUGS.has(slug)) return '';
   if (LOGO_MAP[slug]) return LOGO_MAP[slug];
   if (item.brandLogo && !item.brandLogo.includes('placeholder')) return item.brandLogo;
   return '';
@@ -116,6 +138,7 @@ const buildRhythmicBrandRailTrack = (items: BrandRailItem[]): BrandRailItem[] =>
 
   for (const item of items) {
     const slug = (item.brandSlug || item.brandId || '').toLowerCase();
+    if (EXCLUDED_BRAND_SLUGS.has(slug)) continue;
     const resolvedItem = { ...item, brandLogo: resolveBrandLogo(item) };
     if (heroSlugs.includes(slug)) {
       if (!heroMap.has(slug)) {
