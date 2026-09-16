@@ -122,7 +122,7 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
 
   return (
     <>
-      {/* Backdrop overlay */}
+      {/* Backdrop overlay with rich frosted blur */}
       <div
         className="mega-menu-backdrop"
         onClick={() => {
@@ -131,21 +131,21 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
         }}
         style={{
           position: 'fixed',
-          top: '100%',
+          top: 0,
           left: 0,
           right: 0,
           bottom: 0,
           height: '100vh',
-          backgroundColor: 'rgba(0, 0, 0, 0.45)',
-          backdropFilter: 'blur(2px)',
-          WebkitBackdropFilter: 'blur(2px)',
+          backgroundColor: 'rgba(0, 0, 0, 0.35)',
+          backdropFilter: 'blur(8px) saturate(150%)',
+          WebkitBackdropFilter: 'blur(8px) saturate(150%)',
           zIndex: DESIGN_TOKENS.zIndex.overlay - 1,
           animation: 'fadeIn 0.2s ease forwards',
         }}
         aria-hidden="true"
       />
 
-      {/* Dropdown Panel Container */}
+      {/* Dropdown Panel Container with true frosted glass blur */}
       <div
         ref={menuRef}
         id="mega-menu-overlay"
@@ -160,11 +160,13 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
           left: 0,
           right: 0,
           width: '100%',
-          backgroundColor: theme.mode === 'dark' ? 'rgba(13, 17, 23, 0.88)' : 'rgba(255, 255, 255, 0.90)',
+          backgroundColor: theme.mode === 'dark' ? 'rgba(15, 23, 42, 0.78)' : 'rgba(255, 255, 255, 0.78)',
           backdropFilter: 'blur(28px) saturate(190%)',
           WebkitBackdropFilter: 'blur(28px) saturate(190%)',
-          borderBottom: `1px solid ${theme.border}`,
-          boxShadow: '0 24px 48px -4px rgba(0, 0, 0, 0.25)',
+          border: 'none',
+          borderTop: 'none',
+          borderBottom: theme.mode === 'dark' ? '1px solid rgba(255, 255, 255, 0.1)' : '1px solid rgba(0, 0, 0, 0.08)',
+          boxShadow: theme.mode === 'dark' ? '0 24px 48px -8px rgba(0, 0, 0, 0.7)' : '0 20px 44px -8px rgba(0, 0, 0, 0.12)',
           zIndex: DESIGN_TOKENS.zIndex.overlay,
           padding: '22px 0',
           maxHeight: 'min(50vh, 440px)',
@@ -322,8 +324,9 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                       justifyContent: 'space-between',
                       padding: '8px 12px',
                       borderRadius: '8px',
-                      backgroundColor: theme.mode === 'dark' ? '#161d2b' : '#f8fafc',
-                      border: `1px solid ${theme.border}`,
+                      backgroundColor: theme.mode === 'dark' ? 'rgba(30, 41, 59, 0.55)' : 'rgba(248, 250, 252, 0.65)',
+                      border: `1px solid ${theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)'}`,
+                      backdropFilter: 'blur(8px)',
                       color: theme.text,
                       fontSize: '13px',
                       fontWeight: 700,
