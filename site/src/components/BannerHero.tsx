@@ -104,10 +104,21 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
   };
 
   return (
-    <div className="banner-hero-wrapper catalog-container" style={{ padding: '8px 0 16px' }}>
+    <div
+      className="banner-hero-wrapper"
+      style={{
+        width: '100%',
+        maxWidth: '100%',
+        padding: 0,
+        margin: 0,
+        overflow: 'hidden',
+      }}
+    >
       <div
         className="banner-hero-card"
         style={{
+          width: '100%',
+          maxWidth: '100%',
           borderRadius: '0',
           overflow: 'hidden',
           position: 'relative',
@@ -118,6 +129,8 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
           border: 'none',
           boxShadow: 'none',
           backgroundColor: 'transparent',
+          padding: 0,
+          margin: 0,
         }}
       >
         {/* Full-Bleed Expanded Video Background (Videosahara) with Soft Edge-Fade Masking */}
@@ -143,9 +156,9 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
             objectPosition: '65% center',
             zIndex: 0,
             maskImage:
-              'radial-gradient(ellipse 92% 88% at 68% 50%, black 30%, rgba(0, 0, 0, 0.65) 60%, transparent 95%), linear-gradient(to right, transparent 0%, black 24%, black 86%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)',
+              'radial-gradient(ellipse 95% 90% at 68% 50%, black 35%, rgba(0, 0, 0, 0.7) 65%, transparent 98%), linear-gradient(to right, transparent 0%, black 20%, black 90%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%)',
             WebkitMaskImage:
-              'radial-gradient(ellipse 92% 88% at 68% 50%, black 30%, rgba(0, 0, 0, 0.65) 60%, transparent 95%), linear-gradient(to right, transparent 0%, black 24%, black 86%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 10%, black 90%, transparent 100%)',
+              'radial-gradient(ellipse 95% 90% at 68% 50%, black 35%, rgba(0, 0, 0, 0.7) 65%, transparent 98%), linear-gradient(to right, transparent 0%, black 20%, black 90%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%)',
           }}
         />
 
@@ -183,7 +196,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
           style={{
             position: 'absolute',
             top: '24px',
-            right: '28px',
+            right: 'clamp(24px, 4vw, 56px)',
             textAlign: 'right',
             fontFamily: "'Playfair Display', 'Georgia', cursive, serif",
             fontStyle: 'italic',
@@ -206,8 +219,8 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
           style={{
             position: 'relative',
             zIndex: 2,
-            maxWidth: '580px',
-            padding: 'clamp(24px, 4vw, 44px)',
+            maxWidth: '620px',
+            padding: 'clamp(36px, 5vw, 64px) clamp(24px, 4vw, 56px) 16px',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'center',
@@ -426,7 +439,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
           style={{
             position: 'relative',
             zIndex: 2,
-            padding: '0 clamp(24px, 4vw, 44px) 24px',
+            padding: '0 clamp(24px, 4vw, 56px) 28px',
             display: 'flex',
             alignItems: 'center',
             gap: '16px',

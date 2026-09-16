@@ -5479,18 +5479,21 @@ select {
    Banner Hero & Technology Spotlight Responsive Styles
    ========================================================================= */
 .banner-hero-wrapper {
-  padding: 16px clamp(12px, 2.5vw, 20px) 8px;
-  width: 100%;
+  padding: 0 !important;
+  margin: 0 !important;
+  width: 100% !important;
+  max-width: 100% !important;
   box-sizing: border-box;
 }
 
 .banner-hero-card {
-  max-width: 1440px;
+  width: 100% !important;
+  max-width: 100% !important;
   margin: 0 auto;
-  border-width: 1px;
-  border-style: solid;
-  border-radius: 20px;
-  padding: clamp(16px, 2.5vw, 28px);
+  border-width: 0 !important;
+  border-style: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
 }
 
 .banner-hero-grid {
@@ -5854,12 +5857,13 @@ select {
 /* Mobile Responsive Adjustments for Technology Spotlight Banner */
 @media (max-width: 640px) {
   .banner-hero-wrapper {
-    padding: 10px 10px 4px 10px;
+    padding: 0 !important;
+    margin: 0 !important;
   }
   .banner-hero-card {
-    padding: 12px 12px 14px 12px;
+    padding: 0 !important;
     gap: 12px;
-    border-radius: 14px;
+    border-radius: 0 !important;
   }
   .tech-spotlight-card {
     flex-direction: column;

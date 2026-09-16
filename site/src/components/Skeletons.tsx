@@ -223,16 +223,22 @@ export const BrandShowcaseSkeleton: React.FC<SkeletonProps> = ({ theme }) => {
 
 export const BannerHeroSkeleton: React.FC<SkeletonProps> = ({ theme }) => {
   return (
-    <div className="banner-hero-wrapper" aria-busy="true" aria-label="Banner bölməsi yüklənir">
+    <div
+      className="banner-hero-wrapper"
+      aria-busy="true"
+      aria-label="Banner bölməsi yüklənir"
+      style={{ width: '100%', maxWidth: '100%', padding: 0, margin: 0 }}
+    >
       <div
         className="banner-hero-card"
         style={{
+          width: '100%',
+          maxWidth: '100%',
           backgroundColor: theme.bgCard,
-          borderColor: theme.border,
-          boxShadow:
-            theme.mode === 'dark'
-              ? '0 10px 30px rgba(0, 0, 0, 0.4)'
-              : '0 6px 20px rgba(0, 0, 0, 0.05)',
+          border: 'none',
+          boxShadow: 'none',
+          borderRadius: 0,
+          padding: 'clamp(36px, 5vw, 64px) clamp(24px, 4vw, 56px) 28px',
         }}
       >
         {/* Top Badges & Tagline */}

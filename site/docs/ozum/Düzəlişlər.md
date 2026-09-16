@@ -19,12 +19,18 @@ Sənə mərhələ mərhələ nə edəcəyini deyirəm.
 
 #4. Splash page hissəsi vare hansıki səhifə açılmamış yüklənənə qədər frontend kimi görsənir. O indiki dizaynımıza uyğun #deyil . Biz refresh edəndə səhifə köhnəyə uyğun həm məlumat həmdə splash görsənir. Bunu bir qayda kimi qeyd et bizim #splashımız görüntü kimi dəyişdiyimiz şeyə uyğunlaşdırmalıdır mütləq. Köhnə məlumat refresh zamanı görsənməməlidir.
 
-5. Əla qapaq videomuz vare onu düzənlə sadəcə ilk 20 saniyəsi istifadə edək.  
+#5. Əla qapaq videomuz vare onu düzənlə sadəcə ilk 20 saniyəsi istifadə edək.  
 
-6. Aşağıda endirimlərə bax şəkili vare onun içində əlavə bir şəkildə var Sahara xüsusi endirimlər adında onu ləğv et.
+#6. Aşağıda endirimlərə bax şəkili vare onun içində əlavə bir şəkildə var Sahara xüsusi endirimlər adında onu ləğv et.
 
-7. Səhifə aşağı hissəsində isə epoçt ünvanınız altında sosial şəbəkə iconları var boş onuda ləğv et. Birdə bizim katlogumuzda epoçt var idi saytda da aşağı hissədə o olsun unutmusan onu yerləşdirməyi .
+#7. Səhifə aşağı hissəsində isə epoçt ünvanınız altında sosial şəbəkə iconları var boş onuda ləğv et. Birdə bizim katlogumuzda epoçt var idi saytda da aşağı hissədə o olsun unutmusan onu yerləşdirməyi .
 
-8. Bundan sonra isə bizim search hissəmiz mən sadəcə search moidalının blur olmasını istəmişdim sən kənarları blur etmisən deməli biz search inputuna toxunanda elə gördüyümüz ölçüdə ona birləşik formada modal açılsın ayrı bir hissə kimi yox. Bizim yuxarı panelimizdə buna uyğun genişlənsin.  Genişlənən hissədə blur olsun.  Kategoryalar sözünün yanıdakı sözlərdən endirimlər sözü qırmızı etmisən onu düzəlt. Qırmızı olmasın. Biz mause ilə bu sözlərin üstünə gələndə panel genişlənsin. Qısa şəkildə gpstərilsin daha geniş baxmaq üçün səhifəyə keçid təklif olunsun. 
+#8. Bundan sonra isə bizim search hissəmiz mən sadəcə search moidalının blur olmasını istəmişdim sən kənarları blur etmisən deməli biz search inputuna toxunanda elə gördüyümüz ölçüdə ona birləşik formada modal açılsın ayrı bir hissə kimi yox. Bizim yuxarı panelimizdə buna uyğun genişlənsin.  Genişlənən hissədə blur olsun.  Kategoryalar sözünün yanıdakı sözlərdən endirimlər sözü qırmızı etmisən onu düzəlt. Qırmızı olmasın. Biz mause ilə bu sözlərin üstünə gələndə panel genişlənsin. Qısa şəkildə gpstərilsin daha geniş baxmaq üçün səhifəyə keçid təklif olunsun. 
 
-9. Bundan sonra isə bizim kartlarımız içində şəkillər yazılar istifadəçi səhifəni aşağı verdikcə animasya ilə gəlsin. Cəlbedici olsun.
+#9. Bundan sonra isə bizim kartlarımız içində şəkillər yazılar istifadəçi səhifəni aşağı verdikcə animasya ilə gəlsin. Cəlbedici olsun.
+
+10. Deməli belə edək. 1 proble odurki məhsul kartlarının üstünə gələndə gizlənir məhsul kartı yoxa çıxır. Bunu düzəlt.
+
+11. Yuxarı paneldə səndə logonu mərkəzlə deyəndə sən opşu yuxarıdan boşluq vermisən. Amma təkcə logo üçün lazımdır sağ tərəfdə olan search flan hissəsinə aid olmamalıdır. Anla məni logo animasya ilə böyüməli ortaya tərəf gəlməlidir. Logo o qədər böyüsünki electronics sözü vare logoda oxuna bilsin rahat. Daha panel genişlənməsin zatən searcha görə genişlənir o bəs edir. 
+
+12. Bundan sonra isə panel altında yerləşdirdiyimiz video qutusunu çərçivəsini ləğv eet dumannı kimi şəffaflaşsın sanki saytın üstündə yox daxilində kimi. Buna görə uyğun böyüdə də bilərsən.
