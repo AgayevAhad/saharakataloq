@@ -206,15 +206,19 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
           position: 'sticky',
           top: 0,
           backgroundColor:
-            themeMode === 'dark' ? 'rgba(8, 12, 18, 0.88)' : 'rgba(255, 255, 255, 0.88)',
-          backdropFilter: 'blur(28px) saturate(190%)',
-          WebkitBackdropFilter: 'blur(28px) saturate(190%)',
+            themeMode === 'dark'
+              ? (hoveredNavTab ? 'rgba(15, 23, 42, 0.95)' : 'rgba(8, 12, 18, 0.92)')
+              : (hoveredNavTab ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.92)'),
+          backdropFilter: 'blur(36px) saturate(200%)',
+          WebkitBackdropFilter: 'blur(36px) saturate(200%)',
           border: 'none',
-          borderBottom: 'none',
+          borderBottom: isCompact && !hoveredNavTab
+            ? (themeMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.06)')
+            : 'none',
           boxShadow: isCompact || hoveredNavTab
             ? themeMode === 'dark'
-              ? '0 16px 36px -4px rgba(0, 0, 0, 0.5)'
-              : '0 12px 32px -4px rgba(0, 0, 0, 0.08)'
+              ? '0 20px 48px -8px rgba(0, 0, 0, 0.7)'
+              : '0 16px 40px -8px rgba(0, 0, 0, 0.12)'
             : 'none',
           zIndex: isSearchExpanded || isMegaMenuOpen || hoveredNavTab
             ? DESIGN_TOKENS.zIndex.modal + 15
@@ -1198,13 +1202,25 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               onMouseLeave={handleNavMouseLeave}
               style={{
                 width: '100%',
-                padding: '16px 0 20px',
+                padding: '20px 0 24px',
+                background:
+                  themeMode === 'dark'
+                    ? 'linear-gradient(180deg, rgba(15, 23, 42, 0.96) 0%, rgba(10, 16, 28, 0.98) 100%)'
+                    : 'linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 252, 0.98) 100%)',
+                backdropFilter: 'blur(36px) saturate(200%)',
+                WebkitBackdropFilter: 'blur(36px) saturate(200%)',
                 borderTop:
                   themeMode === 'dark'
                     ? '1px solid rgba(255, 255, 255, 0.08)'
                     : '1px solid rgba(0, 0, 0, 0.06)',
-                backdropFilter: 'blur(28px) saturate(190%)',
-                WebkitBackdropFilter: 'blur(28px) saturate(190%)',
+                borderBottom:
+                  themeMode === 'dark'
+                    ? '1px solid rgba(255, 255, 255, 0.06)'
+                    : '1px solid rgba(0, 0, 0, 0.05)',
+                boxShadow:
+                  themeMode === 'dark'
+                    ? '0 24px 48px -8px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
+                    : '0 20px 44px -8px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
                 animation: 'smartSearchSlideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
               }}
             >
