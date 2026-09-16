@@ -1202,25 +1202,13 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               onMouseLeave={handleNavMouseLeave}
               style={{
                 width: '100%',
-                padding: '20px 0 24px',
-                background:
-                  themeMode === 'dark'
-                    ? 'linear-gradient(180deg, rgba(15, 23, 42, 0.96) 0%, rgba(10, 16, 28, 0.98) 100%)'
-                    : 'linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(248, 250, 252, 0.98) 100%)',
+                padding: '16px 0 24px',
+                border: 'none',
+                borderTop: 'none',
+                borderBottom: 'none',
+                boxShadow: 'none',
                 backdropFilter: 'blur(36px) saturate(200%)',
                 WebkitBackdropFilter: 'blur(36px) saturate(200%)',
-                borderTop:
-                  themeMode === 'dark'
-                    ? '1px solid rgba(255, 255, 255, 0.08)'
-                    : '1px solid rgba(0, 0, 0, 0.06)',
-                borderBottom:
-                  themeMode === 'dark'
-                    ? '1px solid rgba(255, 255, 255, 0.06)'
-                    : '1px solid rgba(0, 0, 0, 0.05)',
-                boxShadow:
-                  themeMode === 'dark'
-                    ? '0 24px 48px -8px rgba(0, 0, 0, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.05)'
-                    : '0 20px 44px -8px rgba(0, 0, 0, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.8)',
                 animation: 'smartSearchSlideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
               }}
             >
