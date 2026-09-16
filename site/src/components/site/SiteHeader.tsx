@@ -215,7 +215,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
           borderBottom: isCompact && !hoveredNavTab
             ? (themeMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.06)')
             : 'none',
-          boxShadow: isCompact || hoveredNavTab
+          boxShadow: isCompact && !hoveredNavTab
             ? themeMode === 'dark'
               ? '0 20px 48px -8px rgba(0, 0, 0, 0.7)'
               : '0 16px 40px -8px rgba(0, 0, 0, 0.12)'
@@ -1208,7 +1208,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
             left: 0,
             right: 0,
             zIndex: DESIGN_TOKENS.zIndex.modal + 12,
-            backgroundColor: themeMode === 'dark' ? 'rgba(15, 23, 42, 0.78)' : 'rgba(255, 255, 255, 0.78)',
+            backgroundColor: themeMode === 'dark' ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.85)',
             backdropFilter: 'blur(28px) saturate(190%)',
             WebkitBackdropFilter: 'blur(28px) saturate(190%)',
             border: 'none',
