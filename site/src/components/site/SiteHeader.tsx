@@ -211,14 +211,16 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
           WebkitBackdropFilter: 'blur(28px) saturate(190%)',
           border: 'none',
           borderBottom: 'none',
-          boxShadow: isCompact && !hoveredNavTab
-            ? '0 4px 20px rgba(0, 0, 0, 0.1)'
+          boxShadow: isCompact || hoveredNavTab
+            ? themeMode === 'dark'
+              ? '0 16px 36px -4px rgba(0, 0, 0, 0.5)'
+              : '0 12px 32px -4px rgba(0, 0, 0, 0.08)'
             : 'none',
           zIndex: isSearchExpanded || isMegaMenuOpen || hoveredNavTab
             ? DESIGN_TOKENS.zIndex.modal + 15
             : DESIGN_TOKENS.zIndex.sticky,
           transition:
-            'padding 0.2s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.2s ease, background-color 0.2s ease',
+            'box-shadow 0.2s ease, background-color 0.2s ease',
         }}
       >
         <div className="catalog-container" style={{ padding: '0 clamp(24px, 4vw, 56px)' }}>
@@ -1185,384 +1187,361 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
             }}
             onMouseLeave={handleNavMouseLeave}
           />
+
+          {/* Expanded Preview Section directly inside Header (Unified seamless glassmorphism panel) */}
+          {hoveredNavTab && hoveredNavTab !== 'home' && (
+            <div
+              className="header-nav-preview-panel"
+              onMouseEnter={() => {
+                if (hoverNavTimeoutRef.current) clearTimeout(hoverNavTimeoutRef.current);
+              }}
+              onMouseLeave={handleNavMouseLeave}
+              style={{
+                width: '100%',
+                padding: '16px 0 20px',
+                borderTop:
+                  themeMode === 'dark'
+                    ? '1px solid rgba(255, 255, 255, 0.08)'
+                    : '1px solid rgba(0, 0, 0, 0.06)',
+                backdropFilter: 'blur(28px) saturate(190%)',
+                WebkitBackdropFilter: 'blur(28px) saturate(190%)',
+                animation: 'smartSearchSlideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+              }}
+            >
+              <div className="catalog-container" style={{ padding: '0 clamp(24px, 4vw, 56px)' }}>
+                {hoveredNavTab === 'catalog' && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '32px', flexWrap: 'wrap' }}>
+                    <div style={{ maxWidth: '320px' }}>
+                      <div style={{ fontSize: '15px', fontWeight: 800, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <LayoutGrid size={16} color="#e31e24" />
+                        <span>Məhsul Kataloqu</span>
+                      </div>
+                      <p style={{ fontSize: '13px', color: theme.textMuted, margin: '6px 0 0 0', lineHeight: 1.4 }}>
+                        Bütün məişət texnikası və elektronika çeşidləri Sahara-da.
+                      </p>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', flex: 1, justifyContent: 'center' }}>
+                      {activeCategories.slice(0, 6).map((c) => (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => {
+                            setHoveredNavTab(null);
+                            onNavigate('catalog', c.id);
+                          }}
+                          style={{
+                            padding: '8px 16px',
+                            borderRadius: '10px',
+                            backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f8fafc',
+                            border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`,
+                            fontSize: '13px',
+                            fontWeight: 700,
+                            color: theme.text,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            transition: 'all 0.15s ease',
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.borderColor = '#e31e24';
+                            e.currentTarget.style.color = '#e31e24';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.borderColor = themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0';
+                            e.currentTarget.style.color = theme.text;
+                          }}
+                        >
+                          <span>{c.name}</span>
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setHoveredNavTab(null);
+                        onNavigate('catalog');
+                      }}
+                      style={{
+                        padding: '10px 20px',
+                        borderRadius: '10px',
+                        backgroundColor: '#e31e24',
+                        color: '#ffffff',
+                        border: 'none',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        boxShadow: '0 4px 14px rgba(227, 30, 36, 0.35)',
+                      }}
+                    >
+                      <span>Bütün kataloqa bax</span>
+                      <ArrowRight size={14} />
+                    </button>
+                  </div>
+                )}
+
+                {hoveredNavTab === 'brands' && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '32px', flexWrap: 'wrap' }}>
+                    <div style={{ maxWidth: '320px' }}>
+                      <div style={{ fontSize: '15px', fontWeight: 800, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Sparkles size={16} color="#e31e24" />
+                        <span>Rəsmi Tərəfdaş Brendlərimiz</span>
+                      </div>
+                      <p style={{ fontSize: '13px', color: theme.textMuted, margin: '6px 0 0 0', lineHeight: 1.4 }}>
+                        İtaliya, Almaniya və dünya brendlərinin orijinal məişət texnikaları Sahara-da.
+                      </p>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', flex: 1, justifyContent: 'center' }}>
+                      {brands.slice(0, 6).map((b) => (
+                        <button
+                          key={b.id}
+                          type="button"
+                          onClick={() => {
+                            setHoveredNavTab(null);
+                            onNavigate('brand', b.id);
+                          }}
+                          style={{
+                            padding: '8px 16px',
+                            borderRadius: '10px',
+                            backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f8fafc',
+                            border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`,
+                            fontSize: '13px',
+                            fontWeight: 700,
+                            color: theme.text,
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                          }}
+                        >
+                          <span>{b.name}</span>
+                        </button>
+                      ))}
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setHoveredNavTab(null);
+                        onNavigate('brands');
+                      }}
+                      style={{
+                        padding: '10px 20px',
+                        borderRadius: '10px',
+                        backgroundColor: '#e31e24',
+                        color: '#ffffff',
+                        border: 'none',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        boxShadow: '0 4px 14px rgba(227, 30, 36, 0.35)',
+                      }}
+                    >
+                      <span>Bütün brendlərə bax</span>
+                      <ArrowRight size={14} />
+                    </button>
+                  </div>
+                )}
+
+                {hoveredNavTab === 'stores' && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '32px', flexWrap: 'wrap' }}>
+                    <div style={{ maxWidth: '340px' }}>
+                      <div style={{ fontSize: '15px', fontWeight: 800, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <MapPin size={16} color="#e31e24" />
+                        <span>Mağaza və Sərgi Salonlarımız</span>
+                      </div>
+                      <p style={{ fontSize: '13px', color: theme.textMuted, margin: '6px 0 0 0', lineHeight: 1.4 }}>
+                        {settings?.address || 'Sədərək TM Şirniyyat bazarı, 1-ci sıranın arxası Kapital Bankla üzbəüz'}
+                      </p>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: theme.text }}>
+                        <Clock size={15} color="#e31e24" />
+                        <span>Hər gün: 09:00 - 19:00</span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setHoveredNavTab(null);
+                        onNavigate('stores');
+                      }}
+                      style={{
+                        padding: '10px 20px',
+                        borderRadius: '10px',
+                        backgroundColor: '#e31e24',
+                        color: '#ffffff',
+                        border: 'none',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        boxShadow: '0 4px 14px rgba(227, 30, 36, 0.35)',
+                      }}
+                    >
+                      <span>Bütün filiallar və xəritə</span>
+                      <ArrowRight size={14} />
+                    </button>
+                  </div>
+                )}
+
+                {hoveredNavTab === 'services' && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '32px', flexWrap: 'wrap' }}>
+                    <div style={{ maxWidth: '320px' }}>
+                      <div style={{ fontSize: '15px', fontWeight: 800, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <ShieldCheck size={16} color="#e31e24" />
+                        <span>Rəsmi Zəmanət və Servis</span>
+                      </div>
+                      <p style={{ fontSize: '13px', color: theme.textMuted, margin: '6px 0 0 0', lineHeight: 1.4 }}>
+                        Peşəkar ustalar və orijinal ehtiyat hissələri ilə xidmətinizdəyik.
+                      </p>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600, color: theme.text }}>
+                        <CheckCircle2 size={15} color="#16a34a" />
+                        <span>1-3 İl Rəsmi Zəmanət</span>
+                      </div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600, color: theme.text }}>
+                        <Wrench size={15} color="#0284c7" />
+                        <span>Orijinal Detallar</span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setHoveredNavTab(null);
+                        onNavigate('services');
+                      }}
+                      style={{
+                        padding: '10px 20px',
+                        borderRadius: '10px',
+                        backgroundColor: '#e31e24',
+                        color: '#ffffff',
+                        border: 'none',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        boxShadow: '0 4px 14px rgba(227, 30, 36, 0.35)',
+                      }}
+                    >
+                      <span>Servis haqqında ətraflı</span>
+                      <ArrowRight size={14} />
+                    </button>
+                  </div>
+                )}
+
+                {hoveredNavTab === 'support' && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '32px', flexWrap: 'wrap' }}>
+                    <div style={{ maxWidth: '320px' }}>
+                      <div style={{ fontSize: '15px', fontWeight: 800, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Phone size={16} color="#e31e24" />
+                        <span>Müştəri Dəstəyi</span>
+                      </div>
+                      <p style={{ fontSize: '13px', color: theme.textMuted, margin: '6px 0 0 0', lineHeight: 1.4 }}>
+                        Sualınız var? Operativ dəstək komandamız 7/24 xidmətinizdədir.
+                      </p>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
+                      <span style={{ fontSize: '13.5px', fontWeight: 700, color: theme.text }}>
+                        {settings?.phoneNumber || '+994 50 261 30 41'}
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setHoveredNavTab(null);
+                        onNavigate('support');
+                      }}
+                      style={{
+                        padding: '10px 20px',
+                        borderRadius: '10px',
+                        backgroundColor: '#e31e24',
+                        color: '#ffffff',
+                        border: 'none',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        boxShadow: '0 4px 14px rgba(227, 30, 36, 0.35)',
+                      }}
+                    >
+                      <span>Dəstək mərkəzinə keç</span>
+                      <ArrowRight size={14} />
+                    </button>
+                  </div>
+                )}
+
+                {hoveredNavTab === 'discounts' && (
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '32px', flexWrap: 'wrap' }}>
+                    <div style={{ maxWidth: '320px' }}>
+                      <div style={{ fontSize: '15px', fontWeight: 800, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <Percent size={16} color="#e31e24" />
+                        <span>Xüsusi Endirim Təklifləri</span>
+                      </div>
+                      <p style={{ fontSize: '13px', color: theme.textMuted, margin: '6px 0 0 0', lineHeight: 1.4 }}>
+                        Məişət texnikalarına 50%-dək xüsusi mövsüm endirimləri və hədiyyələr.
+                      </p>
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: '#e31e24', backgroundColor: 'rgba(227, 30, 36, 0.1)', padding: '6px 12px', borderRadius: '8px' }}>
+                        Məhdud sayda təkliflər
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setHoveredNavTab(null);
+                        onNavigate('catalog', 'discounts');
+                      }}
+                      style={{
+                        padding: '10px 20px',
+                        borderRadius: '10px',
+                        backgroundColor: '#e31e24',
+                        color: '#ffffff',
+                        border: 'none',
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        boxShadow: '0 4px 14px rgba(227, 30, 36, 0.35)',
+                      }}
+                    >
+                      <span>Bütün endirimlərə bax</span>
+                      <ArrowRight size={14} />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </div>
       </header>
-
-      {/* Nav Links Hover Mega-Preview Panel (Fixed sibling to achieve true unclipped backdrop-filter frosted blur) */}
-      {hoveredNavTab && hoveredNavTab !== 'home' && (
-        <div
-          className="header-nav-preview-panel"
-          onMouseEnter={() => {
-            if (hoverNavTimeoutRef.current) clearTimeout(hoverNavTimeoutRef.current);
-          }}
-          onMouseLeave={handleNavMouseLeave}
-          style={{
-            position: 'fixed',
-            top: `${headerBottom - 1}px`,
-            left: 0,
-            right: 0,
-            zIndex: DESIGN_TOKENS.zIndex.modal + 12,
-            backgroundColor: themeMode === 'dark' ? 'rgba(15, 23, 42, 0.78)' : 'rgba(255, 255, 255, 0.78)',
-            backdropFilter: 'blur(28px) saturate(190%)',
-            WebkitBackdropFilter: 'blur(28px) saturate(190%)',
-            border: 'none',
-            borderTop: 'none',
-            borderBottom: 'none',
-            boxShadow: themeMode === 'dark' ? '0 24px 48px -8px rgba(0, 0, 0, 0.7)' : '0 20px 44px -8px rgba(0, 0, 0, 0.12)',
-            padding: '20px 0 24px',
-          }}
-        >
-          <div className="catalog-container" style={{ padding: '0 clamp(24px, 4vw, 56px)' }}>
-            {hoveredNavTab === 'catalog' && (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '32px', flexWrap: 'wrap' }}>
-                <div style={{ maxWidth: '320px' }}>
-                  <div style={{ fontSize: '15px', fontWeight: 800, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <LayoutGrid size={16} color="#e31e24" />
-                    <span>Məhsul Kataloqu</span>
-                  </div>
-                  <p style={{ fontSize: '13px', color: theme.textMuted, margin: '6px 0 0 0', lineHeight: 1.4 }}>
-                    Bütün məişət texnikası və elektronika çeşidləri Sahara-da.
-                  </p>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', flex: 1, justifyContent: 'center' }}>
-                  {activeCategories.slice(0, 6).map((c) => (
-                    <button
-                      key={c.id}
-                      type="button"
-                      onClick={() => {
-                        setHoveredNavTab(null);
-                        onNavigate('catalog', c.id);
-                      }}
-                      style={{
-                        padding: '8px 16px',
-                        borderRadius: '10px',
-                        backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f8fafc',
-                        border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`,
-                        fontSize: '13px',
-                        fontWeight: 700,
-                        color: theme.text,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                        transition: 'all 0.15s ease',
-                      }}
-                      onMouseEnter={(e) => {
-                        e.currentTarget.style.borderColor = '#e31e24';
-                        e.currentTarget.style.color = '#e31e24';
-                      }}
-                      onMouseLeave={(e) => {
-                        e.currentTarget.style.borderColor = themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0';
-                        e.currentTarget.style.color = theme.text;
-                      }}
-                    >
-                      <span>{c.name}</span>
-                    </button>
-                  ))}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setHoveredNavTab(null);
-                    onNavigate('catalog');
-                  }}
-                  style={{
-                    padding: '10px 20px',
-                    borderRadius: '10px',
-                    backgroundColor: '#e31e24',
-                    color: '#ffffff',
-                    border: 'none',
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    boxShadow: '0 4px 14px rgba(227, 30, 36, 0.35)',
-                  }}
-                >
-                  <span>Bütün kataloqa bax</span>
-                  <ArrowRight size={14} />
-                </button>
-              </div>
-            )}
-
-            {hoveredNavTab === 'brands' && (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '32px', flexWrap: 'wrap' }}>
-                <div style={{ maxWidth: '320px' }}>
-                  <div style={{ fontSize: '15px', fontWeight: 800, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Sparkles size={16} color="#e31e24" />
-                    <span>Rəsmi Tərəfdaş Brendlərimiz</span>
-                  </div>
-                  <p style={{ fontSize: '13px', color: theme.textMuted, margin: '6px 0 0 0', lineHeight: 1.4 }}>
-                    İtaliya, Almaniya və dünya brendlərinin orijinal məişət texnikaları Sahara-da.
-                  </p>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', flex: 1, justifyContent: 'center' }}>
-                  {brands.slice(0, 6).map((b) => (
-                    <button
-                      key={b.id}
-                      type="button"
-                      onClick={() => {
-                        setHoveredNavTab(null);
-                        onNavigate('brand', b.id);
-                      }}
-                      style={{
-                        padding: '8px 16px',
-                        borderRadius: '10px',
-                        backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f8fafc',
-                        border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`,
-                        fontSize: '13px',
-                        fontWeight: 700,
-                        color: theme.text,
-                        cursor: 'pointer',
-                        display: 'flex',
-                        alignItems: 'center',
-                        gap: '8px',
-                      }}
-                    >
-                      <span>{b.name}</span>
-                    </button>
-                  ))}
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setHoveredNavTab(null);
-                    onNavigate('brands');
-                  }}
-                  style={{
-                    padding: '10px 20px',
-                    borderRadius: '10px',
-                    backgroundColor: '#e31e24',
-                    color: '#ffffff',
-                    border: 'none',
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    boxShadow: '0 4px 14px rgba(227, 30, 36, 0.35)',
-                  }}
-                >
-                  <span>Bütün brendlərə bax</span>
-                  <ArrowRight size={14} />
-                </button>
-              </div>
-            )}
-
-            {hoveredNavTab === 'stores' && (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '32px', flexWrap: 'wrap' }}>
-                <div style={{ maxWidth: '340px' }}>
-                  <div style={{ fontSize: '15px', fontWeight: 800, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <MapPin size={16} color="#e31e24" />
-                    <span>Mağaza və Sərgi Salonlarımız</span>
-                  </div>
-                  <p style={{ fontSize: '13px', color: theme.textMuted, margin: '6px 0 0 0', lineHeight: 1.4 }}>
-                    {settings?.address || 'Sədərək TM Şirniyyat bazarı, 1-ci sıranın arxası Kapital Bankla üzbəüz'}
-                  </p>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: theme.text }}>
-                    <Clock size={15} color="#e31e24" />
-                    <span>Hər gün: 09:00 - 19:00</span>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setHoveredNavTab(null);
-                    onNavigate('stores');
-                  }}
-                  style={{
-                    padding: '10px 20px',
-                    borderRadius: '10px',
-                    backgroundColor: '#e31e24',
-                    color: '#ffffff',
-                    border: 'none',
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    boxShadow: '0 4px 14px rgba(227, 30, 36, 0.35)',
-                  }}
-                >
-                  <span>Bütün filiallar və xəritə</span>
-                  <ArrowRight size={14} />
-                </button>
-              </div>
-            )}
-
-            {hoveredNavTab === 'services' && (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '32px', flexWrap: 'wrap' }}>
-                <div style={{ maxWidth: '320px' }}>
-                  <div style={{ fontSize: '15px', fontWeight: 800, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <ShieldCheck size={16} color="#e31e24" />
-                    <span>Rəsmi Zəmanət və Servis</span>
-                  </div>
-                  <p style={{ fontSize: '13px', color: theme.textMuted, margin: '6px 0 0 0', lineHeight: 1.4 }}>
-                    Peşəkar ustalar və orijinal ehtiyat hissələri ilə xidmətinizdəyik.
-                  </p>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600, color: theme.text }}>
-                    <CheckCircle2 size={15} color="#16a34a" />
-                    <span>1-3 İl Rəsmi Zəmanət</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600, color: theme.text }}>
-                    <Wrench size={15} color="#0284c7" />
-                    <span>Orijinal Detallar</span>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setHoveredNavTab(null);
-                    onNavigate('services');
-                  }}
-                  style={{
-                    padding: '10px 20px',
-                    borderRadius: '10px',
-                    backgroundColor: '#e31e24',
-                    color: '#ffffff',
-                    border: 'none',
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    boxShadow: '0 4px 14px rgba(227, 30, 36, 0.35)',
-                  }}
-                >
-                  <span>Servis haqqında ətraflı</span>
-                  <ArrowRight size={14} />
-                </button>
-              </div>
-            )}
-
-            {hoveredNavTab === 'support' && (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '32px', flexWrap: 'wrap' }}>
-                <div style={{ maxWidth: '320px' }}>
-                  <div style={{ fontSize: '15px', fontWeight: 800, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Phone size={16} color="#e31e24" />
-                    <span>Müştəri Dəstəyi</span>
-                  </div>
-                  <p style={{ fontSize: '13px', color: theme.textMuted, margin: '6px 0 0 0', lineHeight: 1.4 }}>
-                    Sualınız var? Operativ dəstək komandamız 7/24 xidmətinizdədir.
-                  </p>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
-                  <span style={{ fontSize: '13.5px', fontWeight: 700, color: theme.text }}>
-                    {settings?.phoneNumber || '+994 50 261 30 41'}
-                  </span>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setHoveredNavTab(null);
-                    onNavigate('support');
-                  }}
-                  style={{
-                    padding: '10px 20px',
-                    borderRadius: '10px',
-                    backgroundColor: '#e31e24',
-                    color: '#ffffff',
-                    border: 'none',
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    boxShadow: '0 4px 14px rgba(227, 30, 36, 0.35)',
-                  }}
-                >
-                  <span>Dəstək mərkəzinə keç</span>
-                  <ArrowRight size={14} />
-                </button>
-              </div>
-            )}
-
-            {hoveredNavTab === 'discounts' && (
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '32px', flexWrap: 'wrap' }}>
-                <div style={{ maxWidth: '320px' }}>
-                  <div style={{ fontSize: '15px', fontWeight: 800, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Percent size={16} color="#e31e24" />
-                    <span>Xüsusi Endirim Təklifləri</span>
-                  </div>
-                  <p style={{ fontSize: '13px', color: theme.textMuted, margin: '6px 0 0 0', lineHeight: 1.4 }}>
-                    Məişət texnikalarına 50%-dək xüsusi mövsüm endirimləri və hədiyyələr.
-                  </p>
-                </div>
-
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                  <span style={{ fontSize: '13px', fontWeight: 700, color: '#e31e24', backgroundColor: 'rgba(227, 30, 36, 0.1)', padding: '6px 12px', borderRadius: '8px' }}>
-                    Məhdud sayda təkliflər
-                  </span>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={() => {
-                    setHoveredNavTab(null);
-                    onNavigate('catalog', 'discounts');
-                  }}
-                  style={{
-                    padding: '10px 20px',
-                    borderRadius: '10px',
-                    backgroundColor: '#e31e24',
-                    color: '#ffffff',
-                    border: 'none',
-                    fontSize: '13px',
-                    fontWeight: 700,
-                    cursor: 'pointer',
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    boxShadow: '0 4px 14px rgba(227, 30, 36, 0.35)',
-                  }}
-                >
-                  <span>Bütün endirimlərə bax</span>
-                  <ArrowRight size={14} />
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
-      {/* Page Backdrop Blur when any nav tab preview panel is active */}
-      {hoveredNavTab && hoveredNavTab !== 'home' && (
-        <div
-          className="header-nav-backdrop"
-          onClick={() => setHoveredNavTab(null)}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: DESIGN_TOKENS.zIndex.modal + 10,
-            backgroundColor: themeMode === 'dark' ? 'rgba(0, 0, 0, 0.45)' : 'rgba(0, 0, 0, 0.2)',
-            backdropFilter: 'blur(10px) saturate(140%)',
-            WebkitBackdropFilter: 'blur(10px) saturate(140%)',
-            animation: 'fadeIn 0.2s ease forwards',
-            pointerEvents: 'none',
-          }}
-          aria-hidden="true"
-        />
-      )}
 
 
       {/* Mobile Category & Navigation Drawer (rendered on mobile when Menyu/Kateqoriyalar clicked) */}
