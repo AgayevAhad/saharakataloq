@@ -156,11 +156,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
   const handleNavMouseEnter = (tab: string) => {
     if (hoverNavTimeoutRef.current) clearTimeout(hoverNavTimeoutRef.current);
     setHoveredNavTab(tab);
-    if (tab === 'catalog') {
-      setIsMegaMenuOpen(true);
-    } else {
-      setIsMegaMenuOpen(false);
-    }
+    setIsMegaMenuOpen(false);
   };
 
   const handleNavMouseLeave = () => {
@@ -209,10 +205,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
         style={{
           position: 'sticky',
           top: 0,
-          backgroundColor:
-            hoveredNavTab || isMegaMenuOpen
-              ? themeMode === 'dark' ? 'rgba(15, 23, 42, 0.78)' : 'rgba(255, 255, 255, 0.78)'
-              : themeMode === 'dark' ? 'rgba(8, 12, 18, 0.88)' : 'rgba(255, 255, 255, 0.88)',
+          backgroundColor: themeMode === 'dark' ? '#080c12' : '#ffffff',
           backdropFilter: 'blur(28px) saturate(190%)',
           WebkitBackdropFilter: 'blur(28px) saturate(190%)',
           border: 'none',
@@ -940,30 +933,28 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               ref={megaMenuBtnRef}
               type="button"
               onClick={() => {
-                setIsMegaMenuOpen((prev) => !prev);
-                setHoveredNavTab((prev) => (prev === 'catalog' ? null : 'catalog'));
+                setHoveredNavTab(null);
+                onNavigate('catalog');
               }}
               onMouseEnter={() => handleNavMouseEnter('catalog')}
               onMouseLeave={handleNavMouseLeave}
-              aria-expanded={isMegaMenuOpen || hoveredNavTab === 'catalog'}
-              aria-controls="mega-menu-overlay"
               className="mega-menu-trigger-btn"
               style={{
                 background: 'transparent',
-                color: isMegaMenuOpen || hoveredNavTab === 'catalog' ? '#e31e24' : theme.text,
+                color: currentRoute === 'catalog' || hoveredNavTab === 'catalog' ? '#e31e24' : theme.text,
                 border: 'none',
                 padding: '4px 0',
-                fontSize: '14px',
-                fontWeight: 700,
+                fontSize: '13.5px',
+                fontWeight: currentRoute === 'catalog' || hoveredNavTab === 'catalog' ? 700 : 500,
                 display: 'inline-flex',
                 alignItems: 'center',
-                gap: '8px',
+                gap: '6px',
                 cursor: 'pointer',
                 transition: 'color 0.15s ease',
                 flexShrink: 0,
               }}
             >
-              <LayoutGrid size={16} />
+              <LayoutGrid size={15} />
               <span>Kataloq</span>
             </button>
 
@@ -1163,7 +1154,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
 
           {/* Desktop MegaMenu Dropdown Panel */}
           <MegaMenu
-            isOpen={isMegaMenuOpen || hoveredNavTab === 'catalog'}
+            isOpen={isMegaMenuOpen}
             onClose={() => {
               setIsMegaMenuOpen(false);
               setHoveredNavTab(null);
@@ -1221,6 +1212,82 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
           }}
         >
           <div className="catalog-container" style={{ padding: '0 clamp(24px, 4vw, 56px)' }}>
+            {hoveredNavTab === 'catalog' && (
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '32px', flexWrap: 'wrap' }}>
+                <div style={{ maxWidth: '320px' }}>
+                  <div style={{ fontSize: '15px', fontWeight: 800, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <LayoutGrid size={16} color="#e31e24" />
+                    <span>Məhsul Kataloqu</span>
+                  </div>
+                  <p style={{ fontSize: '13px', color: theme.textMuted, margin: '6px 0 0 0', lineHeight: 1.4 }}>
+                    Bütün məişət texnikası və elektronika çeşidləri Sahara-da.
+                  </p>
+                </div>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', flex: 1, justifyContent: 'center' }}>
+                  {activeCategories.slice(0, 6).map((c) => (
+                    <button
+                      key={c.id}
+                      type="button"
+                      onClick={() => {
+                        setHoveredNavTab(null);
+                        onNavigate('catalog', c.id);
+                      }}
+                      style={{
+                        padding: '8px 16px',
+                        borderRadius: '10px',
+                        backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f8fafc',
+                        border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`,
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        color: theme.text,
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                        transition: 'all 0.15s ease',
+                      }}
+                      onMouseEnter={(e) => {
+                        e.currentTarget.style.borderColor = '#e31e24';
+                        e.currentTarget.style.color = '#e31e24';
+                      }}
+                      onMouseLeave={(e) => {
+                        e.currentTarget.style.borderColor = themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0';
+                        e.currentTarget.style.color = theme.text;
+                      }}
+                    >
+                      <span>{c.name}</span>
+                    </button>
+                  ))}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    setHoveredNavTab(null);
+                    onNavigate('catalog');
+                  }}
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: '10px',
+                    backgroundColor: '#e31e24',
+                    color: '#ffffff',
+                    border: 'none',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    boxShadow: '0 4px 14px rgba(227, 30, 36, 0.35)',
+                  }}
+                >
+                  <span>Bütün kataloqa bax</span>
+                  <ArrowRight size={14} />
+                </button>
+              </div>
+            )}
+
             {hoveredNavTab === 'brands' && (
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '32px', flexWrap: 'wrap' }}>
                 <div style={{ maxWidth: '320px' }}>
