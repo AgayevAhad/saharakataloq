@@ -174,6 +174,7 @@ describe('Storefront Refinements (Items 5, 6, 7, 8, 9)', () => {
     const navPanel = container.querySelector('.header-nav-preview-panel') as HTMLElement;
     expect(navPanel).toBeTruthy();
     expect(within(navPanel).getByText('Rəsmi Tərəfdaş Brendlərimiz')).toBeTruthy();
+    expect(navPanel.style.backdropFilter).toContain('blur');
     const header = container.querySelector('header') as HTMLElement;
     expect(header.style.backdropFilter).toContain('blur');
 
@@ -185,7 +186,7 @@ describe('Storefront Refinements (Items 5, 6, 7, 8, 9)', () => {
     const catalogPanel = container.querySelector('.header-nav-preview-panel') as HTMLElement;
     expect(catalogPanel).toBeTruthy();
     expect(within(catalogPanel).getByText('Məhsul Kataloqu')).toBeTruthy();
-    // Verify header renders with frosted glass blur and no page backdrop is rendered
+    expect(catalogPanel.style.backdropFilter).toContain('blur');
     expect(header.style.backdropFilter).toContain('blur');
     expect(container.querySelector('.header-nav-backdrop')).toBeNull();
   });

@@ -1193,7 +1193,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
           />
         </div>
 
-        {/* Nav Links Hover Mega-Preview Panel (Directly inside Header container for single unified glass surface) */}
+        {/* Nav Links Hover Mega-Preview Panel (Floating overlay with identical frosted glass blur) */}
         {hoveredNavTab && hoveredNavTab !== 'home' && (
             <div
               className="header-nav-preview-panel"
@@ -1202,8 +1202,18 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               }}
               onMouseLeave={handleNavMouseLeave}
               style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
+                backgroundColor: themeMode === 'dark' ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.85)',
+                backdropFilter: 'blur(28px) saturate(190%)',
+                WebkitBackdropFilter: 'blur(28px) saturate(190%)',
+                border: 'none',
                 borderTop: 'none',
-                padding: '16px 0 20px',
+                borderBottom: 'none',
+                boxShadow: themeMode === 'dark' ? '0 24px 48px -8px rgba(0, 0, 0, 0.7)' : '0 20px 44px -8px rgba(0, 0, 0, 0.12)',
+                padding: '20px 0 24px',
               }}
             >
               <div className="catalog-container" style={{ padding: '0 clamp(24px, 4vw, 56px)' }}>
