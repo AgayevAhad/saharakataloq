@@ -92,9 +92,11 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
         if (parent) {
           const parentRect = parent.getBoundingClientRect();
           const selfRect = searchWrapRef.current.getBoundingClientRect();
+          const left = Math.max(0, selfRect.left - parentRect.left);
+          const availableWidth = Math.max(selfRect.width, parentRect.width - left);
           setSearchBoxBounds({
-            left: Math.max(0, selfRect.left - parentRect.left),
-            width: selfRect.width,
+            left,
+            width: availableWidth,
           });
         }
       }
@@ -578,9 +580,9 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               <div
                 style={{
                   marginLeft: searchBoxBounds ? `${searchBoxBounds.left}px` : 'auto',
-                  marginRight: searchBoxBounds ? 'auto' : 'auto',
+                  marginRight: 'auto',
                   width: searchBoxBounds ? `${searchBoxBounds.width}px` : '100%',
-                  maxWidth: '920px',
+                  maxWidth: '100%',
                   boxSizing: 'border-box',
                 }}
               >

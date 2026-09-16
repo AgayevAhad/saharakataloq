@@ -3190,22 +3190,25 @@ select {
 
 .smart-search-main-grid {
   display: flex;
-  gap: 20px;
+  gap: 24px;
   padding: 16px 18px 12px;
+  width: 100%;
 }
 
 .smart-search-left-col {
-  flex: 1.15;
-  min-width: 0;
+  flex: 0 0 290px;
+  width: 290px;
+  min-width: 250px;
+  max-width: 320px;
   display: flex;
   flex-direction: column;
 }
 
 .smart-search-right-col {
-  flex: 1.25;
+  flex: 1;
   min-width: 0;
   border-left: 1px solid;
-  padding-left: 18px;
+  padding-left: 20px;
   display: flex;
   flex-direction: column;
 }
@@ -3314,14 +3317,16 @@ select {
 
 .smart-search-products-grid {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 10px;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 14px;
+  flex: 1;
+  width: 100%;
 }
 
 .smart-search-product-card {
   border: 1px solid;
-  border-radius: 12px;
-  padding: 8px;
+  border-radius: 14px;
+  padding: 12px;
   cursor: pointer;
   transition:
     transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
@@ -3330,6 +3335,7 @@ select {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
+  min-height: 270px;
   animation: searchCardFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
@@ -3352,14 +3358,15 @@ select {
 
 .smart-search-img-box {
   width: 100%;
-  height: 112px;
-  border-radius: 8px;
+  height: 180px;
+  min-height: 180px;
+  border-radius: 10px;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  padding: 4px;
+  padding: 8px;
 }
 
 .smart-search-prod-img {
