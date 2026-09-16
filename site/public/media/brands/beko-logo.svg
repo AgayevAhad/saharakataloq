@@ -1,5 +1,13 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 48" fill="none">
-  <!-- Beko Official Lowercase Logotype -->
-  <text x="50%" y="62%" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="28" letter-spacing="1" fill="#002C6C">beko</text>
-  <circle cx="128" cy="34" r="2.5" fill="#00A0E2"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 48" fill="none">
+  <!-- Beko Official Slanted Dynamic Wordmark -->
+  <g fill="#005A9C" transform="skewX(-10) translate(14, 11)">
+    <!-- b -->
+    <path d="M0 0 L6 0 L6 8.5 C7.5 7 10 6 13 6 C19.5 6 24 10.5 24 17 C24 23.5 19.5 26.5 13 26.5 C10 26.5 7.5 25.5 6 24 L6 26 L0 26 Z M6 18 C6.5 20.5 8.5 21.5 12 21.5 C15.5 21.5 18 19.5 18 16.5 C18 13.5 15.5 11 12 11 C8.5 11 6.5 12.5 6 15 Z"/>
+    <!-- e -->
+    <path d="M28 16.5 C28 10 32 6 38.5 6 C45 6 48.5 10 48.5 16.5 L48.5 18 L34 18 C34.5 20.5 36.5 22 40 22 C42.5 22 44.5 21 46.5 20 L47.5 24 C45 25.5 42 26.5 38.5 26.5 C32 26.5 28 22.5 28 16.5 Z M43 14 C42.8 11.5 41 10.2 38.5 10.2 C36 10.2 34.5 11.5 34 14 Z"/>
+    <!-- k -->
+    <path d="M53 0 L59 0 L59 13.5 L67 6.5 L74.5 6.5 L65.5 14.5 L75.5 26 L68 26 L60.5 17.5 L59 19 L59 26 L53 26 Z"/>
+    <!-- o -->
+    <path d="M89 6 C96 6 101 10.5 101 16.5 C101 22.5 96 26.5 89 26.5 C82 26.5 77 22.5 77 16.5 C77 10.5 82 6 89 6 Z M89 11 C85 11 83 13.5 83 16.5 C83 19.5 85 21.5 89 21.5 C93 21.5 95 19.5 95 16.5 C95 13.5 93 11 89 11 Z"/>
+  </g>
 </svg>

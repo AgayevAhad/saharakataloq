@@ -1,8 +1,20 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 48">
-    <g transform="translate(16, 6)">
-      <circle cx="18" cy="18" r="17" fill="#A50034"/>
-      <path d="M12 11 v14 h12" fill="none" stroke="#FFFFFF" stroke-width="2.6" stroke-linecap="round"/>
-      <circle cx="14" cy="14" r="2.2" fill="#FFFFFF"/>
-    </g>
-    <text x="66" y="32" font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="26" letter-spacing="1" fill="#222222">LG</text>
-  </svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 48" fill="none">
+  <!-- LG Official Smiley Face Emblem & Clean Modern Wordmark -->
+  <!-- LG Face Circle Emblem -->
+  <g transform="translate(6, 6)">
+    <circle cx="18" cy="18" r="18" fill="#C40043"/>
+    <!-- L nose -->
+    <path d="M18 10 L18 22 L24 22" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+    <!-- G outer face outline -->
+    <path d="M26 13 C24 9.5, 19 8, 14 9.5 C9 11.5, 6.5 17, 8 22 C9.5 27, 15 29.5, 20 28 C24 26.5, 27 22.5, 27 18 L20 18" stroke="#FFFFFF" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+    <!-- Left eye dot -->
+    <circle cx="12" cy="14" r="1.8" fill="#FFFFFF"/>
+  </g>
+  <!-- LG Bold Letters -->
+  <g fill="#555555" transform="translate(56, 12)">
+    <!-- L -->
+    <path d="M0 24 L0 0 L5.5 0 L5.5 19.5 L15 19.5 L15 24 Z"/>
+    <!-- G -->
+    <path d="M35 12 L35 20 C32.5 23 28 24.5 24 24.5 C16.5 24.5 11.5 19.5 11.5 12 C11.5 4.5 16.5 0 24.5 0 C30 0 34 2.5 35 7 L29.5 8 C28.5 5.5 26.5 4.5 24 4.5 C19.5 4.5 17 8 17 12 C17 16 19.5 19.5 24 19.5 C26.5 19.5 28.5 18.5 29.5 17 L29.5 15.5 L24 15.5 L24 12 Z"/>
+  </g>
+</svg>

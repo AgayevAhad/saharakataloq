@@ -1,3 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 48">
-    <text x="50%" y="62%" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="30" letter-spacing="4" fill="#E30613">AEG</text>
-  </svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 48" fill="none">
+  <!-- AEG Official Red Rectangle & White Typography -->
+  <rect x="4" y="6" width="142" height="36" rx="4" fill="#C4121A"/>
+  <g fill="#FFFFFF" transform="translate(18, 12)">
+    <!-- A -->
+    <path d="M0 24.5 L12 0 L19 0 L31 24.5 L24 24.5 L21.5 18.5 L9.5 18.5 L7 24.5 Z M11.8 13.5 L19.2 13.5 L15.5 5.5 Z"/>
+    <!-- E -->
+    <path d="M37 24.5 L37 0 L53 0 L53 5 L43.5 5 L43.5 10 L51.5 10 L51.5 14.5 L43.5 14.5 L43.5 19.5 L53.5 19.5 L53.5 24.5 Z"/>
+    <!-- G -->
+    <path d="M78 12.5 L84 12.5 L84 21 C81 23.8 76 25 70.5 25 C61 25 55 19.5 55 12.5 C55 5.5 61 0 71 0 C78 0 83.5 3.5 84.5 9 L78 10 C77 6.5 74.5 5 71 5 C65.5 5 62 8.5 62 12.5 C62 16.5 65.5 20 71 20 C74.5 20 77 18.5 78 17 L78 16 L72 16 L72 12.5 Z"/>
+  </g>
+</svg>

@@ -1,3 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 48">
-    <text x="50%" y="62%" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="24" letter-spacing="2" fill="#CC0000">HOFFMANN</text>
-  </svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 48" fill="none">
+  <!-- Hoffmann Official Wordmark & German Flag Accent -->
+  <g fill="#CC0000" transform="translate(6, 12)">
+    <!-- H -->
+    <path d="M0 24.5 L0 0 L5.5 0 L5.5 9.5 L14.5 9.5 L14.5 0 L20 0 L20 24.5 L14.5 24.5 L14.5 14.5 L5.5 14.5 L5.5 24.5 Z"/>
+    <!-- O -->
+    <path d="M33 25 C25.5 25 21 19.5 21 12.5 C21 5.5 25.5 0 33 0 C40.5 0 45 5.5 45 12.5 C45 19.5 40.5 25 33 25 Z M33 19.5 C37 19.5 39.5 16.5 39.5 12.5 C39.5 8.5 37 5.5 33 5.5 C29 5.5 26.5 8.5 26.5 12.5 C26.5 16.5 29 19.5 33 19.5 Z"/>
+    <!-- F -->
+    <path d="M48 24.5 L48 0 L61 0 L61 4.5 L53.5 4.5 L53.5 10 L59.5 10 L59.5 14.5 L53.5 14.5 L53.5 24.5 Z"/>
+    <!-- F -->
+    <path d="M64 24.5 L64 0 L77 0 L77 4.5 L69.5 4.5 L69.5 10 L75.5 10 L75.5 14.5 L69.5 14.5 L69.5 24.5 Z"/>
+    <!-- M -->
+    <path d="M80 24.5 L80 0 L86 0 L90.5 12.5 L95 0 L101 0 L101 24.5 L96 24.5 L96 8.5 L92.5 18 L88.5 18 L85 8.5 L85 24.5 Z"/>
+    <!-- A -->
+    <path d="M104 24.5 L111.5 0 L117 0 L124.5 24.5 L119.5 24.5 L118 18.5 L110.5 18.5 L109 24.5 Z M112 14 L116.5 14 L114.2 6.5 Z"/>
+    <!-- N -->
+    <path d="M127 24.5 L127 0 L132.5 0 L141 14.5 L141 0 L146.5 0 L146.5 24.5 L141 24.5 L132.5 10 L132.5 24.5 Z"/>
+    <!-- N -->
+    <path d="M150 24.5 L150 0 L155.5 0 L164 14.5 L164 0 L169.5 0 L169.5 24.5 L164 24.5 L155.5 10 L155.5 24.5 Z" transform="translate(-1, 0)"/>
+  </g>
+  <!-- German Flag Accent Bar -->
+  <g transform="translate(62, 40)">
+    <rect x="0" y="0" width="16" height="3" fill="#111111"/>
+    <rect x="16" y="0" width="16" height="3" fill="#DD0000"/>
+    <rect x="32" y="0" width="16" height="3" fill="#FFCE00"/>
+  </g>
+</svg>

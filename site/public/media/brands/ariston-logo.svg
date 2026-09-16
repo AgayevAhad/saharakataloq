@@ -1,3 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 48">
-    <text x="50%" y="62%" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="25" letter-spacing="2" fill="#C8102E">ARISTON</text>
-  </svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 48" fill="none">
+  <!-- Ariston Official Red Ribbon Curve & Bold Wordmark -->
+  <!-- Red Ribbon Icon -->
+  <g transform="translate(6, 10)">
+    <path d="M4 14 C10 4, 22 4, 26 14 C22 24, 10 24, 4 14 Z" fill="#E31E24"/>
+    <circle cx="15" cy="14" r="3.5" fill="#FFFFFF"/>
+  </g>
+  <!-- ARISTON Wordmark -->
+  <g fill="#E31E24" transform="translate(38, 12)">
+    <!-- A -->
+    <path d="M0 24.5 L7 0 L12.5 0 L19.5 24.5 L14.5 24.5 L13 18.5 L6.5 18.5 L5 24.5 Z M7.8 14 L11.7 14 L9.8 6.5 Z"/>
+    <!-- R -->
+    <path d="M23 24.5 L23 0 L34 0 C38 0 40.5 2 40.5 6 C40.5 9 38.5 11 35.5 11.8 L41.5 24.5 L36 24.5 L30.5 13.5 L28 13.5 L28 24.5 Z M28 9.5 L33 9.5 C34.5 9.5 35.5 8.5 35.5 6 C35.5 4 34.5 3.5 33 3.5 L28 3.5 Z"/>
+    <!-- I -->
+    <path d="M44 24.5 L44 0 L49 0 L49 24.5 Z"/>
+    <!-- S -->
+    <path d="M53 18.5 L58 18 C58.5 19.5 59.5 20.5 62 20.5 C64.5 20.5 65.5 19.5 65.5 18 C65.5 16.5 64 15.5 60.5 14.5 C56 13.5 54 11.5 54 7.5 C54 3.5 57.5 0.5 62.5 0.5 C67.5 0.5 70.5 3 71 7 L66 7.5 C65.5 5.5 64.5 4.5 62.5 4.5 C60.5 4.5 59.5 5.5 59.5 6.8 C59.5 8 60.5 8.8 63 9.5 C68 11 71 13 71 17.5 C71 22 67 25 62 25 C57 25 53.5 22.5 53 18.5 Z"/>
+    <!-- T -->
+    <path d="M74 4.5 L80 4.5 L80 24.5 L85 24.5 L85 4.5 L91 4.5 L91 0 L74 0 Z"/>
+    <!-- O -->
+    <path d="M104 25 C97 25 93 19.5 93 12.5 C93 5.5 97 0 104 0 C111 0 115 5.5 115 12.5 C115 19.5 111 25 104 25 Z M104 19.5 C108 19.5 110 16.5 110 12.5 C110 8.5 108 5.5 104 5.5 C100 5.5 98 8.5 98 12.5 C98 16.5 100 19.5 104 19.5 Z"/>
+    <!-- N -->
+    <path d="M119 24.5 L119 0 L124 0 L133 15 L133 0 L138 0 L138 24.5 L133 24.5 L124 9.5 L124 24.5 Z"/>
+  </g>
+</svg>

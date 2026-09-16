@@ -1,8 +1,27 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 48" fill="none">
-  <g transform="translate(6, 4)">
-    <!-- Midea iconic swirl arc above M/i -->
-    <path d="M12 12 C18 4, 34 4, 42 10 C34 7, 20 8, 12 12 Z" fill="#009AD9"/>
-    <!-- Midea wordmark -->
-    <text x="0" y="32" font-family="'Outfit', 'Montserrat', 'Helvetica Neue', sans-serif" font-weight="800" font-size="28" letter-spacing="-0.5" fill="#009AD9">Midea</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 50" fill="none">
+  <!-- Midea Official Brandmark with Signature Blue Wave -->
+  <defs>
+    <linearGradient id="mideaBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#00A0E9"/>
+      <stop offset="100%" stop-color="#0080CD"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- The iconic Midea dynamic swoosh arc encircling above the M and through the i dot -->
+  <path d="M22 14 C36 4, 62 4, 76 13 C68 9, 44 8, 22 14 Z" fill="#00A0E9"/>
+  <circle cx="56" cy="17" r="3.5" fill="#00A0E9"/>
+
+  <!-- Midea stylized wordmark -->
+  <g fill="url(#mideaBlue)" transform="translate(6, 12)">
+    <!-- M -->
+    <path d="M4 25 L4 7 L12 7 L17.5 17 L23 7 L31 7 L31 25 L25.5 25 L25.5 13 L20 22.5 L15 22.5 L9.5 13 L9.5 25 Z"/>
+    <!-- i (stem) -->
+    <path d="M47 11 L53 11 L53 25 L47 25 Z"/>
+    <!-- d -->
+    <path d="M68 25 L68 22 C66.5 24 64 25.5 60.5 25.5 C54 25.5 50 20.5 50 14.5 C50 8.5 54 3.5 60.5 3.5 C63.5 3.5 66 4.8 67.5 6.8 L67.5 0 L73.5 0 L73.5 25 Z M60.8 19.8 C64.8 19.8 67.5 17 67.5 14.5 C67.5 12 64.8 9.2 60.8 9.2 C56.8 9.2 55.5 12 55.5 14.5 C55.5 17 56.8 19.8 60.8 19.8 Z"/>
+    <!-- e -->
+    <path d="M78 14.5 C78 9 82 4 88.5 4 C95 4 98.5 8.5 98.5 15 L98.5 16.5 L83.5 16.5 C83.8 19.5 86 21 89.5 21 C92 21 94.5 20 96.5 19 L97.5 23 C95 24.8 91.5 25.5 88.5 25.5 C82 25.5 78 20.5 78 14.5 Z M93 12.5 C92.8 10 91 8.5 88.5 8.5 C86 8.5 84 10 83.5 12.5 Z"/>
+    <!-- a -->
+    <path d="M102 18 C102 13 105.5 9.5 111.5 9.5 C114.5 9.5 117 10.5 118 12 L118 10 L123.5 10 L123.5 25 L118 25 L118 23 C116.5 24.5 114 25.5 111 25.5 C105.5 25.5 102 22 102 18 Z M118 17.5 L118 16 C117 14.5 115 13.8 112.5 13.8 C109.5 13.8 107.5 15.2 107.5 17.5 C107.5 19.8 109.5 21.2 112.5 21.2 C115 21.2 117 20 118 17.5 Z"/>
   </g>
 </svg>

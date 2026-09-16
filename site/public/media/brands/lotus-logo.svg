@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 190 50" fill="none">
+  <!-- Lotus Iconic Flower Emblem & Modern Wordmark -->
+  <defs>
+    <linearGradient id="lotusPetalMain" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#E879F9"/>
+      <stop offset="50%" stop-color="#C026D3"/>
+      <stop offset="100%" stop-color="#7E22CE"/>
+    </linearGradient>
+    <linearGradient id="lotusPetalSide" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#A855F7"/>
+      <stop offset="100%" stop-color="#6B21A8"/>
+    </linearGradient>
+  </defs>
+  
+  <!-- Flower Emblem -->
+  <g transform="translate(6, 5)">
+    <!-- Center petal -->
+    <path d="M22 4 C27 10, 29 18, 22 28 C15 18, 17 10, 22 4 Z" fill="url(#lotusPetalMain)"/>
+    <!-- Left inner petal -->
+    <path d="M11 11 C18 12, 22 17, 21 26 C13 24, 9 19, 11 11 Z" fill="url(#lotusPetalSide)"/>
+    <!-- Right inner petal -->
+    <path d="M33 11 C35 19, 31 24, 23 26 C22 17, 26 12, 33 11 Z" fill="url(#lotusPetalSide)"/>
+    <!-- Outer base petals -->
+    <path d="M4 21 C12 19, 18 22, 21 30 C12 31, 7 28, 4 21 Z" fill="#9333EA" opacity="0.85"/>
+    <path d="M40 21 C37 28, 32 31, 23 30 C26 22, 32 19, 40 21 Z" fill="#9333EA" opacity="0.85"/>
+    <!-- Bottom curve -->
+    <path d="M9 34 C18 38, 26 38, 35 34" stroke="#7E22CE" stroke-width="2.5" stroke-linecap="round"/>
+  </g>
+
+  <!-- Stylized Modern LOTUS Wordmark -->
+  <g fill="#7E22CE" transform="translate(56, 12)">
+    <!-- L -->
+    <path d="M0 2 L5.5 2 L5.5 22 L15.5 22 L15.5 26.5 L0 26.5 Z"/>
+    <!-- O -->
+    <path d="M28 1.5 C35 1.5, 40.5 7, 40.5 14.5 C40.5 22, 35 27.5, 28 27.5 C21 27.5, 15.5 22, 15.5 14.5 C15.5 7, 21 1.5, 28 1.5 Z M28 6.5 C24 6.5, 21 10, 21 14.5 C21 19, 24 22.5, 28 22.5 C32 22.5, 35 19, 35 14.5 C35 10, 32 6.5, 28 6.5 Z"/>
+    <!-- T -->
+    <path d="M42 2 L57 2 L57 6.5 L52.2 6.5 L52.2 26.5 L46.8 26.5 L46.8 6.5 L42 6.5 Z"/>
+    <!-- U -->
+    <path d="M59 2 L64.5 2 L64.5 17 C64.5 21, 67 23, 70 23 C73 23, 75.5 21, 75.5 17 L75.5 2 L81 2 L81 17 C81 23.5, 76.5 27.5, 70 27.5 C63.5 27.5, 59 23.5, 59 17 Z"/>
+    <!-- S -->
+    <path d="M84.5 21 L89.5 20.5 C90 22.5, 92 23.5, 95 23.5 C98 23.5, 99.5 22, 99.5 20.2 C99.5 18.5, 98 17.5, 93.5 16.5 C88 15, 85 13, 85 8.5 C85 4, 89 1.5, 94.5 1.5 C100 1.5, 104 4.5, 104.5 9 L99.5 9.5 C99 7.5, 97.5 6, 94.5 6 C92 6, 90.5 7, 90.5 8.5 C90.5 10, 92 10.8, 96 11.8 C102 13.2, 105 15.5, 105 19.8 C105 24.5, 100.5 27.5, 95 27.5 C88.5 27.5, 85 24.5, 84.5 21 Z"/>
+  </g>
+</svg>

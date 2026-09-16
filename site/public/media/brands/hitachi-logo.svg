@@ -1,4 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 48" fill="none">
-  <!-- Hitachi Official Wordmark -->
-  <text x="50%" y="62%" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="22" letter-spacing="2" fill="#E60012">HITACHI</text>
+  <!-- Hitachi Official Bold Brandmark & Red Accent Lines -->
+  <g fill="#111111" transform="translate(6, 12)">
+    <!-- H -->
+    <path d="M0 24.5 L0 0 L5.5 0 L5.5 9.5 L14.5 9.5 L14.5 0 L20 0 L20 24.5 L14.5 24.5 L14.5 14.5 L5.5 14.5 L5.5 24.5 Z"/>
+    <!-- I -->
+    <path d="M25 24.5 L25 0 L30.5 0 L30.5 24.5 Z"/>
+    <!-- T -->
+    <path d="M35 4.5 L42.5 4.5 L42.5 24.5 L48 24.5 L48 4.5 L55.5 4.5 L55.5 0 L35 0 Z"/>
+    <!-- A -->
+    <path d="M59 24.5 L67.5 0 L73 0 L81.5 24.5 L76 24.5 L74 18.5 L66.5 18.5 L64.5 24.5 Z M68 14 L72.5 14 L70.2 6.5 Z"/>
+    <!-- C -->
+    <path d="M96 19.5 C92 19.5 89 16.5 89 12 C89 7.5 92 4.5 96 4.5 C99.5 4.5 102 6.5 102.5 10 L108 9.5 C107 4 102.5 0 96 0 C88.5 0 83.5 4.5 83.5 12 C83.5 19.5 88.5 24.5 96 24.5 C103 24.5 107.5 20.5 108 14.5 L102.5 14 C102 17.5 99.5 19.5 96 19.5 Z"/>
+    <!-- H -->
+    <path d="M112 24.5 L112 0 L117.5 0 L117.5 9.5 L126.5 9.5 L126.5 0 L132 0 L132 24.5 L126.5 24.5 L126.5 14.5 L117.5 14.5 L117.5 24.5 Z"/>
+    <!-- I -->
+    <path d="M137 24.5 L137 0 L142.5 0 L142.5 24.5 Z"/>
+  </g>
+  <!-- Red Inspire Accent Underline -->
+  <rect x="60" y="38" width="50" height="2.5" rx="1" fill="#E60012"/>
 </svg>

@@ -1,5 +1,28 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 48" fill="none">
-  <!-- Whirlpool Official Brandmark with Signature Gold Swirl -->
-  <ellipse cx="44" cy="20" rx="20" ry="12" fill="none" stroke="#EDA100" stroke-width="2.5" transform="rotate(-15 44 20)"/>
-  <text x="50%" y="64%" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="22" letter-spacing="1" fill="#003865">Whirlpool</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 48" fill="none">
+  <!-- Whirlpool Official Brandmark with Signature Gold Swirl Ring -->
+  <g transform="translate(4, 8)">
+    <!-- Gold Ring around Whirlpool -->
+    <ellipse cx="64" cy="16" rx="58" ry="14" stroke="#FDB913" stroke-width="2.5" fill="none" transform="rotate(-6 64 16)"/>
+    <!-- Whirlpool Navy Wordmark -->
+    <g fill="#002D62">
+      <!-- W -->
+      <path d="M4 22 L0 4 L4.5 4 L7.5 16.5 L11 4 L15.5 4 L19 16.5 L22 4 L26.5 4 L22.5 22 L17.5 22 L14.5 9.5 L11.5 22 Z"/>
+      <!-- h -->
+      <path d="M29 22 L29 0 L33 0 L33 9 C34.5 7.5 36.5 6.5 39 6.5 C43 6.5 45 9 45 13.5 L45 22 L41 22 L41 14.5 C41 12 40 10.5 38 10.5 C36 10.5 34 12 33 14 L33 22 Z"/>
+      <!-- i -->
+      <path d="M48 22 L48 7 L52 7 L52 22 Z M48 2 L52 2 L52 5 L48 5 Z"/>
+      <!-- r -->
+      <path d="M55 22 L55 7 L59 7 L59 9.5 C60 8 61.5 7 64 7 L64 11 C61.5 11 59 12.5 59 15.5 L59 22 Z"/>
+      <!-- l -->
+      <path d="M66 22 L66 0 L70 0 L70 22 Z"/>
+      <!-- p -->
+      <path d="M73 27 L73 7 L77 7 L77 9 C78.5 7.5 80.5 6.5 83 6.5 C87.5 6.5 91 10 91 14.5 C91 19 87.5 22.5 83 22.5 C80.5 22.5 78.5 21.5 77 20 L77 27 Z M77 14.5 C77 17.5 79 19 81.5 19 C84 19 86.5 17 86.5 14.5 C86.5 12 84 10 81.5 10 C79 10 77 11.5 77 14.5 Z"/>
+      <!-- o -->
+      <path d="M98 6.5 C103 6.5 106.5 10 106.5 14.5 C106.5 19 103 22.5 98 22.5 C93 22.5 89.5 19 89.5 14.5 C89.5 10 93 6.5 98 6.5 Z M98 10 C95.5 10 93.5 12 93.5 14.5 C93.5 17 95.5 19 98 19 C100.5 19 102.5 17 102.5 14.5 C102.5 12 100.5 10 98 10 Z"/>
+      <!-- o -->
+      <path d="M112 6.5 C117 6.5 120.5 10 120.5 14.5 C120.5 19 117 22.5 112 22.5 C107 22.5 103.5 19 103.5 14.5 C103.5 10 107 6.5 112 6.5 Z M112 10 C109.5 10 107.5 12 107.5 14.5 C107.5 17 109.5 19 112 19 C114.5 19 116.5 17 116.5 14.5 C116.5 12 114.5 10 112 10 Z"/>
+      <!-- l -->
+      <path d="M123 22 L123 0 L127 0 L127 22 Z"/>
+    </g>
+  </g>
 </svg>

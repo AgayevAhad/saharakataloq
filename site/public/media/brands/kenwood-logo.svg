@@ -1,7 +1,21 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 48" fill="none">
-  <!-- Kenwood Official Red Diamond Spark + Wordmark -->
-  <g transform="translate(10, 10)">
-    <polygon points="12,2 22,12 12,22 2,12" fill="#C8102E"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 48" fill="none">
+  <!-- Kenwood Official Wordmark with Signature Red Chevron Triangle in W -->
+  <g fill="#000000" transform="translate(6, 12)">
+    <!-- K -->
+    <path d="M0 24.5 L0 0 L5.5 0 L5.5 9.5 L12.5 0 L19 0 L10 11.5 L19.5 24.5 L13 24.5 L6 13.5 L5.5 14.5 L5.5 24.5 Z"/>
+    <!-- E -->
+    <path d="M22 24.5 L22 0 L35 0 L35 4.5 L27.5 4.5 L27.5 9.5 L34 9.5 L34 14 L27.5 14 L27.5 20 L35.5 20 L35.5 24.5 Z"/>
+    <!-- N -->
+    <path d="M38 24.5 L38 0 L43.5 0 L52 14.5 L52 0 L57.5 0 L57.5 24.5 L52 24.5 L43.5 10 L43.5 24.5 Z"/>
+    <!-- W with Red Triangle in center -->
+    <path d="M60 0 L65 0 L68 14 L71 0 L76 0 L79 14 L82 0 L87 0 L82 24.5 L77.5 24.5 L73.5 12 L69.5 24.5 L65 24.5 Z"/>
+    <!-- Red Chevron Triangle in W -->
+    <polygon points="73.5,6 71,2 76,2" fill="#E31E24"/>
+    <!-- O -->
+    <path d="M98 25 C90.5 25 86 19.5 86 12.5 C86 5.5 90.5 0 98 0 C105.5 0 110 5.5 110 12.5 C110 19.5 105.5 25 98 25 Z M98 19.5 C102 19.5 104.5 16.5 104.5 12.5 C104.5 8.5 102 5.5 98 5.5 C94 5.5 91.5 8.5 91.5 12.5 C91.5 16.5 94 19.5 98 19.5 Z"/>
+    <!-- O -->
+    <path d="M120 25 C112.5 25 108 19.5 108 12.5 C108 5.5 112.5 0 120 0 C127.5 0 132 5.5 132 12.5 C132 19.5 127.5 25 120 25 Z M120 19.5 C124 19.5 126.5 16.5 126.5 12.5 C126.5 8.5 124 5.5 120 5.5 C116 5.5 113.5 8.5 113.5 12.5 C113.5 16.5 116 19.5 120 19.5 Z"/>
+    <!-- D -->
+    <path d="M135 24.5 L135 0 L145 0 C151 0 155 4.5 155 12.5 C155 20.5 151 24.5 145 24.5 Z M140.5 19.5 L144.5 19.5 C148 19.5 149.5 16.5 149.5 12.5 C149.5 8.5 148 5 144.5 5 L140.5 5 Z"/>
   </g>
-  <text x="44" y="31" font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="20" letter-spacing="2" fill="#111827">KENWOOD</text>
 </svg>

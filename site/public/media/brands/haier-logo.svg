@@ -1,4 +1,15 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 48" fill="none">
-  <!-- Haier Official Blue Brandmark -->
-  <text x="50%" y="62%" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="28" letter-spacing="1" fill="#005BAC">Haier</text>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 48" fill="none">
+  <!-- Haier Official Red Wordmark -->
+  <g fill="#E31E24" transform="translate(6, 12)">
+    <!-- H -->
+    <path d="M0 24.5 L0 0 L6 0 L6 9.5 L15 9.5 L15 0 L21 0 L21 24.5 L15 24.5 L15 15 L6 15 L6 24.5 Z"/>
+    <!-- a -->
+    <path d="M26 17 C26 11.5 29.5 8 35 8 C38.5 8 41 9.5 42 11.5 L42 8.5 L47.5 8.5 L47.5 24.5 L42 24.5 L42 22.5 C41 24 38.5 25 35 25 C29.5 25 26 21.5 26 17 Z M42 16.5 L42 15 C41.5 13.5 39.5 12.5 37 12.5 C34.5 12.5 32 14 32 16.5 C32 19 34.5 20.5 37 20.5 C39.5 20.5 41.5 19 42 16.5 Z"/>
+    <!-- i -->
+    <path d="M53 8.5 L59 8.5 L59 24.5 L53 24.5 Z M53 1 L59 1 L59 5.5 L53 5.5 Z"/>
+    <!-- e -->
+    <path d="M64 16.5 C64 11 67.5 8 73 8 C78.5 8 82 11.5 82 17 L82 18.5 L70 18.5 C70.5 20.5 72 21.5 75 21.5 C77 21.5 79 20.5 80 19.5 L81.5 22.5 C79.5 24 77 25 73.5 25 C67.5 25 64 21.5 64 16.5 Z M76 15 C75.8 13 74.5 12 73 12 C71.2 12 70.2 13 70 15 Z"/>
+    <!-- r -->
+    <path d="M87 8.5 L92.5 8.5 L92.5 11.5 C94 9.5 96.5 8 100 8 L100 13.5 C96.5 13.5 93 15 93 19 L93 24.5 L87 24.5 Z"/>
+  </g>
 </svg>
