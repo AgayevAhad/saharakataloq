@@ -190,7 +190,7 @@ export const VisualCategoryCards: React.FC<VisualCategoryCardsProps> = ({
         className="visual-category-scroll-track"
         style={{
           display: 'flex',
-          gap: '12px',
+          gap: '16px',
           overflowX: 'auto',
           paddingBottom: '8px',
           paddingTop: '2px',

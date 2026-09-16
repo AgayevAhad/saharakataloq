@@ -13,6 +13,7 @@ import {
   User,
   Home,
   Menu,
+  LayoutGrid,
   Tag,
   ArrowRight,
   ShieldCheck,
@@ -152,7 +153,25 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isSearchExpanded]);
 
+  const megaMenuHoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const handleKataloqMouseEnter = () => {
+    if (megaMenuHoverTimeoutRef.current) clearTimeout(megaMenuHoverTimeoutRef.current);
+    if (hoverNavTimeoutRef.current) clearTimeout(hoverNavTimeoutRef.current);
+    setHoveredNavTab(null);
+    setIsMegaMenuOpen(true);
+  };
+
+  const handleKataloqMouseLeave = () => {
+    if (megaMenuHoverTimeoutRef.current) clearTimeout(megaMenuHoverTimeoutRef.current);
+    megaMenuHoverTimeoutRef.current = setTimeout(() => {
+      setIsMegaMenuOpen(false);
+    }, 180);
+  };
+
   const handleNavMouseEnter = (tab: string) => {
+    if (megaMenuHoverTimeoutRef.current) clearTimeout(megaMenuHoverTimeoutRef.current);
+    setIsMegaMenuOpen(false);
     if (hoverNavTimeoutRef.current) clearTimeout(hoverNavTimeoutRef.current);
     setHoveredNavTab(tab);
   };
@@ -182,7 +201,11 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
     };
     window.addEventListener('scroll', handleScroll, { passive: true });
     handleScroll();
-    return () => window.removeEventListener('scroll', handleScroll);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      if (megaMenuHoverTimeoutRef.current) clearTimeout(megaMenuHoverTimeoutRef.current);
+      if (hoverNavTimeoutRef.current) clearTimeout(hoverNavTimeoutRef.current);
+    };
   }, []);
 
   // Sorted active categories for secondary navigation bar
@@ -921,17 +944,19 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               gap: '28px',
             }}
           >
-            {/* Left: = Kateqoriyalar Trigger */}
+            {/* Left: Kataloq Trigger */}
             <button
               ref={megaMenuBtnRef}
               type="button"
               onClick={() => setIsMegaMenuOpen((prev) => !prev)}
+              onMouseEnter={handleKataloqMouseEnter}
+              onMouseLeave={handleKataloqMouseLeave}
               aria-expanded={isMegaMenuOpen}
               aria-controls="mega-menu-overlay"
               className="mega-menu-trigger-btn"
               style={{
                 background: 'transparent',
-                color: theme.text,
+                color: isMegaMenuOpen ? '#e31e24' : theme.text,
                 border: 'none',
                 padding: '4px 0',
                 fontSize: '14px',
@@ -944,8 +969,8 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 flexShrink: 0,
               }}
             >
-              <Menu size={17} />
-              <span>Kateqoriyalar</span>
+              <LayoutGrid size={16} />
+              <span>Kataloq</span>
             </button>
 
             {/* General Site Navigation Links */}
@@ -977,6 +1002,9 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   fontWeight: currentRoute === 'home' ? 700 : 500,
                   color: currentRoute === 'home' ? '#e31e24' : theme.text,
                   cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
                   transition: 'color 0.15s ease',
                   flexShrink: 0,
                 }}
@@ -985,7 +1013,8 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   (e.currentTarget.style.color = currentRoute === 'home' ? '#e31e24' : theme.text)
                 }
               >
-                Ana Səhifə
+                <Home size={15} />
+                <span>Ana Səhifə</span>
               </button>
 
               <button
@@ -1003,6 +1032,9 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   fontWeight: currentRoute === 'brands' || hoveredNavTab === 'brands' ? 700 : 500,
                   color: currentRoute === 'brands' || hoveredNavTab === 'brands' ? '#e31e24' : theme.text,
                   cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
                   transition: 'color 0.15s ease',
                   flexShrink: 0,
                 }}
@@ -1011,7 +1043,8 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   (e.currentTarget.style.color = currentRoute === 'brands' ? '#e31e24' : theme.text)
                 }
               >
-                Brendlər
+                <Sparkles size={15} />
+                <span>Brendlər</span>
               </button>
 
               <button
@@ -1029,6 +1062,9 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   fontWeight: currentRoute === 'stores' || hoveredNavTab === 'stores' ? 700 : 500,
                   color: currentRoute === 'stores' || hoveredNavTab === 'stores' ? '#e31e24' : theme.text,
                   cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
                   transition: 'color 0.15s ease',
                   flexShrink: 0,
                 }}
@@ -1037,7 +1073,8 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   (e.currentTarget.style.color = currentRoute === 'stores' ? '#e31e24' : theme.text)
                 }
               >
-                Mağazalarımız
+                <MapPin size={15} />
+                <span>Mağazalarımız</span>
               </button>
 
               <button
@@ -1055,6 +1092,9 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   fontWeight: currentRoute === 'services' || hoveredNavTab === 'services' ? 700 : 500,
                   color: currentRoute === 'services' || hoveredNavTab === 'services' ? '#e31e24' : theme.text,
                   cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
                   transition: 'color 0.15s ease',
                   flexShrink: 0,
                 }}
@@ -1063,7 +1103,8 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   (e.currentTarget.style.color = currentRoute === 'services' ? '#e31e24' : theme.text)
                 }
               >
-                Servis və Zəmanət
+                <ShieldCheck size={15} />
+                <span>Servis və Zəmanət</span>
               </button>
 
               <button
@@ -1081,6 +1122,9 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   fontWeight: currentRoute === 'support' || hoveredNavTab === 'support' ? 700 : 500,
                   color: currentRoute === 'support' || hoveredNavTab === 'support' ? '#e31e24' : theme.text,
                   cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '6px',
                   transition: 'color 0.15s ease',
                   flexShrink: 0,
                 }}
@@ -1089,7 +1133,8 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   (e.currentTarget.style.color = currentRoute === 'support' ? '#e31e24' : theme.text)
                 }
               >
-                Müştəri Dəstəyi
+                <Phone size={15} />
+                <span>Müştəri Dəstəyi</span>
               </button>
 
               <button
@@ -1109,13 +1154,14 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   cursor: 'pointer',
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '4px',
+                  gap: '6px',
                   flexShrink: 0,
                   transition: 'color 0.15s ease',
                 }}
                 onMouseEnter={() => handleNavMouseEnter('discounts')}
                 onMouseLeave={(e) => (e.currentTarget.style.color = theme.text)}
               >
+                <Percent size={15} />
                 <span>Endirimlər</span>
               </button>
             </div>
@@ -1133,6 +1179,8 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
             onSelectBrand={(brandId) => onNavigate('catalog', brandId)}
             onNavigate={onNavigate}
             triggerRef={megaMenuBtnRef}
+            onMouseEnter={handleKataloqMouseEnter}
+            onMouseLeave={handleKataloqMouseLeave}
           />
         </div>
       </header>

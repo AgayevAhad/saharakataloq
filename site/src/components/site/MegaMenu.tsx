@@ -14,6 +14,8 @@ interface MegaMenuProps {
   onSelectBrand: (brandId: string) => void;
   onNavigate: (route: string) => void;
   triggerRef?: React.RefObject<HTMLElement>;
+  onMouseEnter?: () => void;
+  onMouseLeave?: () => void;
 }
 
 export const MegaMenu: React.FC<MegaMenuProps> = ({
@@ -27,6 +29,8 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
   onSelectBrand,
   onNavigate,
   triggerRef,
+  onMouseEnter,
+  onMouseLeave,
 }) => {
   const menuRef = useRef<HTMLDivElement>(null);
 
@@ -148,6 +152,8 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
         className="mega-menu-overlay"
         role="region"
         aria-label="Bütün Kateqoriyalar və Brendlər Mega Menyu"
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
         style={{
           position: 'absolute',
           top: '100%',
@@ -160,9 +166,10 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
           borderBottom: `1px solid ${theme.border}`,
           boxShadow: '0 24px 48px -4px rgba(0, 0, 0, 0.25)',
           zIndex: DESIGN_TOKENS.zIndex.overlay,
-          padding: '28px 0',
-          maxHeight: 'calc(100vh - 110px)',
+          padding: '22px 0',
+          maxHeight: 'min(50vh, 440px)',
           overflowY: 'auto',
+          scrollbarWidth: 'none',
           animation: 'slideDownMenu 0.2s cubic-bezier(0.16, 1, 0.3, 1) forwards',
         }}
       >
@@ -271,7 +278,7 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
               ))}
             </div>
 
-            {/* Right 3 Columns: Published Brands Showcase */}
+            {/* Right 3 Columns: Published Brands Showcase (Capped to top brands with view all link) */}
             <div
               style={{
                 gridColumn: 'span 3',
@@ -279,7 +286,8 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                 paddingLeft: '24px',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '12px',
+                gap: '10px',
+                overflow: 'hidden',
               }}
             >
               <div
@@ -298,8 +306,8 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                 <span>Rəsmi Brendlər</span>
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                {publishedBrands.map((brand) => (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {publishedBrands.slice(0, 4).map((brand) => (
                   <button
                     key={brand.id}
                     type="button"
@@ -312,8 +320,8 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      padding: '10px 14px',
-                      borderRadius: '10px',
+                      padding: '8px 12px',
+                      borderRadius: '8px',
                       backgroundColor: theme.mode === 'dark' ? '#161d2b' : '#f8fafc',
                       border: `1px solid ${theme.border}`,
                       color: theme.text,
@@ -376,10 +384,10 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                   fontWeight: 700,
                   cursor: 'pointer',
                   padding: '4px 0',
-                  marginTop: '4px',
+                  marginTop: '2px',
                 }}
               >
-                <span>Bütün brendləri nəzərdən keçir</span>
+                <span>Bütün brendlər ({publishedBrands.length})</span>
                 <ArrowRight size={13} />
               </button>
             </div>
