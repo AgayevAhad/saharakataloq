@@ -3326,11 +3326,12 @@ select {
   overflow-y: hidden;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
-  padding: 4px 8px 10px 4px;
+  padding: 2px 8px 4px 4px;
   width: 100%;
   cursor: grab;
   user-select: none;
-  scrollbar-width: thin;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
   mask-image: linear-gradient(to right, transparent 0px, black 16px, black calc(100% - 16px), transparent 100%);
   -webkit-mask-image: linear-gradient(to right, transparent 0px, black 16px, black calc(100% - 16px), transparent 100%);
 }
@@ -3342,21 +3343,17 @@ select {
 
 .smart-search-products-scroll-wrap::-webkit-scrollbar,
 .smart-search-products-grid::-webkit-scrollbar {
-  height: 4px;
-}
-
-.smart-search-products-scroll-wrap::-webkit-scrollbar-thumb,
-.smart-search-products-grid::-webkit-scrollbar-thumb {
-  background: rgba(127, 127, 127, 0.25);
-  border-radius: 4px;
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
 }
 
 .smart-search-product-card {
-  flex: 0 0 270px;
-  width: 270px;
-  min-width: 270px;
-  max-width: 270px;
-  height: 270px;
+  flex: 0 0 290px;
+  width: 290px;
+  min-width: 290px;
+  max-width: 290px;
+  height: 290px;
   border: 1px solid;
   border-radius: 16px;
   position: relative;
