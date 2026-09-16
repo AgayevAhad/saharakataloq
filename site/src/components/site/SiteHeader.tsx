@@ -1406,24 +1406,6 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
         triggerRef={mobileMenuBtnRef}
       />
 
-      {/* Nav Preview Hover Backdrop Overlay */}
-      {hoveredNavTab && hoveredNavTab !== 'home' && (
-        <div
-          className="header-nav-backdrop-overlay"
-          onClick={() => setHoveredNavTab(null)}
-          onMouseEnter={handleNavMouseLeave}
-          style={{
-            position: 'fixed',
-            inset: 0,
-            zIndex: DESIGN_TOKENS.zIndex.modal + 10,
-            backgroundColor: 'rgba(0, 0, 0, 0.3)',
-            backdropFilter: 'blur(12px) saturate(160%)',
-            WebkitBackdropFilter: 'blur(12px) saturate(160%)',
-          }}
-          aria-hidden="true"
-        />
-      )}
-
       {/* Search Dropdown Clickaway Backdrop */}
       {isSearchExpanded && (
         <div

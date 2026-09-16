@@ -6849,7 +6849,7 @@ select {
   left: 0;
   right: 0;
   z-index: var(--z-overlay, 100);
-  background-color: rgba(255, 255, 255, 0.88);
+  background-color: rgba(255, 255, 255, 0.85);
   backdrop-filter: blur(28px) saturate(190%) !important;
   -webkit-backdrop-filter: blur(28px) saturate(190%) !important;
   border-bottom: 1px solid rgba(226, 232, 240, 0.85);
@@ -6858,31 +6858,9 @@ select {
 }
 
 .theme-dark .header-nav-preview-panel {
-  background-color: rgba(15, 23, 42, 0.88);
+  background-color: rgba(15, 23, 42, 0.85);
   border-bottom-color: rgba(255, 255, 255, 0.12);
   box-shadow: 0 24px 48px -8px rgba(0, 0, 0, 0.6);
-}
-
-.header-nav-backdrop-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background-color: rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(12px) saturate(160%);
-  -webkit-backdrop-filter: blur(12px) saturate(160%);
-  z-index: calc(var(--z-overlay, 100) - 1);
-  animation: headerBackdropFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-@keyframes headerBackdropFadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
 }
 
 @keyframes headerNavSlideDown {
