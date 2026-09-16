@@ -640,44 +640,72 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
                       </div>
                     )}
                     {brandObj && (
-                      <span
-                        className="smart-search-brand-tag"
-                        style={{ backgroundColor: theme.primary, color: '#fff' }}
+                      <div
+                        className="smart-search-brand-logo-badge"
+                        style={{
+                          position: 'absolute',
+                          top: '8px',
+                          left: '8px',
+                          height: '24px',
+                          maxWidth: '76px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          padding: '2px 6px',
+                          borderRadius: '6px',
+                          backgroundColor: isDarkMode
+                            ? 'rgba(15, 23, 42, 0.85)'
+                            : 'rgba(255, 255, 255, 0.94)',
+                          backdropFilter: 'blur(8px)',
+                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                          border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)'}`,
+                          zIndex: 2,
+                        }}
                       >
-                        {brandObj.name}
-                      </span>
+                        {brandObj.logo ? (
+                          <img
+                            src={brandObj.logo}
+                            alt={brandObj.name}
+                            style={{
+                              maxHeight: '17px',
+                              maxWidth: '64px',
+                              objectFit: 'contain',
+                              display: 'block',
+                            }}
+                          />
+                        ) : (
+                          <span
+                            style={{
+                              fontSize: '10px',
+                              fontWeight: 800,
+                              color: theme.primary,
+                              letterSpacing: '0.04em',
+                              textTransform: 'uppercase',
+                            }}
+                          >
+                            {brandObj.name}
+                          </span>
+                        )}
+                      </div>
                     )}
                   </div>
 
                   <div className="smart-search-card-info">
-                    <h4
+                    <span
                       className="smart-search-card-title"
                       style={{ color: theme.text }}
                       title={prod.title}
                     >
                       {prod.title}
-                    </h4>
+                    </span>
 
-                    {prod.categoryName && (
-                      <span className="smart-search-card-cat" style={{ color: theme.textMuted }}>
-                        {prod.categoryName}
-                      </span>
-                    )}
-
-                    <div className="smart-search-card-action">
-                      <span
-                        style={{
-                          color: theme.primary,
-                          fontWeight: 700,
-                          fontSize: '12px',
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                        }}
-                      >
-                        Ətraflı bax <ArrowRight size={12} />
-                      </span>
-                    </div>
+                    <span
+                      className="smart-search-card-action"
+                      style={{ color: theme.primary }}
+                    >
+                      <span>Ətraflı bax</span>
+                      <ArrowRight size={12} />
+                    </span>
                   </div>
                 </div>
               );
