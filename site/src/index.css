@@ -6738,14 +6738,14 @@ select {
   grid-template-columns: repeat(auto-fill, minmax(339px, 339px)) !important;
   gap: 16px !important;
   width: 100%;
-  justify-content: center;
+  justify-content: flex-start !important;
 }
 
 @media (max-width: 768px) {
   .featured-products-grid {
     grid-template-columns: repeat(auto-fill, minmax(min(100%, 339px), 1fr)) !important;
     gap: 16px !important;
-    justify-content: center;
+    justify-content: flex-start !important;
   }
 
   .home-page-container {

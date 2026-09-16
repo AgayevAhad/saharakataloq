@@ -141,6 +141,7 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
           WebkitBackdropFilter: 'blur(8px) saturate(150%)',
           zIndex: DESIGN_TOKENS.zIndex.overlay - 1,
           animation: 'fadeIn 0.2s ease forwards',
+          pointerEvents: 'none',
         }}
         aria-hidden="true"
       />

@@ -225,7 +225,8 @@ export const HomePage: React.FC<HomePageProps> = ({
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(339px, 1fr))',
             gap: '16px',
-            justifyItems: 'center',
+            justifyItems: 'start',
+            justifyContent: 'flex-start',
           }}
         >
           {filteredFeaturedProducts.map((product) => (

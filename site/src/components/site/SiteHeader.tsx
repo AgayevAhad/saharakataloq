@@ -153,33 +153,21 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isSearchExpanded]);
 
-  const megaMenuHoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-
-  const handleKataloqMouseEnter = () => {
-    if (megaMenuHoverTimeoutRef.current) clearTimeout(megaMenuHoverTimeoutRef.current);
-    if (hoverNavTimeoutRef.current) clearTimeout(hoverNavTimeoutRef.current);
-    setHoveredNavTab(null);
-    setIsMegaMenuOpen(true);
-  };
-
-  const handleKataloqMouseLeave = () => {
-    if (megaMenuHoverTimeoutRef.current) clearTimeout(megaMenuHoverTimeoutRef.current);
-    megaMenuHoverTimeoutRef.current = setTimeout(() => {
-      setIsMegaMenuOpen(false);
-    }, 280);
-  };
-
   const handleNavMouseEnter = (tab: string) => {
-    if (megaMenuHoverTimeoutRef.current) clearTimeout(megaMenuHoverTimeoutRef.current);
-    setIsMegaMenuOpen(false);
     if (hoverNavTimeoutRef.current) clearTimeout(hoverNavTimeoutRef.current);
     setHoveredNavTab(tab);
+    if (tab === 'catalog') {
+      setIsMegaMenuOpen(true);
+    } else {
+      setIsMegaMenuOpen(false);
+    }
   };
 
   const handleNavMouseLeave = () => {
     if (hoverNavTimeoutRef.current) clearTimeout(hoverNavTimeoutRef.current);
     hoverNavTimeoutRef.current = setTimeout(() => {
       setHoveredNavTab(null);
+      setIsMegaMenuOpen(false);
     }, 280);
   };
 
@@ -203,7 +191,6 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
     handleScroll();
     return () => {
       window.removeEventListener('scroll', handleScroll);
-      if (megaMenuHoverTimeoutRef.current) clearTimeout(megaMenuHoverTimeoutRef.current);
       if (hoverNavTimeoutRef.current) clearTimeout(hoverNavTimeoutRef.current);
     };
   }, []);
@@ -924,10 +911,14 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
           </div>
         </div>
 
-        {/* Secondary Navigation Row (Desktop: = Kateqoriyalar + Site Page Links; No separating top line) */}
+        {/* Secondary Navigation Row (Desktop: = Kataloq + Site Page Links; No separating top line) */}
         <div
           ref={secondaryNavRef}
           className="header-secondary-nav hide-on-mobile"
+          onMouseEnter={() => {
+            if (hoverNavTimeoutRef.current) clearTimeout(hoverNavTimeoutRef.current);
+          }}
+          onMouseLeave={handleNavMouseLeave}
           style={{
             position: 'relative',
             borderTop: 'none',
@@ -948,15 +939,18 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
             <button
               ref={megaMenuBtnRef}
               type="button"
-              onClick={() => setIsMegaMenuOpen((prev) => !prev)}
-              onMouseEnter={handleKataloqMouseEnter}
-              onMouseLeave={handleKataloqMouseLeave}
-              aria-expanded={isMegaMenuOpen}
+              onClick={() => {
+                setIsMegaMenuOpen((prev) => !prev);
+                setHoveredNavTab((prev) => (prev === 'catalog' ? null : 'catalog'));
+              }}
+              onMouseEnter={() => handleNavMouseEnter('catalog')}
+              onMouseLeave={handleNavMouseLeave}
+              aria-expanded={isMegaMenuOpen || hoveredNavTab === 'catalog'}
               aria-controls="mega-menu-overlay"
               className="mega-menu-trigger-btn"
               style={{
                 background: 'transparent',
-                color: isMegaMenuOpen ? '#e31e24' : theme.text,
+                color: isMegaMenuOpen || hoveredNavTab === 'catalog' ? '#e31e24' : theme.text,
                 border: 'none',
                 padding: '4px 0',
                 fontSize: '14px',
@@ -1169,18 +1163,35 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
 
           {/* Desktop MegaMenu Dropdown Panel */}
           <MegaMenu
-            isOpen={isMegaMenuOpen}
-            onClose={() => setIsMegaMenuOpen(false)}
+            isOpen={isMegaMenuOpen || hoveredNavTab === 'catalog'}
+            onClose={() => {
+              setIsMegaMenuOpen(false);
+              setHoveredNavTab(null);
+            }}
             categories={categories}
             brands={brands}
             products={products}
             theme={theme}
-            onSelectCategory={(catId) => onNavigate('catalog', catId)}
-            onSelectBrand={(brandId) => onNavigate('catalog', brandId)}
-            onNavigate={onNavigate}
+            onSelectCategory={(catId) => {
+              setIsMegaMenuOpen(false);
+              setHoveredNavTab(null);
+              onNavigate('catalog', catId);
+            }}
+            onSelectBrand={(brandId) => {
+              setIsMegaMenuOpen(false);
+              setHoveredNavTab(null);
+              onNavigate('catalog', brandId);
+            }}
+            onNavigate={(route) => {
+              setIsMegaMenuOpen(false);
+              setHoveredNavTab(null);
+              onNavigate(route);
+            }}
             triggerRef={megaMenuBtnRef}
-            onMouseEnter={handleKataloqMouseEnter}
-            onMouseLeave={handleKataloqMouseLeave}
+            onMouseEnter={() => {
+              if (hoverNavTimeoutRef.current) clearTimeout(hoverNavTimeoutRef.current);
+            }}
+            onMouseLeave={handleNavMouseLeave}
           />
         </div>
       </header>
