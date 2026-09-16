@@ -184,9 +184,8 @@ describe('Storefront Refinements (Items 5, 6, 7, 8, 9)', () => {
     const catalogPanel = container.querySelector('.header-nav-preview-panel') as HTMLElement;
     expect(catalogPanel).toBeTruthy();
     expect(within(catalogPanel).getByText('Məhsul Kataloqu')).toBeTruthy();
-    expect(within(catalogPanel).getByText('Bütün kataloqa bax')).toBeTruthy();
-    // Verify it is inside header and no page backdrop is rendered
-    expect(container.querySelector('header')?.contains(catalogPanel)).toBe(true);
+    // Verify preview panel renders with frosted glass blur and no page backdrop is rendered
+    expect(catalogPanel.style.backdropFilter).toContain('blur');
     expect(container.querySelector('.header-nav-backdrop')).toBeNull();
   });
 

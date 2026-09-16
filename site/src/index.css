@@ -6284,7 +6284,6 @@ select {
     padding var(--duration-base) var(--ease-standard),
     box-shadow var(--duration-base) var(--ease-standard),
     background-color var(--duration-base) var(--ease-standard);
-  will-change: padding, box-shadow;
 }
 
 .site-header-sticky.is-compact {
