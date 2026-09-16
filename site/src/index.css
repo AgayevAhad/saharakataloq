@@ -3211,6 +3211,8 @@ select {
   padding-left: 20px;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+  position: relative;
 }
 
 .smart-search-section-header {
@@ -3316,18 +3318,50 @@ select {
   font-style: italic;
 }
 
+.smart-search-products-scroll-wrap,
 .smart-search-products-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
+  display: flex;
   gap: 16px;
-  flex: 1;
+  overflow-x: auto;
+  overflow-y: hidden;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+  padding: 4px 8px 10px 4px;
   width: 100%;
+  cursor: grab;
+  user-select: none;
+  scrollbar-width: thin;
+  mask-image: linear-gradient(to right, transparent 0px, black 16px, black calc(100% - 16px), transparent 100%);
+  -webkit-mask-image: linear-gradient(to right, transparent 0px, black 16px, black calc(100% - 16px), transparent 100%);
+}
+
+.smart-search-products-scroll-wrap:active,
+.smart-search-products-grid:active {
+  cursor: grabbing;
+}
+
+.smart-search-products-scroll-wrap::-webkit-scrollbar,
+.smart-search-products-grid::-webkit-scrollbar {
+  height: 4px;
+}
+
+.smart-search-products-scroll-wrap::-webkit-scrollbar-thumb,
+.smart-search-products-grid::-webkit-scrollbar-thumb {
+  background: rgba(127, 127, 127, 0.25);
+  border-radius: 4px;
 }
 
 .smart-search-product-card {
+  flex: 0 0 270px;
+  width: 270px;
+  min-width: 270px;
+  max-width: 270px;
+  height: 270px;
   border: 1px solid;
   border-radius: 16px;
-  padding: 12px;
+  position: relative;
+  overflow: hidden;
+  padding: 0;
   cursor: pointer;
   transition:
     transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
@@ -3335,7 +3369,6 @@ select {
     border-color 0.2s ease;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
   box-shadow: 0 4px 16px rgba(0, 0, 0, 0.04);
   animation: searchCardFadeIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -3359,17 +3392,14 @@ select {
 
 .smart-search-img-box {
   width: 100%;
-  aspect-ratio: 1 / 1;
-  height: 230px;
-  min-height: 200px;
-  max-height: 250px;
-  border-radius: 12px;
+  height: 100%;
   position: relative;
   display: flex;
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  padding: 10px;
+  padding: 16px 20px 38px;
+  box-sizing: border-box;
 }
 
 .smart-search-prod-img {

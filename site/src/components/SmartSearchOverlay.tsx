@@ -105,6 +105,14 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
     activeDependency: hoveredCategoryId,
   });
 
+  const {
+    containerRef: productsScrollRef,
+    dragProps: productsDragProps,
+    hasMoved: productsHasMoved,
+  } = useHorizontalScroll({
+    mouseDrag: true,
+  });
+
   const needle = searchQuery.trim().toLocaleLowerCase('az');
 
   // Filter only published and active items (strictly no draft products in public search)
@@ -382,22 +390,22 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
     if (hoveredItem) {
       if (hoveredItem.product) {
         const others = publishedProducts.filter((p) => p.id !== hoveredItem.product?.id);
-        return [hoveredItem.product, ...others].slice(0, 2);
+        return [hoveredItem.product, ...others].slice(0, 6);
       }
       if (hoveredItem.categoryId) {
         const catProds = publishedProducts.filter((p) => p.category === hoveredItem.categoryId);
-        if (catProds.length > 0) return catProds.slice(0, 2);
+        if (catProds.length > 0) return catProds.slice(0, 6);
       }
       if (hoveredItem.brandId) {
         const brandProds = publishedProducts.filter((p) => p.brandId === hoveredItem.brandId);
-        if (brandProds.length > 0) return brandProds.slice(0, 2);
+        if (brandProds.length > 0) return brandProds.slice(0, 6);
       }
     }
 
     // B. If a category pill at bottom is hovered
     if (hoveredCategoryId) {
       const catProducts = publishedProducts.filter((p) => p.category === hoveredCategoryId);
-      if (catProducts.length > 0) return catProducts.slice(0, 2);
+      if (catProducts.length > 0) return catProducts.slice(0, 6);
     }
 
     // C. When typing a query, match published products
@@ -408,25 +416,27 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
           .includes(needle)
       );
       if (matches.length > 0) {
-        return matches.slice(0, 2);
+        return matches.slice(0, 6);
       }
     }
 
-    // D. Default multi-brand selection: take 1 item from distinct active brands
+    // D. Default multi-brand selection: take items across active brands
     const selection: Product[] = [];
     activeBrands.forEach((brand) => {
-      if (selection.length < 2) {
-        const item = publishedProducts.find((p) => p.brandId === brand.id && !selection.some((s) => s.id === p.id));
-        if (item) {
-          selection.push(item);
-        }
+      if (selection.length < 6) {
+        const items = publishedProducts.filter((p) => p.brandId === brand.id && !selection.some((s) => s.id === p.id));
+        items.forEach((item) => {
+          if (selection.length < 6) {
+            selection.push(item);
+          }
+        });
       }
     });
 
-    // If still less than 2, fill from first published products
-    if (selection.length < 2) {
+    // If still less than 6, fill from first published products
+    if (selection.length < 6) {
       publishedProducts.forEach((p) => {
-        if (!selection.some((item) => item.id === p.id) && selection.length < 2) {
+        if (!selection.some((item) => item.id === p.id) && selection.length < 6) {
           selection.push(p);
         }
       });
@@ -580,7 +590,11 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
             </button>
           </div>
 
-          <div className="smart-search-products-grid">
+          <div
+            ref={productsScrollRef}
+            {...productsDragProps}
+            className="smart-search-products-scroll-wrap smart-search-products-grid"
+          >
             {displayedProducts.map((prod) => {
               const prodImg =
                 prod.image ||
@@ -593,7 +607,10 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
                 <div
                   key={prod.id}
                   className="smart-search-product-card"
-                  onClick={() => handleProductCardClick(prod)}
+                  onClick={() => {
+                    if (productsHasMoved.current) return;
+                    handleProductCardClick(prod);
+                  }}
                   style={{
                     backgroundColor: isDarkMode
                       ? '#1e293b'
@@ -613,84 +630,91 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
                         alt={prod.title}
                         loading="lazy"
                         objectFit="contain"
-                        spinnerSize={18}
+                        spinnerSize={22}
                         containerStyle={{ width: '100%', height: '100%' }}
                         className="smart-search-prod-img"
                       />
                     ) : (
                       <div className="smart-search-placeholder-img">
-                        <div
-                          style={{
-                            width: '40px',
-                            height: '40px',
-                            borderRadius: '10px',
-                            background:
-                              'linear-gradient(135deg, rgba(220,38,38,0.1), rgba(220,38,38,0.05))',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                          }}
+                        <span
+                          style={{ fontSize: '20px', fontWeight: 800, color: theme.primary }}
                         >
-                          <span
-                            style={{ fontSize: '16px', fontWeight: 800, color: theme.primary }}
-                          >
-                            {brandObj?.name?.slice(0, 1) || 'S'}
-                          </span>
-                        </div>
-                      </div>
-                    )}
-                    {brandObj && (
-                      <div
-                        className="smart-search-brand-logo-badge"
-                        style={{
-                          position: 'absolute',
-                          top: '8px',
-                          left: '8px',
-                          height: '24px',
-                          maxWidth: '76px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          padding: '2px 6px',
-                          borderRadius: '6px',
-                          backgroundColor: isDarkMode
-                            ? 'rgba(15, 23, 42, 0.85)'
-                            : 'rgba(255, 255, 255, 0.94)',
-                          backdropFilter: 'blur(8px)',
-                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-                          border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)'}`,
-                          zIndex: 2,
-                        }}
-                      >
-                        {brandObj.logo ? (
-                          <img
-                            src={brandObj.logo}
-                            alt={brandObj.name}
-                            style={{
-                              maxHeight: '17px',
-                              maxWidth: '64px',
-                              objectFit: 'contain',
-                              display: 'block',
-                            }}
-                          />
-                        ) : (
-                          <span
-                            style={{
-                              fontSize: '10px',
-                              fontWeight: 800,
-                              color: theme.primary,
-                              letterSpacing: '0.04em',
-                              textTransform: 'uppercase',
-                            }}
-                          >
-                            {brandObj.name}
-                          </span>
-                        )}
+                          {brandObj?.name?.slice(0, 1) || 'S'}
+                        </span>
                       </div>
                     )}
                   </div>
 
-                  <div className="smart-search-card-info">
+                  {brandObj && (
+                    <div
+                      className="smart-search-brand-logo-badge"
+                      style={{
+                        position: 'absolute',
+                        top: '10px',
+                        left: '10px',
+                        height: '26px',
+                        maxWidth: '80px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        padding: '2px 8px',
+                        borderRadius: '6px',
+                        backgroundColor: isDarkMode
+                          ? 'rgba(15, 23, 42, 0.88)'
+                          : 'rgba(255, 255, 255, 0.94)',
+                        backdropFilter: 'blur(8px)',
+                        WebkitBackdropFilter: 'blur(8px)',
+                        boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+                        border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)'}`,
+                        zIndex: 4,
+                      }}
+                    >
+                      {brandObj.logo ? (
+                        <img
+                          src={brandObj.logo}
+                          alt={brandObj.name}
+                          style={{
+                            maxHeight: '18px',
+                            maxWidth: '68px',
+                            objectFit: 'contain',
+                            display: 'block',
+                          }}
+                        />
+                      ) : (
+                        <span
+                          style={{
+                            fontSize: '10px',
+                            fontWeight: 800,
+                            color: theme.primary,
+                            letterSpacing: '0.04em',
+                            textTransform: 'uppercase',
+                          }}
+                        >
+                          {brandObj.name}
+                        </span>
+                      )}
+                    </div>
+                  )}
+
+                  <div
+                    className="smart-search-card-info"
+                    style={{
+                      position: 'absolute',
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      zIndex: 4,
+                      padding: '10px 14px 8px',
+                      background: isDarkMode
+                        ? 'linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.72) 65%, transparent 100%)'
+                        : 'linear-gradient(to top, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.75) 65%, transparent 100%)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '8px',
+                      boxSizing: 'border-box',
+                    }}
+                  >
                     <span
                       className="smart-search-card-title"
                       style={{ color: theme.text }}
