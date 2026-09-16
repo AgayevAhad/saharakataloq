@@ -382,22 +382,22 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
     if (hoveredItem) {
       if (hoveredItem.product) {
         const others = publishedProducts.filter((p) => p.id !== hoveredItem.product?.id);
-        return [hoveredItem.product, ...others].slice(0, 3);
+        return [hoveredItem.product, ...others].slice(0, 2);
       }
       if (hoveredItem.categoryId) {
         const catProds = publishedProducts.filter((p) => p.category === hoveredItem.categoryId);
-        if (catProds.length > 0) return catProds.slice(0, 3);
+        if (catProds.length > 0) return catProds.slice(0, 2);
       }
       if (hoveredItem.brandId) {
         const brandProds = publishedProducts.filter((p) => p.brandId === hoveredItem.brandId);
-        if (brandProds.length > 0) return brandProds.slice(0, 3);
+        if (brandProds.length > 0) return brandProds.slice(0, 2);
       }
     }
 
     // B. If a category pill at bottom is hovered
     if (hoveredCategoryId) {
       const catProducts = publishedProducts.filter((p) => p.category === hoveredCategoryId);
-      if (catProducts.length > 0) return catProducts.slice(0, 3);
+      if (catProducts.length > 0) return catProducts.slice(0, 2);
     }
 
     // C. When typing a query, match published products
@@ -408,14 +408,14 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
           .includes(needle)
       );
       if (matches.length > 0) {
-        return matches.slice(0, 3);
+        return matches.slice(0, 2);
       }
     }
 
     // D. Default multi-brand selection: take 1 item from distinct active brands
     const selection: Product[] = [];
     activeBrands.forEach((brand) => {
-      if (selection.length < 3) {
+      if (selection.length < 2) {
         const item = publishedProducts.find((p) => p.brandId === brand.id && !selection.some((s) => s.id === p.id));
         if (item) {
           selection.push(item);
@@ -423,10 +423,10 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
       }
     });
 
-    // If still less than 3, fill from first published products
-    if (selection.length < 3) {
+    // If still less than 2, fill from first published products
+    if (selection.length < 2) {
       publishedProducts.forEach((p) => {
-        if (!selection.some((item) => item.id === p.id) && selection.length < 3) {
+        if (!selection.some((item) => item.id === p.id) && selection.length < 2) {
           selection.push(p);
         }
       });
@@ -596,14 +596,16 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
                   onClick={() => handleProductCardClick(prod)}
                   style={{
                     backgroundColor: isDarkMode
-                      ? 'rgba(30, 41, 59, 0.6)'
-                      : 'rgba(248, 250, 252, 0.8)',
-                    borderColor: theme.border,
+                      ? '#1e293b'
+                      : '#ffffff',
+                    borderColor: isDarkMode
+                      ? 'rgba(255, 255, 255, 0.08)'
+                      : '#e2e8f0',
                   }}
                 >
                   <div
                     className="smart-search-img-box"
-                    style={{ backgroundColor: isDarkMode ? '#0f172a' : '#ffffff' }}
+                    style={{ backgroundColor: isDarkMode ? '#1e293b' : '#ffffff' }}
                   >
                     {prodImg ? (
                       <ShimmerImage

@@ -356,13 +356,13 @@ export const SmartSearchSkeleton: React.FC<SkeletonProps> = ({ theme }) => {
           style={{ marginBottom: '12px' }}
         />
         <div className="smart-search-products-grid">
-          {[1, 2, 3].map((i) => (
+          {[1, 2].map((i) => (
             <div
               key={`search-card-skel-${i}`}
               className="smart-search-product-card"
               style={{ borderColor: theme.border }}
             >
-              <SkeletonBox width="100%" height="180px" borderRadius="10px" />
+              <SkeletonBox width="100%" height="220px" borderRadius="12px" />
               <SkeletonBox
                 width="80%"
                 height="14px"

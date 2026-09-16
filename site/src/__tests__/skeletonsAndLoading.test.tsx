@@ -84,6 +84,6 @@ describe('Skeleton Loading & Shimmer Animation Suite', () => {
     expect(container.querySelector('.skeleton-search-grid')).toBeTruthy();
     expect(container.querySelector('.smart-search-left-col')).toBeTruthy();
     expect(container.querySelector('.smart-search-right-col')).toBeTruthy();
-    expect(container.querySelectorAll('.smart-search-product-card').length).toBe(3);
+    expect(container.querySelectorAll('.smart-search-product-card').length).toBe(2);
   });
 });
