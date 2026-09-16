@@ -206,7 +206,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               gap: '20px',
             }}
           >
-            {/* Logo: Smoothly enlarges, centers horizontally with 40/60 vertical balance and discovery tagline */}
+            {/* Logo: Smoothly enlarges and glides down into the expanded left space with 40/60 vertical balance and discovery tagline */}
             <div
               style={{
                 display: 'flex',
@@ -215,9 +215,13 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 justifyContent: 'center',
                 flexShrink: 0,
                 minWidth: isSearchExpanded ? '270px' : isCompact ? '160px' : '200px',
-                paddingTop: isSearchExpanded ? '6px' : '0',
-                paddingBottom: isSearchExpanded ? '16px' : '0',
-                transition: 'min-width 0.28s cubic-bezier(0.16, 1, 0.3, 1), padding 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
+                zIndex: 10,
+                transform: isSearchExpanded
+                  ? 'translateY(105px) scale(1.38)'
+                  : 'translateY(0px) scale(1)',
+                transformOrigin: 'center center',
+                transition:
+                  'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), min-width 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
               }}
             >
               <button
@@ -233,9 +237,6 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   justifyContent: 'center',
                   padding: 0,
                   flexShrink: 0,
-                  transform: isSearchExpanded ? 'scale(1.38) translateY(4px)' : 'scale(1) translateY(0)',
-                  transformOrigin: 'center center',
-                  transition: 'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
                 }}
                 aria-label="Sahara Electronics Əsas Səhifə"
               >
@@ -245,13 +246,13 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   }
                   alt="Sahara Electronics"
                   style={{
-                    height: isSearchExpanded ? '76px' : isCompact ? '46px' : '56px',
+                    height: isSearchExpanded ? '78px' : isCompact ? '46px' : '56px',
                     width: 'auto',
                     maxWidth: '320px',
                     objectFit: 'contain',
                     display: 'block',
                     margin: '0 auto',
-                    transition: 'height 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
+                    transition: 'height 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
                   }}
                 />
               </button>
@@ -260,13 +261,14 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               {isSearchExpanded && (
                 <div
                   style={{
-                    marginTop: '10px',
+                    marginTop: '12px',
                     fontSize: '12px',
                     fontWeight: 600,
                     color: themeMode === 'dark' ? '#94a3b8' : '#64748b',
                     textAlign: 'center',
                     letterSpacing: '0.02em',
-                    animation: 'smartSearchFadeIn 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
+                    whiteSpace: 'nowrap',
+                    animation: 'smartSearchFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
                     pointerEvents: 'none',
                     display: 'flex',
                     alignItems: 'center',
