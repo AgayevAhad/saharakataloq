@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 48" fill="none">
+  <!-- Kenwood Official Red Diamond Spark + Wordmark -->
+  <g transform="translate(10, 10)">
+    <polygon points="12,2 22,12 12,22 2,12" fill="#C8102E"/>
+  </g>
+  <text x="44" y="31" font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="20" letter-spacing="2" fill="#111827">KENWOOD</text>
+</svg>

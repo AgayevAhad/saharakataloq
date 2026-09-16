@@ -1,3 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 48">
-    <text x="50%" y="62%" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="25" letter-spacing="2" fill="#003399">DAEWOO</text>
-  </svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 48" fill="none">
+  <!-- Daewoo Official Blue Crest + Wordmark -->
+  <g transform="translate(10, 8)">
+    <path d="M6 14 C12 6, 20 6, 26 14 C20 18, 12 18, 6 14 Z" fill="#003399"/>
+    <ellipse cx="16" cy="18" rx="14" ry="7" fill="none" stroke="#003399" stroke-width="2"/>
+  </g>
+  <text x="50" y="32" font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="20" letter-spacing="1.5" fill="#003399">DAEWOO</text>
+</svg>

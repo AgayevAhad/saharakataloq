@@ -1,58 +1,67 @@
 export const CANONICAL_54_BRANDS = [
-  { name: 'Arçelik', slug: 'arcelik', originCountry: 'Türkiyə' },
-  { name: 'AEG', slug: 'aeg', originCountry: 'Almaniya' },
-  { name: 'Ardesto', slug: 'ardesto', originCountry: 'Ukrayna' },
-  { name: 'ARDO', slug: 'ardo', originCountry: 'İtaliya', logo: '/media/brands/ardo-mark.svg' },
-  { name: 'Ariston', slug: 'ariston', originCountry: 'İtaliya' },
-  { name: 'ARTEL', slug: 'artel', originCountry: 'Özbəkistan', logo: '/media/brands/artel-logo.svg' },
-  { name: 'Arlant', slug: 'arlant', originCountry: '' },
-  { name: 'Beko', slug: 'beko', originCountry: 'Türkiyə' },
-  { name: 'Biryusa', slug: 'biryusa', originCountry: 'Rusiya' },
-  { name: 'Bosch', slug: 'bosch', originCountry: 'Almaniya' },
-  { name: 'Daewoo', slug: 'daewoo', originCountry: 'Cənubi Koreya' },
-  { name: 'Darkin', slug: 'darkin', originCountry: '' },
-  { name: 'Electrolux', slug: 'electrolux', originCountry: 'İsveç' },
-  { name: 'ES', slug: 'es', originCountry: '' },
-  { name: 'Eurolux', slug: 'eurolux', originCountry: '' },
-  { name: 'Everest', slug: 'everest', originCountry: '' },
-  { name: 'Ficher', slug: 'ficher', originCountry: '' },
-  { name: 'Finlux', slug: 'finlux', originCountry: 'Finlandiya' },
-  { name: 'GoldMaster', slug: 'goldmaster', originCountry: 'Türkiyə' },
-  { name: 'Hailang', slug: 'hailang', originCountry: 'Çin' },
-  { name: 'Hayland', slug: 'hayland', originCountry: '' },
-  { name: 'Hisense', slug: 'hisense', originCountry: 'Çin' },
-  { name: 'Hitachi', slug: 'hitachi', originCountry: 'Yaponiya' },
-  { name: 'Hoffmann', slug: 'hoffmann', originCountry: 'Almaniya' },
-  { name: 'Hotpoint', slug: 'hotpoint', originCountry: 'İtaliya' },
-  { name: 'Indesit', slug: 'indesit', originCountry: 'İtaliya' },
-  { name: 'Javel', slug: 'javel', originCountry: '' },
-  { name: 'Konka', slug: 'konka', originCountry: 'Çin' },
-  { name: 'Konko', slug: 'konko', originCountry: '' },
-  { name: 'Lanova', slug: 'lanova', originCountry: '' },
-  { name: 'LG', slug: 'lg', originCountry: 'Cənubi Koreya' },
+  // Block 1: ARDO (Hero) + Global Giants
+  { name: 'ARDO', slug: 'ardo', originCountry: 'İtaliya', logo: '/media/brands/ardo-logo.png' },
+  { name: 'Samsung', slug: 'samsung', originCountry: 'Cənubi Koreya', logo: '/media/brands/samsung-logo.svg' },
+  { name: 'Bosch', slug: 'bosch', originCountry: 'Almaniya', logo: '/media/brands/bosch-logo.svg' },
+  { name: 'LG', slug: 'lg', originCountry: 'Cənubi Koreya', logo: '/media/brands/lg-logo.svg' },
+
+  // Block 2: LOTUS (Hero) + Top Appliances
   { name: 'LOTUS', slug: 'lotus', originCountry: 'Türkiyə', logo: '/media/brands/lotus-mark.svg' },
-  { name: 'MGI', slug: 'mgi', originCountry: '' },
-  { name: 'Midea', slug: 'midea', originCountry: 'Çin' },
-  { name: 'Neos', slug: 'neos', originCountry: '' },
-  { name: 'Pozis', slug: 'pozis', originCountry: 'Rusiya' },
-  { name: 'Regal', slug: 'regal', originCountry: 'Türkiyə' },
-  { name: 'Rokos', slug: 'rokos', originCountry: '' },
-  { name: 'Samsung', slug: 'samsung', originCountry: 'Cənubi Koreya' },
-  { name: 'Sharp', slug: 'sharp', originCountry: 'Yaponiya' },
-  { name: 'Shivaki', slug: 'shivaki', originCountry: 'Yaponiya' },
-  { name: 'Siemens', slug: 'siemens', originCountry: 'Almaniya' },
-  { name: 'Silver', slug: 'silver', originCountry: '' },
-  { name: 'Skyworth', slug: 'skyworth', originCountry: 'Çin' },
-  { name: 'Talberg', slug: 'talberg', originCountry: '' },
-  { name: 'TCL', slug: 'tcl', originCountry: 'Çin' },
-  { name: 'Tesla', slug: 'tesla', originCountry: 'Serbiya' },
-  { name: 'Toshiba', slug: 'toshiba', originCountry: 'Yaponiya' },
-  { name: 'Vegas', slug: 'vegas', originCountry: '' },
-  { name: 'Vestel', slug: 'vestel', originCountry: 'Türkiyə' },
-  { name: 'Whirlpool', slug: 'whirlpool', originCountry: 'ABŞ' },
-  { name: 'Winsor', slug: 'winsor', originCountry: '' },
-  { name: 'Yoshiro', slug: 'yoshiro', originCountry: '' },
-  { name: 'Zanussi', slug: 'zanussi', originCountry: 'İtaliya' },
+  { name: 'Beko', slug: 'beko', originCountry: 'Türkiyə', logo: '/media/brands/beko-logo.svg' },
+  { name: 'Arçelik', slug: 'arcelik', originCountry: 'Türkiyə', logo: '/media/brands/arcelik-logo.svg' },
+  { name: 'Sharp', slug: 'sharp', originCountry: 'Yaponiya', logo: '/media/brands/sharp-logo.svg' },
+
+  // Block 3: ARTEL (Hero) + Technology Leaders
+  { name: 'ARTEL', slug: 'artel', originCountry: 'Özbəkistan', logo: '/media/brands/artel-logo.svg' },
+  { name: 'Siemens', slug: 'siemens', originCountry: 'Almaniya', logo: '/media/brands/siemens-logo.svg' },
+  { name: 'Toshiba', slug: 'toshiba', originCountry: 'Yaponiya', logo: '/media/brands/toshiba-logo.svg' },
+  { name: 'Hitachi', slug: 'hitachi', originCountry: 'Yaponiya', logo: '/media/brands/hitachi-logo.svg' },
+
+  // Block 4: MIDEA (Hero) + Climate & Kitchen Giants
+  { name: 'Midea', slug: 'midea', originCountry: 'Çin', logo: '/media/brands/midea-logo.svg' },
+  { name: 'Electrolux', slug: 'electrolux', originCountry: 'İsveç', logo: '/media/brands/electrolux-logo.svg' },
+  { name: 'Whirlpool', slug: 'whirlpool', originCountry: 'ABŞ', logo: '/media/brands/whirlpool-logo.svg' },
+  { name: 'Indesit', slug: 'indesit', originCountry: 'İtaliya', logo: '/media/brands/indesit-logo.svg' },
+
+  // Block 5: Worldwide Major Brands
+  { name: 'Hisense', slug: 'hisense', originCountry: 'Çin', logo: '/media/brands/hisense-logo.svg' },
+  { name: 'TCL', slug: 'tcl', originCountry: 'Çin', logo: '/media/brands/tcl-logo.svg' },
+  { name: 'Daewoo', slug: 'daewoo', originCountry: 'Cənubi Koreya', logo: '/media/brands/daewoo-logo.svg' },
+  { name: 'Hotpoint', slug: 'hotpoint', originCountry: 'İtaliya', logo: '/media/brands/hotpoint-logo.svg' },
+  { name: 'Zanussi', slug: 'zanussi', originCountry: 'İtaliya', logo: '/media/brands/zanussi-logo.svg' },
+  { name: 'Ariston', slug: 'ariston', originCountry: 'İtaliya', logo: '/media/brands/ariston-logo.svg' },
+  { name: 'AEG', slug: 'aeg', originCountry: 'Almaniya', logo: '/media/brands/aeg-logo.svg' },
+  { name: 'Vestel', slug: 'vestel', originCountry: 'Türkiyə', logo: '/media/brands/vestel-logo.svg' },
+  { name: 'Hoffmann', slug: 'hoffmann', originCountry: 'Almaniya', logo: '/media/brands/hoffmann-logo.svg' },
+  { name: 'GoldMaster', slug: 'goldmaster', originCountry: 'Türkiyə', logo: '/media/brands/goldmaster-logo.svg' },
+  { name: 'Shivaki', slug: 'shivaki', originCountry: 'Yaponiya', logo: '/media/brands/shivaki-logo.svg' },
+  { name: 'Skyworth', slug: 'skyworth', originCountry: 'Çin', logo: '/media/brands/skyworth-logo.svg' },
+  { name: 'Regal', slug: 'regal', originCountry: 'Türkiyə', logo: '/media/brands/regal-logo.svg' },
+  { name: 'Tesla', slug: 'tesla', originCountry: 'Serbiya', logo: '/media/brands/tesla-logo.svg' },
+  { name: 'Ardesto', slug: 'ardesto', originCountry: 'Ukrayna', logo: '/media/brands/ardesto-logo.svg' },
+  { name: 'Eurolux', slug: 'eurolux', originCountry: 'Almaniya', logo: '/media/brands/eurolux-logo.svg' },
+  { name: 'Biryusa', slug: 'biryusa', originCountry: 'Rusiya', logo: '/media/brands/biryusa-logo.svg' },
+  { name: 'Pozis', slug: 'pozis', originCountry: 'Rusiya', logo: '/media/brands/pozis-logo.svg' },
+  { name: 'Lanova', slug: 'lanova', originCountry: 'İtaliya', logo: '/media/brands/lanova-logo.svg' },
+  { name: 'Konka', slug: 'konka', originCountry: 'Çin', logo: '/media/brands/konka-logo.svg' },
+  { name: 'Hailang', slug: 'hailang', originCountry: 'Çin', logo: '/media/brands/hailang-logo.svg' },
+  { name: 'Everest', slug: 'everest', originCountry: 'Türkiyə', logo: '/media/brands/everest-logo.svg' },
+  { name: 'Finlux', slug: 'finlux', originCountry: 'Finlandiya', logo: '/media/brands/finlux-logo.svg' },
+  { name: 'Ficher', slug: 'ficher', originCountry: 'Almaniya', logo: '/media/brands/ficher-logo.svg' },
+  { name: 'Winsor', slug: 'winsor', originCountry: 'Böyük Britaniya', logo: '/media/brands/winsor-logo.svg' },
+  { name: 'Talberg', slug: 'talberg', originCountry: 'Almaniya', logo: '/media/brands/talberg-logo.svg' },
+  { name: 'Darkin', slug: 'darkin', originCountry: 'Çin', logo: '/media/brands/darkin-logo.svg' },
+  { name: 'Arlant', slug: 'arlant', originCountry: 'Türkiyə', logo: '/media/brands/arlant-logo.svg' },
+  { name: 'ES', slug: 'es', originCountry: 'İspaniya', logo: '/media/brands/es-logo.svg' },
+  { name: 'Konko', slug: 'konko', originCountry: 'Çin', logo: '/media/brands/konko-logo.svg' },
+  { name: 'Hayland', slug: 'hayland', originCountry: 'Çin', logo: '/media/brands/hayland-logo.svg' },
+  { name: 'MGI', slug: 'mgi', originCountry: 'İtaliya', logo: '/media/brands/mgi-logo.svg' },
+  { name: 'Neos', slug: 'neos', originCountry: 'Çin', logo: '/media/brands/neos-logo.svg' },
+  { name: 'Rokos', slug: 'rokos', originCountry: 'Polşa', logo: '/media/brands/rokos-logo.svg' },
+  { name: 'Silver', slug: 'silver', originCountry: 'Türkiyə', logo: '/media/brands/silver-logo.svg' },
+  { name: 'Vegas', slug: 'vegas', originCountry: 'Türkiyə', logo: '/media/brands/vegas-logo.svg' },
+  { name: 'Yoshiro', slug: 'yoshiro', originCountry: 'Yaponiya', logo: '/media/brands/yoshiro-logo.svg' },
+  { name: 'Javel', slug: 'javel', originCountry: 'Fransa', logo: '/media/brands/javel-logo.svg' },
 ];
 
 export const PHASE5_BRAND_RAIL_MANIFEST = {
@@ -196,7 +205,7 @@ export function seedCanonical54Brands(db, _actor = 'migration') {
     .some((c) => c.name === 'coming_soon');
 
   for (const b of CANONICAL_54_BRANDS) {
-    const existing = db.prepare('SELECT id, name FROM brands WHERE id = ? OR slug = ?').get(b.slug, b.slug);
+    const existing = db.prepare('SELECT id, name, logo FROM brands WHERE id = ? OR slug = ?').get(b.slug, b.slug);
     if (!existing) {
       if (hasComingSoonCol) {
         db.prepare(`
@@ -209,8 +218,13 @@ export function seedCanonical54Brands(db, _actor = 'migration') {
           VALUES (?, ?, ?, ?, '', ?, 1)
         `).run(b.slug, b.name, b.slug, b.originCountry || '', b.logo || '');
       }
-    } else if (existing.name !== b.name) {
-      db.prepare('UPDATE brands SET name = ? WHERE id = ?').run(b.name, existing.id);
+    } else {
+      if (b.logo && (!existing.logo || existing.logo.includes('placeholder') || existing.logo.includes('ardo-mark'))) {
+        db.prepare('UPDATE brands SET logo = ? WHERE id = ?').run(b.logo, existing.id);
+      }
+      if (existing.name !== b.name) {
+        db.prepare('UPDATE brands SET name = ? WHERE id = ?').run(b.name, existing.id);
+      }
     }
   }
 
@@ -226,7 +240,7 @@ export function seedCanonical54Brands(db, _actor = 'migration') {
     `).run(now, now);
   }
 
-  // 3. Ensure all 54 brands are in brand_rail_items
+  // 3. Ensure all 54 brands are in brand_rail_items with curated rhythmic sort_order
   const itemsCount = db.prepare('SELECT count(*) as cnt FROM brand_rail_items').get().cnt;
   if (itemsCount === 0) {
     const insertItem = db.prepare(`
@@ -237,6 +251,11 @@ export function seedCanonical54Brands(db, _actor = 'migration') {
 
     CANONICAL_54_BRANDS.forEach((b, index) => {
       insertItem.run(`rail_item_${b.slug}`, b.slug, index + 1, now, now);
+    });
+  } else {
+    const updateSort = db.prepare('UPDATE brand_rail_items SET sort_order = ? WHERE brand_id = ? OR id = ?');
+    CANONICAL_54_BRANDS.forEach((b, index) => {
+      updateSort.run(index + 1, b.slug, `rail_item_${b.slug}`);
     });
   }
 }

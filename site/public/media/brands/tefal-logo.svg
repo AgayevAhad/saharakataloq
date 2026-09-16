@@ -1,0 +1,7 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 48" fill="none">
+  <!-- Tefal Official Red Oval Wordmark -->
+  <g transform="translate(10, 8)">
+    <rect x="0" y="0" width="140" height="32" rx="16" fill="#E2001A"/>
+    <text x="70" y="23" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif" font-weight="900" font-style="italic" font-size="20" letter-spacing="1" fill="#FFFFFF">Tefal</text>
+  </g>
+</svg>

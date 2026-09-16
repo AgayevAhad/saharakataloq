@@ -1,7 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 48">
-    <g transform="translate(10, 8)">
-      <path d="M16 4 L26 28 L6 28 Z" fill="none" stroke="#011E41" stroke-width="2.2"/>
-      <circle cx="16" cy="18" r="4" fill="#011E41"/>
-    </g>
-    <text x="48" y="32" font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif" font-weight="800" font-size="22" letter-spacing="1" fill="#011E41">Electrolux</text>
-  </svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 190 48" fill="none">
+  <!-- Electrolux Iconic Emblem + Wordmark -->
+  <g transform="translate(10, 8)">
+    <circle cx="16" cy="16" r="14" fill="#011E41"/>
+    <path d="M12 10 h8 v4 h-4 v3 h4 v4 h-4 v3 h8 v4 h-12 Z" fill="#FFFFFF"/>
+  </g>
+  <text x="48" y="32" font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="20" letter-spacing="2" fill="#011E41">Electrolux</text>
+</svg>

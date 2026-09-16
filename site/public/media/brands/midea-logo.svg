@@ -1,3 +1,8 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 48">
-    <text x="50%" y="62%" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif" font-weight="800" font-size="26" letter-spacing="1" fill="#009AD9">Midea</text>
-  </svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 48" fill="none">
+  <g transform="translate(6, 4)">
+    <!-- Midea iconic swirl arc above M/i -->
+    <path d="M12 12 C18 4, 34 4, 42 10 C34 7, 20 8, 12 12 Z" fill="#009AD9"/>
+    <!-- Midea wordmark -->
+    <text x="0" y="32" font-family="'Outfit', 'Montserrat', 'Helvetica Neue', sans-serif" font-weight="800" font-size="28" letter-spacing="-0.5" fill="#009AD9">Midea</text>
+  </g>
+</svg>

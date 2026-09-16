@@ -1,3 +1,5 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 48">
-    <text x="50%" y="62%" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="28" letter-spacing="1.5" fill="#0066CC">beko</text>
-  </svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 48" fill="none">
+  <!-- Beko Official Lowercase Logotype -->
+  <text x="50%" y="62%" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="28" letter-spacing="1" fill="#002C6C">beko</text>
+  <circle cx="128" cy="34" r="2.5" fill="#00A0E2"/>
+</svg>
