@@ -224,7 +224,7 @@ export const HomePage: React.FC<HomePageProps> = ({
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(339px, 1fr))',
-            gap: '24px',
+            gap: '16px',
             justifyItems: 'center',
           }}
         >

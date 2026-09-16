@@ -166,7 +166,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
     if (megaMenuHoverTimeoutRef.current) clearTimeout(megaMenuHoverTimeoutRef.current);
     megaMenuHoverTimeoutRef.current = setTimeout(() => {
       setIsMegaMenuOpen(false);
-    }, 180);
+    }, 280);
   };
 
   const handleNavMouseEnter = (tab: string) => {
@@ -180,7 +180,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
     if (hoverNavTimeoutRef.current) clearTimeout(hoverNavTimeoutRef.current);
     hoverNavTimeoutRef.current = setTimeout(() => {
       setHoveredNavTab(null);
-    }, 180);
+    }, 280);
   };
 
   useEffect(() => {
