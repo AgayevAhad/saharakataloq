@@ -227,7 +227,18 @@ export const BannerHeroSkeleton: React.FC<SkeletonProps> = ({ theme }) => {
       className="banner-hero-wrapper"
       aria-busy="true"
       aria-label="Banner bölməsi yüklənir"
-      style={{ width: '100%', maxWidth: '100%', padding: 0, margin: 0 }}
+      style={{
+        width: '100vw',
+        maxWidth: '100vw',
+        marginLeft: 'calc(-50vw + 50%)',
+        marginRight: 'calc(-50vw + 50%)',
+        padding: 0,
+        position: 'relative',
+        left: 0,
+        right: 0,
+        overflow: 'hidden',
+        boxSizing: 'border-box',
+      }}
     >
       <div
         className="banner-hero-card"

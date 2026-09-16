@@ -107,11 +107,16 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
     <div
       className="banner-hero-wrapper"
       style={{
-        width: '100%',
-        maxWidth: '100%',
+        width: '100vw',
+        maxWidth: '100vw',
+        marginLeft: 'calc(-50vw + 50%)',
+        marginRight: 'calc(-50vw + 50%)',
         padding: 0,
-        margin: 0,
+        position: 'relative',
+        left: 0,
+        right: 0,
         overflow: 'hidden',
+        boxSizing: 'border-box',
       }}
     >
       <div
