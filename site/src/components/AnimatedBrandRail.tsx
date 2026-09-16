@@ -13,8 +13,8 @@ interface AnimatedBrandRailProps {
 }
 
 const LOGO_MAP: Record<string, string> = {
-  ardo: '/media/brands/ardo-logo.svg',
-  lotus: '/media/brands/lotus-logo.svg',
+  ardo: '/media/brands/ardo-logo.png',
+  lotus: '/media/brands/lotus-logo.png',
   artel: '/media/brands/artel-logo.svg',
   midea: '/media/brands/midea-logo.svg',
   samsung: '/media/brands/samsung-logo.svg',
@@ -144,7 +144,7 @@ const buildRhythmicBrandRailTrack = (items: BrandRailItem[]): BrandRailItem[] =>
       brandId: 'ardo',
       brandName: 'ARDO',
       brandSlug: 'ardo',
-      brandLogo: '/media/brands/ardo-logo.svg',
+      brandLogo: '/media/brands/ardo-logo.png',
       enabled: true,
       sortOrder: 1,
       linkEnabled: true,
@@ -156,7 +156,7 @@ const buildRhythmicBrandRailTrack = (items: BrandRailItem[]): BrandRailItem[] =>
       brandId: 'lotus',
       brandName: 'LOTUS',
       brandSlug: 'lotus',
-      brandLogo: '/media/brands/lotus-logo.svg',
+      brandLogo: '/media/brands/lotus-logo.png',
       enabled: true,
       sortOrder: 2,
       linkEnabled: true,

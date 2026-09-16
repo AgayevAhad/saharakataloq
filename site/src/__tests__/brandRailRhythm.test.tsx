@@ -81,8 +81,8 @@ describe('AnimatedBrandRail - Rhythmic Recurrence & Vector Logos', () => {
     const images = Array.from(document.querySelectorAll('img')) as HTMLImageElement[];
     const srcList = images.map((img) => img.getAttribute('src'));
 
-    expect(srcList.some((s) => s?.includes('/media/brands/ardo-logo.svg'))).toBe(true);
-    expect(srcList.some((s) => s?.includes('/media/brands/lotus-logo.svg'))).toBe(true);
+    expect(srcList.some((s) => s?.includes('/media/brands/ardo-logo.png'))).toBe(true);
+    expect(srcList.some((s) => s?.includes('/media/brands/lotus-logo.png'))).toBe(true);
     expect(srcList.some((s) => s?.includes('/media/brands/artel-logo.svg'))).toBe(true);
     expect(srcList.some((s) => s?.includes('/media/brands/midea-logo.svg'))).toBe(true);
     expect(srcList.some((s) => s?.includes('/media/brands/samsung-logo.svg'))).toBe(true);
