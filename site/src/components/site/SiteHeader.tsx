@@ -207,10 +207,10 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
           top: 0,
           backgroundColor:
             themeMode === 'dark'
-              ? (hoveredNavTab ? 'rgba(15, 23, 42, 0.95)' : 'rgba(8, 12, 18, 0.92)')
-              : (hoveredNavTab ? 'rgba(255, 255, 255, 0.95)' : 'rgba(255, 255, 255, 0.92)'),
-          backdropFilter: 'blur(36px) saturate(200%)',
-          WebkitBackdropFilter: 'blur(36px) saturate(200%)',
+              ? (hoveredNavTab ? 'rgba(15, 23, 42, 0.85)' : 'rgba(8, 12, 18, 0.85)')
+              : (hoveredNavTab ? 'rgba(255, 255, 255, 0.85)' : 'rgba(255, 255, 255, 0.85)'),
+          backdropFilter: 'blur(28px) saturate(190%)',
+          WebkitBackdropFilter: 'blur(28px) saturate(190%)',
           border: 'none',
           borderBottom: isCompact && !hoveredNavTab
             ? (themeMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.06)')
@@ -1201,14 +1201,28 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               }}
               onMouseLeave={handleNavMouseLeave}
               style={{
+                position: 'absolute',
+                top: '100%',
+                left: 0,
+                right: 0,
                 width: '100%',
-                padding: '16px 0 24px',
+                padding: '18px 0 22px',
+                backgroundColor:
+                  themeMode === 'dark'
+                    ? 'rgba(15, 23, 42, 0.75)'
+                    : 'rgba(255, 255, 255, 0.75)',
+                backdropFilter: 'blur(28px) saturate(190%)',
+                WebkitBackdropFilter: 'blur(28px) saturate(190%)',
                 border: 'none',
                 borderTop: 'none',
-                borderBottom: 'none',
-                boxShadow: 'none',
-                backdropFilter: 'blur(36px) saturate(200%)',
-                WebkitBackdropFilter: 'blur(36px) saturate(200%)',
+                borderBottom:
+                  themeMode === 'dark'
+                    ? '1px solid rgba(255, 255, 255, 0.08)'
+                    : '1px solid rgba(0, 0, 0, 0.06)',
+                boxShadow:
+                  themeMode === 'dark'
+                    ? '0 24px 48px -8px rgba(0, 0, 0, 0.7)'
+                    : '0 20px 44px -8px rgba(0, 0, 0, 0.12)',
                 animation: 'smartSearchSlideDown 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
               }}
             >
