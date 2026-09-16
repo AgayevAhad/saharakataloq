@@ -206,7 +206,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               gap: '20px',
             }}
           >
-            {/* Logo: Smoothly enlarges and glides down into the expanded left space with 40/60 vertical balance and discovery tagline */}
+            {/* Logo: Smoothly enlarges, glides down & away from left edge with discovery tagline */}
             <div
               style={{
                 display: 'flex',
@@ -214,11 +214,11 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
-                minWidth: isSearchExpanded ? '270px' : isCompact ? '160px' : '200px',
+                minWidth: isSearchExpanded ? '280px' : isCompact ? '160px' : '200px',
                 zIndex: 10,
                 transform: isSearchExpanded
-                  ? 'translateY(105px) scale(1.38)'
-                  : 'translateY(0px) scale(1)',
+                  ? 'translate(24px, 128px) scale(1.46)'
+                  : 'translate(0px, 0px) scale(1)',
                 transformOrigin: 'center center',
                 transition:
                   'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), min-width 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -246,9 +246,9 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   }
                   alt="Sahara Electronics"
                   style={{
-                    height: isSearchExpanded ? '78px' : isCompact ? '46px' : '56px',
+                    height: isSearchExpanded ? '84px' : isCompact ? '46px' : '56px',
                     width: 'auto',
-                    maxWidth: '320px',
+                    maxWidth: '340px',
                     objectFit: 'contain',
                     display: 'block',
                     margin: '0 auto',
@@ -261,12 +261,12 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               {isSearchExpanded && (
                 <div
                   style={{
-                    marginTop: '12px',
-                    fontSize: '12px',
+                    marginTop: '10px',
+                    fontSize: '11.5px',
                     fontWeight: 600,
                     color: themeMode === 'dark' ? '#94a3b8' : '#64748b',
                     textAlign: 'center',
-                    letterSpacing: '0.02em',
+                    letterSpacing: '0.01em',
                     whiteSpace: 'nowrap',
                     animation: 'smartSearchFadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
                     pointerEvents: 'none',
@@ -276,7 +276,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                     gap: '5px',
                   }}
                 >
-                  <span style={{ color: '#e31e24', fontSize: '12px' }}>✨</span>
+                  <span style={{ color: '#e31e24', fontSize: '11px' }}>✨</span>
                   <span>Arzuladığınız texnologiyanı asanlıqla kəşf edin</span>
                 </div>
               )}
