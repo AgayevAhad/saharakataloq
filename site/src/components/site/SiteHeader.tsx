@@ -215,6 +215,8 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 justifyContent: 'center',
                 flexShrink: 0,
                 minWidth: isSearchExpanded ? '280px' : isCompact ? '160px' : '200px',
+                height: '56px',
+                position: 'relative',
                 zIndex: 10,
                 transform: isSearchExpanded
                   ? 'translate(24px, 128px) scale(1.46)'

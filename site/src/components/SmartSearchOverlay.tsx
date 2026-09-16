@@ -342,6 +342,7 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
   }, [needle, publishedProducts, activeCategories, activeBrands]);
 
   // 2. Dynamic Preview & Popular Products (Right column)
+  // 2. Dynamic Preview & Popular Products (Right column: up to 4 items in a rich grid)
   const displayedProducts: Product[] = useMemo(() => {
     if (!publishedProducts.length) return [];
 
@@ -349,30 +350,30 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
     if (hoveredItem) {
       if (hoveredItem.type === 'product' && hoveredItem.product) {
         const hoveredProd = hoveredItem.product;
-        const complementary = publishedProducts.find(
+        const others = publishedProducts.filter(
           (p) =>
             p.id !== hoveredProd.id &&
-            (p.category === hoveredProd.category || p.brandId !== hoveredProd.brandId)
+            (p.category === hoveredProd.category || p.brandId === hoveredProd.brandId)
         );
-        return complementary ? [hoveredProd, complementary] : [hoveredProd];
+        return [hoveredProd, ...others.slice(0, 3)];
       }
 
       if (hoveredItem.type === 'category' && hoveredItem.categoryId) {
         const catProducts = publishedProducts.filter((p) => p.category === hoveredItem.categoryId);
-        if (catProducts.length > 0) return catProducts.slice(0, 2);
+        if (catProducts.length > 0) return catProducts.slice(0, 4);
       }
 
       if (hoveredItem.type === 'brand' && hoveredItem.brandId) {
         const brandProducts = publishedProducts.filter((p) => p.brandId === hoveredItem.brandId);
-        if (brandProducts.length > 0) return brandProducts.slice(0, 2);
+        if (brandProducts.length > 0) return brandProducts.slice(0, 4);
       }
 
       if (hoveredItem.type === 'keyword') {
         if (hoveredItem.product) {
-          const related = publishedProducts.find(
+          const others = publishedProducts.filter(
             (p) => p.id !== hoveredItem.product!.id && p.category === hoveredItem.product!.category
           );
-          return related ? [hoveredItem.product, related] : [hoveredItem.product];
+          return [hoveredItem.product, ...others.slice(0, 3)];
         }
       }
     }
@@ -380,7 +381,7 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
     // B. If a category pill at bottom is hovered
     if (hoveredCategoryId) {
       const catProducts = publishedProducts.filter((p) => p.category === hoveredCategoryId);
-      if (catProducts.length > 0) return catProducts.slice(0, 2);
+      if (catProducts.length > 0) return catProducts.slice(0, 4);
     }
 
     // C. When typing a query, match published products
@@ -391,25 +392,25 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
           .includes(needle)
       );
       if (matches.length > 0) {
-        return matches.slice(0, 2);
+        return matches.slice(0, 4);
       }
     }
 
-    // D. Default multi-brand selection: take 1 item from distinct active brands
+    // D. Default multi-brand selection: take items from distinct active brands
     const selection: Product[] = [];
     activeBrands.forEach((brand) => {
-      if (selection.length < 2) {
-        const item = publishedProducts.find((p) => p.brandId === brand.id);
-        if (item && !selection.some((s) => s.id === item.id)) {
+      if (selection.length < 4) {
+        const item = publishedProducts.find((p) => p.brandId === brand.id && !selection.some((s) => s.id === p.id));
+        if (item) {
           selection.push(item);
         }
       }
     });
 
-    // If still less than 2, fill from first published products
-    if (selection.length < 2) {
+    // If still less than 4, fill from first published products
+    if (selection.length < 4) {
       publishedProducts.forEach((p) => {
-        if (!selection.some((item) => item.id === p.id) && selection.length < 2) {
+        if (!selection.some((item) => item.id === p.id) && selection.length < 4) {
           selection.push(p);
         }
       });
