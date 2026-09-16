@@ -111,7 +111,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
           borderRadius: '28px',
           overflow: 'hidden',
           position: 'relative',
-          minHeight: '480px',
+          minHeight: '520px',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
@@ -122,7 +122,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
               : '0 20px 50px -10px rgba(0, 0, 0, 0.07)',
         }}
       >
-        {/* Full-Bleed Video Background (Videosahara) with Fallback Poster Image */}
+        {/* Full-Bleed Expanded Video Background (Videosahara) with Soft Edge-Fade Masking */}
         <video
           ref={videoRef}
           src="/media/Videosahara.mp4"
@@ -142,8 +142,12 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
             width: '100%',
             height: '100%',
             objectFit: 'cover',
-            objectPosition: 'right center',
+            objectPosition: 'center center',
             zIndex: 0,
+            maskImage:
+              'radial-gradient(ellipse 90% 88% at 65% 50%, black 45%, rgba(0, 0, 0, 0.75) 68%, transparent 98%)',
+            WebkitMaskImage:
+              'radial-gradient(ellipse 90% 88% at 65% 50%, black 45%, rgba(0, 0, 0, 0.75) 68%, transparent 98%)',
           }}
         />
 
@@ -155,8 +159,8 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
             zIndex: 1,
             background:
               theme.mode === 'dark'
-                ? 'linear-gradient(90deg, rgba(8, 12, 18, 0.96) 0%, rgba(8, 12, 18, 0.88) 45%, rgba(8, 12, 18, 0.35) 75%, rgba(8, 12, 18, 0.15) 100%)'
-                : 'linear-gradient(90deg, rgba(255, 255, 255, 0.97) 0%, rgba(255, 255, 255, 0.90) 45%, rgba(255, 255, 255, 0.35) 75%, rgba(255, 255, 255, 0.1) 100%)',
+                ? 'linear-gradient(90deg, rgba(8, 12, 18, 0.95) 0%, rgba(8, 12, 18, 0.80) 36%, rgba(8, 12, 18, 0.20) 66%, transparent 100%)'
+                : 'linear-gradient(90deg, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.82) 36%, rgba(255, 255, 255, 0.20) 66%, transparent 100%)',
           }}
         />
 
@@ -169,8 +173,8 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
             pointerEvents: 'none',
             background:
               theme.mode === 'dark'
-                ? 'linear-gradient(to bottom, rgba(8, 12, 18, 0.45) 0%, transparent 18%, transparent 82%, rgba(8, 12, 18, 0.55) 100%), linear-gradient(to right, rgba(8, 12, 18, 0.3) 0%, transparent 22%, transparent 78%, rgba(8, 12, 18, 0.45) 100%)'
-                : 'linear-gradient(to bottom, rgba(255, 255, 255, 0.5) 0%, transparent 18%, transparent 82%, rgba(255, 255, 255, 0.6) 100%), linear-gradient(to right, rgba(255, 255, 255, 0.35) 0%, transparent 22%, transparent 78%, rgba(255, 255, 255, 0.5) 100%)',
+                ? 'linear-gradient(to bottom, rgba(8, 12, 18, 0.5) 0%, transparent 14%, transparent 86%, rgba(8, 12, 18, 0.6) 100%), linear-gradient(to right, rgba(8, 12, 18, 0.4) 0%, transparent 18%, transparent 82%, rgba(8, 12, 18, 0.5) 100%)'
+                : 'linear-gradient(to bottom, rgba(255, 255, 255, 0.5) 0%, transparent 14%, transparent 86%, rgba(255, 255, 255, 0.6) 100%), linear-gradient(to right, rgba(255, 255, 255, 0.4) 0%, transparent 18%, transparent 82%, rgba(255, 255, 255, 0.5) 100%)',
           }}
         />
 

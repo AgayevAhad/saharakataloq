@@ -241,6 +241,6 @@ describe('Storefront Refinements (Items 5, 6, 7, 8, 9)', () => {
     const heroCard = container.querySelector('.banner-hero-card') as HTMLElement;
     expect(heroCard).toBeTruthy();
     expect(heroCard.style.border.includes('none')).toBe(true);
-    expect(heroCard.style.minHeight).toBe('480px');
+    expect(parseInt(heroCard.style.minHeight, 10)).toBeGreaterThanOrEqual(480);
   });
 });

@@ -1155,8 +1155,9 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
             backgroundColor: themeMode === 'dark' ? 'rgba(15, 23, 42, 0.78)' : 'rgba(255, 255, 255, 0.78)',
             backdropFilter: 'blur(28px) saturate(190%)',
             WebkitBackdropFilter: 'blur(28px) saturate(190%)',
+            border: 'none',
             borderTop: 'none',
-            borderBottom: `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(226, 232, 240, 0.85)'}`,
+            borderBottom: 'none',
             boxShadow: themeMode === 'dark' ? '0 24px 48px -8px rgba(0, 0, 0, 0.7)' : '0 20px 44px -8px rgba(0, 0, 0, 0.12)',
             padding: '20px 0 24px',
           }}
