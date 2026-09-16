@@ -374,10 +374,9 @@ export const AnimatedBrandRail: React.FC<AnimatedBrandRailProps> = ({
         className="brand-rail-unified-container brand-rail-fullwidth"
         style={{
           backgroundColor: theme?.bgCard || '#ffffff',
-          borderColor: theme?.border || '#e2e8f0',
+          border: 'none',
+          borderWidth: 0,
           borderRadius: 0,
-          borderLeft: 'none',
-          borderRight: 'none',
           width: '100%',
           padding: '10px 0',
         }}

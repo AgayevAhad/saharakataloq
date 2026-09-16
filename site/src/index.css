@@ -6426,21 +6426,18 @@ select {
 .brand-rail-unified-container {
   width: 100% !important;
   max-width: 100% !important;
-  border-width: 1px 0 !important;
-  border-style: solid !important;
+  border: none !important;
+  border-width: 0 !important;
   border-radius: 0 !important;
-  border-left: none !important;
-  border-right: none !important;
   padding: 10px 0 !important;
   margin: 0 !important;
-  box-shadow: 0 2px 12px -2px rgba(0, 0, 0, 0.04) !important;
+  box-shadow: none !important;
   display: flex !important;
   flex-direction: column !important;
   gap: 6px !important;
   transition:
     background-color 0.2s ease,
-    border-color 0.2s ease,
-    box-shadow 0.2s ease;
+    border-color 0.2s ease;
 }
 
 .brand-rail-header {
