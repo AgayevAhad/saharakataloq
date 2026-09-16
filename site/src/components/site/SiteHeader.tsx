@@ -214,9 +214,9 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 alignItems: 'center',
                 justifyContent: 'center',
                 flexShrink: 0,
-                minWidth: isSearchExpanded ? '250px' : isCompact ? '160px' : '200px',
-                paddingTop: isSearchExpanded ? '8px' : '0',
-                paddingBottom: isSearchExpanded ? '14px' : '0',
+                minWidth: isSearchExpanded ? '270px' : isCompact ? '160px' : '200px',
+                paddingTop: isSearchExpanded ? '6px' : '0',
+                paddingBottom: isSearchExpanded ? '16px' : '0',
                 transition: 'min-width 0.28s cubic-bezier(0.16, 1, 0.3, 1), padding 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
               }}
             >
@@ -233,7 +233,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   justifyContent: 'center',
                   padding: 0,
                   flexShrink: 0,
-                  transform: isSearchExpanded ? 'scale(1.32) translateY(2px)' : 'scale(1) translateY(0)',
+                  transform: isSearchExpanded ? 'scale(1.38) translateY(4px)' : 'scale(1) translateY(0)',
                   transformOrigin: 'center center',
                   transition: 'transform 0.28s cubic-bezier(0.16, 1, 0.3, 1)',
                 }}
@@ -245,9 +245,9 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   }
                   alt="Sahara Electronics"
                   style={{
-                    height: isSearchExpanded ? '66px' : isCompact ? '46px' : '56px',
+                    height: isSearchExpanded ? '76px' : isCompact ? '46px' : '56px',
                     width: 'auto',
-                    maxWidth: '300px',
+                    maxWidth: '320px',
                     objectFit: 'contain',
                     display: 'block',
                     margin: '0 auto',
@@ -260,8 +260,8 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               {isSearchExpanded && (
                 <div
                   style={{
-                    marginTop: '8px',
-                    fontSize: '11.5px',
+                    marginTop: '10px',
+                    fontSize: '12px',
                     fontWeight: 600,
                     color: themeMode === 'dark' ? '#94a3b8' : '#64748b',
                     textAlign: 'center',

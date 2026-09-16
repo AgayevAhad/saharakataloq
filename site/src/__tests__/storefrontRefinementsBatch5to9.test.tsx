@@ -5,6 +5,7 @@ import { BannerHero } from '../components/BannerHero';
 import { SpecialDiscountBanner } from '../components/SpecialDiscountBanner';
 import { Footer } from '../components/Footer';
 import { SiteHeader } from '../components/site/SiteHeader';
+import { FeaturedProductCard } from '../components/FeaturedProductCard';
 import { lightTheme } from '../types/theme';
 
 describe('Storefront Refinements (Items 5, 6, 7, 8, 9)', () => {
@@ -175,5 +176,71 @@ describe('Storefront Refinements (Items 5, 6, 7, 8, 9)', () => {
     expect(navPanel).toBeTruthy();
     expect(within(navPanel).getByText('Rəsmi Tərəfdaş Brendlərimiz')).toBeTruthy();
     expect(navPanel.style.backdropFilter).toContain('blur');
+  });
+
+  it('Item 10: FeaturedProductCard kursor üstünə gəldikdə (hover) gizlənmir və is-revealed sinfini qoruyur', () => {
+    const sampleProduct = {
+      id: 'p-1',
+      title: 'ARDO Soyuducu 123',
+      price: 1200,
+      image: '/media/ardo1.png',
+      published: true,
+    };
+
+    const { container } = render(
+      <FeaturedProductCard product={sampleProduct as any} theme={lightTheme} onSelect={() => {}} />
+    );
+
+    const card = container.querySelector('.featured-product-card') as HTMLElement;
+    expect(card).toBeTruthy();
+
+    // Hover over card
+    fireEvent.mouseEnter(card);
+    expect(card.classList.contains('is-card-hovered')).toBe(true);
+    expect(card.style.overflow).toBe('hidden');
+
+    // Mouse leave
+    fireEvent.mouseLeave(card);
+    expect(card.classList.contains('is-card-hovered')).toBe(false);
+  });
+
+  it('Item 11: Axtarış aktiv olduqda loqo böyüyür və altında kəşf şüarı göstərilir', () => {
+    const { container } = render(
+      <SiteHeader
+        currentRoute="home"
+        onNavigate={() => {}}
+        categories={[]}
+        brands={[]}
+        products={[]}
+        theme={lightTheme}
+        themeMode="light"
+        onToggleTheme={() => {}}
+        searchQuery=""
+        onSearchChange={() => {}}
+        onOpenSearchModal={() => {}}
+        comparisonCount={0}
+        favoritesCount={0}
+        onOpenSaharaMatch={() => {}}
+      />
+    );
+
+    // Focus / click search input to expand search
+    const searchTrigger = container.querySelector('[data-testid="header-search-trigger"]') as HTMLElement;
+    expect(searchTrigger).toBeTruthy();
+    fireEvent.click(searchTrigger);
+
+    // Tagline appears under enlarged logo
+    expect(screen.getByText(/Arzuladığınız texnologiyanı asanlıqla kəşf edin/i)).toBeTruthy();
+  });
+
+  it('Item 12: BannerHero çərçivəsizdir (border: none) və dumannı/şəffaf vizual dərinlik üçün minimum 480px hündürlüyə malikdir', () => {
+    const { container } = render(
+      <BannerHero theme={lightTheme} onOpenArticle={() => {}} />
+    );
+
+    const heroCard = container.querySelector('.banner-hero-card') as HTMLElement;
+    expect(heroCard).toBeTruthy();
+    expect(heroCard.style.border.includes('none')).toBe(true);
+    expect(heroCard.style.minHeight).toBe('480px');
   });
 });

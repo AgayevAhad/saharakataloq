@@ -108,18 +108,18 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
       <div
         className="banner-hero-card"
         style={{
-          borderRadius: '24px',
+          borderRadius: '28px',
           overflow: 'hidden',
           position: 'relative',
-          minHeight: '440px',
+          minHeight: '480px',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
-          border: `1px solid ${theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)'}`,
+          border: 'none',
           boxShadow:
             theme.mode === 'dark'
-              ? '0 16px 40px -8px rgba(0, 0, 0, 0.6)'
-              : '0 12px 32px -6px rgba(0, 0, 0, 0.08)',
+              ? '0 24px 70px -12px rgba(0, 0, 0, 0.75)'
+              : '0 20px 50px -10px rgba(0, 0, 0, 0.07)',
         }}
       >
         {/* Full-Bleed Video Background (Videosahara) with Fallback Poster Image */}
@@ -157,6 +157,20 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
               theme.mode === 'dark'
                 ? 'linear-gradient(90deg, rgba(8, 12, 18, 0.96) 0%, rgba(8, 12, 18, 0.88) 45%, rgba(8, 12, 18, 0.35) 75%, rgba(8, 12, 18, 0.15) 100%)'
                 : 'linear-gradient(90deg, rgba(255, 255, 255, 0.97) 0%, rgba(255, 255, 255, 0.90) 45%, rgba(255, 255, 255, 0.35) 75%, rgba(255, 255, 255, 0.1) 100%)',
+          }}
+        />
+
+        {/* Misty atmospheric edge diffusion overlay (Dissolves edges seamlessly into page canvas) */}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            zIndex: 1,
+            pointerEvents: 'none',
+            background:
+              theme.mode === 'dark'
+                ? 'linear-gradient(to bottom, rgba(8, 12, 18, 0.45) 0%, transparent 18%, transparent 82%, rgba(8, 12, 18, 0.55) 100%), linear-gradient(to right, rgba(8, 12, 18, 0.3) 0%, transparent 22%, transparent 78%, rgba(8, 12, 18, 0.45) 100%)'
+                : 'linear-gradient(to bottom, rgba(255, 255, 255, 0.5) 0%, transparent 18%, transparent 82%, rgba(255, 255, 255, 0.6) 100%), linear-gradient(to right, rgba(255, 255, 255, 0.35) 0%, transparent 22%, transparent 78%, rgba(255, 255, 255, 0.5) 100%)',
           }}
         />
 

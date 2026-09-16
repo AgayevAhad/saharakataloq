@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Heart, ShoppingCart } from 'lucide-react';
 import { Product } from '../types/product';
 import { ThemeColors } from '../types/theme';
@@ -19,6 +19,32 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
 }) => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
+  const [isRevealed, setIsRevealed] = useState(false);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    const el = cardRef.current;
+    if (!el) return;
+
+    if (!('IntersectionObserver' in window)) {
+      setIsRevealed(true);
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0]?.isIntersecting) {
+          setIsRevealed(true);
+          observer.disconnect();
+        }
+      },
+      { rootMargin: '0px 0px -40px 0px', threshold: 0.1 }
+    );
+
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, []);
 
   const rawPrice = product.price ?? (product as any).priceCash;
   const displayPrice =
@@ -48,7 +74,8 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
 
   return (
     <div
-      className={`featured-product-card product-card scroll-reveal-item ${isHovered ? 'is-card-hovered' : ''}`}
+      ref={cardRef}
+      className={`featured-product-card product-card scroll-reveal-item ${isRevealed ? 'is-revealed' : ''} ${isHovered ? 'is-card-hovered' : ''}`}
       onClick={() => onSelect(product)}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}

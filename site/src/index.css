@@ -6701,9 +6701,13 @@ select {
   box-sizing: border-box !important;
 }
 
-.featured-product-card:hover {
+.featured-product-card:hover,
+.featured-product-card.is-card-hovered,
+.product-card:hover,
+.product-card.is-card-hovered {
   transform: translateY(-4px) !important;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12) !important;
+  opacity: 1 !important;
 }
 
 .featured-product-card .featured-product-img-inner {
