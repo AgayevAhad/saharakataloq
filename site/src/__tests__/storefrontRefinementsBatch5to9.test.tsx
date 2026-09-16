@@ -171,11 +171,23 @@ describe('Storefront Refinements (Items 5, 6, 7, 8, 9)', () => {
     expect(brandsNavBtn).toBeTruthy();
     fireEvent.mouseEnter(brandsNavBtn);
 
-    // Expanding preview panel appears
     const navPanel = container.querySelector('.header-nav-preview-panel') as HTMLElement;
     expect(navPanel).toBeTruthy();
     expect(within(navPanel).getByText('Rəsmi Tərəfdaş Brendlərimiz')).toBeTruthy();
     expect(navPanel.style.backdropFilter).toContain('blur');
+
+    // Test Kataloq button hover as well
+    const catalogBtn = container.querySelector('.mega-menu-trigger-btn') as HTMLElement;
+    expect(catalogBtn).toBeTruthy();
+    fireEvent.mouseEnter(catalogBtn);
+
+    const catalogPanel = container.querySelector('.header-nav-preview-panel') as HTMLElement;
+    expect(catalogPanel).toBeTruthy();
+    expect(within(catalogPanel).getByText('Məhsul Kataloqu')).toBeTruthy();
+    expect(within(catalogPanel).getByText('Bütün kataloqa bax')).toBeTruthy();
+    // Verify it is inside header and no page backdrop is rendered
+    expect(container.querySelector('header')?.contains(catalogPanel)).toBe(true);
+    expect(container.querySelector('.header-nav-backdrop')).toBeNull();
   });
 
   it('Item 10: FeaturedProductCard kursor üstünə gəldikdə (hover) gizlənmir və is-revealed sinfini qoruyur', () => {
