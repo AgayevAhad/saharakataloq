@@ -107,16 +107,13 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
     <div
       className="banner-hero-wrapper"
       style={{
-        width: '100vw',
+        width: 'calc(100% + (100vw - 100%) / 2)',
         maxWidth: '100vw',
-        marginLeft: 'calc(-50vw + 50%)',
-        marginRight: 'calc(-50vw + 50%)',
-        padding: 0,
-        position: 'relative',
-        left: 0,
-        right: 0,
-        overflow: 'hidden',
+        marginLeft: 'calc((-50vw + 50%) / 2)',
+        marginRight: 'calc((-50vw + 50%) / 2)',
+        padding: '6px clamp(8px, 1.5vw, 16px) 16px',
         boxSizing: 'border-box',
+        overflow: 'hidden',
       }}
     >
       <div
@@ -124,7 +121,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
         style={{
           width: '100%',
           maxWidth: '100%',
-          borderRadius: '0',
+          borderRadius: '20px',
           overflow: 'hidden',
           position: 'relative',
           minHeight: '560px',
@@ -132,10 +129,13 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
           flexDirection: 'column',
           justifyContent: 'space-between',
           border: 'none',
-          boxShadow: 'none',
+          boxShadow:
+            theme.mode === 'dark'
+              ? '0 12px 36px rgba(0, 0, 0, 0.4)'
+              : '0 8px 28px rgba(0, 0, 0, 0.06)',
           backgroundColor: 'transparent',
           padding: 0,
-          margin: 0,
+          margin: '0 auto',
         }}
       >
         {/* Full-Bleed Expanded Video Background (Videosahara) with Soft Edge-Fade Masking */}

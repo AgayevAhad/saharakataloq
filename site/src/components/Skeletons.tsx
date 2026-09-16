@@ -228,16 +228,13 @@ export const BannerHeroSkeleton: React.FC<SkeletonProps> = ({ theme }) => {
       aria-busy="true"
       aria-label="Banner bölməsi yüklənir"
       style={{
-        width: '100vw',
+        width: 'calc(100% + (100vw - 100%) / 2)',
         maxWidth: '100vw',
-        marginLeft: 'calc(-50vw + 50%)',
-        marginRight: 'calc(-50vw + 50%)',
-        padding: 0,
-        position: 'relative',
-        left: 0,
-        right: 0,
-        overflow: 'hidden',
+        marginLeft: 'calc((-50vw + 50%) / 2)',
+        marginRight: 'calc((-50vw + 50%) / 2)',
+        padding: '6px clamp(8px, 1.5vw, 16px) 16px',
         boxSizing: 'border-box',
+        overflow: 'hidden',
       }}
     >
       <div
@@ -247,8 +244,11 @@ export const BannerHeroSkeleton: React.FC<SkeletonProps> = ({ theme }) => {
           maxWidth: '100%',
           backgroundColor: theme.bgCard,
           border: 'none',
-          boxShadow: 'none',
-          borderRadius: 0,
+          boxShadow:
+            theme.mode === 'dark'
+              ? '0 12px 36px rgba(0, 0, 0, 0.4)'
+              : '0 8px 28px rgba(0, 0, 0, 0.06)',
+          borderRadius: '20px',
           padding: 'clamp(36px, 5vw, 64px) clamp(24px, 4vw, 56px) 28px',
         }}
       >
