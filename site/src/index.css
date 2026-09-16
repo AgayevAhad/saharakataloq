@@ -3326,7 +3326,7 @@ select {
   overflow-y: hidden;
   scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
-  padding: 2px 8px 4px 4px;
+  padding: 0 8px 0 4px;
   width: 100%;
   cursor: grab;
   user-select: none;
@@ -3349,11 +3349,11 @@ select {
 }
 
 .smart-search-product-card {
-  flex: 0 0 290px;
-  width: 290px;
-  min-width: 290px;
-  max-width: 290px;
-  height: 290px;
+  flex: 0 0 300px;
+  width: 300px;
+  min-width: 300px;
+  max-width: 300px;
+  height: 300px;
   border: 1px solid;
   border-radius: 16px;
   position: relative;
@@ -3395,7 +3395,7 @@ select {
   align-items: center;
   justify-content: center;
   overflow: hidden;
-  padding: 16px 20px 38px;
+  padding: 16px 18px;
   box-sizing: border-box;
 }
 
