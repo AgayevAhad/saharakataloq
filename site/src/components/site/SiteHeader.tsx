@@ -200,11 +200,15 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
           position: 'sticky',
           top: 0,
           backgroundColor:
-            themeMode === 'dark' ? 'rgba(8, 12, 18, 0.88)' : 'rgba(255, 255, 255, 0.88)',
-          backdropFilter: 'blur(24px) saturate(180%)',
-          WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-          borderBottom: `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0'}`,
-          boxShadow: isCompact
+            hoveredNavTab
+              ? themeMode === 'dark' ? 'rgba(15, 23, 42, 0.78)' : 'rgba(255, 255, 255, 0.78)'
+              : themeMode === 'dark' ? 'rgba(8, 12, 18, 0.88)' : 'rgba(255, 255, 255, 0.88)',
+          backdropFilter: 'blur(28px) saturate(190%)',
+          WebkitBackdropFilter: 'blur(28px) saturate(190%)',
+          borderBottom: hoveredNavTab
+            ? 'none'
+            : `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0'}`,
+          boxShadow: isCompact && !hoveredNavTab
             ? '0 4px 20px rgba(0, 0, 0, 0.1)'
             : 'none',
           zIndex: isSearchExpanded || isMegaMenuOpen || hoveredNavTab
@@ -1144,13 +1148,14 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
           onMouseLeave={handleNavMouseLeave}
           style={{
             position: 'fixed',
-            top: `${headerBottom}px`,
+            top: `${headerBottom - 1}px`,
             left: 0,
             right: 0,
             zIndex: DESIGN_TOKENS.zIndex.modal + 12,
             backgroundColor: themeMode === 'dark' ? 'rgba(15, 23, 42, 0.78)' : 'rgba(255, 255, 255, 0.78)',
             backdropFilter: 'blur(28px) saturate(190%)',
             WebkitBackdropFilter: 'blur(28px) saturate(190%)',
+            borderTop: 'none',
             borderBottom: `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(226, 232, 240, 0.85)'}`,
             boxShadow: themeMode === 'dark' ? '0 24px 48px -8px rgba(0, 0, 0, 0.7)' : '0 20px 44px -8px rgba(0, 0, 0, 0.12)',
             padding: '20px 0 24px',
