@@ -41,6 +41,9 @@ export interface CatalogPageProps {
   onShare: (product: Product | null) => void;
   onCopyLink: (product: Product) => void;
   onNavigate: (route: string, param?: string) => void;
+  onAddToCart?: (product: Product) => void;
+  onToggleFavorite?: (product: Product) => void;
+  favoriteIds?: string[];
 }
 
 type SortOption = 'recommended' | 'price-asc' | 'price-desc' | 'newest' | 'discount';
@@ -63,6 +66,9 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
   onShare,
   onCopyLink,
   onNavigate,
+  onAddToCart,
+  onToggleFavorite,
+  favoriteIds = [],
 }) => {
   // Published/active items only
   const activeProducts = useMemo(() => products.filter((p) => p.status !== 'draft'), [products]);
@@ -1241,6 +1247,9 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                       onWhatsApp={onWhatsApp}
                       onCall={onCall}
                       onCopyLink={onCopyLink}
+                      onAddToCart={onAddToCart}
+                      onToggleFavorite={onToggleFavorite}
+                      isFavorite={favoriteIds.includes(product.id)}
                     />
                   );
                 })}

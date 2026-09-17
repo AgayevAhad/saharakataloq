@@ -9,6 +9,8 @@ interface FeaturedProductCardProps {
   theme: ThemeColors;
   onSelect: (product: Product) => void;
   onAddToCart?: (product: Product) => void;
+  onToggleFavorite?: (product: Product) => void;
+  isFavorite?: boolean;
 }
 
 export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
@@ -16,8 +18,11 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
   theme: _theme,
   onSelect,
   onAddToCart,
+  onToggleFavorite,
+  isFavorite: isFavoriteProp,
 }) => {
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [internalFavorite, setInternalFavorite] = useState(false);
+  const isFavorite = isFavoriteProp !== undefined ? isFavoriteProp : internalFavorite;
   const [isHovered, setIsHovered] = useState(false);
   const [isRevealed, setIsRevealed] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -60,7 +65,11 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setIsFavorite((prev) => !prev);
+    if (onToggleFavorite) {
+      onToggleFavorite(product);
+    } else {
+      setInternalFavorite((prev) => !prev);
+    }
   };
 
   const handleCartClick = (e: React.MouseEvent) => {

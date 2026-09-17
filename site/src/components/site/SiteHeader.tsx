@@ -50,6 +50,7 @@ interface SiteHeaderProps {
   onOpenSearchModal: () => void;
   comparisonCount: number;
   favoritesCount: number;
+  cartCount?: number;
   onOpenSaharaMatch: () => void;
   onOpenDrawer?: () => void;
 }
@@ -69,6 +70,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
   onOpenSearchModal,
   comparisonCount,
   favoritesCount,
+  cartCount = 0,
   onOpenSaharaMatch,
   onOpenDrawer,
 }) => {
@@ -515,44 +517,46 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 )}
               </button>
 
-              {/* Cart 🛒 (0) */}
+              {/* Cart 🛒 */}
               <button
                 type="button"
-                onClick={() => onNavigate('catalog')}
+                onClick={() => onNavigate('cart')}
                 style={{
                   position: 'relative',
                   background: 'transparent',
                   border: 'none',
                   padding: '6px',
-                  color: theme.text,
+                  color: currentRoute === 'cart' ? '#e31e24' : theme.text,
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   transition: 'color 0.15s ease',
                 }}
-                aria-label="Səbət"
+                aria-label={cartCount > 0 ? `Səbət (${cartCount})` : 'Səbət'}
               >
-                <ShoppingCart size={20} />
-                <span
-                  style={{
-                    position: 'absolute',
-                    top: '-2px',
-                    right: '-4px',
-                    backgroundColor: '#e31e24',
-                    color: '#ffffff',
-                    fontSize: '9.5px',
-                    fontWeight: 800,
-                    width: '16px',
-                    height: '16px',
-                    borderRadius: '50%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  0
-                </span>
+                <ShoppingCart size={20} color={currentRoute === 'cart' ? '#e31e24' : theme.text} />
+                {cartCount > 0 && (
+                  <span
+                    style={{
+                      position: 'absolute',
+                      top: '-2px',
+                      right: '-4px',
+                      backgroundColor: '#e31e24',
+                      color: '#ffffff',
+                      fontSize: '9.5px',
+                      fontWeight: 800,
+                      width: '16px',
+                      height: '16px',
+                      borderRadius: '50%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {cartCount}
+                  </span>
+                )}
               </button>
 
               {/* Profile 👤 */}
@@ -723,13 +727,13 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 {/* Mobile Cart Button 🛒 */}
                 <button
                   type="button"
-                  onClick={() => onNavigate('catalog')}
+                  onClick={() => onNavigate('cart')}
                   style={{
                     position: 'relative',
                     background: 'transparent',
                     border: 'none',
                     padding: '4px',
-                    color: theme.text,
+                    color: currentRoute === 'cart' ? '#e31e24' : theme.text,
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
@@ -737,26 +741,28 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   }}
                   aria-label="Səbət"
                 >
-                  <ShoppingCart size={18} />
-                  <span
-                    style={{
-                      position: 'absolute',
-                      top: '-2px',
-                      right: '-4px',
-                      backgroundColor: '#e31e24',
-                      color: '#ffffff',
-                      fontSize: '8.5px',
-                      fontWeight: 800,
-                      width: '14px',
-                      height: '14px',
-                      borderRadius: '50%',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    0
-                  </span>
+                  <ShoppingCart size={18} color={currentRoute === 'cart' ? '#e31e24' : theme.text} />
+                  {cartCount > 0 && (
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: '-2px',
+                        right: '-4px',
+                        backgroundColor: '#e31e24',
+                        color: '#ffffff',
+                        fontSize: '8.5px',
+                        fontWeight: 800,
+                        width: '14px',
+                        height: '14px',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {cartCount}
+                    </span>
+                  )}
                 </button>
 
                 {/* Mobile Theme Toggle */}

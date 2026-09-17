@@ -13,6 +13,8 @@ import {
   Phone,
   ChevronLeft,
   ChevronRight,
+  Heart,
+  ShoppingCart,
 } from 'lucide-react';
 import { Product } from '../types/product';
 import { ThemeColors } from '../types/theme';
@@ -27,6 +29,9 @@ interface ProductCardProps {
   onWhatsApp: (product: Product) => void;
   onCall: (product: Product) => void;
   onCopyLink: (product: Product) => void;
+  onAddToCart?: (product: Product) => void;
+  onToggleFavorite?: (product: Product) => void;
+  isFavorite?: boolean;
   brandName?: string;
   brandOrigin?: string;
   rank?: number;
@@ -42,6 +47,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   onShare,
   onWhatsApp,
   onCall,
+  onAddToCart,
+  onToggleFavorite,
+  isFavorite = false,
   brandName: _brandName,
   brandOrigin,
   rank,
@@ -504,13 +512,97 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           </div>
         )}
 
+        {/* Quick Favorite Heart Button */}
+        <button
+          type="button"
+          className="card-action-btn-heart"
+          onClick={(e) => {
+            e.stopPropagation();
+            onToggleFavorite?.(product);
+          }}
+          title={isFavorite ? 'Seçilmişlərdən çıxart' : 'Seçilmişlərə əlavə et'}
+          aria-label="Seçilmişlər"
+          style={{
+            position: 'absolute',
+            top: '10px',
+            right: '10px',
+            width: '32px',
+            height: '32px',
+            borderRadius: '50%',
+            backgroundColor: isFavorite
+              ? '#dc2626'
+              : theme.mode === 'dark'
+                ? 'rgba(15, 23, 42, 0.9)'
+                : 'rgba(255, 255, 255, 0.92)',
+            border: `1px solid ${isFavorite ? '#dc2626' : theme.border}`,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            color: isFavorite ? '#ffffff' : '#dc2626',
+            boxShadow: '0 3px 10px rgba(0, 0, 0, 0.15)',
+            cursor: 'pointer',
+            zIndex: 7,
+            opacity: isActive || isFavorite ? 1 : 0,
+            transform: isActive || isFavorite ? 'scale(1)' : 'scale(0.8)',
+            transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+            backdropFilter: 'blur(6px)',
+          }}
+        >
+          <Heart
+            size={16}
+            color={isFavorite ? '#ffffff' : '#dc2626'}
+            fill={isFavorite ? '#ffffff' : 'none'}
+            strokeWidth={2.2}
+          />
+        </button>
+
+        {/* Quick Add To Cart Hover Button */}
+        {onAddToCart && (
+          <button
+            type="button"
+            className="card-action-btn-cart"
+            onClick={(e) => {
+              e.stopPropagation();
+              onAddToCart(product);
+            }}
+            title="Səbətə əlavə et"
+            aria-label="Səbətə at"
+            style={{
+              position: 'absolute',
+              bottom: '12px',
+              left: '50%',
+              transform: `translateX(-50%) ${isActive ? 'translateY(0)' : 'translateY(12px)'}`,
+              opacity: isActive ? 1 : 0,
+              backgroundColor: '#e31e24',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '24px',
+              padding: '7px 16px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontSize: '12px',
+              fontWeight: 700,
+              boxShadow: '0 4px 14px rgba(227, 30, 36, 0.35)',
+              cursor: 'pointer',
+              zIndex: 7,
+              transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+              pointerEvents: isActive ? 'auto' : 'none',
+              whiteSpace: 'nowrap',
+            }}
+          >
+            <ShoppingCart size={14} color="#ffffff" strokeWidth={2.2} />
+            <span>Səbətə at</span>
+          </button>
+        )}
+
         {/* Floating Category & Badge tags */}
         <div
           style={{
             position: 'absolute',
             top: '10px',
             left: '10px',
-            right: '10px',
+            right: '48px',
             display: 'flex',
             justifyContent: 'space-between',
             alignItems: 'center',

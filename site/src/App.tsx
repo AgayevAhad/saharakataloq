@@ -18,6 +18,8 @@ import { StoresPage } from './pages/StoresPage';
 import { ComparePage } from './pages/ComparePage';
 import { SupportPage } from './pages/SupportPage';
 import { NotFoundPage } from './pages/NotFoundPage';
+import { CartPage, CartItem } from './pages/CartPage';
+import { FavoritesPage } from './pages/FavoritesPage';
 import { SmartSearchOverlay } from './components/SmartSearchOverlay';
 import { SaharaLogo } from './components/SaharaLogo';
 import { BrandShowcase } from './components/BrandShowcase';
@@ -47,9 +49,20 @@ import { featureFlags } from './utils/featureFlags';
 
 const THEME_KEY = 'sahara_theme_mode';
 const COMPARE_KEY = 'sahara_compare_items';
+const CART_KEY = 'sahara_cart_items';
+const FAVORITES_KEY = 'sahara_favorite_items';
 
 type RouteName =
-  'home' | 'catalog' | 'brands' | 'services' | 'stores' | 'compare' | 'support' | '404';
+  | 'home'
+  | 'catalog'
+  | 'brands'
+  | 'services'
+  | 'stores'
+  | 'compare'
+  | 'support'
+  | 'cart'
+  | 'favorites'
+  | '404';
 
 export interface AppProps {
   initialRoute?: string;
@@ -68,6 +81,8 @@ export const resolveRouteFromPath = (
   if (clean === '/services') return { route: 'services' };
   if (clean === '/stores') return { route: 'stores' };
   if (clean === '/support') return { route: 'support' };
+  if (clean === '/cart') return { route: 'cart' };
+  if (clean === '/favorites' || clean === '/wishlist') return { route: 'favorites' };
   if (clean === '/compare')
     return { route: featureFlags.isEnabled('enableCompare') ? 'compare' : '404' };
   if (clean.startsWith('/category/')) {
@@ -95,6 +110,26 @@ const getInitialCompare = (): string[] => {
   if (typeof window === 'undefined') return [];
   try {
     const saved = localStorage.getItem(COMPARE_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch {
+    return [];
+  }
+};
+
+const getInitialCart = (): CartItem[] => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const saved = localStorage.getItem(CART_KEY);
+    return saved ? JSON.parse(saved) : [];
+  } catch {
+    return [];
+  }
+};
+
+const getInitialFavorites = (): string[] => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const saved = localStorage.getItem(FAVORITES_KEY);
     return saved ? JSON.parse(saved) : [];
   } catch {
     return [];
@@ -147,7 +182,8 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
   const [isSaharaMatchOpen, setIsSaharaMatchOpen] = useState(false);
   const [comparisonIds, setComparisonIds] = useState<string[]>(getInitialCompare);
-  const [favorites] = useState<string[]>([]);
+  const [cartItems, setCartItems] = useState<CartItem[]>(getInitialCart);
+  const [favoriteIds, setFavoriteIds] = useState<string[]>(getInitialFavorites);
   const [themeMode, setThemeMode] = useState<ThemeMode>(getInitialThemeMode);
   const [toast, setToast] = useState<{ message: string; visible: boolean }>({
     message: '',
@@ -399,6 +435,139 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
       .filter((p): p is Product => Boolean(p));
   }, [catalog.products, comparisonIds]);
 
+  // Cart Handlers
+  const addToCart = useCallback(
+    (product: Product, qty: number = 1) => {
+      setCartItems((prev) => {
+        const existingIdx = prev.findIndex((item) => item.product.id === product.id);
+        let next: CartItem[];
+        if (existingIdx >= 0) {
+          next = prev.map((item, idx) =>
+            idx === existingIdx ? { ...item, quantity: item.quantity + qty } : item
+          );
+        } else {
+          next = [...prev, { product, quantity: qty }];
+        }
+        try {
+          localStorage.setItem(CART_KEY, JSON.stringify(next));
+        } catch {}
+        return next;
+      });
+      showToast(`${product.title} səbətə əlavə edildi!`);
+    },
+    [showToast]
+  );
+
+  const updateCartQuantity = useCallback((productId: string, quantity: number) => {
+    setCartItems((prev) => {
+      let next: CartItem[];
+      if (quantity <= 0) {
+        next = prev.filter((item) => item.product.id !== productId);
+      } else {
+        next = prev.map((item) =>
+          item.product.id === productId ? { ...item, quantity } : item
+        );
+      }
+      try {
+        localStorage.setItem(CART_KEY, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  }, []);
+
+  const removeFromCart = useCallback(
+    (productId: string) => {
+      setCartItems((prev) => {
+        const next = prev.filter((item) => item.product.id !== productId);
+        try {
+          localStorage.setItem(CART_KEY, JSON.stringify(next));
+        } catch {}
+        return next;
+      });
+      showToast('Məhsul səbətdən silindi.');
+    },
+    [showToast]
+  );
+
+  const clearCart = useCallback(() => {
+    setCartItems([]);
+    try {
+      localStorage.removeItem(CART_KEY);
+    } catch {}
+    showToast('Səbət təmizləndi.');
+  }, [showToast]);
+
+  // Favorites Handlers
+  const toggleFavorite = useCallback(
+    (product: Product) => {
+      setFavoriteIds((prev) => {
+        const exists = prev.includes(product.id);
+        const next = exists ? prev.filter((id) => id !== product.id) : [...prev, product.id];
+        try {
+          localStorage.setItem(FAVORITES_KEY, JSON.stringify(next));
+        } catch {}
+        showToast(exists ? 'Seçilmişlərdən çıxarıldı' : 'Seçilmişlərə əlavə edildi!');
+        return next;
+      });
+    },
+    [showToast]
+  );
+
+  const clearFavorites = useCallback(() => {
+    setFavoriteIds([]);
+    try {
+      localStorage.removeItem(FAVORITES_KEY);
+    } catch {}
+    showToast('Bütün seçilmişlər təmizləndi.');
+  }, [showToast]);
+
+  const addAllFavoritesToCart = useCallback(
+    (products: Product[]) => {
+      products.forEach((p) => {
+        setCartItems((prev) => {
+          const existingIdx = prev.findIndex((item) => item.product.id === p.id);
+          let next: CartItem[];
+          if (existingIdx >= 0) {
+            next = prev.map((item, idx) =>
+              idx === existingIdx ? { ...item, quantity: item.quantity + 1 } : item
+            );
+          } else {
+            next = [...prev, { product: p, quantity: 1 }];
+          }
+          try {
+            localStorage.setItem(CART_KEY, JSON.stringify(next));
+          } catch {}
+          return next;
+        });
+      });
+      showToast(`${products.length} məhsul səbətə əlavə edildi!`);
+    },
+    [showToast]
+  );
+
+  const handleWhatsAppCheckout = useCallback(
+    (items: CartItem[], total: number, promo?: string) => {
+      let message = `🛒 *Sahara Electronics — Yeni Sifariş*\n\n`;
+      items.forEach((item, idx) => {
+        const p = item.product;
+        const priceStr = p.price
+          ? `${p.price * item.quantity} AZN (${p.price} AZN x ${item.quantity})`
+          : 'Qiymət sorğusu';
+        message += `${idx + 1}. *${p.title}* (${p.code})\n   Say: ${item.quantity} ədəd | Məbləğ: ${priceStr}\n\n`;
+      });
+      if (promo) {
+        message += `🎟 *Tətbiq olunan promo kod:* ${promo}\n`;
+      }
+      message += `💰 *Ümumi yekun məbləğ:* ${total.toFixed(2)} AZN\n\n`;
+      message += `📍 Çatdırılma və rəsmiləşdirmə üçün əlaqə saxlamağınızı xahiş edirəm.`;
+
+      const href = whatsappHref(catalog.settings.whatsappNumber, message);
+      if (!href) return showToast('WhatsApp nömrəsi qeyd olunmayıb.');
+      window.open(href, '_blank', 'noopener,noreferrer');
+    },
+    [catalog.settings.whatsappNumber, showToast]
+  );
+
   const breadcrumbsList = useMemo(() => {
     if (currentRoute === 'home') {
       return [{ label: 'Ana Səhifə', href: '/' }];
@@ -455,6 +624,18 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
       return [
         { label: 'Ana Səhifə', href: '/' },
         { label: 'Müştəri Dəstəyi', href: '/support' },
+      ];
+    }
+    if (currentRoute === 'cart') {
+      return [
+        { label: 'Ana Səhifə', href: '/' },
+        { label: 'Səbətim', href: '/cart' },
+      ];
+    }
+    if (currentRoute === 'favorites') {
+      return [
+        { label: 'Ana Səhifə', href: '/' },
+        { label: 'Seçilmişlər', href: '/favorites' },
       ];
     }
     if (currentRoute === 'compare') {
@@ -527,6 +708,8 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
       else if (validRoute === 'services') cleanUrl = '/services';
       else if (validRoute === 'stores') cleanUrl = '/stores';
       else if (validRoute === 'support') cleanUrl = '/support';
+      else if (validRoute === 'cart') cleanUrl = '/cart';
+      else if (validRoute === 'favorites') cleanUrl = '/favorites';
       else if (validRoute === 'compare') cleanUrl = '/compare';
       else if (validRoute === '404') cleanUrl = '/404';
 
@@ -909,7 +1092,8 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
           onSearchChange={setSearchQuery}
           onOpenSearchModal={() => setIsSearchOverlayOpen(true)}
           comparisonCount={comparisonIds.length}
-          favoritesCount={favorites.length}
+          favoritesCount={favoriteIds.length}
+          cartCount={cartItems.reduce((acc, i) => acc + i.quantity, 0)}
           onOpenSaharaMatch={() => setIsSaharaMatchOpen(true)}
           onOpenDrawer={() => setIsDrawerOpen(true)}
         />
@@ -986,89 +1170,131 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
                     settings={catalog.settings}
                     brandRail={catalog.brandRail}
                     isLoadingRail={isLoadingCatalog}
-                theme={activeTheme}
-                onNavigate={handleNavigate}
-                onSelectProduct={selectProduct}
-                onOpenSaharaMatch={() => setIsSaharaMatchOpen(true)}
-                onOpenArticle={openArticle}
-                onWhatsApp={openWhatsApp}
-                onCall={openCall}
-                onShare={openShare}
-                onCopyLink={copyLink}
-              />
-            )}
-            {currentRoute === 'catalog' && (
-              <CatalogPage
-                products={catalog.products}
-                categories={catalog.categories}
-                brands={catalog.brands}
-                settings={catalog.settings}
-                theme={activeTheme}
-                themeMode={themeMode}
-                initialCategory={selectedCategory}
-                initialBrand={selectedBrand}
-                searchQuery={searchQuery}
-                onSearchChange={setSearchQuery}
-                onSelectProduct={selectProduct}
-                onWhatsApp={openWhatsApp}
-                onCall={openCall}
-                onShare={openShare}
-                onCopyLink={copyLink}
-                onNavigate={handleNavigate}
-              />
-            )}
-            {currentRoute === 'brands' && (
-              <BrandsPage
-                brands={catalog.brands}
-                products={catalog.products}
-                theme={activeTheme}
-                onNavigate={handleNavigate}
-              />
-            )}
-            {currentRoute === 'services' && (
-              <ServicesPage
-                settings={catalog.settings}
-                theme={activeTheme}
-                onWhatsApp={() => openWhatsApp(null)}
-                onCall={() => openCall()}
-              />
-            )}
-            {currentRoute === 'stores' && (
-              <StoresPage
-                settings={catalog.settings}
-                theme={activeTheme}
-                onWhatsApp={() => openWhatsApp(null)}
-                onCall={(ph) => openCall(ph)}
-              />
-            )}
-            {currentRoute === 'compare' &&
-              (featureFlags.isEnabled('enableCompare') ? (
-                <ComparePage
-                  comparisonProducts={comparisonProducts}
-                  theme={activeTheme}
-                  onRemoveFromCompare={removeFromCompare}
-                  onClearCompare={clearCompare}
-                  onSelectProduct={selectProduct}
-                  onNavigate={handleNavigate}
-                />
-              ) : (
-                <NotFoundPage
-                  theme={activeTheme}
-                  onNavigate={handleNavigate}
-                  message="Müqayisə funksiyası hazırda aktivləşdirilməyib."
-                />
-              ))}
-            {currentRoute === 'support' && (
-              <SupportPage
-                settings={catalog.settings}
-                theme={activeTheme}
-                onWhatsApp={() => openWhatsApp(null)}
-                onCall={() => openCall()}
-              />
-            )}
-            {currentRoute === '404' && (
-              <NotFoundPage theme={activeTheme} onNavigate={handleNavigate} />
-            )}
+                    theme={activeTheme}
+                    onNavigate={handleNavigate}
+                    onSelectProduct={selectProduct}
+                    onOpenSaharaMatch={() => setIsSaharaMatchOpen(true)}
+                    onOpenArticle={openArticle}
+                    onWhatsApp={openWhatsApp}
+                    onCall={openCall}
+                    onShare={openShare}
+                    onCopyLink={copyLink}
+                    onAddToCart={addToCart}
+                    onToggleFavorite={toggleFavorite}
+                    favoriteIds={favoriteIds}
+                  />
+                )}
+                {currentRoute === 'catalog' && (
+                  <CatalogPage
+                    products={catalog.products}
+                    categories={catalog.categories}
+                    brands={catalog.brands}
+                    settings={catalog.settings}
+                    theme={activeTheme}
+                    themeMode={themeMode}
+                    initialCategory={selectedCategory}
+                    initialBrand={selectedBrand}
+                    searchQuery={searchQuery}
+                    onSearchChange={setSearchQuery}
+                    onSelectProduct={selectProduct}
+                    onWhatsApp={openWhatsApp}
+                    onCall={openCall}
+                    onShare={openShare}
+                    onCopyLink={copyLink}
+                    onNavigate={handleNavigate}
+                    onAddToCart={addToCart}
+                    onToggleFavorite={toggleFavorite}
+                    favoriteIds={favoriteIds}
+                  />
+                )}
+                {currentRoute === 'brands' && (
+                  <BrandsPage
+                    brands={catalog.brands}
+                    products={catalog.products}
+                    theme={activeTheme}
+                    onNavigate={handleNavigate}
+                  />
+                )}
+                {currentRoute === 'services' && (
+                  <ServicesPage
+                    settings={catalog.settings}
+                    theme={activeTheme}
+                    onWhatsApp={() => openWhatsApp(null)}
+                    onCall={() => openCall()}
+                  />
+                )}
+                {currentRoute === 'stores' && (
+                  <StoresPage
+                    settings={catalog.settings}
+                    theme={activeTheme}
+                    onWhatsApp={() => openWhatsApp(null)}
+                    onCall={(ph) => openCall(ph)}
+                  />
+                )}
+                {currentRoute === 'compare' &&
+                  (featureFlags.isEnabled('enableCompare') ? (
+                    <ComparePage
+                      comparisonProducts={comparisonProducts}
+                      theme={activeTheme}
+                      onRemoveFromCompare={removeFromCompare}
+                      onClearCompare={clearCompare}
+                      onSelectProduct={selectProduct}
+                      onNavigate={handleNavigate}
+                    />
+                  ) : (
+                    <NotFoundPage
+                      theme={activeTheme}
+                      onNavigate={handleNavigate}
+                      message="Müqayisə funksiyası hazırda aktivləşdirilməyib."
+                    />
+                  ))}
+                {currentRoute === 'support' && (
+                  <SupportPage
+                    settings={catalog.settings}
+                    theme={activeTheme}
+                    onWhatsApp={() => openWhatsApp(null)}
+                    onCall={() => openCall()}
+                  />
+                )}
+                {currentRoute === 'cart' && (
+                  <CartPage
+                    cartItems={cartItems}
+                    allProducts={catalog.products}
+                    settings={catalog.settings}
+                    theme={activeTheme}
+                    themeMode={themeMode}
+                    onUpdateQuantity={updateCartQuantity}
+                    onRemoveItem={removeFromCart}
+                    onClearCart={clearCart}
+                    onNavigate={handleNavigate}
+                    onSelectProduct={selectProduct}
+                    onWhatsAppCheckout={handleWhatsAppCheckout}
+                    onCall={openCall}
+                  />
+                )}
+                {currentRoute === 'favorites' && (
+                  <FavoritesPage
+                    favoriteIds={favoriteIds}
+                    allProducts={catalog.products}
+                    categories={catalog.categories}
+                    settings={catalog.settings}
+                    theme={activeTheme}
+                    themeMode={themeMode}
+                    onToggleFavorite={toggleFavorite}
+                    onClearFavorites={clearFavorites}
+                    onAddToCart={addToCart}
+                    onAddAllToCart={addAllFavoritesToCart}
+                    onSelectProduct={selectProduct}
+                    onWhatsApp={openWhatsApp}
+                    onCall={openCall}
+                    onShare={openShare}
+                    onCopyLink={copyLink}
+                    onNavigate={handleNavigate}
+                  />
+                )}
+                {currentRoute === '404' && (
+                  <NotFoundPage theme={activeTheme} onNavigate={handleNavigate} />
+                )}
               </>
             )}
           </div>
@@ -1112,6 +1338,8 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
           onNavigate={handleNavigate}
           onOpenSearch={() => setIsSearchOverlayOpen(true)}
           comparisonCount={comparisonIds.length}
+          cartCount={cartItems.reduce((acc, i) => acc + i.quantity, 0)}
+          favoritesCount={favoriteIds.length}
           theme={activeTheme}
         />
       )}

@@ -37,6 +37,48 @@ const getArticleIcon = (iconName?: string, color?: string, size = 18) => {
   }
 };
 
+interface HeroSlide {
+  type: 'video' | 'image';
+  src: string;
+  poster?: string;
+  duration: number; // in seconds
+  titlePart1: string;
+  titlePart2: string;
+  titleAccent: string;
+  subtitle: string;
+}
+
+const HERO_SLIDES: HeroSlide[] = [
+  {
+    type: 'video',
+    src: '/media/Videosahara.mp4',
+    poster: '/media/hero-livingroom.jpg',
+    duration: 20,
+    titlePart1: 'Texnologiya',
+    titlePart2: 'həyatınızı',
+    titleAccent: 'daha gözəl edir',
+    subtitle: 'Seçilmiş brendlər, rəsmi zəmanət, etibarlı seçim – Sahara Electronics-də.',
+  },
+  {
+    type: 'image',
+    src: '/media/promo-fridge.jpg',
+    duration: 6,
+    titlePart1: 'Mətbəxinizdə',
+    titlePart2: 'italyan zərifliyi və',
+    titleAccent: 'inverter gücü',
+    subtitle: 'A+++ enerji effektivliyi, NoFrost dondurma və rəsmi zəmanətli premium texnika.',
+  },
+  {
+    type: 'image',
+    src: '/media/promo-washer.jpg',
+    duration: 6,
+    titlePart1: 'Ağıllı qulluq və',
+    titlePart2: 'hər parçada',
+    titleAccent: 'maksimum təmizlik',
+    subtitle: 'Buxarla yuma, səssiz birbaşa ötürücülü mühərrik və intuitiv sensor idarəetmə.',
+  },
+];
+
 export const BannerHero: React.FC<BannerHeroProps> = ({
   theme,
   articles = [],
@@ -48,64 +90,80 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
 }) => {
   const activeArticles = articles.filter((a) => a.active !== false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [slideProgress, setSlideProgress] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
   const [animating, setAnimating] = useState(false);
   const isMountedRef = useRef(true);
   const animTimeoutRef = useRef<any>(null);
+  const progressIntervalRef = useRef<any>(null);
   const videoRef = useRef<HTMLVideoElement>(null);
+
+  const currentSlide = HERO_SLIDES[currentIndex % HERO_SLIDES.length];
 
   useEffect(() => {
     isMountedRef.current = true;
     return () => {
       isMountedRef.current = false;
       if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current);
+      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
     };
   }, []);
 
+  // Handle slide progression and smooth red progress bar fill
   useEffect(() => {
-    if (activeArticles.length <= 1 || isPaused) return;
-    const timer = setInterval(() => {
-      if (!isMountedRef.current) return;
-      setAnimating(true);
-      animTimeoutRef.current = setTimeout(() => {
-        if (!isMountedRef.current) return;
-        setCurrentIndex((prev) => (prev + 1) % activeArticles.length);
-        setAnimating(false);
-      }, 200);
-    }, 5000);
-    return () => {
-      clearInterval(timer);
-      if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current);
-    };
-  }, [activeArticles.length, isPaused]);
+    if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+    setSlideProgress(0);
 
-  const currentArticle = activeArticles[currentIndex] || activeArticles[0];
+    if (currentSlide.type === 'image') {
+      const stepMs = 50;
+      const totalSteps = (currentSlide.duration * 1000) / stepMs;
+      const progressIncrement = 100 / totalSteps;
+
+      progressIntervalRef.current = setInterval(() => {
+        if (!isMountedRef.current || isPaused) return;
+        setSlideProgress((prev) => {
+          if (prev >= 99.5) {
+            goToSlide((currentIndex + 1) % HERO_SLIDES.length);
+            return 0;
+          }
+          return Math.min(100, prev + progressIncrement);
+        });
+      }, stepMs);
+    }
+
+    return () => {
+      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+    };
+  }, [currentIndex, isPaused, currentSlide.type, currentSlide.duration]);
+
+  const goToSlide = (targetIdx: number) => {
+    if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current);
+    setAnimating(true);
+    setSlideProgress(0);
+    animTimeoutRef.current = setTimeout(() => {
+      if (!isMountedRef.current) return;
+      setCurrentIndex(targetIdx);
+      setAnimating(false);
+    }, 150);
+  };
 
   const prevSlide = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setAnimating(true);
-    if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current);
-    animTimeoutRef.current = setTimeout(() => {
-      if (!isMountedRef.current) return;
-      setCurrentIndex((prev) => (prev - 1 + activeArticles.length) % activeArticles.length);
-      setAnimating(false);
-    }, 150);
+    goToSlide((currentIndex - 1 + HERO_SLIDES.length) % HERO_SLIDES.length);
   };
 
   const nextSlide = (e: React.MouseEvent) => {
     e.stopPropagation();
-    setAnimating(true);
-    if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current);
-    animTimeoutRef.current = setTimeout(() => {
-      if (!isMountedRef.current) return;
-      setCurrentIndex((prev) => (prev + 1) % activeArticles.length);
-      setAnimating(false);
-    }, 150);
+    goToSlide((currentIndex + 1) % HERO_SLIDES.length);
   };
+
+  const currentArticle = activeArticles[currentIndex % activeArticles.length] || activeArticles[0];
 
   return (
     <div
       className="banner-hero-wrapper"
+      onMouseEnter={() => setIsPaused(true)}
+      onMouseLeave={() => setIsPaused(false)}
       style={{
         width: 'calc(100% + (100vw - 100%) / 2)',
         maxWidth: '100vw',
@@ -135,34 +193,65 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
           margin: '0 auto',
         }}
       >
-        {/* Full-Bleed Expanded Video Background (Videosahara) with Deep Boundary-Free Edge-Fade Masking */}
-        <video
-          ref={videoRef}
-          src="/media/Videosahara.mp4"
-          poster="/media/hero-livingroom.jpg"
-          autoPlay
-          muted
-          loop
-          playsInline
-          onTimeUpdate={() => {
-            if (videoRef.current && videoRef.current.currentTime >= 20) {
-              videoRef.current.currentTime = 0;
-            }
-          }}
-          style={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-            objectPosition: '65% center',
-            zIndex: 0,
-            maskImage:
-              'radial-gradient(ellipse 85% 85% at 65% 50%, black 50%, rgba(0, 0, 0, 0.8) 75%, transparent 100%), linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)',
-            WebkitMaskImage:
-              'radial-gradient(ellipse 85% 85% at 65% 50%, black 50%, rgba(0, 0, 0, 0.8) 75%, transparent 100%), linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)',
-          }}
-        />
+        {/* Visual Media Layer: Video for slide 0, Crisp high-res image for slides 1 & 2 */}
+        {currentSlide.type === 'video' ? (
+          <video
+            ref={videoRef}
+            key="hero-video-slide"
+            src={currentSlide.src}
+            poster={currentSlide.poster}
+            autoPlay
+            muted
+            loop
+            playsInline
+            onTimeUpdate={() => {
+              if (videoRef.current) {
+                const cur = videoRef.current.currentTime;
+                const dur = currentSlide.duration;
+                if (!isPaused) {
+                  setSlideProgress(Math.min(100, (cur / dur) * 100));
+                }
+                if (cur >= dur) {
+                  videoRef.current.currentTime = 0;
+                  goToSlide((currentIndex + 1) % HERO_SLIDES.length);
+                }
+              }
+            }}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: '65% center',
+              zIndex: 0,
+              maskImage:
+                'radial-gradient(ellipse 85% 85% at 65% 50%, black 50%, rgba(0, 0, 0, 0.8) 75%, transparent 100%), linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)',
+              WebkitMaskImage:
+                'radial-gradient(ellipse 85% 85% at 65% 50%, black 50%, rgba(0, 0, 0, 0.8) 75%, transparent 100%), linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)',
+            }}
+          />
+        ) : (
+          <img
+            key={`hero-img-slide-${currentIndex}`}
+            src={currentSlide.src}
+            alt={currentSlide.titlePart1}
+            style={{
+              position: 'absolute',
+              inset: 0,
+              width: '100%',
+              height: '100%',
+              objectFit: 'cover',
+              objectPosition: '65% center',
+              zIndex: 0,
+              transition: 'opacity 0.4s ease, transform 0.8s ease',
+              maskImage:
+                'radial-gradient(ellipse 85% 85% at 65% 50%, black 50%, rgba(0, 0, 0, 0.8) 75%, transparent 100%), linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)',
+              WebkitMaskImage:
+                'radial-gradient(ellipse 85% 85% at 65% 50%, black 50%, rgba(0, 0, 0, 0.8) 75%, transparent 100%), linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)',
+            }}
+          />
+        )}
 
         {/* Ambient Gradient Overlay for text readability (Dark/Moody left vignette) */}
         <div
@@ -239,13 +328,16 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
               fontSize: 'clamp(2rem, 4vw, 3.4rem)',
               letterSpacing: '-0.02em',
               margin: '0 0 16px 0',
+              transition: 'opacity 0.2s ease, transform 0.2s ease',
+              opacity: animating ? 0.3 : 1,
+              transform: animating ? 'translateY(4px)' : 'none',
             }}
           >
-            <span>Texnologiya</span>
+            <span>{currentSlide.titlePart1}</span>
             <br />
-            <span>həyatınızı</span>
+            <span>{currentSlide.titlePart2}</span>
             <br />
-            <span style={{ color: '#e31e24' }}>daha gözəl edir</span>
+            <span style={{ color: '#e31e24' }}>{currentSlide.titleAccent}</span>
           </h1>
 
           <p
@@ -257,9 +349,11 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
               margin: '0 0 24px 0',
               maxWidth: '460px',
               fontWeight: 500,
+              transition: 'opacity 0.2s ease',
+              opacity: animating ? 0.3 : 1,
             }}
           >
-            Seçilmiş brendlər, rəsmi zəmanət, etibarlı seçim – Sahara Electronics-də.
+            {currentSlide.subtitle}
           </p>
 
           <div className="banner-hero-actions-row" style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
@@ -435,7 +529,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
           )}
         </div>
 
-        {/* Pagination / Slide indicator (01 — 02 03) */}
+        {/* Pagination / Real-Time Progress Bar indicator (01 — 02 — 03) */}
         <div
           className="banner-hero-pagination-row"
           style={{
@@ -450,39 +544,53 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
             color: theme.textMuted || '#64748b',
           }}
         >
-          {[0, 1, 2].map((idx) => {
-            const isActive = (currentIndex % 3) === idx;
+          {HERO_SLIDES.map((slide, idx) => {
+            const isActive = (currentIndex % HERO_SLIDES.length) === idx;
+            const isPassed = (currentIndex % HERO_SLIDES.length) > idx;
             const formattedNum = String(idx + 1).padStart(2, '0');
+            const fillWidth = isActive ? `${slideProgress}%` : isPassed ? '100%' : '0%';
+
             return (
               <button
                 key={idx}
                 type="button"
-                onClick={() => setCurrentIndex(idx)}
+                className={`hero-pagination-btn ${isActive ? 'active' : ''}`}
+                onClick={() => goToSlide(idx)}
                 style={{
                   background: 'transparent',
                   border: 'none',
                   cursor: 'pointer',
-                  padding: '4px 2px',
+                  padding: '6px 4px',
                   color: isActive ? theme.text : theme.textMuted || '#94a3b8',
                   fontWeight: isActive ? 800 : 600,
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '8px',
                 }}
-                aria-label={`Slayd ${idx + 1}`}
+                aria-label={`Slayd ${idx + 1}: ${slide.titlePart1}`}
               >
                 <span>{formattedNum}</span>
-                {isActive && (
-                  <span
+                <div
+                  style={{
+                    width: '38px',
+                    height: '3px',
+                    backgroundColor: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.18)' : 'rgba(0, 0, 0, 0.12)',
+                    borderRadius: '3px',
+                    overflow: 'hidden',
+                    position: 'relative',
+                  }}
+                >
+                  <div
+                    className="hero-progress-fill"
                     style={{
-                      width: '24px',
-                      height: '2px',
+                      width: fillWidth,
+                      height: '100%',
                       backgroundColor: '#e31e24',
-                      display: 'inline-block',
-                      borderRadius: '2px',
+                      borderRadius: '3px',
+                      transition: isActive && !isPaused ? 'width 0.05s linear' : 'none',
                     }}
                   />
-                )}
+                </div>
               </button>
             );
           })}

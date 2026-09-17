@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Layers, ShoppingCart, User } from 'lucide-react';
+import { Home, Layers, ShoppingCart, User, Heart } from 'lucide-react';
 import { ThemeColors, DESIGN_TOKENS } from '../../types/theme';
 
 interface MobileBottomNavProps {
@@ -7,12 +7,16 @@ interface MobileBottomNavProps {
   onNavigate: (route: string) => void;
   onOpenSearch?: () => void;
   comparisonCount?: number;
+  cartCount?: number;
+  favoritesCount?: number;
   theme: ThemeColors;
 }
 
 export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   currentRoute,
   onNavigate,
+  cartCount = 0,
+  favoritesCount = 0,
   theme,
 }) => {
   return (
@@ -91,7 +95,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         {/* 3. Səbət */}
         <button
           type="button"
-          onClick={() => onNavigate('catalog')}
+          onClick={() => onNavigate('cart')}
           className={`mobile-nav-item ${currentRoute === 'cart' ? 'active' : ''}`}
           style={{
             position: 'relative',
@@ -110,25 +114,27 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         >
           <div style={{ position: 'relative' }}>
             <ShoppingCart size={20} />
-            <span
-              style={{
-                position: 'absolute',
-                top: '-4px',
-                right: '-6px',
-                backgroundColor: '#e31e24',
-                color: '#ffffff',
-                fontSize: '9px',
-                fontWeight: 800,
-                width: '14px',
-                height: '14px',
-                borderRadius: '50%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-              }}
-            >
-              0
-            </span>
+            {cartCount > 0 && (
+              <span
+                style={{
+                  position: 'absolute',
+                  top: '-4px',
+                  right: '-6px',
+                  backgroundColor: '#e31e24',
+                  color: '#ffffff',
+                  fontSize: '9px',
+                  fontWeight: 800,
+                  width: '15px',
+                  height: '15px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                {cartCount > 99 ? '99+' : cartCount}
+              </span>
+            )}
           </div>
           <span>Səbət</span>
         </button>
@@ -139,6 +145,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           onClick={() => onNavigate('favorites')}
           className={`mobile-nav-item ${currentRoute === 'favorites' ? 'active' : ''}`}
           style={{
+            position: 'relative',
             background: 'transparent',
             border: 'none',
             display: 'flex',
@@ -152,7 +159,30 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             padding: '4px 8px',
           }}
         >
-          <User size={20} />
+          <div style={{ position: 'relative' }}>
+            <User size={20} />
+            {favoritesCount > 0 && (
+              <span
+                style={{
+                  position: 'absolute',
+                  top: '-4px',
+                  right: '-6px',
+                  backgroundColor: '#dc2626',
+                  color: '#ffffff',
+                  fontSize: '9px',
+                  fontWeight: 800,
+                  width: '15px',
+                  height: '15px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                {favoritesCount > 99 ? '99+' : favoritesCount}
+              </span>
+            )}
+          </div>
           <span>Profil</span>
         </button>
       </div>

@@ -36,6 +36,9 @@ interface HomePageProps {
   onCall: (product: Product) => void;
   onShare: (product: Product) => void;
   onCopyLink: (product: Product) => void;
+  onAddToCart?: (product: Product) => void;
+  onToggleFavorite?: (product: Product) => void;
+  favoriteIds?: string[];
 }
 
 const FEATURED_TABS = [
@@ -65,6 +68,9 @@ export const HomePage: React.FC<HomePageProps> = ({
   onCall: _onCall,
   onShare: _onShare,
   onCopyLink: _onCopyLink,
+  onAddToCart,
+  onToggleFavorite,
+  favoriteIds = [],
 }) => {
   const [selectedTab, setSelectedTab] = useState('all');
 
@@ -235,6 +241,9 @@ export const HomePage: React.FC<HomePageProps> = ({
               product={product}
               theme={theme}
               onSelect={onSelectProduct}
+              onAddToCart={onAddToCart}
+              onToggleFavorite={onToggleFavorite}
+              isFavorite={favoriteIds.includes(product.id)}
             />
           ))}
         </div>
