@@ -185,7 +185,7 @@ describe('Storefront Refinements (Items 5, 6, 7, 8, 9)', () => {
 
     const catalogPanel = container.querySelector('.header-nav-preview-panel') as HTMLElement;
     expect(catalogPanel).toBeTruthy();
-    expect(within(catalogPanel).getByText('Məhsul Kataloqu')).toBeTruthy();
+    expect(within(catalogPanel).getByText('Böyük Məişət Texnikası')).toBeTruthy();
     expect(catalogPanel.style.backdropFilter).toContain('blur');
     expect(header.style.backdropFilter).toContain('blur');
     expect(container.querySelector('.header-nav-backdrop')).toBeNull();

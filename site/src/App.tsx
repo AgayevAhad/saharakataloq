@@ -11,6 +11,7 @@ import { SiteHeader } from './components/site/SiteHeader';
 import { SaharaMatchModal } from './components/site/SaharaMatchModal';
 import { MobileBottomNav } from './components/site/MobileBottomNav';
 import { HomePage } from './pages/HomePage';
+import { CatalogPage } from './pages/CatalogPage';
 import { BrandsPage } from './pages/BrandsPage';
 import { ServicesPage } from './pages/ServicesPage';
 import { StoresPage } from './pages/StoresPage';
@@ -996,7 +997,26 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
                 onCopyLink={copyLink}
               />
             )}
-            {currentRoute === 'catalog' && renderCatalogView()}
+            {currentRoute === 'catalog' && (
+              <CatalogPage
+                products={catalog.products}
+                categories={catalog.categories}
+                brands={catalog.brands}
+                settings={catalog.settings}
+                theme={activeTheme}
+                themeMode={themeMode}
+                initialCategory={selectedCategory}
+                initialBrand={selectedBrand}
+                searchQuery={searchQuery}
+                onSearchChange={setSearchQuery}
+                onSelectProduct={selectProduct}
+                onWhatsApp={openWhatsApp}
+                onCall={openCall}
+                onShare={openShare}
+                onCopyLink={copyLink}
+                onNavigate={handleNavigate}
+              />
+            )}
             {currentRoute === 'brands' && (
               <BrandsPage
                 brands={catalog.brands}

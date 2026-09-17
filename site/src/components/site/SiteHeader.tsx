@@ -24,6 +24,7 @@ import {
   Percent,
   X,
   Loader2,
+  Flame,
 } from 'lucide-react';
 import { Brand, CatalogCategory, Product, CatalogSettings } from '../../types/product';
 import { ThemeColors, DESIGN_TOKENS } from '../../types/theme';
@@ -31,6 +32,7 @@ import { TopServiceBar } from './TopServiceBar';
 import { MegaMenu } from './MegaMenu';
 import { MobileCategoryDrawer } from './MobileCategoryDrawer';
 import { SmartSearchOverlay } from '../SmartSearchOverlay';
+import { ShimmerImage } from '../ShimmerImage';
 import { featureFlags } from '../../utils/featureFlags';
 
 interface SiteHeaderProps {
@@ -1220,78 +1222,290 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
         >
           <div className="catalog-container" style={{ padding: '0 clamp(24px, 4vw, 56px)' }}>
                 {hoveredNavTab === 'catalog' && (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '32px', flexWrap: 'wrap' }}>
-                    <div style={{ maxWidth: '320px' }}>
-                      <div style={{ fontSize: '15px', fontWeight: 800, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <LayoutGrid size={16} color="#e31e24" />
-                        <span>Məhsul Kataloqu</span>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '28px', alignItems: 'start' }}>
+                    {/* Left 8 Columns: Structured Multi-Level Category Taxonomy Groups */}
+                    <div style={{ gridColumn: 'span 8', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '20px' }}>
+                      {/* Group 1: Böyük Məişət Texnikası */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#e31e24', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                          <LayoutGrid size={14} />
+                          <span>Böyük Məişət Texnikası</span>
+                        </div>
+                        {activeCategories
+                          .filter((c) => ['washer', 'refrigerator', 'oven'].includes(c.id) || ['paltaryuyanlar', 'soyuducular', 'sobalar'].includes(c.slug || ''))
+                          .map((c) => {
+                            const count = products.filter((p) => p.category === c.id && p.status !== 'draft').length;
+                            return (
+                              <button
+                                key={c.id}
+                                type="button"
+                                onClick={() => {
+                                  setHoveredNavTab(null);
+                                  onNavigate('catalog', c.id);
+                                }}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  padding: '8px 12px',
+                                  borderRadius: '8px',
+                                  backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.45)' : 'rgba(241, 245, 249, 0.65)',
+                                  border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)'}`,
+                                  fontSize: '13px',
+                                  fontWeight: 600,
+                                  color: theme.text,
+                                  cursor: 'pointer',
+                                  transition: 'all 0.15s ease',
+                                  textAlign: 'left',
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.borderColor = '#e31e24';
+                                  e.currentTarget.style.color = '#e31e24';
+                                  e.currentTarget.style.backgroundColor = themeMode === 'dark' ? 'rgba(227, 30, 36, 0.12)' : 'rgba(227, 30, 36, 0.06)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.borderColor = themeMode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';
+                                  e.currentTarget.style.color = theme.text;
+                                  e.currentTarget.style.backgroundColor = themeMode === 'dark' ? 'rgba(30, 41, 59, 0.45)' : 'rgba(241, 245, 249, 0.65)';
+                                }}
+                              >
+                                <span>{c.name}</span>
+                                {count > 0 && (
+                                  <span style={{ fontSize: '11px', color: theme.textMuted, fontWeight: 500 }}>
+                                    {count} model
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
                       </div>
-                      <p style={{ fontSize: '13px', color: theme.textMuted, margin: '6px 0 0 0', lineHeight: 1.4 }}>
-                        Bütün məişət texnikası və elektronika çeşidləri Sahara-da.
-                      </p>
+
+                      {/* Group 2: Quraşdırılan Texnika */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#e31e24', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                          <Layers size={14} />
+                          <span>Quraşdırılan Texnika</span>
+                        </div>
+                        {activeCategories
+                          .filter((c) => ['cooktop', 'hood', 'microwave'].includes(c.id) || ['bisirme-panelleri', 'aspiratorlar', 'mikrodalgali-sobalar'].includes(c.slug || ''))
+                          .map((c) => {
+                            const count = products.filter((p) => p.category === c.id && p.status !== 'draft').length;
+                            return (
+                              <button
+                                key={c.id}
+                                type="button"
+                                onClick={() => {
+                                  setHoveredNavTab(null);
+                                  onNavigate('catalog', c.id);
+                                }}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  padding: '8px 12px',
+                                  borderRadius: '8px',
+                                  backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.45)' : 'rgba(241, 245, 249, 0.65)',
+                                  border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)'}`,
+                                  fontSize: '13px',
+                                  fontWeight: 600,
+                                  color: theme.text,
+                                  cursor: 'pointer',
+                                  transition: 'all 0.15s ease',
+                                  textAlign: 'left',
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.borderColor = '#e31e24';
+                                  e.currentTarget.style.color = '#e31e24';
+                                  e.currentTarget.style.backgroundColor = themeMode === 'dark' ? 'rgba(227, 30, 36, 0.12)' : 'rgba(227, 30, 36, 0.06)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.borderColor = themeMode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';
+                                  e.currentTarget.style.color = theme.text;
+                                  e.currentTarget.style.backgroundColor = themeMode === 'dark' ? 'rgba(30, 41, 59, 0.45)' : 'rgba(241, 245, 249, 0.65)';
+                                }}
+                              >
+                                <span>{c.name}</span>
+                                {count > 0 && (
+                                  <span style={{ fontSize: '11px', color: theme.textMuted, fontWeight: 500 }}>
+                                    {count} model
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                      </div>
+
+                      {/* Group 3: Kiçik Məişət & İqlim */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#e31e24', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
+                          <Flame size={14} />
+                          <span>Kiçik Məişət & İqlim</span>
+                        </div>
+                        {activeCategories
+                          .filter((c) => ['airfryer', 'vacuum_cleaner', 'air_conditioner', 'thermopot', 'meat_grinder', 'iron', 'tv'].includes(c.id) || ['airfryer', 'tozsoranlar', 'kondisionerler'].includes(c.slug || ''))
+                          .slice(0, 4)
+                          .map((c) => {
+                            const count = products.filter((p) => p.category === c.id && p.status !== 'draft').length;
+                            return (
+                              <button
+                                key={c.id}
+                                type="button"
+                                onClick={() => {
+                                  setHoveredNavTab(null);
+                                  onNavigate('catalog', c.id);
+                                }}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  padding: '8px 12px',
+                                  borderRadius: '8px',
+                                  backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.45)' : 'rgba(241, 245, 249, 0.65)',
+                                  border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)'}`,
+                                  fontSize: '13px',
+                                  fontWeight: 600,
+                                  color: theme.text,
+                                  cursor: 'pointer',
+                                  transition: 'all 0.15s ease',
+                                  textAlign: 'left',
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.borderColor = '#e31e24';
+                                  e.currentTarget.style.color = '#e31e24';
+                                  e.currentTarget.style.backgroundColor = themeMode === 'dark' ? 'rgba(227, 30, 36, 0.12)' : 'rgba(227, 30, 36, 0.06)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.borderColor = themeMode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)';
+                                  e.currentTarget.style.color = theme.text;
+                                  e.currentTarget.style.backgroundColor = themeMode === 'dark' ? 'rgba(30, 41, 59, 0.45)' : 'rgba(241, 245, 249, 0.65)';
+                                }}
+                              >
+                                <span>{c.name}</span>
+                                {count > 0 && (
+                                  <span style={{ fontSize: '11px', color: theme.textMuted, fontWeight: 500 }}>
+                                    {count} model
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
+                      </div>
                     </div>
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', flex: 1, justifyContent: 'center' }}>
-                      {activeCategories.slice(0, 6).map((c) => (
+                    {/* Right 4 Columns: Official Brand Cards with Original Logos */}
+                    <div style={{ gridColumn: 'span 4', borderLeft: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`, paddingLeft: '24px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: theme.textMuted, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <Sparkles size={14} color="#e31e24" />
+                          <span>Rəsmi Brendlər</span>
+                        </div>
                         <button
-                          key={c.id}
                           type="button"
                           onClick={() => {
                             setHoveredNavTab(null);
-                            onNavigate('catalog', c.id);
+                            onNavigate('brands');
                           }}
                           style={{
-                            padding: '8px 16px',
-                            borderRadius: '10px',
-                            backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f8fafc',
-                            border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`,
-                            fontSize: '13px',
+                            background: 'none',
+                            border: 'none',
+                            color: '#e31e24',
+                            fontSize: '11px',
                             fontWeight: 700,
-                            color: theme.text,
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '8px',
-                            transition: 'all 0.15s ease',
-                          }}
-                          onMouseEnter={(e) => {
-                            e.currentTarget.style.borderColor = '#e31e24';
-                            e.currentTarget.style.color = '#e31e24';
-                          }}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.style.borderColor = themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0';
-                            e.currentTarget.style.color = theme.text;
+                            gap: '4px',
+                            padding: 0,
                           }}
                         >
-                          <span>{c.name}</span>
+                          <span>Hamısı</span>
+                          <ArrowRight size={12} />
                         </button>
-                      ))}
-                    </div>
+                      </div>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setHoveredNavTab(null);
-                        onNavigate('catalog');
-                      }}
-                      style={{
-                        padding: '10px 20px',
-                        borderRadius: '10px',
-                        backgroundColor: '#e31e24',
-                        color: '#ffffff',
-                        border: 'none',
-                        fontSize: '13px',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        boxShadow: '0 4px 14px rgba(227, 30, 36, 0.35)',
-                      }}
-                    >
-                      <span>Bütün kataloqa bax</span>
-                      <ArrowRight size={14} />
-                    </button>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '8px' }}>
+                        {brands.filter((b) => b.active).slice(0, 4).map((brand) => (
+                          <button
+                            key={brand.id}
+                            type="button"
+                            onClick={() => {
+                              setHoveredNavTab(null);
+                              onNavigate('brand', brand.id);
+                            }}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '10px',
+                              padding: '8px 10px',
+                              borderRadius: '10px',
+                              backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f8fafc',
+                              border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
+                              cursor: 'pointer',
+                              transition: 'all 0.15s ease',
+                              textAlign: 'left',
+                            }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.borderColor = '#e31e24';
+                              e.currentTarget.style.transform = 'translateY(-1px)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.borderColor = themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : '#e2e8f0';
+                              e.currentTarget.style.transform = 'none';
+                            }}
+                          >
+                            {brand.logo ? (
+                              <ShimmerImage
+                                src={brand.logo}
+                                alt={brand.name}
+                                spinnerSize={12}
+                                containerStyle={{ width: '42px', height: '22px', flexShrink: 0 }}
+                                style={{ objectFit: 'contain' }}
+                              />
+                            ) : (
+                              <div style={{ width: '42px', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '11px', color: theme.text }}>
+                                {brand.name}
+                              </div>
+                            )}
+                            <div style={{ overflow: 'hidden' }}>
+                              <div style={{ fontSize: '12px', fontWeight: 700, color: theme.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                {brand.name}
+                              </div>
+                              <div style={{ fontSize: '10px', color: theme.textMuted }}>
+                                {brand.originCountry || 'Orijinal'}
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setHoveredNavTab(null);
+                          onNavigate('catalog');
+                        }}
+                        style={{
+                          marginTop: '4px',
+                          padding: '9px 14px',
+                          borderRadius: '10px',
+                          backgroundColor: '#e31e24',
+                          color: '#ffffff',
+                          border: 'none',
+                          fontSize: '12.5px',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          boxShadow: '0 4px 14px rgba(227, 30, 36, 0.35)',
+                          transition: 'opacity 0.15s ease',
+                        }}
+                      >
+                        <span>Bütün kataloqa və filtrlərə bax</span>
+                        <ArrowRight size={14} />
+                      </button>
+                    </div>
                   </div>
                 )}
 

@@ -121,7 +121,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
         style={{
           width: '100%',
           maxWidth: '100%',
-          borderRadius: '20px',
+          borderRadius: 0,
           overflow: 'hidden',
           position: 'relative',
           minHeight: '560px',
@@ -129,16 +129,13 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
           flexDirection: 'column',
           justifyContent: 'space-between',
           border: 'none',
-          boxShadow:
-            theme.mode === 'dark'
-              ? '0 12px 36px rgba(0, 0, 0, 0.4)'
-              : '0 8px 28px rgba(0, 0, 0, 0.06)',
+          boxShadow: 'none',
           backgroundColor: 'transparent',
           padding: 0,
           margin: '0 auto',
         }}
       >
-        {/* Full-Bleed Expanded Video Background (Videosahara) with Soft Edge-Fade Masking */}
+        {/* Full-Bleed Expanded Video Background (Videosahara) with Deep Boundary-Free Edge-Fade Masking */}
         <video
           ref={videoRef}
           src="/media/Videosahara.mp4"
@@ -161,9 +158,9 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
             objectPosition: '65% center',
             zIndex: 0,
             maskImage:
-              'radial-gradient(ellipse 95% 90% at 68% 50%, black 35%, rgba(0, 0, 0, 0.7) 65%, transparent 98%), linear-gradient(to right, transparent 0%, black 20%, black 90%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%)',
+              'radial-gradient(ellipse 85% 85% at 65% 50%, black 50%, rgba(0, 0, 0, 0.8) 75%, transparent 100%), linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)',
             WebkitMaskImage:
-              'radial-gradient(ellipse 95% 90% at 68% 50%, black 35%, rgba(0, 0, 0, 0.7) 65%, transparent 98%), linear-gradient(to right, transparent 0%, black 20%, black 90%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 8%, black 92%, transparent 100%)',
+              'radial-gradient(ellipse 85% 85% at 65% 50%, black 50%, rgba(0, 0, 0, 0.8) 75%, transparent 100%), linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)',
           }}
         />
 
@@ -181,7 +178,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
           }}
         />
 
-        {/* Misty atmospheric edge diffusion overlay (Dissolves edges seamlessly into page canvas) */}
+        {/* Misty atmospheric edge dissolution overlay (Melts 4 outer borders directly into page canvas) */}
         <div
           style={{
             position: 'absolute',
@@ -190,8 +187,8 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
             pointerEvents: 'none',
             background:
               theme.mode === 'dark'
-                ? 'linear-gradient(to bottom, rgba(8, 12, 18, 0.6) 0%, transparent 12%, transparent 88%, rgba(8, 12, 18, 0.7) 100%), linear-gradient(to right, rgba(8, 12, 18, 0.5) 0%, transparent 16%, transparent 84%, rgba(8, 12, 18, 0.6) 100%)'
-                : 'linear-gradient(to bottom, rgba(255, 255, 255, 0.6) 0%, transparent 12%, transparent 88%, rgba(255, 255, 255, 0.7) 100%), linear-gradient(to right, rgba(255, 255, 255, 0.5) 0%, transparent 16%, transparent 84%, rgba(255, 255, 255, 0.6) 100%)',
+                ? 'radial-gradient(ellipse 90% 90% at 65% 50%, transparent 45%, rgba(11, 15, 23, 0.5) 75%, #0b0f17 100%), linear-gradient(to bottom, #0b0f17 0%, transparent 14%, transparent 86%, #0b0f17 100%), linear-gradient(to right, #0b0f17 0%, transparent 18%, transparent 85%, #0b0f17 100%)'
+                : 'radial-gradient(ellipse 90% 90% at 65% 50%, transparent 45%, rgba(248, 250, 252, 0.5) 75%, #f8fafc 100%), linear-gradient(to bottom, #f8fafc 0%, transparent 14%, transparent 86%, #f8fafc 100%), linear-gradient(to right, #f8fafc 0%, transparent 18%, transparent 85%, #f8fafc 100%)',
           }}
         />
 
