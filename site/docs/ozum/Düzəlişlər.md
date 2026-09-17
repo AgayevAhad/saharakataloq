@@ -29,8 +29,22 @@ Sənə mərhələ mərhələ nə edəcəyini deyirəm.
 
 #9. Bundan sonra isə bizim kartlarımız içində şəkillər yazılar istifadəçi səhifəni aşağı verdikcə animasya ilə gəlsin. Cəlbedici olsun.
 
-10. Deməli belə edək. 1 proble odurki məhsul kartlarının üstünə gələndə gizlənir məhsul kartı yoxa çıxır. Bunu düzəlt.
+#10. Deməli belə edək. 1 problem odurki məhsul kartlarının üstünə gələndə gizlənir məhsul kartı yoxa çıxır. Bunu düzəlt.
 
-11. Yuxarı paneldə səndə logonu mərkəzlə deyəndə sən opşu yuxarıdan boşluq vermisən. Amma təkcə logo üçün lazımdır sağ tərəfdə olan search flan hissəsinə aid olmamalıdır. Anla məni logo animasya ilə böyüməli ortaya tərəf gəlməlidir. Logo o qədər böyüsünki electronics sözü vare logoda oxuna bilsin rahat. Daha panel genişlənməsin zatən searcha görə genişlənir o bəs edir. 
+#11. Yuxarı paneldə səndə logonu mərkəzlə deyəndə sən opşu yuxarıdan boşluq vermisən. Amma təkcə logo üçün lazımdır sağ tərəfdə olan search flan hissəsinə aid olmamalıdır. Anla məni logo animasya ilə böyüməli ortaya tərəf gəlməlidir. Logo o qədər böyüsünki electronics sözü vare logoda oxuna bilsin rahat. Daha panel genişlənməsin zatən searcha görə genişlənir o bəs edir. 
 
-12. Bundan sonra isə panel altında yerləşdirdiyimiz video qutusunu çərçivəsini ləğv eet dumannı kimi şəffaflaşsın sanki saytın üstündə yox daxilində kimi. Buna görə uyğun böyüdə də bilərsən.
+#12. Bundan sonra isə panel altında yerləşdirdiyimiz video qutusunu çərçivəsini ləğv eet dumannı kimi şəffaflaşsın sanki saytın üstündə yox daxilində kimi. Buna görə uyğun böyüdə də bilərsən.
+
+#13. Bu addımda saytın video hissəsi vare orada 1 iki şey dəyişdirəcəyik. Deməli videonun kənarlarını kölgələşdir deyəndə sən qıraq yumuşaqlığı ləğv etmişdin sonra ölçünü genişləndirəndə yenədə yumuşqalıq gətirdin . Mən video kənarlarını istifadəçiyə görsənməməsini istəyirəm sanki video saytın daxilindədir. Üstündə yox. Amma bunu elə tənzimləki görünürlük indik vəziyyətdən az olmasın.Əsasən kənarların səhifəyə qarışaraq yoxa çıxması lazımdır bizə. 
+
+#14. Burada katalog görünüşünü yaratmalıyıq. Həm katalog səhifəsi həmdə paneldə katalog üstünə gələndə açılan katalog hissəsi . Deməli bizim katalogumuzda panel açılan hissədə seçimlər və kategoryalar olmalıdır. Məsələn məişət əşyaarı və s kategoryalarda məsələn paltaryuyan və s. Sağ tərəfdə brendlər. Hər brend orginila logosundan istifadə et. Diqqət çəkici və gözəl et. Katalog səhifəsində isə daha mürəkkəb seçim filtr və s .Saytları incələ məsələn [bakuelectronics.com](https://bakuelectronics.az/) https://kontakt.az/ . Xarici saytlara da bax. Dizaynı ssaytımıza uyğun et. 
+
+15. Bu video hissəsində 2 və 3 cü seçim olsada heçbir şey yoxdur. 2 və 3 üçün yerni şəkillər tap dizaynımıza uyğun əlavə yazılar olmayan səliqəli elekronika müştəriləri üçün cəlbedici. Bundan sonra 1 məsələ video neçə saniyədirsə qırmızı dolsun. Hiss olunsunki növbətiyə keçəcək. Sanki youtubeda videoya baxanda olure elə. Şəkillər üçündü qalma aralığında elə olsun. 
+
+16. Yuxarıda paneldə səbətə toxunanda kataloga aparır amma bu doğru deyil deməli bunun üçün əsasən xarici saytları incələ kreativ və unikal bir səbət səhifəsi yarat. İncəliklərlə gözəllik istifadəçini valeh etsin istəyirəm. Gözəl və cəlbedici bir şeylər et. Bəyədiyimiz məhsullar səhifəsi üçündə bunları et.
+
+17. Biz necə səhifəni aşağl scrool edəndə yavaş yavaş gəlire məhsul kartı içində. Belə et. İndi çox sürətldir bunu elə etki gözə çarpan şəkildə görsənsin. Həmçinin hamısı aşağıdan yuxarı yox fərqli fərqli uyğun kontentlərlə olsun. Birdə hər hissədə bu olsun kart daxilindəki yazı və s hissələr.
+
+18. Paneldə katalog hissəsində belə olsun deməli seçim alt alta böyük məişət və s. Qutuda yox sadəcə söz olaraq amma üstünə gələndə açılacaq hissi görünüşü və uyğun icon sözün önündə. Üstünəə gələndə uyğun açılış. Böyük məişət iconu ilə katalog iconunu eyni qoymusan bunu düzəlt ayrı olsun.Sağ tərəfdə brendlərin qutusunu çox enli etmisən bunu biraz azalt. 
+
+19. Useer hisəsi vare ona vuranda seçilmişlərə gedir. Onuda düzəlt. Tam unikal müasir şəkildə. aytları incələ məsələn [bakuelectronics.com](https://bakuelectronics.az/) https://kontakt.az/ . Xarici saytlara da bax. Dizaynı ssaytımıza uyğun et.Xarici saytlara baxdığından əmin ol. 

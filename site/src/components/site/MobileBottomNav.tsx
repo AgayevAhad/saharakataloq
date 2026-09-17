@@ -6,6 +6,7 @@ interface MobileBottomNavProps {
   currentRoute: string;
   onNavigate: (route: string) => void;
   onOpenSearch?: () => void;
+  onOpenUserDrawer?: () => void;
   comparisonCount?: number;
   cartCount?: number;
   favoritesCount?: number;
@@ -15,6 +16,7 @@ interface MobileBottomNavProps {
 export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   currentRoute,
   onNavigate,
+  onOpenUserDrawer,
   cartCount = 0,
   favoritesCount = 0,
   theme,
@@ -142,7 +144,13 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         {/* 4. Profil */}
         <button
           type="button"
-          onClick={() => onNavigate('favorites')}
+          onClick={() => {
+            if (onOpenUserDrawer) {
+              onOpenUserDrawer();
+            } else {
+              onNavigate('favorites');
+            }
+          }}
           className={`mobile-nav-item ${currentRoute === 'favorites' ? 'active' : ''}`}
           style={{
             position: 'relative',

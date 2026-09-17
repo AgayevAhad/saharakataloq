@@ -10,6 +10,7 @@ import { TopServiceBar } from '../components/site/TopServiceBar';
 import { MegaMenu } from '../components/site/MegaMenu';
 import { SaharaMatchModal } from '../components/site/SaharaMatchModal';
 import { MobileBottomNav } from '../components/site/MobileBottomNav';
+import { UserAccountDrawer } from '../components/site/UserAccountDrawer';
 import { BrandsPage } from '../pages/BrandsPage';
 import { ServicesPage } from '../pages/ServicesPage';
 import { StoresPage } from '../pages/StoresPage';
@@ -115,7 +116,7 @@ describe('Sahara Electronics Site Storefront Navigation & Components', () => {
         />
       );
 
-      expect(screen.getByText(/Əsas Kateqoriyalar/i)).toBeDefined();
+      expect(screen.getByText(/Böyük Məişət Texnikası/i)).toBeDefined();
       expect(screen.getByText(/Aspiratorlar/i)).toBeDefined();
       expect(screen.getAllByText(/Brendlər/i).length).toBeGreaterThan(0);
       expect(screen.getByText(/ARDO/i)).toBeDefined();
@@ -125,11 +126,13 @@ describe('Sahara Electronics Site Storefront Navigation & Components', () => {
   describe('MobileBottomNav', () => {
     it('renders 4 primary navigation tabs and triggers callbacks', () => {
       const handleNavigate = vi.fn();
+      const handleOpenUserDrawer = vi.fn();
 
       render(
         <MobileBottomNav
           currentRoute="home"
           onNavigate={handleNavigate}
+          onOpenUserDrawer={handleOpenUserDrawer}
           theme={lightTheme}
         />
       );
@@ -143,7 +146,7 @@ describe('Sahara Electronics Site Storefront Navigation & Components', () => {
       expect(handleNavigate).toHaveBeenCalledWith('catalog');
 
       fireEvent.click(screen.getByText('Profil'));
-      expect(handleNavigate).toHaveBeenCalledWith('favorites');
+      expect(handleOpenUserDrawer).toHaveBeenCalled();
     });
   });
 
@@ -277,6 +280,64 @@ describe('Sahara Electronics Site Storefront Navigation & Components', () => {
 
       expect(screen.getByText(/Müştəri Dəstəyi və Əlaqə/i)).toBeDefined();
       expect(screen.getByText(/Tez-Tez Verilən Suallar/i)).toBeDefined();
+    });
+  });
+
+  describe('UserAccountDrawer', () => {
+    it('renders UserAccountDrawer with quick stats, navigation rows, auth tabs, and interactive features', () => {
+      const handleClose = vi.fn();
+      const handleToggleTheme = vi.fn();
+      const handleNavigate = vi.fn();
+      const handleWhatsApp = vi.fn();
+
+      render(
+        <UserAccountDrawer
+          isOpen={true}
+          onClose={handleClose}
+          theme={lightTheme}
+          themeMode="light"
+          onToggleTheme={handleToggleTheme}
+          onNavigate={handleNavigate}
+          cartCount={3}
+          favoritesCount={5}
+          onWhatsAppSupport={handleWhatsApp}
+        />
+      );
+
+      // Verify user greeting
+      expect(screen.getByText(/İstifadəçi Kabineti/i)).toBeDefined();
+      expect(screen.getByText(/Xoş gəlmisiniz!/i)).toBeDefined();
+
+      // Verify quick stats badges
+      expect(screen.getByText('3')).toBeDefined(); // cartCount
+      expect(screen.getByText('5')).toBeDefined(); // favoritesCount
+
+      // Verify navigation links
+      expect(screen.getByText('Səbətim və Sifariş')).toBeDefined();
+      expect(screen.getByText('Bəyəndiyim Məhsullar')).toBeDefined();
+      expect(screen.getByText('Mağazalar & Sərgi Salonları')).toBeDefined();
+      expect(screen.getByText('Rəsmi Servis və Zəmanət')).toBeDefined();
+      expect(screen.getByText('Müştəri Dəstəyi və FAQ')).toBeDefined();
+
+      // Verify order tracking input
+      expect(screen.getByPlaceholderText(/SHR-9021/i)).toBeDefined();
+
+      // Test navigating to cart
+      fireEvent.click(screen.getByText('Səbətim və Sifariş'));
+      expect(handleNavigate).toHaveBeenCalledWith('cart');
+      expect(handleClose).toHaveBeenCalled();
+
+      // Test WhatsApp button
+      const whatsappBtn = screen.getByText(/WhatsApp ilə Canlı Əlaqə/i);
+      expect(whatsappBtn).toBeDefined();
+      fireEvent.click(whatsappBtn);
+      expect(handleWhatsApp).toHaveBeenCalled();
+
+      // Test theme toggle button
+      const themeBtn = screen.getByText('Dəyişdir');
+      expect(themeBtn).toBeDefined();
+      fireEvent.click(themeBtn);
+      expect(handleToggleTheme).toHaveBeenCalled();
     });
   });
 

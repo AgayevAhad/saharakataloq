@@ -10,6 +10,7 @@ import { Header } from './components/Header';
 import { SiteHeader } from './components/site/SiteHeader';
 import { SaharaMatchModal } from './components/site/SaharaMatchModal';
 import { MobileBottomNav } from './components/site/MobileBottomNav';
+import { UserAccountDrawer } from './components/site/UserAccountDrawer';
 import { HomePage } from './pages/HomePage';
 import { CatalogPage } from './pages/CatalogPage';
 import { BrandsPage } from './pages/BrandsPage';
@@ -179,6 +180,7 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [shareTargetProduct, setShareTargetProduct] = useState<Product | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [isUserDrawerOpen, setIsUserDrawerOpen] = useState(false);
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
   const [isSaharaMatchOpen, setIsSaharaMatchOpen] = useState(false);
   const [comparisonIds, setComparisonIds] = useState<string[]>(getInitialCompare);
@@ -1096,6 +1098,7 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
           cartCount={cartItems.reduce((acc, i) => acc + i.quantity, 0)}
           onOpenSaharaMatch={() => setIsSaharaMatchOpen(true)}
           onOpenDrawer={() => setIsDrawerOpen(true)}
+          onOpenUserDrawer={() => setIsUserDrawerOpen(true)}
         />
       ) : (
         <Header
@@ -1337,6 +1340,7 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
           currentRoute={currentRoute}
           onNavigate={handleNavigate}
           onOpenSearch={() => setIsSearchOverlayOpen(true)}
+          onOpenUserDrawer={() => setIsUserDrawerOpen(true)}
           comparisonCount={comparisonIds.length}
           cartCount={cartItems.reduce((acc, i) => acc + i.quantity, 0)}
           favoritesCount={favoriteIds.length}
@@ -1464,6 +1468,18 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
           </div>
         </div>
       </Drawer>
+      {/* App Level User Account Drawer */}
+      <UserAccountDrawer
+        isOpen={isUserDrawerOpen}
+        onClose={() => setIsUserDrawerOpen(false)}
+        theme={activeTheme}
+        themeMode={themeMode}
+        onToggleTheme={toggleTheme}
+        onNavigate={handleNavigate}
+        cartCount={cartItems.reduce((acc, i) => acc + i.quantity, 0)}
+        favoritesCount={favoriteIds.length}
+        onWhatsAppSupport={openWhatsApp}
+      />
       <Toast message={toast.message} visible={toast.visible} theme={activeTheme} />
     </div>
   );

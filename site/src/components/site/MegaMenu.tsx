@@ -1,7 +1,33 @@
 import React, { useEffect, useRef } from 'react';
 import { Brand, CatalogCategory, Product } from '../../types/product';
 import { ThemeColors, DESIGN_TOKENS } from '../../types/theme';
-import { ArrowRight, Tag, Layers } from 'lucide-react';
+import {
+  ArrowRight,
+  Tag,
+  Layers,
+  Package,
+  Flame,
+  Wind,
+  Snowflake,
+  RotateCw,
+  Grid,
+  Zap,
+  Thermometer,
+} from 'lucide-react';
+
+const getCategoryIcon = (id: string, slug?: string) => {
+  const key = `${id} ${slug || ''}`.toLowerCase();
+  if (key.includes('refrigerator') || key.includes('soyuducu')) return <Snowflake size={14} style={{ color: '#0ea5e9', flexShrink: 0 }} />;
+  if (key.includes('washer') || key.includes('paltaryuyan')) return <RotateCw size={14} style={{ color: '#e31e24', flexShrink: 0 }} />;
+  if (key.includes('oven') || key.includes('soba')) return <Flame size={14} style={{ color: '#f97316', flexShrink: 0 }} />;
+  if (key.includes('cooktop') || key.includes('bisirme') || key.includes('panel')) return <Grid size={14} style={{ color: '#e31e24', flexShrink: 0 }} />;
+  if (key.includes('hood') || key.includes('aspirator')) return <Wind size={14} style={{ color: '#64748b', flexShrink: 0 }} />;
+  if (key.includes('microwave') || key.includes('mikrodalga')) return <Zap size={14} style={{ color: '#eab308', flexShrink: 0 }} />;
+  if (key.includes('conditioner') || key.includes('iqlim') || key.includes('kondisioner')) return <Thermometer size={14} style={{ color: '#3b82f6', flexShrink: 0 }} />;
+  if (key.includes('vacuum') || key.includes('tozsoran')) return <Wind size={14} style={{ color: '#06b6d4', flexShrink: 0 }} />;
+  if (key.includes('airfryer')) return <Flame size={14} style={{ color: '#f43f5e', flexShrink: 0 }} />;
+  return <Package size={14} style={{ color: '#e31e24', flexShrink: 0 }} />;
+};
 
 interface MegaMenuProps {
   isOpen: boolean;
@@ -209,13 +235,19 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                       gap: '6px',
                     }}
                   >
-                    <Layers size={14} />
+                    {colIdx === 0 ? (
+                      <Package size={14} style={{ color: theme.primary }} />
+                    ) : colIdx === 1 ? (
+                      <Flame size={14} style={{ color: theme.primary }} />
+                    ) : (
+                      <Wind size={14} style={{ color: theme.primary }} />
+                    )}
                     <span>
                       {colIdx === 0
-                        ? 'Əsas Kateqoriyalar'
+                        ? 'Böyük Məişət Texnikası'
                         : colIdx === 1
-                          ? 'Mətbəx & İqlim'
-                          : 'Digər Məişət'}
+                          ? 'Quraşdırılan Texnika'
+                          : 'Kiçik Məişət & İqlim'}
                     </span>
                   </div>
 
@@ -226,7 +258,7 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                       margin: 0,
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: '4px',
+                      gap: '2px',
                     }}
                   >
                     {colCategories.map((cat) => {
@@ -245,10 +277,10 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                               display: 'flex',
                               alignItems: 'center',
                               justifyContent: 'space-between',
-                              padding: '8px 12px',
+                              padding: '6px 10px',
                               borderRadius: '8px',
                               background: 'transparent',
-                              border: '1px solid transparent',
+                              border: 'none',
                               color: theme.text,
                               fontSize: '13px',
                               fontWeight: 600,
@@ -256,8 +288,22 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                               textAlign: 'left',
                               transition: 'all 0.15s ease',
                             }}
+                            onMouseEnter={(e) => {
+                              e.currentTarget.style.backgroundColor =
+                                theme.mode === 'dark' ? 'rgba(227, 30, 36, 0.12)' : 'rgba(227, 30, 36, 0.06)';
+                              e.currentTarget.style.color = '#e31e24';
+                              e.currentTarget.style.transform = 'translateX(3px)';
+                            }}
+                            onMouseLeave={(e) => {
+                              e.currentTarget.style.backgroundColor = 'transparent';
+                              e.currentTarget.style.color = theme.text;
+                              e.currentTarget.style.transform = 'none';
+                            }}
                           >
-                            <span>{cat.name}</span>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              {getCategoryIcon(cat.id, cat.slug)}
+                              <span>{cat.name}</span>
+                            </div>
                             {count > 0 && (
                               <span
                                 style={{
