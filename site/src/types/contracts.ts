@@ -222,11 +222,11 @@ export interface FeatureFlagsContract {
 }
 
 export const DEFAULT_FEATURE_FLAGS: FeatureFlagsContract = {
-  enableCart: false,
+  enableCart: true,
   enableCheckout: false,
   enableSaharaMatch: false,
   enableCompare: false,
-  enableFavorites: false,
+  enableFavorites: true,
   enableGuides: false,
   enableBrandDetail: false,
   enableOnlinePayment: false,

@@ -17,12 +17,10 @@ describe('Feature Flags Production Hardening & Incomplete Feature Lockdown', () 
   it('strictly prohibits enabling unfinished features via localStorage in production mode', () => {
     // Simulate user writing to localStorage directly in browser console
     const maliciousOverrides = {
-      enableFavorites: true,
       enableCompare: true,
       enableGuides: true,
       enableSaharaMatch: true,
       enableBrandDetail: true,
-      enableCart: true,
       enableCheckout: true,
       enableOnlinePayment: true,
     };
@@ -42,9 +40,6 @@ describe('Feature Flags Production Hardening & Incomplete Feature Lockdown', () 
     const manager = new FeatureFlagManager();
     (manager as any).isProductionMode = () => true;
 
-    manager.setFlag('enableFavorites', true);
-    expect(manager.isEnabled('enableFavorites')).toBe(false);
-
     manager.setFlag('enableCompare', true);
     expect(manager.isEnabled('enableCompare')).toBe(false);
 
@@ -53,9 +48,6 @@ describe('Feature Flags Production Hardening & Incomplete Feature Lockdown', () 
 
     manager.setFlag('enableBrandDetail', true);
     expect(manager.isEnabled('enableBrandDetail')).toBe(false);
-
-    manager.setFlag('enableCart', true);
-    expect(manager.isEnabled('enableCart')).toBe(false);
 
     manager.setFlag('enableCheckout', true);
     expect(manager.isEnabled('enableCheckout')).toBe(false);
@@ -66,12 +58,10 @@ describe('Feature Flags Production Hardening & Incomplete Feature Lockdown', () 
 
   it('guarantees that all disabled routes are rejected and route to 404 on direct URL navigation', () => {
     const disabledRoutes = [
-      'favorites',
       'compare',
       'guides',
       'saharaMatch',
       'brandDetail',
-      'cart',
       'checkout',
       'onlinePayment',
       'unknownRouteXYZ',
@@ -84,11 +74,11 @@ describe('Feature Flags Production Hardening & Incomplete Feature Lockdown', () 
       services: true,
       stores: true,
       support: true,
+      favorites: true,
+      cart: true,
       compare: featureFlags.isEnabled('enableCompare'),
-      favorites: featureFlags.isEnabled('enableFavorites'),
       guides: featureFlags.isEnabled('enableGuides'),
       brandDetail: featureFlags.isEnabled('enableBrandDetail'),
-      cart: featureFlags.isEnabled('enableCart'),
       checkout: featureFlags.isEnabled('enableCheckout'),
       onlinePayment: featureFlags.isEnabled('enableOnlinePayment'),
       saharaMatch: featureFlags.isEnabled('enableSaharaMatch'),
@@ -105,12 +95,10 @@ describe('Feature Flags Production Hardening & Incomplete Feature Lockdown', () 
       const { App } = await import('../App');
 
       const disabledRoutes = [
-        'favorites',
         'compare',
         'guides',
         'saharaMatch',
         'brandDetail',
-        'cart',
         'checkout',
         'onlinePayment',
         'nonExistentPage123',
@@ -135,18 +123,16 @@ describe('Feature Flags Production Hardening & Incomplete Feature Lockdown', () 
       localStorage.setItem(
         'sahara_feature_flags',
         JSON.stringify({
-          enableFavorites: true,
           enableCompare: true,
           enableGuides: true,
           enableBrandDetail: true,
-          enableCart: true,
           enableCheckout: true,
           enableOnlinePayment: true,
           enableSaharaMatch: true,
         })
       );
 
-      const targetDisabledRoutes = ['favorites', 'compare', 'cart', 'checkout'];
+      const targetDisabledRoutes = ['compare', 'checkout', 'onlinePayment'];
 
       for (const route of targetDisabledRoutes) {
         cleanup();

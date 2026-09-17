@@ -301,4 +301,36 @@ describe('Item 16 & 17 — ProductCard Quick Hover Buttons and Header Badges', (
     fireEvent.click(mobileCartBtn);
     expect(navigate).toHaveBeenCalledWith('cart');
   });
+
+  it('renders CartPage and FavoritesPage directly without 404 when navigating via URL or history', async () => {
+    const { App } = await import('../App');
+    
+    // Test Cart route
+    window.history.pushState({}, '', '/cart');
+    const { container: cartContainer, unmount: unmountCart } = render(<App />);
+    expect(cartContainer.querySelector('.cart-page-wrap')).toBeDefined();
+    expect(screen.queryByText(/Səhifə Tapılmadı/i)).toBeNull();
+    unmountCart();
+
+    // Test Favorites route
+    window.history.pushState({}, '', '/favorites');
+    const { container: favContainer, unmount: unmountFav } = render(<App />);
+    expect(favContainer.querySelector('.favorites-page-wrap')).toBeDefined();
+    expect(screen.queryByText(/Səhifə Tapılmadı/i)).toBeNull();
+    unmountFav();
+
+    // Test deep link ?page=cart
+    window.history.pushState({}, '', '/?page=cart');
+    const { container: dlCartContainer, unmount: unmountDlCart } = render(<App />);
+    expect(dlCartContainer.querySelector('.cart-page-wrap')).toBeDefined();
+    expect(screen.queryByText(/Səhifə Tapılmadı/i)).toBeNull();
+    unmountDlCart();
+
+    // Test deep link ?page=favorites
+    window.history.pushState({}, '', '/?page=favorites');
+    const { container: dlFavContainer, unmount: unmountDlFav } = render(<App />);
+    expect(dlFavContainer.querySelector('.favorites-page-wrap')).toBeDefined();
+    expect(screen.queryByText(/Səhifə Tapılmadı/i)).toBeNull();
+    unmountDlFav();
+  });
 });

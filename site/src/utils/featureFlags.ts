@@ -8,12 +8,10 @@ const STORAGE_KEY = 'sahara_feature_flags';
  * and CANNOT be overridden by localStorage, querystring, or client-side tampering.
  */
 export const UNFINISHED_FEATURE_FLAGS: ReadonlyArray<keyof FeatureFlagsContract> = [
-  'enableFavorites',
   'enableCompare',
   'enableGuides',
   'enableSaharaMatch',
   'enableBrandDetail',
-  'enableCart',
   'enableCheckout',
   'enableOnlinePayment',
   'enableInstallmentCalc',

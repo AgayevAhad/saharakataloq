@@ -172,14 +172,14 @@ describe('Phase 1 UI Primitives, Accessibility & Quality Foundation Suite', () =
   describe('Feature Flag System', () => {
     it('initializes default flags and allows toggling with localStorage persistence', () => {
       featureFlags.resetToDefaults();
-      expect(featureFlags.isEnabled('enableCart')).toBe(false);
+      expect(featureFlags.isEnabled('enableCompare')).toBe(false);
       expect(featureFlags.isEnabled('enableSaharaMatch')).toBe(false);
 
-      featureFlags.setFlag('enableCart', true);
-      expect(featureFlags.isEnabled('enableCart')).toBe(true);
+      featureFlags.setFlag('enableCompare', true);
+      expect(featureFlags.isEnabled('enableCompare')).toBe(true);
 
       featureFlags.resetToDefaults();
-      expect(featureFlags.isEnabled('enableCart')).toBe(false);
+      expect(featureFlags.isEnabled('enableCompare')).toBe(false);
     });
   });
 
