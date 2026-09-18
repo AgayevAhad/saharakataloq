@@ -485,7 +485,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
         clearTimeout(swipeTimerRef.current);
       }
       swipeTimerRef.current = setTimeout(() => {
-        if (isMountedRef.current) {
+        if (typeof window !== 'undefined' && isMountedRef.current) {
           setStageIsSwiping(false);
         }
         swipeTimerRef.current = null;

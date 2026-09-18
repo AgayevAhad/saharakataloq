@@ -207,11 +207,9 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
       onMouseEnter={() => setIsPaused(true)}
       onMouseLeave={() => setIsPaused(false)}
       style={{
-        width: 'calc(100% + (100vw - 100%) / 2)',
-        maxWidth: '100vw',
-        marginLeft: 'calc((-50vw + 50%) / 2)',
-        marginRight: 'calc((-50vw + 50%) / 2)',
-        padding: '6px clamp(8px, 1.5vw, 16px) 16px',
+        width: '100%',
+        maxWidth: '100%',
+        padding: '0 0 12px 0',
         boxSizing: 'border-box',
         overflow: 'hidden',
       }}
@@ -221,21 +219,21 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
         style={{
           width: '100%',
           maxWidth: '100%',
-          borderRadius: 0,
+          borderRadius: '24px',
           overflow: 'hidden',
           position: 'relative',
-          minHeight: '560px',
+          minHeight: '540px',
           display: 'flex',
           flexDirection: 'column',
           justifyContent: 'space-between',
           border: 'none',
-          boxShadow: 'none',
-          backgroundColor: 'transparent',
+          boxShadow: theme.mode === 'dark' ? '0 24px 60px rgba(0, 0, 0, 0.45)' : '0 16px 45px rgba(0, 0, 0, 0.10)',
+          backgroundColor: '#0a0e17',
           padding: 0,
           margin: '0 auto',
         }}
       >
-        {/* Visual Media Layer: Clear, bright video for slide 0, high-res images for slides 1 & 2 */}
+        {/* Visual Media Layer: Clear, bright, natural video for slide 0, high-res images for slides 1 & 2 */}
         {currentSlide.type === 'video' ? (
           <video
             ref={videoRef}
@@ -287,7 +285,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
           />
         )}
 
-        {/* Ambient Gradient Overlay for text readability (Focused softly on the left side) */}
+        {/* Cinematic Scrim Gradient (Left side only for text legibility, zero edge glare on borders) */}
         <div
           style={{
             position: 'absolute',
@@ -295,26 +293,9 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
             zIndex: 1,
             pointerEvents: 'none',
             background:
-              theme.mode === 'dark'
-                ? 'linear-gradient(90deg, rgba(8, 12, 18, 0.90) 0%, rgba(8, 12, 18, 0.65) 28%, rgba(8, 12, 18, 0.15) 50%, transparent 70%)'
-                : 'linear-gradient(90deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.70) 28%, rgba(255, 255, 255, 0.15) 50%, transparent 70%)',
+              'linear-gradient(90deg, rgba(7, 10, 15, 0.85) 0%, rgba(7, 10, 15, 0.55) 36%, rgba(7, 10, 15, 0.10) 60%, transparent 80%)',
           }}
         />
-
-        {/* Subtle perimeter dissolution (Softly blends outer edges into page canvas without darkening the video) */}
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            zIndex: 1,
-            pointerEvents: 'none',
-            background:
-              theme.mode === 'dark'
-                ? 'linear-gradient(to bottom, #0b0f17 0%, transparent 3.5%, transparent 96.5%, #0b0f17 100%), linear-gradient(to right, #0b0f17 0%, transparent 2.5%, transparent 97.5%, #0b0f17 100%)'
-                : 'linear-gradient(to bottom, #f8fafc 0%, transparent 3.5%, transparent 96.5%, #f8fafc 100%), linear-gradient(to right, #f8fafc 0%, transparent 2.5%, transparent 97.5%, #f8fafc 100%)',
-          }}
-        />
-
 
         {/* Top-Right Calligraphy Script Badge: "Daha çox imkan, sənə yaxın!" */}
         <div
@@ -326,13 +307,13 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
             textAlign: 'right',
             fontFamily: "'Playfair Display', 'Georgia', cursive, serif",
             fontStyle: 'italic',
-            textShadow: '0 2px 10px rgba(0, 0, 0, 0.65)',
+            textShadow: '0 2px 12px rgba(0, 0, 0, 0.8)',
             pointerEvents: 'none',
             lineHeight: 1.25,
             zIndex: 3,
           }}
         >
-          <div style={{ fontSize: 'clamp(15px, 1.8vw, 20px)', fontWeight: 600, color: theme.mode === 'dark' ? '#ffffff' : '#1e293b' }}>
+          <div style={{ fontSize: 'clamp(15px, 1.8vw, 20px)', fontWeight: 600, color: '#ffffff' }}>
             Daha çox imkan,
           </div>
           <div style={{ fontSize: 'clamp(18px, 2.2vw, 24px)', fontWeight: 800, color: '#e31e24' }}>
@@ -356,7 +337,8 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
           <h1
             className="banner-hero-title"
             style={{
-              color: theme.text,
+              color: '#ffffff',
+              textShadow: '0 2px 14px rgba(0, 0, 0, 0.65)',
               fontFamily: 'Outfit, -apple-system, sans-serif',
               fontWeight: 900,
               lineHeight: 1.15,
@@ -378,7 +360,8 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
           <p
             className="banner-hero-subtitle"
             style={{
-              color: theme.textMuted || '#64748b',
+              color: 'rgba(255, 255, 255, 0.85)',
+              textShadow: '0 1px 8px rgba(0, 0, 0, 0.6)',
               fontSize: 'clamp(0.95rem, 1.2vw, 1.1rem)',
               lineHeight: 1.5,
               margin: '0 0 24px 0',
@@ -390,6 +373,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
           >
             {currentSlide.subtitle}
           </p>
+
 
           <div className="banner-hero-actions-row" style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
             <button
@@ -428,10 +412,10 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
               tabIndex={0}
               aria-label={`Texnologiya: ${currentArticle.title}`}
               style={{
-                backgroundColor: theme.mode === 'dark' ? 'rgba(15, 23, 42, 0.75)' : 'rgba(255, 255, 255, 0.85)',
-                backdropFilter: 'blur(12px)',
-                WebkitBackdropFilter: 'blur(12px)',
-                border: `1px solid ${theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(227, 30, 36, 0.2)'}`,
+                backgroundColor: 'rgba(15, 23, 42, 0.72)',
+                backdropFilter: 'blur(16px)',
+                WebkitBackdropFilter: 'blur(16px)',
+                border: '1px solid rgba(255, 255, 255, 0.12)',
                 borderRadius: '14px',
                 padding: '10px 16px',
                 marginTop: '20px',
@@ -441,7 +425,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 gap: '12px',
-                boxShadow: '0 4px 16px rgba(0, 0, 0, 0.1)',
+                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)',
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
@@ -450,7 +434,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
                     width: '34px',
                     height: '34px',
                     borderRadius: '8px',
-                    backgroundColor: theme.mode === 'dark' ? '#2e0e0e' : '#fee2e2',
+                    backgroundColor: 'rgba(227, 30, 36, 0.15)',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -466,7 +450,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
                       style={{
                         fontSize: '13px',
                         fontWeight: 800,
-                        color: theme.text,
+                        color: '#ffffff',
                         margin: 0,
                         overflow: 'hidden',
                         textOverflow: 'ellipsis',
@@ -494,7 +478,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
                   <p
                     style={{
                       fontSize: '11.5px',
-                      color: theme.textMuted || '#64748b',
+                      color: 'rgba(255, 255, 255, 0.72)',
                       margin: '2px 0 0 0',
                       overflow: 'hidden',
                       textOverflow: 'ellipsis',
@@ -528,11 +512,11 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
                       title="Əvvəlki texnologiya"
                       aria-label="Əvvəlki texnologiya"
                       style={{
-                        background: theme.bgCard,
-                        border: `1px solid ${theme.border}`,
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        border: '1px solid rgba(255, 255, 255, 0.12)',
                         borderRadius: '6px',
                         padding: '4px',
-                        color: theme.text,
+                        color: '#ffffff',
                         cursor: 'pointer',
                         display: 'flex',
                       }}
@@ -546,11 +530,11 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
                       title="Növbəti texnologiya"
                       aria-label="Növbəti texnologiya"
                       style={{
-                        background: theme.bgCard,
-                        border: `1px solid ${theme.border}`,
+                        background: 'rgba(255, 255, 255, 0.1)',
+                        border: '1px solid rgba(255, 255, 255, 0.12)',
                         borderRadius: '6px',
                         padding: '4px',
-                        color: theme.text,
+                        color: '#ffffff',
                         cursor: 'pointer',
                         display: 'flex',
                       }}
@@ -576,7 +560,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
             gap: '16px',
             fontSize: '13px',
             fontWeight: 700,
-            color: theme.textMuted || '#64748b',
+            color: 'rgba(255, 255, 255, 0.6)',
           }}
         >
           {HERO_SLIDES.map((slide, idx) => {
@@ -596,7 +580,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
                   border: 'none',
                   cursor: 'pointer',
                   padding: '6px 4px',
-                  color: isActive ? theme.text : theme.textMuted || '#94a3b8',
+                  color: isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.55)',
                   fontWeight: isActive ? 800 : 600,
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -609,7 +593,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
                   style={{
                     width: '38px',
                     height: '3px',
-                    backgroundColor: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.18)' : 'rgba(0, 0, 0, 0.12)',
+                    backgroundColor: 'rgba(255, 255, 255, 0.22)',
                     borderRadius: '3px',
                     overflow: 'hidden',
                     position: 'relative',
@@ -622,7 +606,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
                       height: '100%',
                       backgroundColor: '#e31e24',
                       borderRadius: '3px',
-                      transition: isActive && !isPaused ? 'width 0.05s linear' : 'none',
+                      transition: isActive && !isPaused ? 'width 0.08s linear' : 'none',
                     }}
                   />
                 </div>

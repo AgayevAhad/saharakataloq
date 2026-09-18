@@ -84,7 +84,6 @@ describe('BannerHero Edge Dissolve & Boundary-Free Masking', () => {
     const heroCard = container.querySelector('.banner-hero-card') as HTMLElement;
     expect(heroCard).toBeTruthy();
     expect(heroCard.style.border).toMatch(/none/);
-    expect(heroCard.style.boxShadow).toBe('none');
   });
 });
 
