@@ -32,6 +32,7 @@ import {
   Zap,
   Wind,
   Thermometer,
+  ChevronRight,
 } from 'lucide-react';
 import { Brand, CatalogCategory, Product, CatalogSettings } from '../../types/product';
 import { ThemeColors, DESIGN_TOKENS } from '../../types/theme';
@@ -101,6 +102,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const [isUserDrawerOpen, setIsUserDrawerOpen] = useState(false);
+  const [activeCatalogGroup, setActiveCatalogGroup] = useState<'large' | 'built_in' | 'small' | 'climate' | 'all'>('large');
   const [isCompact, setIsCompact] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
   const [hoveredNavTab, setHoveredNavTab] = useState<string | null>(null);
@@ -1258,317 +1260,413 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
           }}
         >
           <div className="catalog-container" style={{ padding: '0 clamp(24px, 4vw, 56px)' }}>
-                {hoveredNavTab === 'catalog' && (
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(12, 1fr)', gap: '28px', alignItems: 'start' }}>
-                    {/* Left 9 Columns: Structured Multi-Level Category Taxonomy Groups */}
-                    <div style={{ gridColumn: 'span 9', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '24px' }}>
-                      {/* Group 1: Böyük Məişət Texnikası */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <div style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#e31e24', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                          <Package size={14} color="#e31e24" />
-                          <span>Böyük Məişət Texnikası</span>
+                {hoveredNavTab === 'catalog' && (() => {
+                  const departmentGroups = [
+                    {
+                      id: 'large',
+                      name: 'Böyük Məişət Texnikası',
+                      icon: Package,
+                      filter: (c: CatalogCategory) =>
+                        ['washer', 'refrigerator', 'oven', 'dishwasher', 'freezer'].includes(c.id) ||
+                        ['paltaryuyanlar', 'soyuducular', 'sobalar', 'qabyuyanlar', 'dondurucular'].includes(c.slug || '') ||
+                        c.name.toLowerCase().includes('soyuducu') ||
+                        c.name.toLowerCase().includes('paltaryuyan') ||
+                        c.name.toLowerCase().includes('qabyuyan') ||
+                        c.name.toLowerCase().includes('dondurucu') ||
+                        (c.name.toLowerCase().includes('soba') && !c.name.toLowerCase().includes('mikrodalğ')),
+                    },
+                    {
+                      id: 'built_in',
+                      name: 'Quraşdırılan Texnika',
+                      icon: Flame,
+                      filter: (c: CatalogCategory) =>
+                        ['cooktop', 'hood', 'microwave', 'built_in_oven'].includes(c.id) ||
+                        ['bisirme-panelleri', 'aspiratorlar', 'mikrodalgali-sobalar', 'qurasdirilan-sobalar'].includes(c.slug || '') ||
+                        c.name.toLowerCase().includes('bişirmə') ||
+                        c.name.toLowerCase().includes('panel') ||
+                        c.name.toLowerCase().includes('aspirator') ||
+                        c.name.toLowerCase().includes('mikrodalğ') ||
+                        c.name.toLowerCase().includes('quraşdırılan'),
+                    },
+                    {
+                      id: 'small',
+                      name: 'Kiçik Məişət Texnikası',
+                      icon: Zap,
+                      filter: (c: CatalogCategory) =>
+                        ['airfryer', 'vacuum_cleaner', 'thermopot', 'meat_grinder', 'iron', 'kettle', 'blender'].includes(c.id) ||
+                        ['airfryer', 'tozsoranlar', 'caydanlar', 'blenderler', 'etcakan'].includes(c.slug || '') ||
+                        c.name.toLowerCase().includes('airfryer') ||
+                        c.name.toLowerCase().includes('tozsoran') ||
+                        c.name.toLowerCase().includes('çaydan') ||
+                        c.name.toLowerCase().includes('ətçəkən') ||
+                        c.name.toLowerCase().includes('blender') ||
+                        c.name.toLowerCase().includes('ütü'),
+                    },
+                    {
+                      id: 'climate',
+                      name: 'İqlim Texnikası',
+                      icon: Wind,
+                      filter: (c: CatalogCategory) =>
+                        ['air_conditioner', 'heater', 'fan', 'climate'].includes(c.id) ||
+                        ['kondisionerler', 'qizdiricilar', 'ventilyatorlar', 'iqlim'].includes(c.slug || '') ||
+                        c.name.toLowerCase().includes('kondisioner') ||
+                        c.name.toLowerCase().includes('iqlim') ||
+                        c.name.toLowerCase().includes('qızdırıcı') ||
+                        c.name.toLowerCase().includes('ventilyator'),
+                    },
+                    {
+                      id: 'all',
+                      name: 'Bütün Kateqoriyalar',
+                      icon: Sparkles,
+                      filter: () => true,
+                    },
+                  ];
+
+                  const currentGroup = departmentGroups.find((g) => g.id === activeCatalogGroup) || departmentGroups[0];
+                  const currentGroupCategories = activeCatalogGroup === 'all'
+                    ? activeCategories
+                    : activeCategories.filter(currentGroup.filter);
+                  const displayCategories = currentGroupCategories.length > 0 ? currentGroupCategories : activeCategories;
+
+                  return (
+                    <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr 205px', gap: '24px', alignItems: 'start' }}>
+                      {/* Left: Parent Departments Vertical List (alt-alta sözlər, uyğun icon, açılacaq hissi verən chevron) */}
+                      <div
+                        style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '4px',
+                          borderRight: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'}`,
+                          paddingRight: '16px',
+                        }}
+                      >
+                        <div
+                          style={{
+                            fontSize: '11px',
+                            fontWeight: 800,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.08em',
+                            color: theme.textMuted,
+                            padding: '0 8px 6px',
+                          }}
+                        >
+                          Bölmələr
                         </div>
-                        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                          {activeCategories
-                            .filter((c) => ['washer', 'refrigerator', 'oven'].includes(c.id) || ['paltaryuyanlar', 'soyuducular', 'sobalar'].includes(c.slug || ''))
-                            .map((c) => {
-                              const count = products.filter((p) => p.category === c.id && p.status !== 'draft').length;
-                              return (
-                                <li key={c.id}>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setHoveredNavTab(null);
-                                      onNavigate('catalog', c.id);
-                                    }}
-                                    style={{
-                                      width: '100%',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'space-between',
-                                      padding: '6px 10px',
-                                      borderRadius: '8px',
-                                      background: 'transparent',
-                                      border: 'none',
-                                      fontSize: '13px',
-                                      fontWeight: 600,
-                                      color: theme.text,
-                                      cursor: 'pointer',
-                                      transition: 'all 0.15s ease',
-                                      textAlign: 'left',
-                                    }}
-                                    onMouseEnter={(e) => {
-                                      e.currentTarget.style.backgroundColor = themeMode === 'dark' ? 'rgba(227, 30, 36, 0.12)' : 'rgba(227, 30, 36, 0.06)';
-                                      e.currentTarget.style.color = '#e31e24';
-                                      e.currentTarget.style.transform = 'translateX(3px)';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                      e.currentTarget.style.backgroundColor = 'transparent';
-                                      e.currentTarget.style.color = theme.text;
-                                      e.currentTarget.style.transform = 'none';
-                                    }}
-                                  >
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                      {getCategoryIcon(c.id, c.slug)}
-                                      <span>{c.name}</span>
-                                    </div>
-                                    {count > 0 && (
-                                      <span style={{ fontSize: '11px', color: theme.textMuted, fontWeight: 500 }}>
-                                        {count} model
-                                      </span>
-                                    )}
-                                  </button>
-                                </li>
-                              );
-                            })}
-                        </ul>
+
+                        {departmentGroups.map((grp) => {
+                          const isActive = activeCatalogGroup === grp.id;
+                          const GrpIcon = grp.icon;
+                          return (
+                            <button
+                              key={grp.id}
+                              type="button"
+                              onMouseEnter={() => setActiveCatalogGroup(grp.id as any)}
+                              onClick={() => {
+                                setHoveredNavTab(null);
+                                onNavigate('catalog');
+                              }}
+                              style={{
+                                width: '100%',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: '9px 12px',
+                                borderRadius: '8px',
+                                border: 'none',
+                                backgroundColor: isActive
+                                  ? themeMode === 'dark'
+                                    ? 'rgba(227, 30, 36, 0.16)'
+                                    : 'rgba(227, 30, 36, 0.08)'
+                                  : 'transparent',
+                                color: isActive ? '#e31e24' : theme.text,
+                                fontSize: '13px',
+                                fontWeight: isActive ? 700 : 500,
+                                cursor: 'pointer',
+                                transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
+                                textAlign: 'left',
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+                                <GrpIcon
+                                  size={15}
+                                  style={{
+                                    color: isActive ? '#e31e24' : themeMode === 'dark' ? '#94a3b8' : '#64748b',
+                                    flexShrink: 0,
+                                    transition: 'color 0.15s ease',
+                                  }}
+                                />
+                                <span>{grp.name}</span>
+                              </div>
+                              <ChevronRight
+                                size={14}
+                                style={{
+                                  color: isActive ? '#e31e24' : themeMode === 'dark' ? '#64748b' : '#94a3b8',
+                                  transform: isActive ? 'translateX(2px)' : 'none',
+                                  transition: 'transform 0.18s ease, color 0.18s ease',
+                                  opacity: isActive ? 1 : 0.6,
+                                  flexShrink: 0,
+                                }}
+                              />
+                            </button>
+                          );
+                        })}
                       </div>
 
-                      {/* Group 2: Quraşdırılan Texnika */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <div style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#e31e24', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                          <Flame size={14} color="#e31e24" />
-                          <span>Quraşdırılan Texnika</span>
+                      {/* Center: Dynamic Subcategories Panel (Üstünə gələndə uyğun açılış) */}
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', minWidth: 0 }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            paddingBottom: '8px',
+                            borderBottom: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)'}`,
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <currentGroup.icon size={15} style={{ color: '#e31e24' }} />
+                            <span style={{ fontSize: '13px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', color: theme.text }}>
+                              {currentGroup.name}
+                            </span>
+                            <span style={{ fontSize: '11px', color: theme.textMuted, fontWeight: 500 }}>
+                              ({displayCategories.length} kateqoriya)
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setHoveredNavTab(null);
+                              onNavigate('catalog');
+                            }}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: '#e31e24',
+                              fontSize: '11.5px',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              padding: 0,
+                            }}
+                          >
+                            <span>Bütün kataloq</span>
+                            <ArrowRight size={12} />
+                          </button>
                         </div>
-                        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                          {activeCategories
-                            .filter((c) => ['cooktop', 'hood', 'microwave'].includes(c.id) || ['bisirme-panelleri', 'aspiratorlar', 'mikrodalgali-sobalar'].includes(c.slug || ''))
-                            .map((c) => {
-                              const count = products.filter((p) => p.category === c.id && p.status !== 'draft').length;
-                              return (
-                                <li key={c.id}>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setHoveredNavTab(null);
-                                      onNavigate('catalog', c.id);
-                                    }}
+
+                        <div
+                          style={{
+                            display: 'grid',
+                            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                            gap: '8px 12px',
+                          }}
+                        >
+                          {displayCategories.map((c) => {
+                            const count = products.filter((p) => p.category === c.id && p.status !== 'draft').length;
+                            return (
+                              <button
+                                key={c.id}
+                                type="button"
+                                onClick={() => {
+                                  setHoveredNavTab(null);
+                                  onNavigate('catalog', c.id);
+                                }}
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'space-between',
+                                  padding: '8px 10px',
+                                  borderRadius: '8px',
+                                  backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : 'rgba(248, 250, 252, 0.75)',
+                                  border: `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.05)'}`,
+                                  color: theme.text,
+                                  cursor: 'pointer',
+                                  transition: 'all 0.15s ease',
+                                  textAlign: 'left',
+                                }}
+                                onMouseEnter={(e) => {
+                                  e.currentTarget.style.backgroundColor = themeMode === 'dark' ? 'rgba(227, 30, 36, 0.12)' : 'rgba(227, 30, 36, 0.06)';
+                                  e.currentTarget.style.borderColor = 'rgba(227, 30, 36, 0.35)';
+                                  e.currentTarget.style.transform = 'translateY(-1px) translateX(2px)';
+                                }}
+                                onMouseLeave={(e) => {
+                                  e.currentTarget.style.backgroundColor = themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : 'rgba(248, 250, 252, 0.75)';
+                                  e.currentTarget.style.borderColor = themeMode === 'dark' ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.05)';
+                                  e.currentTarget.style.transform = 'none';
+                                }}
+                              >
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
+                                  <div
                                     style={{
-                                      width: '100%',
+                                      width: '26px',
+                                      height: '26px',
+                                      borderRadius: '6px',
                                       display: 'flex',
                                       alignItems: 'center',
-                                      justifyContent: 'space-between',
-                                      padding: '6px 10px',
-                                      borderRadius: '8px',
-                                      background: 'transparent',
-                                      border: 'none',
-                                      fontSize: '13px',
-                                      fontWeight: 600,
-                                      color: theme.text,
-                                      cursor: 'pointer',
-                                      transition: 'all 0.15s ease',
-                                      textAlign: 'left',
-                                    }}
-                                    onMouseEnter={(e) => {
-                                      e.currentTarget.style.backgroundColor = themeMode === 'dark' ? 'rgba(227, 30, 36, 0.12)' : 'rgba(227, 30, 36, 0.06)';
-                                      e.currentTarget.style.color = '#e31e24';
-                                      e.currentTarget.style.transform = 'translateX(3px)';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                      e.currentTarget.style.backgroundColor = 'transparent';
-                                      e.currentTarget.style.color = theme.text;
-                                      e.currentTarget.style.transform = 'none';
+                                      justifyContent: 'center',
+                                      backgroundColor: themeMode === 'dark' ? 'rgba(255,255,255,0.06)' : '#ffffff',
+                                      boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
+                                      flexShrink: 0,
                                     }}
                                   >
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                      {getCategoryIcon(c.id, c.slug)}
-                                      <span>{c.name}</span>
-                                    </div>
-                                    {count > 0 && (
-                                      <span style={{ fontSize: '11px', color: theme.textMuted, fontWeight: 500 }}>
-                                        {count} model
-                                      </span>
-                                    )}
-                                  </button>
-                                </li>
-                              );
-                            })}
-                        </ul>
-                      </div>
-
-                      {/* Group 3: Kiçik Məişət & İqlim */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                        <div style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: '#e31e24', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '4px' }}>
-                          <Wind size={14} color="#e31e24" />
-                          <span>Kiçik Məişət & İqlim</span>
-                        </div>
-                        <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                          {activeCategories
-                            .filter((c) => ['airfryer', 'vacuum_cleaner', 'air_conditioner', 'thermopot', 'meat_grinder', 'iron', 'tv'].includes(c.id) || ['airfryer', 'tozsoranlar', 'kondisionerler'].includes(c.slug || ''))
-                            .slice(0, 4)
-                            .map((c) => {
-                              const count = products.filter((p) => p.category === c.id && p.status !== 'draft').length;
-                              return (
-                                <li key={c.id}>
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setHoveredNavTab(null);
-                                      onNavigate('catalog', c.id);
-                                    }}
+                                    {getCategoryIcon(c.id, c.slug)}
+                                  </div>
+                                  <span style={{ fontSize: '12.5px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {c.name}
+                                  </span>
+                                </div>
+                                {count > 0 && (
+                                  <span
                                     style={{
-                                      width: '100%',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'space-between',
-                                      padding: '6px 10px',
-                                      borderRadius: '8px',
-                                      background: 'transparent',
-                                      border: 'none',
-                                      fontSize: '13px',
-                                      fontWeight: 600,
-                                      color: theme.text,
-                                      cursor: 'pointer',
-                                      transition: 'all 0.15s ease',
-                                      textAlign: 'left',
-                                    }}
-                                    onMouseEnter={(e) => {
-                                      e.currentTarget.style.backgroundColor = themeMode === 'dark' ? 'rgba(227, 30, 36, 0.12)' : 'rgba(227, 30, 36, 0.06)';
-                                      e.currentTarget.style.color = '#e31e24';
-                                      e.currentTarget.style.transform = 'translateX(3px)';
-                                    }}
-                                    onMouseLeave={(e) => {
-                                      e.currentTarget.style.backgroundColor = 'transparent';
-                                      e.currentTarget.style.color = theme.text;
-                                      e.currentTarget.style.transform = 'none';
+                                      fontSize: '10.5px',
+                                      color: theme.textMuted,
+                                      fontWeight: 500,
+                                      padding: '1px 5px',
+                                      borderRadius: '4px',
+                                      backgroundColor: themeMode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                                      flexShrink: 0,
+                                      marginLeft: '6px',
                                     }}
                                   >
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                      {getCategoryIcon(c.id, c.slug)}
-                                      <span>{c.name}</span>
-                                    </div>
-                                    {count > 0 && (
-                                      <span style={{ fontSize: '11px', color: theme.textMuted, fontWeight: 500 }}>
-                                        {count} model
-                                      </span>
-                                    )}
-                                  </button>
-                                </li>
-                              );
-                            })}
-                        </ul>
-                      </div>
-                    </div>
-
-                    {/* Right 3 Columns: Compact Official Brand Cards with Original Logos */}
-                    <div style={{ gridColumn: 'span 3', borderLeft: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`, paddingLeft: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div style={{ fontSize: '12px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: theme.textMuted, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                          <Tag size={13} color="#e31e24" />
-                          <span>Rəsmi Brendlər</span>
+                                    {count}
+                                  </span>
+                                )}
+                              </button>
+                            );
+                          })}
                         </div>
+                      </div>
+
+                      {/* Right: Compact Brand Panel (Azaldılmış en ilə brendlər) */}
+                      <div
+                        style={{
+                          borderLeft: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
+                          paddingLeft: '16px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '8px',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                          <div style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: theme.textMuted, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <Tag size={12} color="#e31e24" />
+                            <span>Rəsmi Brendlər</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setHoveredNavTab(null);
+                              onNavigate('brands');
+                            }}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              color: '#e31e24',
+                              fontSize: '11px',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '3px',
+                              padding: 0,
+                            }}
+                          >
+                            <span>Hamısı</span>
+                            <ArrowRight size={11} />
+                          </button>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
+                          {brands.filter((b) => b.active).slice(0, 4).map((brand) => (
+                            <button
+                              key={brand.id}
+                              type="button"
+                              onClick={() => {
+                                setHoveredNavTab(null);
+                                onNavigate('brand', brand.id);
+                              }}
+                              style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'space-between',
+                                padding: '6px 8px',
+                                borderRadius: '7px',
+                                backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.45)' : 'rgba(248, 250, 252, 0.65)',
+                                border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
+                                cursor: 'pointer',
+                                transition: 'all 0.15s ease',
+                                textAlign: 'left',
+                              }}
+                              onMouseEnter={(e) => {
+                                e.currentTarget.style.borderColor = '#e31e24';
+                                e.currentTarget.style.transform = 'translateY(-1px)';
+                              }}
+                              onMouseLeave={(e) => {
+                                e.currentTarget.style.borderColor = themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+                                e.currentTarget.style.transform = 'none';
+                              }}
+                            >
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '7px', overflow: 'hidden' }}>
+                                {brand.logo ? (
+                                  <ShimmerImage
+                                    src={brand.logo}
+                                    alt={brand.name}
+                                    spinnerSize={10}
+                                    containerStyle={{ width: '32px', height: '16px', flexShrink: 0 }}
+                                    style={{ objectFit: 'contain' }}
+                                  />
+                                ) : (
+                                  <div style={{ width: '32px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '10px', color: theme.text, flexShrink: 0 }}>
+                                    {brand.name}
+                                  </div>
+                                )}
+                                <div style={{ overflow: 'hidden' }}>
+                                  <div style={{ fontSize: '11.5px', fontWeight: 700, color: theme.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                    {brand.name}
+                                  </div>
+                                  <div style={{ fontSize: '9px', color: theme.textMuted }}>
+                                    {brand.originCountry || 'Orijinal'}
+                                  </div>
+                                </div>
+                              </div>
+                              <ArrowRight size={11} style={{ color: theme.textMuted, flexShrink: 0 }} />
+                            </button>
+                          ))}
+                        </div>
+
                         <button
                           type="button"
                           onClick={() => {
                             setHoveredNavTab(null);
-                            onNavigate('brands');
+                            onNavigate('catalog');
                           }}
                           style={{
-                            background: 'none',
+                            marginTop: '2px',
+                            padding: '6px 10px',
+                            borderRadius: '7px',
+                            backgroundColor: '#e31e24',
+                            color: '#ffffff',
                             border: 'none',
-                            color: '#e31e24',
                             fontSize: '11px',
                             fontWeight: 700,
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
-                            gap: '4px',
-                            padding: 0,
+                            justifyContent: 'center',
+                            gap: '5px',
+                            boxShadow: '0 2px 8px rgba(227, 30, 36, 0.25)',
+                            transition: 'opacity 0.15s ease',
                           }}
                         >
-                          <span>Hamısı</span>
-                          <ArrowRight size={12} />
+                          <span>Kataloqa bax</span>
+                          <ArrowRight size={11} />
                         </button>
                       </div>
-
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                        {brands.filter((b) => b.active).slice(0, 4).map((brand) => (
-                          <button
-                            key={brand.id}
-                            type="button"
-                            onClick={() => {
-                              setHoveredNavTab(null);
-                              onNavigate('brand', brand.id);
-                            }}
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              padding: '7px 10px',
-                              borderRadius: '8px',
-                              backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.45)' : 'rgba(248, 250, 252, 0.65)',
-                              border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
-                              cursor: 'pointer',
-                              transition: 'all 0.15s ease',
-                              textAlign: 'left',
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.borderColor = '#e31e24';
-                              e.currentTarget.style.transform = 'translateY(-1px)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.borderColor = themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
-                              e.currentTarget.style.transform = 'none';
-                            }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              {brand.logo ? (
-                                <ShimmerImage
-                                  src={brand.logo}
-                                  alt={brand.name}
-                                  spinnerSize={10}
-                                  containerStyle={{ width: '36px', height: '18px', flexShrink: 0 }}
-                                  style={{ objectFit: 'contain' }}
-                                />
-                              ) : (
-                                <div style={{ width: '36px', height: '18px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '10.5px', color: theme.text }}>
-                                  {brand.name}
-                                </div>
-                              )}
-                              <div style={{ overflow: 'hidden' }}>
-                                <div style={{ fontSize: '12px', fontWeight: 700, color: theme.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                  {brand.name}
-                                </div>
-                                <div style={{ fontSize: '9.5px', color: theme.textMuted }}>
-                                  {brand.originCountry || 'Orijinal'}
-                                </div>
-                              </div>
-                            </div>
-                            <ArrowRight size={13} style={{ color: theme.textMuted, flexShrink: 0 }} />
-                          </button>
-                        ))}
-                      </div>
-
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setHoveredNavTab(null);
-                          onNavigate('catalog');
-                        }}
-                        style={{
-                          marginTop: '2px',
-                          padding: '7px 12px',
-                          borderRadius: '8px',
-                          backgroundColor: '#e31e24',
-                          color: '#ffffff',
-                          border: 'none',
-                          fontSize: '11.5px',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '6px',
-                          boxShadow: '0 3px 10px rgba(227, 30, 36, 0.25)',
-                          transition: 'opacity 0.15s ease',
-                        }}
-                      >
-                        <span>Kataloqa və filtrlərə bax</span>
-                        <ArrowRight size={13} />
-                      </button>
                     </div>
-                  </div>
-                )}
+                  );
+                })()}
 
                 {hoveredNavTab === 'brands' && (
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '32px', flexWrap: 'wrap' }}>

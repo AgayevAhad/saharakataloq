@@ -116,8 +116,8 @@ describe('Sahara Electronics Site Storefront Navigation & Components', () => {
         />
       );
 
-      expect(screen.getByText(/Böyük Məişət Texnikası/i)).toBeDefined();
-      expect(screen.getByText(/Aspiratorlar/i)).toBeDefined();
+      expect(screen.getAllByText(/Böyük Məişət Texnikası/i).length).toBeGreaterThan(0);
+      expect(screen.getAllByText(/Aspiratorlar/i).length).toBeGreaterThan(0);
       expect(screen.getAllByText(/Brendlər/i).length).toBeGreaterThan(0);
       expect(screen.getByText(/ARDO/i)).toBeDefined();
     });

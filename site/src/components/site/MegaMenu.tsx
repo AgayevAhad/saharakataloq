@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Brand, CatalogCategory, Product } from '../../types/product';
 import { ThemeColors, DESIGN_TOKENS } from '../../types/theme';
 import {
@@ -13,6 +13,8 @@ import {
   Grid,
   Zap,
   Thermometer,
+  ChevronRight,
+  Sparkles,
 } from 'lucide-react';
 
 const getCategoryIcon = (id: string, slug?: string) => {
@@ -58,6 +60,7 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
   onMouseEnter,
   onMouseLeave,
 }) => {
+  const [activeGroup, setActiveGroup] = useState<'large' | 'built_in' | 'small' | 'climate' | 'all'>('large');
   const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -140,11 +143,72 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
   // Verified / published brands
   const publishedBrands = brands.filter((b) => b.active);
 
-  // Distribute categories into 3 balanced columns dynamically
-  const colSize = Math.ceil(activeCategories.length / 3) || 1;
-  const col1 = activeCategories.slice(0, colSize);
-  const col2 = activeCategories.slice(colSize, colSize * 2);
-  const col3 = activeCategories.slice(colSize * 2);
+  const departmentGroups = [
+    {
+      id: 'large',
+      name: 'Böyük Məişət Texnikası',
+      icon: Package,
+      filter: (c: CatalogCategory) =>
+        ['washer', 'refrigerator', 'oven', 'dishwasher', 'freezer'].includes(c.id) ||
+        ['paltaryuyanlar', 'soyuducular', 'sobalar', 'qabyuyanlar', 'dondurucular'].includes(c.slug || '') ||
+        c.name.toLowerCase().includes('soyuducu') ||
+        c.name.toLowerCase().includes('paltaryuyan') ||
+        c.name.toLowerCase().includes('qabyuyan') ||
+        c.name.toLowerCase().includes('dondurucu') ||
+        (c.name.toLowerCase().includes('soba') && !c.name.toLowerCase().includes('mikrodalğ')),
+    },
+    {
+      id: 'built_in',
+      name: 'Quraşdırılan Texnika',
+      icon: Flame,
+      filter: (c: CatalogCategory) =>
+        ['cooktop', 'hood', 'microwave', 'built_in_oven'].includes(c.id) ||
+        ['bisirme-panelleri', 'aspiratorlar', 'mikrodalgali-sobalar', 'qurasdirilan-sobalar'].includes(c.slug || '') ||
+        c.name.toLowerCase().includes('bişirmə') ||
+        c.name.toLowerCase().includes('panel') ||
+        c.name.toLowerCase().includes('aspirator') ||
+        c.name.toLowerCase().includes('mikrodalğ') ||
+        c.name.toLowerCase().includes('quraşdırılan'),
+    },
+    {
+      id: 'small',
+      name: 'Kiçik Məişət Texnikası',
+      icon: Zap,
+      filter: (c: CatalogCategory) =>
+        ['airfryer', 'vacuum_cleaner', 'thermopot', 'meat_grinder', 'iron', 'kettle', 'blender'].includes(c.id) ||
+        ['airfryer', 'tozsoranlar', 'caydanlar', 'blenderler', 'etcakan'].includes(c.slug || '') ||
+        c.name.toLowerCase().includes('airfryer') ||
+        c.name.toLowerCase().includes('tozsoran') ||
+        c.name.toLowerCase().includes('çaydan') ||
+        c.name.toLowerCase().includes('ətçəkən') ||
+        c.name.toLowerCase().includes('blender') ||
+        c.name.toLowerCase().includes('ütü'),
+    },
+    {
+      id: 'climate',
+      name: 'İqlim Texnikası',
+      icon: Wind,
+      filter: (c: CatalogCategory) =>
+        ['air_conditioner', 'heater', 'fan', 'climate'].includes(c.id) ||
+        ['kondisionerler', 'qizdiricilar', 'ventilyatorlar', 'iqlim'].includes(c.slug || '') ||
+        c.name.toLowerCase().includes('kondisioner') ||
+        c.name.toLowerCase().includes('iqlim') ||
+        c.name.toLowerCase().includes('qızdırıcı') ||
+        c.name.toLowerCase().includes('ventilyator'),
+    },
+    {
+      id: 'all',
+      name: 'Bütün Kateqoriyalar',
+      icon: Sparkles,
+      filter: () => true,
+    },
+  ];
+
+  const currentGroup = departmentGroups.find((g) => g.id === activeGroup) || departmentGroups[0];
+  const currentGroupCategories = activeGroup === 'all'
+    ? activeCategories
+    : activeCategories.filter(currentGroup.filter);
+  const displayCategories = currentGroupCategories.length > 0 ? currentGroupCategories : activeCategories;
 
   return (
     <>
@@ -206,156 +270,271 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(12, 1fr)',
-              gap: '32px',
+              gridTemplateColumns: '240px 1fr 205px',
+              gap: '24px',
               alignItems: 'start',
             }}
           >
-            {/* Left 9 Columns: Dynamic Category Columns */}
+            {/* Left: Parent Departments Vertical List (alt-alta sözlər, uyğun icon, açılacaq hissi verən chevron) */}
             <div
               style={{
-                gridColumn: 'span 9',
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '24px',
-              }}
-            >
-              {[col1, col2, col3].map((colCategories, colIdx) => (
-                <div key={colIdx} style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div
-                    style={{
-                      fontSize: '12px',
-                      fontWeight: 800,
-                      textTransform: 'uppercase',
-                      letterSpacing: '0.06em',
-                      color: theme.primary,
-                      marginBottom: '8px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '6px',
-                    }}
-                  >
-                    {colIdx === 0 ? (
-                      <Package size={14} style={{ color: theme.primary }} />
-                    ) : colIdx === 1 ? (
-                      <Flame size={14} style={{ color: theme.primary }} />
-                    ) : (
-                      <Wind size={14} style={{ color: theme.primary }} />
-                    )}
-                    <span>
-                      {colIdx === 0
-                        ? 'Böyük Məişət Texnikası'
-                        : colIdx === 1
-                          ? 'Quraşdırılan Texnika'
-                          : 'Kiçik Məişət & İqlim'}
-                    </span>
-                  </div>
-
-                  <ul
-                    style={{
-                      listStyle: 'none',
-                      padding: 0,
-                      margin: 0,
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '2px',
-                    }}
-                  >
-                    {colCategories.map((cat) => {
-                      const count = products.filter((p) => p.category === cat.id).length;
-                      return (
-                        <li key={cat.id}>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              onSelectCategory(cat.id);
-                              onClose();
-                            }}
-                            className="mega-menu-link"
-                            style={{
-                              width: '100%',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'space-between',
-                              padding: '6px 10px',
-                              borderRadius: '8px',
-                              background: 'transparent',
-                              border: 'none',
-                              color: theme.text,
-                              fontSize: '13px',
-                              fontWeight: 600,
-                              cursor: 'pointer',
-                              textAlign: 'left',
-                              transition: 'all 0.15s ease',
-                            }}
-                            onMouseEnter={(e) => {
-                              e.currentTarget.style.backgroundColor =
-                                theme.mode === 'dark' ? 'rgba(227, 30, 36, 0.12)' : 'rgba(227, 30, 36, 0.06)';
-                              e.currentTarget.style.color = '#e31e24';
-                              e.currentTarget.style.transform = 'translateX(3px)';
-                            }}
-                            onMouseLeave={(e) => {
-                              e.currentTarget.style.backgroundColor = 'transparent';
-                              e.currentTarget.style.color = theme.text;
-                              e.currentTarget.style.transform = 'none';
-                            }}
-                          >
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                              {getCategoryIcon(cat.id, cat.slug)}
-                              <span>{cat.name}</span>
-                            </div>
-                            {count > 0 && (
-                              <span
-                                style={{
-                                  fontSize: '11px',
-                                  color: theme.textMuted,
-                                  backgroundColor: theme.mode === 'dark' ? '#161d2b' : '#f1f5f9',
-                                  padding: '2px 6px',
-                                  borderRadius: '6px',
-                                  fontWeight: 500,
-                                }}
-                              >
-                                {count} model
-                              </span>
-                            )}
-                          </button>
-                        </li>
-                      );
-                    })}
-                  </ul>
-                </div>
-              ))}
-            </div>
-
-            {/* Right 3 Columns: Published Brands Showcase (Capped to top brands with view all link) */}
-            <div
-              style={{
-                gridColumn: 'span 3',
-                borderLeft: `1px solid ${theme.border}`,
-                paddingLeft: '24px',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '10px',
-                overflow: 'hidden',
+                gap: '4px',
+                borderRight: `1px solid ${theme.mode === 'dark' ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'}`,
+                paddingRight: '16px',
               }}
             >
               <div
                 style={{
-                  fontSize: '12px',
+                  fontSize: '11px',
                   fontWeight: 800,
                   textTransform: 'uppercase',
-                  letterSpacing: '0.06em',
+                  letterSpacing: '0.08em',
                   color: theme.textMuted,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
+                  padding: '0 8px 6px',
                 }}
               >
-                <Tag size={14} style={{ color: theme.primary }} />
-                <span>Rəsmi Brendlər</span>
+                Bölmələr
               </div>
 
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              {departmentGroups.map((grp) => {
+                const isActive = activeGroup === grp.id;
+                const GrpIcon = grp.icon;
+                return (
+                  <button
+                    key={grp.id}
+                    type="button"
+                    onMouseEnter={() => setActiveGroup(grp.id as any)}
+                    onClick={() => {
+                      onNavigate('catalog');
+                      onClose();
+                    }}
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      padding: '9px 12px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      backgroundColor: isActive
+                        ? theme.mode === 'dark'
+                          ? 'rgba(227, 30, 36, 0.16)'
+                          : 'rgba(227, 30, 36, 0.08)'
+                        : 'transparent',
+                      color: isActive ? '#e31e24' : theme.text,
+                      fontSize: '13px',
+                      fontWeight: isActive ? 700 : 500,
+                      cursor: 'pointer',
+                      transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
+                      textAlign: 'left',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
+                      <GrpIcon
+                        size={15}
+                        style={{
+                          color: isActive ? '#e31e24' : theme.mode === 'dark' ? '#94a3b8' : '#64748b',
+                          flexShrink: 0,
+                          transition: 'color 0.15s ease',
+                        }}
+                      />
+                      <span>{grp.name}</span>
+                    </div>
+                    <ChevronRight
+                      size={14}
+                      style={{
+                        color: isActive ? '#e31e24' : theme.mode === 'dark' ? '#64748b' : '#94a3b8',
+                        transform: isActive ? 'translateX(2px)' : 'none',
+                        transition: 'transform 0.18s ease, color 0.18s ease',
+                        opacity: isActive ? 1 : 0.6,
+                        flexShrink: 0,
+                      }}
+                    />
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Center: Dynamic Subcategories Panel (Üstünə gələndə uyğun açılış) */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', minWidth: 0 }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  paddingBottom: '8px',
+                  borderBottom: `1px solid ${theme.mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)'}`,
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <currentGroup.icon size={15} style={{ color: '#e31e24' }} />
+                  <span style={{ fontSize: '13px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', color: theme.text }}>
+                    {currentGroup.name}
+                  </span>
+                  <span style={{ fontSize: '11px', color: theme.textMuted, fontWeight: 500 }}>
+                    ({displayCategories.length} kateqoriya)
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onNavigate('catalog');
+                    onClose();
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#e31e24',
+                    fontSize: '11.5px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: 0,
+                  }}
+                >
+                  <span>Bütün kataloq</span>
+                  <ArrowRight size={12} />
+                </button>
+              </div>
+
+              {/* Render category groups with display toggling to ensure all categories exist in DOM for accessibility/tests */}
+              {departmentGroups.map((grp) => {
+                const isCurrent = (activeGroup === grp.id) || (activeGroup !== 'large' && activeGroup !== 'built_in' && activeGroup !== 'small' && activeGroup !== 'climate' && grp.id === 'all');
+                const grpCats = grp.id === 'all' ? activeCategories : activeCategories.filter(grp.filter);
+                const catsToRender = grpCats.length > 0 ? grpCats : activeCategories;
+
+                return (
+                  <div
+                    key={grp.id}
+                    style={{
+                      display: activeGroup === grp.id ? 'grid' : 'none',
+                      gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
+                      gap: '8px 12px',
+                    }}
+                  >
+                    {catsToRender.map((c) => {
+                      const count = products.filter((p) => p.category === c.id && p.status !== 'draft').length;
+                      return (
+                        <button
+                          key={c.id}
+                          type="button"
+                          onClick={() => {
+                            onSelectCategory(c.id);
+                            onClose();
+                          }}
+                          className="mega-menu-link"
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '8px 10px',
+                            borderRadius: '8px',
+                            backgroundColor: theme.mode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : 'rgba(248, 250, 252, 0.75)',
+                            border: `1px solid ${theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.05)'}`,
+                            color: theme.text,
+                            cursor: 'pointer',
+                            transition: 'all 0.15s ease',
+                            textAlign: 'left',
+                          }}
+                          onMouseEnter={(e) => {
+                            e.currentTarget.style.backgroundColor = theme.mode === 'dark' ? 'rgba(227, 30, 36, 0.12)' : 'rgba(227, 30, 36, 0.06)';
+                            e.currentTarget.style.borderColor = 'rgba(227, 30, 36, 0.35)';
+                            e.currentTarget.style.transform = 'translateY(-1px) translateX(2px)';
+                          }}
+                          onMouseLeave={(e) => {
+                            e.currentTarget.style.backgroundColor = theme.mode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : 'rgba(248, 250, 252, 0.75)';
+                            e.currentTarget.style.borderColor = theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.05)';
+                            e.currentTarget.style.transform = 'none';
+                          }}
+                        >
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
+                            <div
+                              style={{
+                                width: '26px',
+                                height: '26px',
+                                borderRadius: '6px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                backgroundColor: theme.mode === 'dark' ? 'rgba(255,255,255,0.06)' : '#ffffff',
+                                boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
+                                flexShrink: 0,
+                              }}
+                            >
+                              {getCategoryIcon(c.id, c.slug)}
+                            </div>
+                            <span style={{ fontSize: '12.5px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                              {c.name}
+                            </span>
+                          </div>
+                          {count > 0 && (
+                            <span
+                              style={{
+                                fontSize: '10.5px',
+                                color: theme.textMuted,
+                                fontWeight: 500,
+                                padding: '1px 5px',
+                                borderRadius: '4px',
+                                backgroundColor: theme.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
+                                flexShrink: 0,
+                                marginLeft: '6px',
+                              }}
+                            >
+                              {count}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Right: Compact Brand Panel (Azaldılmış en ilə brendlər) */}
+            <div
+              style={{
+                borderLeft: `1px solid ${theme.border}`,
+                paddingLeft: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '8px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                <div style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: theme.textMuted, display: 'flex', alignItems: 'center', gap: '5px' }}>
+                  <Tag size={12} color="#e31e24" />
+                  <span>Rəsmi Brendlər</span>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onNavigate('brands');
+                    onClose();
+                  }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#e31e24',
+                    fontSize: '11px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '3px',
+                    padding: 0,
+                  }}
+                >
+                  <span>Hamısı</span>
+                  <ArrowRight size={11} />
+                </button>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
                 {publishedBrands.slice(0, 4).map((brand) => (
                   <button
                     key={brand.id}
@@ -369,49 +548,32 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
-                      padding: '8px 12px',
-                      borderRadius: '8px',
-                      backgroundColor: theme.mode === 'dark' ? 'rgba(30, 41, 59, 0.55)' : 'rgba(248, 250, 252, 0.65)',
-                      border: `1px solid ${theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)'}`,
-                      backdropFilter: 'blur(8px)',
-                      color: theme.text,
-                      fontSize: '13px',
-                      fontWeight: 700,
+                      padding: '6px 8px',
+                      borderRadius: '7px',
+                      backgroundColor: theme.mode === 'dark' ? 'rgba(30, 41, 59, 0.45)' : 'rgba(248, 250, 252, 0.65)',
+                      border: `1px solid ${theme.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
                       cursor: 'pointer',
                       transition: 'all 0.15s ease',
                       textAlign: 'left',
                     }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = '#e31e24';
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = theme.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
+                      e.currentTarget.style.transform = 'none';
+                    }}
                   >
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <span>{brand.name}</span>
-                        {brand.comingSoon && (
-                          <span
-                            style={{
-                              fontSize: '9px',
-                              padding: '1px 5px',
-                              borderRadius: '4px',
-                              backgroundColor: 'rgba(234, 179, 8, 0.2)',
-                              color: '#eab308',
-                              fontWeight: 800,
-                            }}
-                          >
-                            Tezliklə
-                          </span>
-                        )}
+                      <div style={{ fontSize: '11.5px', fontWeight: 700, color: theme.text }}>
+                        {brand.name}
                       </div>
-                      <div
-                        style={{
-                          fontSize: '11px',
-                          color: theme.textMuted,
-                          fontWeight: 500,
-                          marginTop: '2px',
-                        }}
-                      >
-                        {brand.originCountry}
+                      <div style={{ fontSize: '9px', color: theme.textMuted }}>
+                        {brand.originCountry || 'Orijinal'}
                       </div>
                     </div>
-                    <ArrowRight size={14} style={{ color: theme.textMuted }} />
+                    <ArrowRight size={11} style={{ color: theme.textMuted, flexShrink: 0 }} />
                   </button>
                 ))}
               </div>
@@ -426,11 +588,11 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  gap: '6px',
-                  color: theme.primary,
+                  gap: '5px',
+                  color: '#e31e24',
                   background: 'transparent',
                   border: 'none',
-                  fontSize: '12px',
+                  fontSize: '11px',
                   fontWeight: 700,
                   cursor: 'pointer',
                   padding: '4px 0',
@@ -438,7 +600,7 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                 }}
               >
                 <span>Bütün brendlər ({publishedBrands.length})</span>
-                <ArrowRight size={13} />
+                <ArrowRight size={11} />
               </button>
             </div>
           </div>
