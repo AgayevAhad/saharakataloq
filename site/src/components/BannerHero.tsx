@@ -91,7 +91,6 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
   const activeArticles = articles.filter((a) => a.active !== false);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [slideProgress, setSlideProgress] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
   const [animating, setAnimating] = useState(false);
   const isMountedRef = useRef(true);
   const animTimeoutRef = useRef<any>(null);
@@ -120,16 +119,14 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
       if (videoRef.current) {
         try {
           videoRef.current.currentTime = 0;
-          if (!isPaused) {
-            videoRef.current.play().catch(() => {});
-          }
+          videoRef.current.play().catch(() => {});
         } catch {
           // ignore
         }
       }
 
       progressIntervalRef.current = setInterval(() => {
-        if (!isMountedRef.current || isPaused) return;
+        if (!isMountedRef.current) return;
         if (videoRef.current) {
           const cur = videoRef.current.currentTime || 0;
           const dur = currentSlide.duration || 20;
@@ -147,7 +144,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
       const progressIncrement = 100 / totalSteps;
 
       progressIntervalRef.current = setInterval(() => {
-        if (!isMountedRef.current || isPaused) return;
+        if (!isMountedRef.current) return;
         setSlideProgress((prev) => {
           if (prev >= 99.5) {
             goToSlide((currentIndex + 1) % HERO_SLIDES.length);
@@ -161,22 +158,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
     return () => {
       if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
     };
-  }, [currentIndex, isPaused, currentSlide.type, currentSlide.duration]);
-
-  // Sync video play/pause with hover state
-  useEffect(() => {
-    if (currentSlide.type === 'video' && videoRef.current) {
-      if (isPaused) {
-        if (!videoRef.current.paused) {
-          videoRef.current.pause();
-        }
-      } else {
-        if (videoRef.current.paused) {
-          videoRef.current.play().catch(() => {});
-        }
-      }
-    }
-  }, [isPaused, currentSlide.type]);
+  }, [currentIndex, currentSlide.type, currentSlide.duration]);
 
   const goToSlide = (targetIdx: number) => {
     if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current);
@@ -204,8 +186,6 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
   return (
     <div
       className="banner-hero-wrapper"
-      onMouseEnter={() => setIsPaused(true)}
-      onMouseLeave={() => setIsPaused(false)}
       style={{
         width: '100%',
         maxWidth: '100%',
@@ -248,9 +228,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
               if (videoRef.current) {
                 const cur = videoRef.current.currentTime;
                 const dur = currentSlide.duration || 20;
-                if (!isPaused) {
-                  setSlideProgress(Math.min(100, Math.max(0, (cur / dur) * 100)));
-                }
+                setSlideProgress(Math.min(100, Math.max(0, (cur / dur) * 100)));
                 if (cur >= dur || videoRef.current.ended) {
                   videoRef.current.currentTime = 0;
                   goToSlide((currentIndex + 1) % HERO_SLIDES.length);
@@ -405,8 +383,6 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
           {currentArticle && (
             <div
               className={`tech-spotlight-card ${animating ? 'is-animating' : ''}`}
-              onMouseEnter={() => setIsPaused(true)}
-              onMouseLeave={() => setIsPaused(false)}
               onClick={() => onOpenArticle(currentArticle)}
               role="button"
               tabIndex={0}
@@ -606,7 +582,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
                       height: '100%',
                       backgroundColor: '#e31e24',
                       borderRadius: '3px',
-                      transition: isActive && !isPaused ? 'width 0.08s linear' : 'none',
+                      transition: isActive ? 'width 0.08s linear' : 'none',
                     }}
                   />
                 </div>
