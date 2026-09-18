@@ -206,6 +206,7 @@ export const ProductSchema = z.object({
   currency: z.string().default('AZN'),
   stockStatus: z.enum(['in_stock', 'out_of_stock', 'preorder']).default('in_stock'),
   shortDesc: z.string().default(''),
+  description: z.string().optional(),
   specs: z.array(ProductSpecSchema).default([]),
   highlights: z.array(z.string()).default([]),
   brandId: z.string().optional(),

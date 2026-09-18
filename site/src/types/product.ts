@@ -70,6 +70,7 @@ export interface Product {
   currency?: string;
   stockStatus?: 'in_stock' | 'out_of_stock' | 'preorder';
   shortDesc: string;
+  description?: string;
   specs: ProductSpecItem[];
   highlights: string[];
   brandId?: string;

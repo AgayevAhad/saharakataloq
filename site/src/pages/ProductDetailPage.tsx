@@ -26,6 +26,11 @@ import {
   MapPin,
   Flame,
   CheckCircle2,
+  Star,
+  FileText,
+  Send,
+  UserCheck,
+  RefreshCw,
 } from 'lucide-react';
 import { Product, Brand, CatalogCategory, CatalogSettings } from '../types/product';
 import { ThemeColors } from '../types/theme';
@@ -33,6 +38,15 @@ import { ShimmerImage } from '../components/ShimmerImage';
 import { WhatsAppIcon } from '../components/WhatsAppIcon';
 import { ProductCard } from '../components/ProductCard';
 import { useHorizontalScroll } from '../hooks/useHorizontalScroll';
+
+export interface ProductReview {
+  id: string;
+  author: string;
+  rating: number; // 1 to 5
+  comment: string;
+  date: string;
+  isVerified?: boolean;
+}
 
 interface ProductDetailPageProps {
   product: Product;
@@ -56,6 +70,33 @@ interface ProductDetailPageProps {
   cartCount?: number;
 }
 
+const getDefaultReviews = (productId: string): ProductReview[] => [
+  {
+    id: `rev-1-${productId}`,
+    author: 'Kamran M.',
+    rating: 5,
+    comment: 'Məhsulu çox bəyəndik, dizaynı və keyfiyyəti əladır. Çatdırılma da vaxtında gəldi.',
+    date: '12 sentyabr 2026',
+    isVerified: true,
+  },
+  {
+    id: `rev-2-${productId}`,
+    author: 'Leyla Ə.',
+    rating: 5,
+    comment: 'İstifadəsi çox rahatdır və olduqca səssiz işləyir. Sahara Electronics komandasına təşəkkürlər!',
+    date: '5 sentyabr 2026',
+    isVerified: true,
+  },
+  {
+    id: `rev-3-${productId}`,
+    author: 'Rəşad Q.',
+    rating: 5,
+    comment: 'Rəsmi zəmanətli və orijinal məhsuldur. Quraşdırma və servis xidməti də operativ oldu.',
+    date: '28 avqust 2026',
+    isVerified: true,
+  },
+];
+
 export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   product,
   allProducts,
@@ -78,7 +119,8 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   cartCount: _cartCount,
 }) => {
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
-  const [activeTab, setActiveTab] = useState<'specs' | 'tech' | 'delivery'>('specs');
+  // Default tab: 'description' (Təsvir & İcmal first)
+  const [activeTab, setActiveTab] = useState<'description' | 'specs' | 'reviews' | 'tech' | 'delivery'>('description');
   const [isVideoMuted, setIsVideoMuted] = useState(true);
   const [isFullscreenGallery, setIsFullscreenGallery] = useState(false);
   const [zoomScale, setZoomScale] = useState(1);
@@ -87,9 +129,30 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isCopied, setIsCopied] = useState(false);
 
+  // Reviews state & form
+  const [reviews, setReviews] = useState<ProductReview[]>(() => {
+    try {
+      const saved = localStorage.getItem(`sahara_product_reviews_${product.id}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      }
+    } catch {
+      // ignore
+    }
+    return getDefaultReviews(product.id);
+  });
+
+  const [newAuthor, setNewAuthor] = useState('');
+  const [newRating, setNewRating] = useState(5);
+  const [hoverRating, setHoverRating] = useState<number | null>(null);
+  const [newComment, setNewComment] = useState('');
+  const [reviewSuccessMessage, setReviewSuccessMessage] = useState('');
+
   const videoRef = useRef<HTMLVideoElement>(null);
   const fullscreenVideoRef = useRef<HTMLVideoElement>(null);
   const thumbnailScrollRef = useRef<HTMLDivElement>(null);
+  const tabsContainerRef = useRef<HTMLDivElement>(null);
 
   const { dragProps: _thumbDragProps } = useHorizontalScroll({
     scrollRef: thumbnailScrollRef,
@@ -98,11 +161,26 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   // Reset states on product change
   useEffect(() => {
     setActiveMediaIndex(0);
-    setActiveTab('specs');
+    setActiveTab('description');
     setIsVideoMuted(true);
     setIsFullscreenGallery(false);
     setZoomScale(1);
     setPanPosition({ x: 0, y: 0 });
+    setReviewSuccessMessage('');
+    try {
+      const saved = localStorage.getItem(`sahara_product_reviews_${product.id}`);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          setReviews(parsed);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          return;
+        }
+      }
+    } catch {
+      // ignore
+    }
+    setReviews(getDefaultReviews(product.id));
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [product.id]);
 
@@ -217,6 +295,22 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const discountPercent =
     currentPrice && oldPrice ? Math.round(((oldPrice - currentPrice) / oldPrice) * 100) : null;
 
+  // Rating calculations
+  const averageRating = useMemo(() => {
+    if (!reviews.length) return 5.0;
+    const total = reviews.reduce((sum, r) => sum + r.rating, 0);
+    return Number((total / reviews.length).toFixed(1));
+  }, [reviews]);
+
+  const ratingCounts = useMemo(() => {
+    const counts = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    reviews.forEach((r) => {
+      const star = Math.min(5, Math.max(1, Math.round(r.rating))) as 1 | 2 | 3 | 4 | 5;
+      counts[star] = (counts[star] || 0) + 1;
+    });
+    return counts;
+  }, [reviews]);
+
   const handleCopyLink = () => {
     if (onCopyLink) {
       onCopyLink(product);
@@ -235,6 +329,42 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
       if (fullscreenVideoRef.current) fullscreenVideoRef.current.muted = next;
       return next;
     });
+  };
+
+  // Review submission handler
+  const handleReviewSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newAuthor.trim() || !newComment.trim()) return;
+
+    const newRev: ProductReview = {
+      id: `review-${Date.now()}`,
+      author: newAuthor.trim(),
+      rating: newRating,
+      comment: newComment.trim(),
+      date: new Date().toLocaleDateString('az-AZ', { day: 'numeric', month: 'long', year: 'numeric' }),
+      isVerified: true,
+    };
+
+    const updated = [newRev, ...reviews];
+    setReviews(updated);
+    try {
+      localStorage.setItem(`sahara_product_reviews_${product.id}`, JSON.stringify(updated));
+    } catch {
+      // ignore
+    }
+
+    setNewAuthor('');
+    setNewComment('');
+    setNewRating(5);
+    setReviewSuccessMessage('Təşəkkür edirik! Rəyiniz uğurla əlavə edildi.');
+    setTimeout(() => setReviewSuccessMessage(''), 4000);
+  };
+
+  const scrollToTabs = (tab: typeof activeTab) => {
+    setActiveTab(tab);
+    if (tabsContainerRef.current) {
+      tabsContainerRef.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   };
 
   // Lightbox Drag and Pan handlers
@@ -287,6 +417,39 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const handleTouchEnd = useCallback(() => {
     setIsDragging(false);
   }, []);
+
+  // Lightbox Click-to-Zoom Toggle
+  const handleImageClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (zoomScale === 1) {
+      setZoomScale(2);
+    } else {
+      setZoomScale(1);
+      setPanPosition({ x: 0, y: 0 });
+    }
+  };
+
+  // Lightbox Double Click Zoom
+  const handleImageDoubleClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (zoomScale > 1) {
+      setZoomScale(1);
+      setPanPosition({ x: 0, y: 0 });
+    } else {
+      setZoomScale(2.5);
+    }
+  };
+
+  // Mouse wheel zoom in lightbox
+  const handleLightboxWheel = (e: React.WheelEvent) => {
+    e.stopPropagation();
+    const delta = e.deltaY < 0 ? 0.25 : -0.25;
+    setZoomScale((prev) => {
+      const next = Math.min(3.5, Math.max(1, prev + delta));
+      if (next === 1) setPanPosition({ x: 0, y: 0 });
+      return next;
+    });
+  };
 
   return (
     <div
@@ -410,7 +573,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             top: '88px',
           }}
         >
-          {/* Main Large Media Viewport (Increased Size to 540px) */}
+          {/* Main Large Media Viewport */}
           <div
             className="product-detail-main-stage"
             style={{
@@ -564,7 +727,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               </button>
             </div>
 
-            {/* Media Content Stage (Larger Image with Pure Background) */}
+            {/* Media Content Stage */}
             {activeMedia?.type === 'video' ? (
               <video
                 ref={videoRef}
@@ -750,7 +913,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
         </div>
 
         {/* Right Column: Title, Clean Price, Action Buttons & Borderless Cards */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           {/* Top Info Header */}
           <div>
             <div
@@ -759,22 +922,49 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 alignItems: 'center',
                 justifyContent: 'space-between',
                 gap: '8px',
-                marginBottom: '8px',
+                marginBottom: '10px',
                 flexWrap: 'wrap',
               }}
             >
-              <span
-                style={{
-                  fontSize: '12.5px',
-                  fontWeight: 700,
-                  color: theme.textSecondary,
-                  backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f1f5f9',
-                  padding: '4px 10px',
-                  borderRadius: '8px',
-                }}
-              >
-                {category?.name || product.categoryName}
-              </span>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                <span
+                  style={{
+                    fontSize: '12.5px',
+                    fontWeight: 700,
+                    color: theme.textSecondary,
+                    backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f1f5f9',
+                    padding: '4px 10px',
+                    borderRadius: '8px',
+                  }}
+                >
+                  {category?.name || product.categoryName}
+                </span>
+
+                {/* Rating Badge with Direct Scroll to Reviews */}
+                <button
+                  type="button"
+                  onClick={() => scrollToTabs('reviews')}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    backgroundColor: 'rgba(234, 179, 8, 0.12)',
+                    color: '#ca8a04',
+                    border: 'none',
+                    borderRadius: '8px',
+                    padding: '4px 9px',
+                    fontSize: '12px',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    transition: 'opacity 0.15s ease',
+                  }}
+                  title="Müştəri rəylərinə bax"
+                >
+                  <Star size={13} fill="#eab308" color="#eab308" />
+                  <span>{averageRating}</span>
+                  <span style={{ color: theme.textMuted, fontWeight: 600 }}>({reviews.length} rəy)</span>
+                </button>
+              </div>
 
               {/* Status without "Rəsmi" */}
               <span
@@ -801,29 +991,29 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 fontWeight: 900,
                 color: theme.text,
                 lineHeight: 1.25,
-                margin: '4px 0 12px 0',
+                margin: '4px 0 10px 0',
                 letterSpacing: '-0.02em',
               }}
             >
               {product.title}
             </h1>
 
-            {product.description && (
+            {product.shortDesc && (
               <p
                 style={{
                   fontSize: '14.5px',
                   color: theme.textSecondary,
                   lineHeight: 1.6,
-                  margin: '0 0 16px 0',
+                  margin: '0 0 14px 0',
                 }}
               >
-                {product.description}
+                {product.shortDesc}
               </p>
             )}
           </div>
 
           {/* Clean Borderless Price Section */}
-          <div style={{ padding: '4px 0 8px', display: 'flex', alignItems: 'baseline', gap: '12px', flexWrap: 'wrap' }}>
+          <div style={{ padding: '2px 0 6px', display: 'flex', alignItems: 'baseline', gap: '12px', flexWrap: 'wrap' }}>
             {currentPrice ? (
               <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', flexWrap: 'wrap' }}>
                 <span
@@ -1137,33 +1327,74 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
         </div>
       </div>
 
-      {/* Segmented Detail Tabs: Specifications, Technologies, Services */}
-      <div style={{ marginBottom: '56px' }}>
+      {/* Segmented Detail Tabs: Description First, Specs, Reviews, Technologies, Delivery */}
+      <div ref={tabsContainerRef} style={{ marginBottom: '56px' }}>
         {/* Tabs Control Row */}
         <div
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
+            gap: '4px',
             borderBottom: `2px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
             marginBottom: '24px',
+            overflowX: 'auto',
           }}
+          className="no-scrollbar"
         >
+          {/* Tab 1: Description First */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('description')}
+            style={{
+              padding: '12px 18px',
+              border: 'none',
+              background: 'none',
+              fontSize: '14.5px',
+              fontWeight: 800,
+              color: activeTab === 'description' ? '#dc2626' : theme.textSecondary,
+              cursor: 'pointer',
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '7px',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+            }}
+          >
+            <FileText size={16} />
+            <span>Təsvir & İcmal</span>
+            {activeTab === 'description' && (
+              <span
+                style={{
+                  position: 'absolute',
+                  bottom: '-2px',
+                  left: 0,
+                  right: 0,
+                  height: '2px',
+                  backgroundColor: '#dc2626',
+                }}
+              />
+            )}
+          </button>
+
+          {/* Tab 2: Specifications */}
           <button
             type="button"
             onClick={() => setActiveTab('specs')}
             style={{
-              padding: '12px 20px',
+              padding: '12px 18px',
               border: 'none',
               background: 'none',
-              fontSize: '15px',
+              fontSize: '14.5px',
               fontWeight: 800,
               color: activeTab === 'specs' ? '#dc2626' : theme.textSecondary,
               cursor: 'pointer',
               position: 'relative',
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
+              gap: '7px',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
             }}
           >
             <Layers size={16} />
@@ -1182,25 +1413,64 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             )}
           </button>
 
+          {/* Tab 3: Reviews & Ratings */}
+          <button
+            type="button"
+            onClick={() => setActiveTab('reviews')}
+            style={{
+              padding: '12px 18px',
+              border: 'none',
+              background: 'none',
+              fontSize: '14.5px',
+              fontWeight: 800,
+              color: activeTab === 'reviews' ? '#dc2626' : theme.textSecondary,
+              cursor: 'pointer',
+              position: 'relative',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '7px',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+            }}
+          >
+            <Star size={16} />
+            <span>Müştəri Rəyləri ({reviews.length})</span>
+            {activeTab === 'reviews' && (
+              <span
+                style={{
+                  position: 'absolute',
+                  bottom: '-2px',
+                  left: 0,
+                  right: 0,
+                  height: '2px',
+                  backgroundColor: '#dc2626',
+                }}
+              />
+            )}
+          </button>
+
+          {/* Tab 4: Technologies */}
           <button
             type="button"
             onClick={() => setActiveTab('tech')}
             style={{
-              padding: '12px 20px',
+              padding: '12px 18px',
               border: 'none',
               background: 'none',
-              fontSize: '15px',
+              fontSize: '14.5px',
               fontWeight: 800,
               color: activeTab === 'tech' ? '#dc2626' : theme.textSecondary,
               cursor: 'pointer',
               position: 'relative',
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
+              gap: '7px',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
             }}
           >
             <Sparkles size={16} />
-            <span>Üstünlüklər & Texnologiyalar</span>
+            <span>Üstünlüklər</span>
             {activeTab === 'tech' && (
               <span
                 style={{
@@ -1215,21 +1485,24 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             )}
           </button>
 
+          {/* Tab 5: Delivery */}
           <button
             type="button"
             onClick={() => setActiveTab('delivery')}
             style={{
-              padding: '12px 20px',
+              padding: '12px 18px',
               border: 'none',
               background: 'none',
-              fontSize: '15px',
+              fontSize: '14.5px',
               fontWeight: 800,
               color: activeTab === 'delivery' ? '#dc2626' : theme.textSecondary,
               cursor: 'pointer',
               position: 'relative',
               display: 'flex',
               alignItems: 'center',
-              gap: '8px',
+              gap: '7px',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
             }}
           >
             <Truck size={16} />
@@ -1249,7 +1522,147 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
           </button>
         </div>
 
-        {/* Tab 1: Specifications Matrix Table */}
+        {/* Tab 1 Content: Description & Overview (Default View) */}
+        {activeTab === 'description' && (
+          <div
+            style={{
+              backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#ffffff',
+              borderRadius: '20px',
+              border: `1px solid ${theme.border}`,
+              padding: '28px',
+              boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '24px',
+            }}
+          >
+            <div>
+              <h3
+                style={{
+                  fontSize: '18px',
+                  fontWeight: 900,
+                  color: theme.text,
+                  margin: '0 0 12px 0',
+                  letterSpacing: '-0.02em',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                }}
+              >
+                <span style={{ width: '4px', height: '18px', backgroundColor: '#dc2626', borderRadius: '4px' }} />
+                <span>Məhsul Haqqında Ətraflı Məlumat</span>
+              </h3>
+
+              {product.description ? (
+                <div
+                  style={{
+                    fontSize: '15.5px',
+                    color: theme.text,
+                    lineHeight: 1.8,
+                    whiteSpace: 'pre-line',
+                    padding: '16px 20px',
+                    borderRadius: '14px',
+                    backgroundColor: themeMode === 'dark' ? 'rgba(15, 23, 42, 0.4)' : '#f8fafc',
+                    borderLeft: '4px solid #dc2626',
+                  }}
+                >
+                  {product.description}
+                </div>
+              ) : (
+                <div
+                  style={{
+                    fontSize: '14.5px',
+                    color: theme.textSecondary,
+                    lineHeight: 1.7,
+                    padding: '16px 20px',
+                    borderRadius: '14px',
+                    backgroundColor: themeMode === 'dark' ? 'rgba(15, 23, 42, 0.4)' : '#f8fafc',
+                    borderLeft: '4px solid #94a3b8',
+                  }}
+                >
+                  {product.title} modeli üçün ətraflı təsvir mətni administrator tərəfindən tənzimlənir. Bütün texniki göstəricilər və parametrlər rəsmi istehsalçı zəmanəti ilə təmin olunur.
+                </div>
+              )}
+            </div>
+
+            {/* Key Advantages Summary */}
+            {product.highlights && product.highlights.length > 0 && (
+              <div>
+                <h4 style={{ fontSize: '15px', fontWeight: 800, color: theme.text, margin: '0 0 12px 0' }}>
+                  Fərqləndirici Xüsusiyyətlər
+                </h4>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
+                  {product.highlights.map((item, idx) => (
+                    <div
+                      key={idx}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        padding: '12px 16px',
+                        borderRadius: '12px',
+                        backgroundColor: themeMode === 'dark' ? 'rgba(15, 23, 42, 0.5)' : '#f8fafc',
+                        border: `1px solid ${theme.border}`,
+                      }}
+                    >
+                      <CheckCircle2 size={16} color="#16a34a" />
+                      <span style={{ fontSize: '13.5px', fontWeight: 700, color: theme.text }}>
+                        {item}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Direct Switcher to Full Specs */}
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '16px',
+                paddingTop: '16px',
+                borderTop: `1px solid ${theme.border}`,
+              }}
+            >
+              <div>
+                <div style={{ fontSize: '14px', fontWeight: 800, color: theme.text }}>
+                  Bütün texniki parametrləri müqayisə etmək istəyirsiniz?
+                </div>
+                <div style={{ fontSize: '12.5px', color: theme.textMuted }}>
+                  Ölçülər, enerji sinfi, material və funksiyaların tam siyahısı
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setActiveTab('specs')}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '10px 20px',
+                  borderRadius: '12px',
+                  backgroundColor: '#dc2626',
+                  color: '#ffffff',
+                  border: 'none',
+                  fontSize: '13.5px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  boxShadow: '0 4px 14px rgba(220, 38, 38, 0.25)',
+                  transition: 'transform 0.15s ease',
+                }}
+              >
+                <span>Bütün Texniki Xüsusiyyətlərə Bax</span>
+                <ChevronRight size={16} />
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Tab 2 Content: Specifications Matrix Table */}
         {activeTab === 'specs' && (
           <div
             style={{
@@ -1312,7 +1725,341 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
           </div>
         )}
 
-        {/* Tab 2: Technologies and Highlights */}
+        {/* Tab 3 Content: Customer Reviews & Ratings */}
+        {activeTab === 'reviews' && (
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '28px',
+            }}
+          >
+            {/* Reviews Summary & Write Form Grid */}
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))',
+                gap: '24px',
+              }}
+            >
+              {/* Rating Summary Card */}
+              <div
+                style={{
+                  padding: '24px',
+                  borderRadius: '20px',
+                  backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#ffffff',
+                  border: `1px solid ${theme.border}`,
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '16px',
+                }}
+              >
+                <h3 style={{ fontSize: '16px', fontWeight: 800, color: theme.text, margin: 0 }}>
+                  Qiymətləndirmə və Reytinq
+                </h3>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                  <div style={{ textAlign: 'center' }}>
+                    <div style={{ fontSize: '44px', fontWeight: 900, color: theme.text, lineHeight: 1 }}>
+                      {averageRating}
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'center', gap: '2px', margin: '6px 0 4px' }}>
+                      {[1, 2, 3, 4, 5].map((s) => (
+                        <Star
+                          key={s}
+                          size={16}
+                          fill={s <= Math.round(averageRating) ? '#eab308' : 'none'}
+                          color={s <= Math.round(averageRating) ? '#eab308' : '#cbd5e1'}
+                        />
+                      ))}
+                    </div>
+                    <div style={{ fontSize: '12px', color: theme.textMuted }}>
+                      {reviews.length} müştəri rəyi
+                    </div>
+                  </div>
+
+                  {/* Star Distribution Progress Bars */}
+                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                    {[5, 4, 3, 2, 1].map((starNum) => {
+                      const count = (ratingCounts as any)[starNum] || 0;
+                      const pct = reviews.length > 0 ? Math.round((count / reviews.length) * 100) : 0;
+                      return (
+                        <div key={starNum} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
+                          <span style={{ width: '28px', color: theme.textSecondary, fontWeight: 700 }}>
+                            {starNum} ★
+                          </span>
+                          <div
+                            style={{
+                              flex: 1,
+                              height: '7px',
+                              borderRadius: '4px',
+                              backgroundColor: themeMode === 'dark' ? '#334155' : '#e2e8f0',
+                              overflow: 'hidden',
+                            }}
+                          >
+                            <div
+                              style={{
+                                width: `${pct}%`,
+                                height: '100%',
+                                backgroundColor: '#eab308',
+                                borderRadius: '4px',
+                                transition: 'width 0.3s ease',
+                              }}
+                            />
+                          </div>
+                          <span style={{ width: '24px', textAlign: 'right', color: theme.textMuted, fontSize: '11px' }}>
+                            {count}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '10px 14px',
+                    borderRadius: '12px',
+                    backgroundColor: 'rgba(22, 163, 74, 0.1)',
+                    color: '#16a34a',
+                    fontSize: '12.5px',
+                    fontWeight: 700,
+                  }}
+                >
+                  <CheckCircle2 size={16} />
+                  <span>100% alıcılar bu modeli tövsiyə edir</span>
+                </div>
+              </div>
+
+              {/* Add New Review Form */}
+              <div
+                style={{
+                  padding: '24px',
+                  borderRadius: '20px',
+                  backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#ffffff',
+                  border: `1px solid ${theme.border}`,
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
+                }}
+              >
+                <h3 style={{ fontSize: '16px', fontWeight: 800, color: theme.text, margin: '0 0 14px 0' }}>
+                  Məhsula Rəy və Ulduz Bildirin
+                </h3>
+
+                {reviewSuccessMessage && (
+                  <div
+                    style={{
+                      padding: '10px 14px',
+                      borderRadius: '10px',
+                      backgroundColor: 'rgba(22, 163, 74, 0.15)',
+                      color: '#16a34a',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      marginBottom: '14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                    }}
+                  >
+                    <Check size={16} />
+                    <span>{reviewSuccessMessage}</span>
+                  </div>
+                )}
+
+                <form onSubmit={handleReviewSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {/* Interactive Star Rating Selector */}
+                  <div>
+                    <label style={{ display: 'block', fontSize: '12.5px', fontWeight: 700, color: theme.text, marginBottom: '6px' }}>
+                      Qiymətiniz (Ulduz seçin) *
+                    </label>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      {[1, 2, 3, 4, 5].map((starVal) => {
+                        const isFilled = starVal <= (hoverRating !== null ? hoverRating : newRating);
+                        return (
+                          <button
+                            key={starVal}
+                            type="button"
+                            onClick={() => setNewRating(starVal)}
+                            onMouseEnter={() => setHoverRating(starVal)}
+                            onMouseLeave={() => setHoverRating(null)}
+                            style={{
+                              background: 'none',
+                              border: 'none',
+                              padding: '4px',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                            }}
+                            title={`${starVal} ulduz`}
+                          >
+                            <Star
+                              size={24}
+                              fill={isFilled ? '#eab308' : 'none'}
+                              color={isFilled ? '#eab308' : '#cbd5e1'}
+                              strokeWidth={2}
+                            />
+                          </button>
+                        );
+                      })}
+                      <span style={{ fontSize: '13px', fontWeight: 700, color: '#ca8a04', marginLeft: '6px' }}>
+                        {newRating === 5
+                          ? 'Əla (5/5)'
+                          : newRating === 4
+                            ? 'Çox yaxşı (4/5)'
+                            : newRating === 3
+                              ? 'Yaxşı (3/5)'
+                              : newRating === 2
+                                ? 'Kafi (2/5)'
+                                : 'Zəif (1/5)'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Author Name */}
+                  <div>
+                    <input
+                      type="text"
+                      value={newAuthor}
+                      onChange={(e) => setNewAuthor(e.target.value)}
+                      placeholder="Adınız və Soyadınız *"
+                      required
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px',
+                        borderRadius: '10px',
+                        border: `1px solid ${theme.border}`,
+                        backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f8fafc',
+                        color: theme.text,
+                        fontSize: '13.5px',
+                        boxSizing: 'border-box',
+                        outline: 'none',
+                      }}
+                    />
+                  </div>
+
+                  {/* Comment Textarea */}
+                  <div>
+                    <textarea
+                      value={newComment}
+                      onChange={(e) => setNewComment(e.target.value)}
+                      placeholder="Məhsul haqqında təcrübənizi və fikirlərinizi bölüşün... *"
+                      rows={3}
+                      required
+                      style={{
+                        width: '100%',
+                        padding: '10px 14px',
+                        borderRadius: '10px',
+                        border: `1px solid ${theme.border}`,
+                        backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f8fafc',
+                        color: theme.text,
+                        fontSize: '13.5px',
+                        boxSizing: 'border-box',
+                        outline: 'none',
+                        resize: 'vertical',
+                      }}
+                    />
+                  </div>
+
+                  <button
+                    type="submit"
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      gap: '8px',
+                      padding: '11px 20px',
+                      borderRadius: '10px',
+                      backgroundColor: '#dc2626',
+                      color: '#ffffff',
+                      border: 'none',
+                      fontSize: '13.5px',
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                      boxShadow: '0 4px 14px rgba(220, 38, 38, 0.3)',
+                    }}
+                  >
+                    <Send size={15} />
+                    <span>Rəyi Göndər</span>
+                  </button>
+                </form>
+              </div>
+            </div>
+
+            {/* List of Existing Customer Reviews */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <h4 style={{ fontSize: '16px', fontWeight: 800, color: theme.text, margin: 0 }}>
+                Müştəri Şərhləri ({reviews.length})
+              </h4>
+
+              {reviews.map((r) => (
+                <div
+                  key={r.id}
+                  style={{
+                    padding: '18px 22px',
+                    borderRadius: '16px',
+                    backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#ffffff',
+                    border: `1px solid ${theme.border}`,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '14.5px', fontWeight: 800, color: theme.text }}>
+                        {r.author}
+                      </span>
+                      {r.isVerified && (
+                        <span
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            fontSize: '11px',
+                            fontWeight: 700,
+                            color: '#16a34a',
+                            backgroundColor: 'rgba(22, 163, 74, 0.1)',
+                            padding: '2px 8px',
+                            borderRadius: '6px',
+                          }}
+                        >
+                          <UserCheck size={12} />
+                          <span>Təsdiqlənmiş Alıcı</span>
+                        </span>
+                      )}
+                    </div>
+
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ display: 'flex', gap: '2px' }}>
+                        {[1, 2, 3, 4, 5].map((st) => (
+                          <Star
+                            key={st}
+                            size={14}
+                            fill={st <= r.rating ? '#eab308' : 'none'}
+                            color={st <= r.rating ? '#eab308' : '#cbd5e1'}
+                          />
+                        ))}
+                      </div>
+                      <span style={{ fontSize: '12px', color: theme.textMuted }}>
+                        {r.date}
+                      </span>
+                    </div>
+                  </div>
+
+                  <p style={{ fontSize: '14px', color: theme.textSecondary, lineHeight: 1.6, margin: 0 }}>
+                    {r.comment}
+                  </p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Tab 4 Content: Technologies and Highlights */}
         {activeTab === 'tech' && (
           <div
             style={{
@@ -1380,7 +2127,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
           </div>
         )}
 
-        {/* Tab 3: Delivery and Service Terms */}
+        {/* Tab 5 Content: Delivery and Service Terms */}
         {activeTab === 'delivery' && (
           <div
             style={{
@@ -1408,7 +2155,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             </div>
 
             <div style={{ display: 'flex', gap: '16px', alignItems: 'start' }}>
-              <div style={{ width: '44px', height: '44px', borderRadius: '12px', backgroundColor: 'rgba(22, 163, 74, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '12px', backgroundColor: 'rgba(220, 38, 38, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <ShieldCheck size={22} color="#16a34a" />
               </div>
               <div>
@@ -1529,14 +2276,14 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
         </section>
       )}
 
-      {/* Fullscreen Interactive Lightbox Modal with Zoom & Pan */}
+      {/* Fullscreen Interactive Lightbox Modal with Studio White Canvas, Click-to-Zoom & Drag/Pan */}
       {isFullscreenGallery && (
         <div
           style={{
             position: 'fixed',
             inset: 0,
             zIndex: 120,
-            backgroundColor: 'rgba(0, 0, 0, 0.94)',
+            backgroundColor: '#ffffff',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
@@ -1544,29 +2291,36 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             boxSizing: 'border-box',
           }}
           onClick={() => setIsFullscreenGallery(false)}
+          onWheel={handleLightboxWheel}
         >
-          {/* Lightbox Top Header */}
+          {/* Lightbox Top Header (Clean Light Design) */}
           <div
             style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              color: '#ffffff',
+              color: '#0f172a',
               zIndex: 10,
-              padding: '4px 8px',
+              padding: '6px 12px',
+              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              borderRadius: '16px',
+              border: '1px solid #e2e8f0',
+              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
+              backdropFilter: 'blur(10px)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ fontSize: '15px', fontWeight: 800, maxWidth: '60%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            <div style={{ fontSize: '15px', fontWeight: 800, maxWidth: '55%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
               {product.title} {mediaList.length > 1 && `(${activeMediaIndex + 1} / ${mediaList.length})`}
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {/* Zoom Out Button */}
               <button
                 type="button"
                 onClick={() => {
                   setZoomScale((z) => {
-                    const next = Math.max(z - 0.3, 1);
+                    const next = Math.max(z - 0.4, 1);
                     if (next === 1) setPanPosition({ x: 0, y: 0 });
                     return next;
                   });
@@ -1574,10 +2328,10 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 style={{
                   width: '38px',
                   height: '38px',
-                  borderRadius: '50%',
-                  backgroundColor: 'rgba(255, 255, 255, 0.18)',
-                  color: '#ffffff',
-                  border: 'none',
+                  borderRadius: '10px',
+                  backgroundColor: '#f1f5f9',
+                  color: '#0f172a',
+                  border: '1px solid #e2e8f0',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -1585,36 +2339,64 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 }}
                 title="Uzaqlaşdır"
               >
-                <ZoomOut size={18} />
+                <ZoomOut size={17} />
               </button>
 
+              {/* Zoom Level Indicator / Reset Button */}
               <button
                 type="button"
-                onClick={() => setZoomScale((z) => Math.min(z + 0.4, 3))}
+                onClick={() => {
+                  setZoomScale(1);
+                  setPanPosition({ x: 0, y: 0 });
+                }}
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: '10px',
+                  backgroundColor: zoomScale > 1 ? '#fee2e2' : '#f1f5f9',
+                  color: zoomScale > 1 ? '#dc2626' : '#475569',
+                  border: `1px solid ${zoomScale > 1 ? '#fca5a5' : '#e2e8f0'}`,
+                  fontSize: '12px',
+                  fontWeight: 800,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+                title="Zoom-u sıfırla (100%)"
+              >
+                <RefreshCw size={12} />
+                <span>{Math.round(zoomScale * 100)}%</span>
+              </button>
+
+              {/* Zoom In Button */}
+              <button
+                type="button"
+                onClick={() => setZoomScale((z) => Math.min(z + 0.4, 3.5))}
                 style={{
                   width: '38px',
                   height: '38px',
-                  borderRadius: '50%',
-                  backgroundColor: 'rgba(255, 255, 255, 0.18)',
-                  color: '#ffffff',
-                  border: 'none',
+                  borderRadius: '10px',
+                  backgroundColor: '#f1f5f9',
+                  color: '#0f172a',
+                  border: '1px solid #e2e8f0',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
-                title="Böyüt"
+                title="Böyüt (Kliklə yaxınlaşdır)"
               >
-                <ZoomIn size={18} />
+                <ZoomIn size={17} />
               </button>
 
+              {/* Close Button */}
               <button
                 type="button"
                 onClick={() => setIsFullscreenGallery(false)}
                 style={{
                   width: '38px',
                   height: '38px',
-                  borderRadius: '50%',
+                  borderRadius: '10px',
                   backgroundColor: '#dc2626',
                   color: '#ffffff',
                   border: 'none',
@@ -1622,7 +2404,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  boxShadow: '0 4px 14px rgba(220, 38, 38, 0.4)',
+                  boxShadow: '0 4px 14px rgba(220, 38, 38, 0.35)',
                 }}
                 title="Bağla"
               >
@@ -1631,7 +2413,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             </div>
           </div>
 
-          {/* Lightbox Center Content with Pan & Drag when Zoomed */}
+          {/* Lightbox Center Content with Click-to-Zoom and Pan & Drag */}
           <div
             style={{
               flex: 1,
@@ -1640,9 +2422,11 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               justifyContent: 'center',
               overflow: 'hidden',
               position: 'relative',
-              cursor: zoomScale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
+              cursor: zoomScale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'zoom-in',
+              backgroundColor: '#ffffff',
             }}
-            onClick={(e) => e.stopPropagation()}
+            onClick={activeMedia?.type === 'image' ? handleImageClick : (e) => e.stopPropagation()}
+            onDoubleClick={activeMedia?.type === 'image' ? handleImageDoubleClick : undefined}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
@@ -1658,6 +2442,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 controls
                 muted={isVideoMuted}
                 style={{ maxHeight: '80vh', maxWidth: '88vw', borderRadius: '16px' }}
+                onClick={(e) => e.stopPropagation()}
               />
             ) : (
               <img
@@ -1665,13 +2450,12 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 alt={activeMedia?.alt || product.title}
                 draggable={false}
                 style={{
-                  maxHeight: '80vh',
-                  maxWidth: '86vw',
+                  maxHeight: '82vh',
+                  maxWidth: '88vw',
                   objectFit: 'contain',
                   transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoomScale})`,
                   transition: isDragging ? 'none' : 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
                   userSelect: 'none',
-                  pointerEvents: zoomScale > 1 ? 'auto' : 'none',
                 }}
               />
             )}
@@ -1686,6 +2470,13 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 gap: '10px',
                 zIndex: 10,
                 padding: '8px 0',
+                backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                borderRadius: '16px',
+                border: '1px solid #e2e8f0',
+                maxWidth: 'fit-content',
+                margin: '0 auto',
+                paddingLeft: '14px',
+                paddingRight: '14px',
               }}
               onClick={(e) => e.stopPropagation()}
             >
@@ -1699,14 +2490,15 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     setPanPosition({ x: 0, y: 0 });
                   }}
                   style={{
-                    width: '54px',
-                    height: '54px',
+                    width: '56px',
+                    height: '56px',
                     borderRadius: '10px',
                     backgroundColor: '#ffffff',
-                    border: `2px solid ${idx === activeMediaIndex ? '#dc2626' : 'rgba(255,255,255,0.4)'}`,
+                    border: `2px solid ${idx === activeMediaIndex ? '#dc2626' : '#e2e8f0'}`,
                     overflow: 'hidden',
                     cursor: 'pointer',
                     padding: 0,
+                    boxShadow: idx === activeMediaIndex ? '0 2px 8px rgba(220, 38, 38, 0.25)' : 'none',
                   }}
                 >
                   <img

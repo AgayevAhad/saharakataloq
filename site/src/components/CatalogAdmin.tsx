@@ -6089,6 +6089,17 @@ export const ProductEditor = ({
               value={product.shortDesc || ''}
               onChange={(e) => change('shortDesc', e.target.value)}
               rows={2}
+              placeholder="Məhsul haqqında qısa xülasə..."
+            />
+          </label>
+
+          <label style={{ marginTop: '14px' }}>
+            <span>Ətraflı Təsvir (Məhsul Detalı səhifəsində "Təsvir" bölməsi üçün)</span>
+            <textarea
+              value={product.description || ''}
+              onChange={(e) => change('description', e.target.value)}
+              rows={4}
+              placeholder="Məhsulun xüsusiyyətləri, istifadəsi və üstünlükləri haqqında ətraflı təsvir mətni..."
             />
           </label>
 
