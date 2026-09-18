@@ -6864,6 +6864,38 @@ select {
   }
 }
 
+/* Catalog 3-Column Grid Layout */
+.catalog-products-container.is-grid-view {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 339px)) !important;
+  gap: 20px !important;
+  justify-content: start !important;
+}
+
+@media (max-width: 1280px) and (min-width: 900px) {
+  .catalog-products-container.is-grid-view {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 339px)) !important;
+  }
+}
+
+@media (max-width: 899px) {
+  .catalog-desktop-sidebar {
+    display: none !important;
+  }
+  .catalog-products-container.is-grid-view {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 339px)) !important;
+    justify-content: center !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .catalog-products-container.is-grid-view {
+    grid-template-columns: 1fr !important;
+    justify-items: center !important;
+  }
+}
+
+
 
 .visual-category-card {
   width: 339px !important;

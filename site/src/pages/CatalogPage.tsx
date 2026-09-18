@@ -350,8 +350,8 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
   };
 
   return (
-    <div className="catalog-page-wrapper" style={{ minHeight: '100vh', padding: '16px 0 64px' }}>
-      <div className="catalog-container" style={{ padding: '0 clamp(16px, 3.5vw, 48px)' }}>
+    <div className="catalog-page-wrapper" style={{ minHeight: '100vh', padding: '16px 0 64px', width: '100%', boxSizing: 'border-box' }}>
+      <div className="catalog-container" style={{ maxWidth: '1480px', margin: '0 auto', padding: '0 clamp(16px, 2.5vw, 36px)', width: '100%', boxSizing: 'border-box' }}>
         {/* Page Header Bar */}
         <div
           style={{
@@ -831,12 +831,12 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
         </div>
 
         {/* 2-Column Catalog Body: Left Sidebar Filters (Desktop) + Right Products Grid */}
-        <div style={{ display: 'flex', gap: '28px', alignItems: 'start' }}>
+        <div style={{ display: 'flex', gap: '24px', alignItems: 'start', width: '100%' }}>
           {/* Desktop Left Sidebar Filters (Hidden on small screens via CSS) */}
           <aside
             className="catalog-desktop-sidebar"
             style={{
-              width: '280px',
+              width: '250px',
               flexShrink: 0,
               display: 'flex',
               flexDirection: 'column',
@@ -1380,7 +1380,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                 style={{
                   display: 'grid',
                   gridTemplateColumns:
-                    viewMode === 'list' ? '1fr' : 'repeat(auto-fill, minmax(280px, 339px))',
+                    viewMode === 'list' ? '1fr' : 'repeat(3, minmax(0, 339px))',
                   gap: '20px',
                   justifyContent: 'start',
                 }}
