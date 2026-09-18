@@ -711,7 +711,7 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
         { label: 'Ana Səhifə', href: '/' },
         { label: 'Kataloq', href: '/catalog' },
         ...(cat ? [{ label: cat.name, href: `/category/${cat.id}` }] : []),
-        { label: selectedProduct.code, href: `/product/${selectedProduct.id}` },
+        { label: selectedProduct.title || selectedProduct.code, href: `/product/${selectedProduct.id}` },
       ];
     }
     return [

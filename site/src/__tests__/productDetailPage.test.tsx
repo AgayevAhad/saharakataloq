@@ -118,12 +118,11 @@ describe('ProductDetailPage Tests', () => {
       />
     );
 
-    expect(screen.getAllByText('FLN 128 LW').length).toBeGreaterThan(0);
     expect(screen.getByText('ARDO 8kq Paltaryuyan İnverter')).toBeDefined();
     expect(screen.getAllByText(/999/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/1.*199/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText(/İtaliya/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Rəsmi Anbarda mövcuddur/i)).toBeDefined();
+    expect(screen.getByText(/Anbarda mövcuddur/i)).toBeDefined();
   });
 
   it('2. Triggers WhatsApp, Call, Cart, Favorite, and Compare callbacks', () => {
