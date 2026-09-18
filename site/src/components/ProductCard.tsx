@@ -63,6 +63,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 }) => {
   const [isHovered, setIsHovered] = useState(false);
   const [isMobileFocused, setIsMobileFocused] = useState(false);
+  const [isMobileActionVisible, setIsMobileActionVisible] = useState(false);
   const [hasManuallySwiped, setHasManuallySwiped] = useState(false);
   const [currentImageIdx, setCurrentImageIdx] = useState(0);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -121,7 +122,20 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     };
   }, []);
 
+  useEffect(() => {
+    if (isMobileFocused) {
+      setIsMobileActionVisible(true);
+      const timer = setTimeout(() => {
+        setIsMobileActionVisible(false);
+      }, 2600);
+      return () => clearTimeout(timer);
+    } else {
+      setIsMobileActionVisible(false);
+    }
+  }, [isMobileFocused]);
+
   const isActive = isHovered || isMobileFocused;
+  const isActionClusterVisible = isHovered || (isMobileFocused && isMobileActionVisible);
 
   // Video Autoplay / Pause: Only decode/play on active hover/focus to prevent CPU/decoder saturation
   useEffect(() => {
@@ -526,9 +540,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           position: 'absolute',
           bottom: '42px',
           left: '50%',
-          transform: `translateX(-50%) ${isActive ? 'translateY(0)' : 'translateY(10px)'}`,
-          opacity: isActive ? 1 : 0,
-          pointerEvents: isActive ? 'auto' : 'none',
+          transform: `translateX(-50%) ${isActionClusterVisible ? 'translateY(0)' : 'translateY(10px)'}`,
+          opacity: isActionClusterVisible ? 1 : 0,
+          pointerEvents: isActionClusterVisible ? 'auto' : 'none',
           display: 'flex',
           alignItems: 'center',
           gap: '6px',

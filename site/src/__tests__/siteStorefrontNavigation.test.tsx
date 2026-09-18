@@ -138,11 +138,11 @@ describe('Sahara Electronics Site Storefront Navigation & Components', () => {
       );
 
       expect(screen.getByText('Ana Səhifə')).toBeDefined();
-      expect(screen.getByText('Kateqoriyalar')).toBeDefined();
+      expect(screen.getByText('Kataloq')).toBeDefined();
       expect(screen.getByText('Səbət')).toBeDefined();
       expect(screen.getByText('Profil')).toBeDefined();
 
-      fireEvent.click(screen.getByText('Kateqoriyalar'));
+      fireEvent.click(screen.getByText('Kataloq'));
       expect(handleNavigate).toHaveBeenCalledWith('catalog');
 
       fireEvent.click(screen.getByText('Profil'));

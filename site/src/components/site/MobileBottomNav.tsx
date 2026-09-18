@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, Layers, ShoppingCart, User, Heart } from 'lucide-react';
+import { Home, LayoutGrid, ShoppingCart, User, Heart } from 'lucide-react';
 import { AuthUser } from '../../types/auth';
 import { ThemeColors, DESIGN_TOKENS } from '../../types/theme';
 
@@ -75,7 +75,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           <span>Ana Səhifə</span>
         </button>
 
-        {/* 2. Kateqoriyalar */}
+        {/* 2. Kataloq */}
         <button
           type="button"
           onClick={() => onNavigate('catalog')}
@@ -94,8 +94,8 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             padding: '4px 8px',
           }}
         >
-          <Layers size={20} />
-          <span>Kateqoriyalar</span>
+          <LayoutGrid size={20} />
+          <span>Kataloq</span>
         </button>
 
         {/* 3. Səbət */}
