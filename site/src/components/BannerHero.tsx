@@ -114,8 +114,35 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
     if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
     setSlideProgress(0);
 
-    if (currentSlide.type === 'image') {
-      const stepMs = 50;
+    const stepMs = 50;
+
+    if (currentSlide.type === 'video') {
+      if (videoRef.current) {
+        try {
+          videoRef.current.currentTime = 0;
+          if (!isPaused) {
+            videoRef.current.play().catch(() => {});
+          }
+        } catch {
+          // ignore
+        }
+      }
+
+      progressIntervalRef.current = setInterval(() => {
+        if (!isMountedRef.current || isPaused) return;
+        if (videoRef.current) {
+          const cur = videoRef.current.currentTime || 0;
+          const dur = currentSlide.duration || 20;
+          const progress = Math.min(100, Math.max(0, (cur / dur) * 100));
+          setSlideProgress(progress);
+
+          if (cur >= dur || videoRef.current.ended) {
+            videoRef.current.currentTime = 0;
+            goToSlide((currentIndex + 1) % HERO_SLIDES.length);
+          }
+        }
+      }, stepMs);
+    } else {
       const totalSteps = (currentSlide.duration * 1000) / stepMs;
       const progressIncrement = 100 / totalSteps;
 
@@ -135,6 +162,21 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
       if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
     };
   }, [currentIndex, isPaused, currentSlide.type, currentSlide.duration]);
+
+  // Sync video play/pause with hover state
+  useEffect(() => {
+    if (currentSlide.type === 'video' && videoRef.current) {
+      if (isPaused) {
+        if (!videoRef.current.paused) {
+          videoRef.current.pause();
+        }
+      } else {
+        if (videoRef.current.paused) {
+          videoRef.current.play().catch(() => {});
+        }
+      }
+    }
+  }, [isPaused, currentSlide.type]);
 
   const goToSlide = (targetIdx: number) => {
     if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current);
@@ -193,7 +235,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
           margin: '0 auto',
         }}
       >
-        {/* Visual Media Layer: Video for slide 0, Crisp high-res image for slides 1 & 2 */}
+        {/* Visual Media Layer: Clear, bright video for slide 0, high-res images for slides 1 & 2 */}
         {currentSlide.type === 'video' ? (
           <video
             ref={videoRef}
@@ -202,16 +244,16 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
             poster={currentSlide.poster}
             autoPlay
             muted
-            loop
+            loop={false}
             playsInline
             onTimeUpdate={() => {
               if (videoRef.current) {
                 const cur = videoRef.current.currentTime;
-                const dur = currentSlide.duration;
+                const dur = currentSlide.duration || 20;
                 if (!isPaused) {
-                  setSlideProgress(Math.min(100, (cur / dur) * 100));
+                  setSlideProgress(Math.min(100, Math.max(0, (cur / dur) * 100)));
                 }
-                if (cur >= dur) {
+                if (cur >= dur || videoRef.current.ended) {
                   videoRef.current.currentTime = 0;
                   goToSlide((currentIndex + 1) % HERO_SLIDES.length);
                 }
@@ -223,12 +265,8 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
               width: '100%',
               height: '100%',
               objectFit: 'cover',
-              objectPosition: '65% center',
+              objectPosition: 'center 40%',
               zIndex: 0,
-              maskImage:
-                'radial-gradient(ellipse 85% 85% at 65% 50%, black 50%, rgba(0, 0, 0, 0.8) 75%, transparent 100%), linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)',
-              WebkitMaskImage:
-                'radial-gradient(ellipse 85% 85% at 65% 50%, black 50%, rgba(0, 0, 0, 0.8) 75%, transparent 100%), linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)',
             }}
           />
         ) : (
@@ -242,18 +280,14 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
               width: '100%',
               height: '100%',
               objectFit: 'cover',
-              objectPosition: '65% center',
+              objectPosition: 'center center',
               zIndex: 0,
               transition: 'opacity 0.4s ease, transform 0.8s ease',
-              maskImage:
-                'radial-gradient(ellipse 85% 85% at 65% 50%, black 50%, rgba(0, 0, 0, 0.8) 75%, transparent 100%), linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)',
-              WebkitMaskImage:
-                'radial-gradient(ellipse 85% 85% at 65% 50%, black 50%, rgba(0, 0, 0, 0.8) 75%, transparent 100%), linear-gradient(to right, transparent 0%, black 15%, black 85%, transparent 100%), linear-gradient(to bottom, transparent 0%, black 12%, black 88%, transparent 100%)',
             }}
           />
         )}
 
-        {/* Ambient Gradient Overlay for text readability (Dark/Moody left vignette) */}
+        {/* Ambient Gradient Overlay for text readability (Focused softly on the left side) */}
         <div
           style={{
             position: 'absolute',
@@ -262,12 +296,12 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
             pointerEvents: 'none',
             background:
               theme.mode === 'dark'
-                ? 'linear-gradient(90deg, rgba(8, 12, 18, 0.98) 0%, rgba(8, 12, 18, 0.85) 34%, rgba(8, 12, 18, 0.15) 64%, transparent 100%)'
-                : 'linear-gradient(90deg, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.88) 34%, rgba(255, 255, 255, 0.15) 64%, transparent 100%)',
+                ? 'linear-gradient(90deg, rgba(8, 12, 18, 0.90) 0%, rgba(8, 12, 18, 0.65) 28%, rgba(8, 12, 18, 0.15) 50%, transparent 70%)'
+                : 'linear-gradient(90deg, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0.70) 28%, rgba(255, 255, 255, 0.15) 50%, transparent 70%)',
           }}
         />
 
-        {/* Misty atmospheric edge dissolution overlay (Melts 4 outer borders directly into page canvas) */}
+        {/* Subtle perimeter dissolution (Softly blends outer edges into page canvas without darkening the video) */}
         <div
           style={{
             position: 'absolute',
@@ -276,10 +310,11 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
             pointerEvents: 'none',
             background:
               theme.mode === 'dark'
-                ? 'radial-gradient(ellipse 90% 90% at 65% 50%, transparent 45%, rgba(11, 15, 23, 0.5) 75%, #0b0f17 100%), linear-gradient(to bottom, #0b0f17 0%, transparent 14%, transparent 86%, #0b0f17 100%), linear-gradient(to right, #0b0f17 0%, transparent 18%, transparent 85%, #0b0f17 100%)'
-                : 'radial-gradient(ellipse 90% 90% at 65% 50%, transparent 45%, rgba(248, 250, 252, 0.5) 75%, #f8fafc 100%), linear-gradient(to bottom, #f8fafc 0%, transparent 14%, transparent 86%, #f8fafc 100%), linear-gradient(to right, #f8fafc 0%, transparent 18%, transparent 85%, #f8fafc 100%)',
+                ? 'linear-gradient(to bottom, #0b0f17 0%, transparent 3.5%, transparent 96.5%, #0b0f17 100%), linear-gradient(to right, #0b0f17 0%, transparent 2.5%, transparent 97.5%, #0b0f17 100%)'
+                : 'linear-gradient(to bottom, #f8fafc 0%, transparent 3.5%, transparent 96.5%, #f8fafc 100%), linear-gradient(to right, #f8fafc 0%, transparent 2.5%, transparent 97.5%, #f8fafc 100%)',
           }}
         />
+
 
         {/* Top-Right Calligraphy Script Badge: "Daha çox imkan, sənə yaxın!" */}
         <div
