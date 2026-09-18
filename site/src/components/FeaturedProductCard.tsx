@@ -1,8 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Heart, ShoppingCart } from 'lucide-react';
+import { Heart, ShoppingCart, Scale, Phone } from 'lucide-react';
 import { Product } from '../types/product';
 import { ThemeColors } from '../types/theme';
 import { ShimmerImage } from './ShimmerImage';
+import { WhatsAppIcon } from './WhatsAppIcon';
 
 interface FeaturedProductCardProps {
   product: Product;
@@ -11,6 +12,10 @@ interface FeaturedProductCardProps {
   onAddToCart?: (product: Product) => void;
   onToggleFavorite?: (product: Product) => void;
   isFavorite?: boolean;
+  onToggleCompare?: (product: Product) => void;
+  isComparing?: boolean;
+  onWhatsApp?: (product: Product) => void;
+  onCall?: (product: Product) => void;
 }
 
 export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
@@ -20,6 +25,10 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
   onAddToCart,
   onToggleFavorite,
   isFavorite: isFavoriteProp,
+  onToggleCompare,
+  isComparing = false,
+  onWhatsApp,
+  onCall,
 }) => {
   const [internalFavorite, setInternalFavorite] = useState(false);
   const isFavorite = isFavoriteProp !== undefined ? isFavoriteProp : internalFavorite;
@@ -72,10 +81,33 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
     }
   };
 
+  const handleCompareClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    onToggleCompare?.(product);
+  };
+
   const handleCartClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onAddToCart) {
       onAddToCart(product);
+    } else {
+      onSelect(product);
+    }
+  };
+
+  const handleWhatsAppClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onWhatsApp) {
+      onWhatsApp(product);
+    } else {
+      onSelect(product);
+    }
+  };
+
+  const handleCallClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (onCall) {
+      onCall(product);
     } else {
       onSelect(product);
     }
@@ -116,65 +148,155 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
         }
       }}
     >
-      {/* Top Right: Heart/Favorite Button (Appears on Hover or if Favorited) */}
+      {/* Top Right: Favorite & Compare Action Buttons */}
       <div
-        className="card-hover-heart"
         style={{
           position: 'absolute',
           top: '10px',
           right: '10px',
           zIndex: 6,
-          opacity: isHovered || isFavorite ? 1 : 0,
-          pointerEvents: isHovered || isFavorite ? 'auto' : 'none',
-          transform: isHovered || isFavorite ? 'scale(1)' : 'scale(0.85)',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          opacity: isHovered || isFavorite || isComparing ? 1 : 0,
+          pointerEvents: isHovered || isFavorite || isComparing ? 'auto' : 'none',
+          transform: isHovered || isFavorite || isComparing ? 'scale(1)' : 'scale(0.85)',
           transition: 'opacity 0.2s ease, transform 0.2s ease',
         }}
       >
+        {/* Compare Button */}
+        {onToggleCompare && (
+          <button
+            type="button"
+            onClick={handleCompareClick}
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              backgroundColor: isComparing ? '#2563eb' : 'rgba(255, 255, 255, 0.95)',
+              border: `1px solid ${isComparing ? '#2563eb' : 'rgba(226, 232, 240, 0.9)'}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              padding: 0,
+              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+              color: isComparing ? '#ffffff' : '#64748b',
+              transition: 'transform 0.15s ease, color 0.15s ease, background-color 0.15s ease',
+            }}
+            aria-label={isComparing ? 'Müqayisədən çıxar' : 'Müqayisə et'}
+            title={isComparing ? 'Müqayisədən çıxar' : 'Müqayisə et'}
+          >
+            <Scale size={15} color={isComparing ? '#ffffff' : '#64748b'} />
+          </button>
+        )}
+
+        {/* Heart/Favorite Button */}
         <button
           type="button"
           onClick={handleFavoriteClick}
           style={{
-            width: '34px',
-            height: '34px',
+            width: '32px',
+            height: '32px',
             borderRadius: '50%',
-            backgroundColor: 'rgba(255, 255, 255, 0.95)',
-            border: '1px solid rgba(226, 232, 240, 0.9)',
+            backgroundColor: isFavorite ? '#ef4444' : 'rgba(255, 255, 255, 0.95)',
+            border: `1px solid ${isFavorite ? '#ef4444' : 'rgba(226, 232, 240, 0.9)'}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
             padding: 0,
             boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-            color: isFavorite ? '#ef4444' : '#94a3b8',
+            color: isFavorite ? '#ffffff' : '#94a3b8',
             transition: 'transform 0.15s ease, color 0.15s ease, background-color 0.15s ease',
           }}
           aria-label={isFavorite ? 'Sevimlilərdən çıxar' : 'Sevimlilərə əlavə et'}
+          title={isFavorite ? 'Sevimlilərdən çıxar' : 'Sevimlilərə əlavə et'}
         >
-          <Heart size={18} fill={isFavorite ? '#ef4444' : 'none'} color={isFavorite ? '#ef4444' : '#64748b'} />
+          <Heart size={16} fill={isFavorite ? '#ffffff' : 'none'} color={isFavorite ? '#ffffff' : '#64748b'} />
         </button>
       </div>
 
-      {/* Floating Bottom Right: Red Cart Button (Appears on Hover) */}
+      {/* Floating Hover Action Cluster: WhatsApp, Call, and Cart (Frosted Translucent Bar) */}
       <div
-        className="card-hover-cart"
+        className="card-hover-actions-cluster"
         style={{
           position: 'absolute',
-          bottom: '38px',
-          right: '10px',
+          bottom: '42px',
+          left: '50%',
+          transform: `translateX(-50%) ${isHovered ? 'translateY(0)' : 'translateY(8px)'}`,
           zIndex: 6,
           opacity: isHovered ? 1 : 0,
           pointerEvents: isHovered ? 'auto' : 'none',
-          transform: isHovered ? 'scale(1)' : 'scale(0.85)',
-          transition: 'opacity 0.2s ease, transform 0.2s ease',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          padding: '4px 8px',
+          borderRadius: '24px',
+          backgroundColor: 'rgba(255, 255, 255, 0.92)',
+          backdropFilter: 'blur(10px)',
+          WebkitBackdropFilter: 'blur(10px)',
+          border: '1px solid rgba(226, 232, 240, 0.85)',
+          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
+          transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
+        {/* WhatsApp Icon */}
+        <button
+          type="button"
+          onClick={handleWhatsAppClick}
+          style={{
+            width: '32px',
+            height: '32px',
+            borderRadius: '50%',
+            backgroundColor: '#25D366',
+            color: '#ffffff',
+            border: 'none',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 2px 6px rgba(37, 211, 102, 0.3)',
+            transition: 'transform 0.15s ease',
+          }}
+          title="WhatsApp ilə soruş"
+          aria-label="WhatsApp"
+        >
+          <WhatsAppIcon size={16} color="#ffffff" />
+        </button>
+
+        {/* Call Icon */}
+        <button
+          type="button"
+          onClick={handleCallClick}
+          style={{
+            width: '32px',
+            height: '32px',
+            borderRadius: '50%',
+            backgroundColor: '#0284c7',
+            color: '#ffffff',
+            border: 'none',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 2px 6px rgba(2, 132, 199, 0.3)',
+            transition: 'transform 0.15s ease',
+          }}
+          title="Zəng et"
+          aria-label="Zəng et"
+        >
+          <Phone size={14} color="#ffffff" />
+        </button>
+
+        {/* Add to Cart Icon */}
         <button
           type="button"
           onClick={handleCartClick}
           style={{
-            width: '36px',
-            height: '36px',
-            borderRadius: '10px',
+            width: '32px',
+            height: '32px',
+            borderRadius: '50%',
             backgroundColor: '#dc2626',
             color: '#ffffff',
             border: 'none',
@@ -182,13 +304,13 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 4px 14px rgba(220, 38, 38, 0.4)',
-            transition: 'transform 0.15s ease, background-color 0.15s ease',
+            boxShadow: '0 2px 6px rgba(220, 38, 38, 0.35)',
+            transition: 'transform 0.15s ease',
           }}
           aria-label="Səbətə əlavə et"
           title="Səbətə əlavə et"
         >
-          <ShoppingCart size={17} color="#ffffff" />
+          <ShoppingCart size={15} color="#ffffff" />
         </button>
       </div>
 

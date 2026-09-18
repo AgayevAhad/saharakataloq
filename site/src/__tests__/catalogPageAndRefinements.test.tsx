@@ -174,7 +174,10 @@ describe('CatalogPage Rich Filters & Navigation', () => {
       />
     );
 
-    // Check ARDO checkbox in sidebar
+    // Expand collapsed Rəsmi Brendlər section then check ARDO checkbox in sidebar
+    const brandsHeader = screen.getByText(/Rəsmi Brendlər/i);
+    fireEvent.click(brandsHeader);
+
     const ardoCheckboxes = screen.getAllByLabelText(/ARDO brendini seç/i);
     fireEvent.click(ardoCheckboxes[0]);
 

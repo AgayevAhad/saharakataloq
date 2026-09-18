@@ -417,6 +417,28 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
   };
 
   // Compare functions
+  const toggleCompare = useCallback(
+    (product: Product) => {
+      setComparisonIds((prev) => {
+        let next: string[];
+        if (prev.includes(product.id)) {
+          next = prev.filter((id) => id !== product.id);
+          showToast(`${product.code} müqayisədən çıxarıldı.`);
+        } else {
+          if (prev.length >= 4) {
+            showToast('Maksimum 4 məhsul müqayisə edilə bilər.', 'error');
+            return prev;
+          }
+          next = [...prev, product.id];
+          showToast(`${product.code} müqayisəyə əlavə edildi.`);
+        }
+        localStorage.setItem(COMPARE_KEY, JSON.stringify(next));
+        return next;
+      });
+    },
+    [showToast]
+  );
+
   const removeFromCompare = useCallback((productId: string) => {
     setComparisonIds((prev) => {
       const next = prev.filter((id) => id !== productId);
@@ -1185,6 +1207,8 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
                     onAddToCart={addToCart}
                     onToggleFavorite={toggleFavorite}
                     favoriteIds={favoriteIds}
+                    comparisonIds={comparisonIds}
+                    onToggleCompare={toggleCompare}
                   />
                 )}
                 {currentRoute === 'catalog' && (
@@ -1208,6 +1232,9 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
                     onAddToCart={addToCart}
                     onToggleFavorite={toggleFavorite}
                     favoriteIds={favoriteIds}
+                    comparisonIds={comparisonIds}
+                    onToggleCompare={toggleCompare}
+                    onClearCompare={clearCompare}
                   />
                 )}
                 {currentRoute === 'brands' && (

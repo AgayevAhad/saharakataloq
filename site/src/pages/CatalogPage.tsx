@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   Filter,
   SlidersHorizontal,
@@ -17,12 +17,41 @@ import {
   Check,
   ArrowUpDown,
   LayoutGrid,
+  Scale,
+  Snowflake,
+  RotateCw,
+  Wind,
+  Thermometer,
+  Package,
+  ArrowDownNarrowWide,
+  ArrowUpNarrowWide,
+  ArrowRight,
+  ShoppingCart,
+  Phone,
+  Eye,
+  EyeOff,
+  Trash2,
 } from 'lucide-react';
 import { Brand, CatalogCategory, CatalogSettings, Product } from '../types/product';
 import { ThemeColors } from '../types/theme';
 import { ProductCard } from '../components/ProductCard';
 import { ShimmerImage } from '../components/ShimmerImage';
+import { WhatsAppIcon } from '../components/WhatsAppIcon';
 import { useHorizontalScroll } from '../hooks/useHorizontalScroll';
+
+const getCategoryIcon = (id: string, slug?: string) => {
+  const key = `${id} ${slug || ''}`.toLowerCase();
+  if (key.includes('refrigerator') || key.includes('soyuducu')) return <Snowflake size={14} style={{ color: '#0ea5e9', flexShrink: 0 }} />;
+  if (key.includes('washer') || key.includes('paltaryuyan') || key.includes('qabyuyan')) return <RotateCw size={14} style={{ color: '#e31e24', flexShrink: 0 }} />;
+  if (key.includes('oven') || key.includes('soba')) return <Flame size={14} style={{ color: '#f97316', flexShrink: 0 }} />;
+  if (key.includes('cooktop') || key.includes('bisirme') || key.includes('panel')) return <Grid size={14} style={{ color: '#e31e24', flexShrink: 0 }} />;
+  if (key.includes('hood') || key.includes('aspirator')) return <Wind size={14} style={{ color: '#64748b', flexShrink: 0 }} />;
+  if (key.includes('microwave') || key.includes('mikrodalga')) return <Zap size={14} style={{ color: '#eab308', flexShrink: 0 }} />;
+  if (key.includes('conditioner') || key.includes('iqlim') || key.includes('kondisioner')) return <Thermometer size={14} style={{ color: '#3b82f6', flexShrink: 0 }} />;
+  if (key.includes('vacuum') || key.includes('tozsoran')) return <Wind size={14} style={{ color: '#06b6d4', flexShrink: 0 }} />;
+  if (key.includes('airfryer')) return <Flame size={14} style={{ color: '#f43f5e', flexShrink: 0 }} />;
+  return <Package size={14} style={{ color: '#e31e24', flexShrink: 0 }} />;
+};
 
 export interface CatalogPageProps {
   products: Product[];
@@ -44,6 +73,9 @@ export interface CatalogPageProps {
   onAddToCart?: (product: Product) => void;
   onToggleFavorite?: (product: Product) => void;
   favoriteIds?: string[];
+  comparisonIds?: string[];
+  onToggleCompare?: (product: Product) => void;
+  onClearCompare?: () => void;
 }
 
 type SortOption = 'recommended' | 'price-asc' | 'price-desc' | 'newest' | 'discount';
@@ -69,6 +101,9 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
   onAddToCart,
   onToggleFavorite,
   favoriteIds = [],
+  comparisonIds = [],
+  onToggleCompare,
+  onClearCompare,
 }) => {
   // Published/active items only
   const activeProducts = useMemo(() => products.filter((p) => p.status !== 'draft'), [products]);
@@ -89,8 +124,31 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
   const [selectedMotorType, setSelectedMotorType] = useState<string>('all');
   const [selectedColor, setSelectedColor] = useState<string>('all');
   const [sortBy, setSortBy] = useState<SortOption>('recommended');
+  const [isSortDropdownOpen, setIsSortDropdownOpen] = useState<boolean>(false);
+  const sortRef = useRef<HTMLDivElement>(null);
   const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState<boolean>(false);
+
+  // In-Catalog Comparison Modal States
+  const [isCompareModalOpen, setIsCompareModalOpen] = useState<boolean>(false);
+  const [onlyDifferencesInModal, setOnlyDifferencesInModal] = useState<boolean>(false);
+
+  const comparedProducts = useMemo(() => {
+    return (comparisonIds || [])
+      .map((id) => activeProducts.find((p) => p.id === id))
+      .filter((p): p is Product => Boolean(p));
+  }, [comparisonIds, activeProducts]);
+
+  // Close sort dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (sortRef.current && !sortRef.current.contains(e.target as Node)) {
+        setIsSortDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   // Price range calculation
   const allPrices = useMemo(
@@ -103,10 +161,10 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
   const [minPrice, setMinPrice] = useState<number>(minAvailablePrice);
   const [maxPrice, setMaxPrice] = useState<number>(maxAvailablePrice);
 
-  // Collapsible sidebar sections
+  // Collapsible sidebar sections - Official brands collapsed by default per Item 20
   const [openSections, setOpenSections] = useState({
     categories: true,
-    brands: true,
+    brands: false,
     price: true,
     specifications: true,
     special: true,
@@ -475,6 +533,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                   boxShadow: isSelected ? '0 4px 12px rgba(227, 30, 36, 0.3)' : 'none',
                 }}
               >
+                {getCategoryIcon(c.id, c.slug)}
                 <span>{c.name}</span>
                 {count > 0 && <span style={{ fontSize: '11px', opacity: 0.85 }}>({count})</span>}
               </button>
@@ -609,29 +668,119 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
 
           {/* Sort Selector & View Mode Switcher */}
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <ArrowUpDown size={14} style={{ color: theme.textMuted }} />
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as SortOption)}
+            {/* Custom Interactive Sort Dropdown */}
+            <div ref={sortRef} style={{ position: 'relative' }}>
+              <button
+                type="button"
+                onClick={() => setIsSortDropdownOpen((prev) => !prev)}
+                className="catalog-sort-custom-btn"
                 style={{
-                  padding: '8px 12px',
-                  borderRadius: '10px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  padding: '8px 14px',
+                  borderRadius: '12px',
                   backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f8fafc',
-                  border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#cbd5e1'}`,
+                  border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.12)' : '#cbd5e1'}`,
                   color: theme.text,
                   fontSize: '13px',
-                  fontWeight: 600,
-                  outline: 'none',
+                  fontWeight: 700,
                   cursor: 'pointer',
+                  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.04)',
+                  transition: 'all 0.15s ease',
                 }}
+                aria-haspopup="listbox"
+                aria-expanded={isSortDropdownOpen}
               >
-                <option value="recommended">Tövsiyə olunan</option>
-                <option value="price-asc">Qiymət: Ucuzdan bahaya</option>
-                <option value="price-desc">Qiymət: Bahadan ucuza</option>
-                <option value="newest">Yeni modellər</option>
-                <option value="discount">Ən böyük endirim</option>
-              </select>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  {sortBy === 'recommended' && <Sparkles size={14} color="#e31e24" />}
+                  {sortBy === 'price-asc' && <ArrowDownNarrowWide size={14} color="#10b981" />}
+                  {sortBy === 'price-desc' && <ArrowUpNarrowWide size={14} color="#3b82f6" />}
+                  {sortBy === 'newest' && <Flame size={14} color="#f97316" />}
+                  {sortBy === 'discount' && <Tag size={14} color="#ec4899" />}
+                  <span>
+                    {sortBy === 'recommended' && 'Tövsiyə olunan'}
+                    {sortBy === 'price-asc' && 'Qiymət: Ucuzdan bahaya'}
+                    {sortBy === 'price-desc' && 'Qiymət: Bahadan ucuza'}
+                    {sortBy === 'newest' && 'Yeni modellər'}
+                    {sortBy === 'discount' && 'Ən böyük endirim'}
+                  </span>
+                </div>
+                <ChevronDown
+                  size={14}
+                  style={{
+                    transform: isSortDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                    transition: 'transform 0.2s ease',
+                    color: theme.textMuted,
+                  }}
+                />
+              </button>
+
+              {/* Popover Menu */}
+              {isSortDropdownOpen && (
+                <div
+                  className="catalog-sort-popover"
+                  style={{
+                    position: 'absolute',
+                    top: 'calc(100% + 6px)',
+                    right: 0,
+                    minWidth: '220px',
+                    backgroundColor: themeMode === 'dark' ? '#0f172a' : '#ffffff',
+                    border: `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : '#e2e8f0'}`,
+                    borderRadius: '14px',
+                    boxShadow: '0 12px 32px rgba(0, 0, 0, 0.18)',
+                    padding: '6px',
+                    zIndex: 50,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '2px',
+                    backdropFilter: 'blur(12px)',
+                  }}
+                >
+                  {[
+                    { value: 'recommended' as SortOption, label: 'Tövsiyə olunan', icon: <Sparkles size={14} color="#e31e24" /> },
+                    { value: 'price-asc' as SortOption, label: 'Qiymət: Ucuzdan bahaya', icon: <ArrowDownNarrowWide size={14} color="#10b981" /> },
+                    { value: 'price-desc' as SortOption, label: 'Qiymət: Bahadan ucuza', icon: <ArrowUpNarrowWide size={14} color="#3b82f6" /> },
+                    { value: 'newest' as SortOption, label: 'Yeni modellər', icon: <Flame size={14} color="#f97316" /> },
+                    { value: 'discount' as SortOption, label: 'Ən böyük endirim', icon: <Tag size={14} color="#ec4899" /> },
+                  ].map((opt) => {
+                    const isSelected = sortBy === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => {
+                          setSortBy(opt.value);
+                          setIsSortDropdownOpen(false);
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                          padding: '9px 12px',
+                          borderRadius: '8px',
+                          backgroundColor: isSelected
+                            ? (themeMode === 'dark' ? 'rgba(227, 30, 36, 0.15)' : 'rgba(227, 30, 36, 0.08)')
+                            : 'transparent',
+                          color: isSelected ? '#e31e24' : theme.text,
+                          border: 'none',
+                          fontSize: '13px',
+                          fontWeight: isSelected ? 700 : 500,
+                          cursor: 'pointer',
+                          textAlign: 'left',
+                          transition: 'background-color 0.15s ease',
+                        }}
+                      >
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {opt.icon}
+                          <span>{opt.label}</span>
+                        </div>
+                        {isSelected && <Check size={14} color="#e31e24" strokeWidth={2.5} />}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
 
             {/* View Mode Toggle */}
@@ -740,7 +889,10 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                       textAlign: 'left',
                     }}
                   >
-                    <span>Bütün Kateqoriyalar</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <LayoutGrid size={14} style={{ color: '#e31e24' }} />
+                      <span>Bütün Kateqoriyalar</span>
+                    </span>
                     <span style={{ fontSize: '11px', color: theme.textMuted }}>{activeProducts.length}</span>
                   </button>
 
@@ -767,7 +919,10 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                           textAlign: 'left',
                         }}
                       >
-                        <span>{cat.name}</span>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          {getCategoryIcon(cat.id, cat.slug)}
+                          <span>{cat.name}</span>
+                        </span>
                         <span style={{ fontSize: '11px', color: theme.textMuted }}>{count}</span>
                       </button>
                     );
@@ -1250,6 +1405,8 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                       onAddToCart={onAddToCart}
                       onToggleFavorite={onToggleFavorite}
                       isFavorite={favoriteIds.includes(product.id)}
+                      onToggleCompare={onToggleCompare}
+                      isComparing={comparisonIds.includes(product.id)}
                     />
                   );
                 })}
@@ -1258,6 +1415,614 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
           </main>
         </div>
       </div>
+
+      {/* Floating Bottom Comparison Dock */}
+      {comparisonIds && comparisonIds.length > 0 && (
+        <div
+          className="catalog-floating-compare-dock"
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 90,
+            maxWidth: '94vw',
+            width: '680px',
+            backgroundColor: themeMode === 'dark' ? 'rgba(15, 23, 42, 0.94)' : 'rgba(255, 255, 255, 0.96)',
+            backdropFilter: 'blur(16px)',
+            WebkitBackdropFilter: 'blur(16px)',
+            border: `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(226, 232, 240, 0.95)'}`,
+            borderRadius: '20px',
+            boxShadow: '0 16px 40px rgba(0, 0, 0, 0.22)',
+            padding: '10px 18px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            gap: '12px',
+            boxSizing: 'border-box',
+          }}
+        >
+          {/* Left: Badge & Thumbnail List */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', overflowX: 'auto' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                backgroundColor: 'rgba(37, 99, 235, 0.12)',
+                color: '#2563eb',
+                padding: '6px 12px',
+                borderRadius: '12px',
+                fontSize: '13px',
+                fontWeight: 800,
+                whiteSpace: 'nowrap',
+              }}
+            >
+              <Scale size={16} />
+              <span>Müqayisə ({comparisonIds.length}/4)</span>
+            </div>
+
+            {/* Thumbnail previews */}
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              {comparedProducts.map((cp) => (
+                <div
+                  key={cp.id}
+                  style={{
+                    position: 'relative',
+                    width: '40px',
+                    height: '40px',
+                    borderRadius: '10px',
+                    backgroundColor: '#ffffff',
+                    border: '1px solid #e2e8f0',
+                    overflow: 'hidden',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                  title={cp.title}
+                >
+                  <ShimmerImage
+                    src={cp.image || (Array.isArray(cp.gallery) && cp.gallery[0]) || ''}
+                    alt={cp.title}
+                    style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '2px' }}
+                  />
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onToggleCompare?.(cp);
+                    }}
+                    style={{
+                      position: 'absolute',
+                      top: '1px',
+                      right: '1px',
+                      width: '15px',
+                      height: '15px',
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(0, 0, 0, 0.65)',
+                      color: '#ffffff',
+                      border: 'none',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: 0,
+                    }}
+                    aria-label="Müqayisədən çıxar"
+                  >
+                    <X size={9} />
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Right: Action Buttons */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+            {onClearCompare && (
+              <button
+                type="button"
+                onClick={onClearCompare}
+                style={{
+                  padding: '7px 12px',
+                  borderRadius: '10px',
+                  backgroundColor: 'transparent',
+                  color: theme.textMuted,
+                  border: `1px solid ${theme.border}`,
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                }}
+              >
+                Təmizlə
+              </button>
+            )}
+
+            <button
+              type="button"
+              className="catalog-open-compare-btn"
+              onClick={() => setIsCompareModalOpen(true)}
+              style={{
+                padding: '8px 16px',
+                borderRadius: '12px',
+                backgroundColor: '#2563eb',
+                color: '#ffffff',
+                border: 'none',
+                fontSize: '13px',
+                fontWeight: 700,
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                boxShadow: '0 4px 14px rgba(37, 99, 235, 0.35)',
+              }}
+            >
+              <span>Müqayisə et</span>
+              <ArrowRight size={14} />
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Full In-Catalog Comparison Modal */}
+      {isCompareModalOpen && (
+        <div
+          className="catalog-compare-modal-backdrop"
+          onClick={() => setIsCompareModalOpen(false)}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 220,
+            backgroundColor: 'rgba(0, 0, 0, 0.7)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '20px',
+            boxSizing: 'border-box',
+          }}
+        >
+          <div
+            className="catalog-compare-modal-dialog"
+            onClick={(e) => e.stopPropagation()}
+            style={{
+              width: '100%',
+              maxWidth: '1080px',
+              maxHeight: '90vh',
+              backgroundColor: themeMode === 'dark' ? '#0f172a' : '#ffffff',
+              borderRadius: '24px',
+              border: `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : '#e2e8f0'}`,
+              boxShadow: '0 24px 60px rgba(0, 0, 0, 0.3)',
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden',
+            }}
+          >
+            {/* Modal Header */}
+            <div
+              style={{
+                padding: '16px 24px',
+                borderBottom: `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : '#e2e8f0'}`,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '12px',
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div
+                  style={{
+                    width: '36px',
+                    height: '36px',
+                    borderRadius: '10px',
+                    backgroundColor: 'rgba(37, 99, 235, 0.12)',
+                    color: '#2563eb',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Scale size={20} />
+                </div>
+                <div>
+                  <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 800, color: theme.text }}>
+                    Məhsul Müqayisəsi ({comparedProducts.length} Model)
+                  </h3>
+                  <span style={{ fontSize: '12px', color: theme.textMuted }}>
+                    Texniki göstəricilər və fərqlər
+                  </span>
+                </div>
+              </div>
+
+              {/* Header Controls */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                {/* Difference toggle */}
+                <button
+                  type="button"
+                  onClick={() => setOnlyDifferencesInModal((prev) => !prev)}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    padding: '6px 12px',
+                    borderRadius: '10px',
+                    backgroundColor: onlyDifferencesInModal
+                      ? 'rgba(37, 99, 235, 0.15)'
+                      : themeMode === 'dark'
+                        ? '#1e293b'
+                        : '#f1f5f9',
+                    color: onlyDifferencesInModal ? '#2563eb' : theme.text,
+                    border: `1px solid ${onlyDifferencesInModal ? '#2563eb' : theme.border}`,
+                    fontSize: '12.5px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  {onlyDifferencesInModal ? <EyeOff size={14} /> : <Eye size={14} />}
+                  <span>Yalnız fərqləri göstər</span>
+                </button>
+
+                {/* Clear all */}
+                {onClearCompare && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      onClearCompare();
+                      setIsCompareModalOpen(false);
+                    }}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      padding: '6px 10px',
+                      borderRadius: '8px',
+                      backgroundColor: 'transparent',
+                      color: '#ef4444',
+                      border: 'none',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <Trash2 size={13} />
+                    <span>Təmizlə</span>
+                  </button>
+                )}
+
+                {/* Close Button */}
+                <button
+                  type="button"
+                  onClick={() => setIsCompareModalOpen(false)}
+                  style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f1f5f9',
+                    border: 'none',
+                    color: theme.text,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <X size={18} />
+                </button>
+              </div>
+            </div>
+
+            {/* Modal Body: Scrollable Comparison Table */}
+            <div style={{ flex: 1, overflowY: 'auto', padding: '20px 24px' }}>
+              {comparedProducts.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px' }}>
+                  <p style={{ color: theme.textMuted }}>Müqayisə üçün heç bir məhsul seçilməyib.</p>
+                </div>
+              ) : (
+                <div style={{ overflowX: 'auto' }}>
+                  <table
+                    style={{
+                      width: '100%',
+                      borderCollapse: 'collapse',
+                      minWidth: `${Math.max(600, comparedProducts.length * 220 + 160)}px`,
+                    }}
+                  >
+                    <thead>
+                      <tr>
+                        <th
+                          style={{
+                            width: '160px',
+                            padding: '12px',
+                            textAlign: 'left',
+                            fontSize: '13px',
+                            fontWeight: 800,
+                            color: theme.textMuted,
+                            borderBottom: `2px solid ${theme.border}`,
+                            verticalAlign: 'bottom',
+                          }}
+                        >
+                          Məhsul
+                        </th>
+                        {comparedProducts.map((p) => {
+                          const rawP = p.price ?? (p as any).priceCash;
+                          const pPrice =
+                            rawP !== undefined && rawP !== null && Number(rawP) > 0
+                              ? `${Number(rawP).toLocaleString('az-AZ')} ₼`
+                              : null;
+                          return (
+                            <th
+                              key={p.id}
+                              style={{
+                                padding: '12px',
+                                textAlign: 'center',
+                                borderBottom: `2px solid ${theme.border}`,
+                                width: `${100 / comparedProducts.length}%`,
+                                minWidth: '200px',
+                              }}
+                            >
+                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                                {/* Product Image */}
+                                <div
+                                  style={{
+                                    width: '120px',
+                                    height: '120px',
+                                    borderRadius: '12px',
+                                    backgroundColor: '#ffffff',
+                                    border: '1px solid #e2e8f0',
+                                    padding: '6px',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                    position: 'relative',
+                                  }}
+                                >
+                                  <ShimmerImage
+                                    src={p.image || (Array.isArray(p.gallery) && p.gallery[0]) || ''}
+                                    alt={p.title}
+                                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                                  />
+                                  <button
+                                    type="button"
+                                    onClick={() => onToggleCompare?.(p)}
+                                    style={{
+                                      position: 'absolute',
+                                      top: '4px',
+                                      right: '4px',
+                                      width: '20px',
+                                      height: '20px',
+                                      borderRadius: '50%',
+                                      backgroundColor: 'rgba(239, 68, 68, 0.9)',
+                                      color: '#ffffff',
+                                      border: 'none',
+                                      cursor: 'pointer',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                      padding: 0,
+                                    }}
+                                    title="Sil"
+                                  >
+                                    <X size={12} />
+                                  </button>
+                                </div>
+
+                                {/* Code & Title */}
+                                <span style={{ fontSize: '11px', fontWeight: 800, color: '#e31e24' }}>
+                                  {p.code}
+                                </span>
+                                <span
+                                  style={{
+                                    fontSize: '13px',
+                                    fontWeight: 700,
+                                    color: theme.text,
+                                    lineHeight: 1.3,
+                                    maxHeight: '34px',
+                                    overflow: 'hidden',
+                                  }}
+                                >
+                                  {p.title}
+                                </span>
+
+                                {pPrice && (
+                                  <span style={{ fontSize: '15px', fontWeight: 900, color: theme.text }}>
+                                    {pPrice}
+                                  </span>
+                                )}
+
+                                {/* Quick Action Cluster */}
+                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                                  {onAddToCart && (
+                                    <button
+                                      type="button"
+                                      onClick={() => onAddToCart(p)}
+                                      style={{
+                                        padding: '5px 10px',
+                                        borderRadius: '8px',
+                                        backgroundColor: '#dc2626',
+                                        color: '#ffffff',
+                                        border: 'none',
+                                        fontSize: '11.5px',
+                                        fontWeight: 700,
+                                        cursor: 'pointer',
+                                        display: 'inline-flex',
+                                        alignItems: 'center',
+                                        gap: '4px',
+                                      }}
+                                    >
+                                      <ShoppingCart size={13} />
+                                      <span>Səbətə at</span>
+                                    </button>
+                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => onWhatsApp(p)}
+                                    style={{
+                                      width: '28px',
+                                      height: '28px',
+                                      borderRadius: '50%',
+                                      backgroundColor: '#25D366',
+                                      color: '#ffffff',
+                                      border: 'none',
+                                      cursor: 'pointer',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                    }}
+                                    title="WhatsApp"
+                                  >
+                                    <WhatsAppIcon size={14} color="#ffffff" />
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => onCall()}
+                                    style={{
+                                      width: '28px',
+                                      height: '28px',
+                                      borderRadius: '50%',
+                                      backgroundColor: '#0284c7',
+                                      color: '#ffffff',
+                                      border: 'none',
+                                      cursor: 'pointer',
+                                      display: 'flex',
+                                      alignItems: 'center',
+                                      justifyContent: 'center',
+                                    }}
+                                    title="Zəng et"
+                                  >
+                                    <Phone size={12} color="#ffffff" />
+                                  </button>
+                                </div>
+                              </div>
+                            </th>
+                          );
+                        })}
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {/* Brand Row */}
+                      {(!onlyDifferencesInModal ||
+                        new Set(comparedProducts.map((p) => p.brandId || '')).size > 1) && (
+                        <tr style={{ borderBottom: `1px solid ${theme.border}` }}>
+                          <td style={{ padding: '10px 12px', fontSize: '12.5px', fontWeight: 700, color: theme.textMuted }}>
+                            Brend
+                          </td>
+                          {comparedProducts.map((p) => {
+                            const b = activeBrands.find((br) => br.id === p.brandId);
+                            return (
+                              <td key={p.id} style={{ padding: '10px 12px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: theme.text }}>
+                                {b?.name || p.brandId || '-'}
+                              </td>
+                            );
+                          })}
+                        </tr>
+                      )}
+
+                      {/* Origin Country */}
+                      {(!onlyDifferencesInModal ||
+                        new Set(comparedProducts.map((p) => p.manufacturingCountry || '')).size > 1) && (
+                        <tr style={{ borderBottom: `1px solid ${theme.border}` }}>
+                          <td style={{ padding: '10px 12px', fontSize: '12.5px', fontWeight: 700, color: theme.textMuted }}>
+                            Mənşə ölkəsi
+                          </td>
+                          {comparedProducts.map((p) => (
+                            <td key={p.id} style={{ padding: '10px 12px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: theme.text }}>
+                              {p.manufacturingCountry || '-'}
+                            </td>
+                          ))}
+                        </tr>
+                      )}
+
+                      {/* Category */}
+                      {(!onlyDifferencesInModal ||
+                        new Set(comparedProducts.map((p) => p.categoryName || p.category || '')).size > 1) && (
+                        <tr style={{ borderBottom: `1px solid ${theme.border}` }}>
+                          <td style={{ padding: '10px 12px', fontSize: '12.5px', fontWeight: 700, color: theme.textMuted }}>
+                            Kateqoriya
+                          </td>
+                          {comparedProducts.map((p) => (
+                            <td key={p.id} style={{ padding: '10px 12px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: theme.text }}>
+                              {p.categoryName || p.category || '-'}
+                            </td>
+                          ))}
+                        </tr>
+                      )}
+
+                      {/* Energy Class */}
+                      {(!onlyDifferencesInModal ||
+                        new Set(comparedProducts.map((p) => p.energyClass || '')).size > 1) && (
+                        <tr style={{ borderBottom: `1px solid ${theme.border}` }}>
+                          <td style={{ padding: '10px 12px', fontSize: '12.5px', fontWeight: 700, color: theme.textMuted }}>
+                            Enerji Sinfi
+                          </td>
+                          {comparedProducts.map((p) => (
+                            <td key={p.id} style={{ padding: '10px 12px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: theme.text }}>
+                              {p.energyClass || '-'}
+                            </td>
+                          ))}
+                        </tr>
+                      )}
+
+                      {/* Motor Type */}
+                      {(!onlyDifferencesInModal ||
+                        new Set(comparedProducts.map((p) => p.motorType || '')).size > 1) && (
+                        <tr style={{ borderBottom: `1px solid ${theme.border}` }}>
+                          <td style={{ padding: '10px 12px', fontSize: '12.5px', fontWeight: 700, color: theme.textMuted }}>
+                            Mühərrik Növü
+                          </td>
+                          {comparedProducts.map((p) => (
+                            <td key={p.id} style={{ padding: '10px 12px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: theme.text }}>
+                              {p.motorType || '-'}
+                            </td>
+                          ))}
+                        </tr>
+                      )}
+
+                      {/* Dynamic Specs */}
+                      {Array.from(
+                        new Set(comparedProducts.flatMap((p) => (p.specs || []).map((s) => s.name)))
+                      )
+                        .filter((specName) => {
+                          if (!onlyDifferencesInModal) return true;
+                          const vals = comparedProducts.map((p) => {
+                            const found = (p.specs || []).find((s) => s.name === specName);
+                            return found ? found.value : '-';
+                          });
+                          return new Set(vals).size > 1;
+                        })
+                        .map((specName) => (
+                          <tr key={specName} style={{ borderBottom: `1px solid ${theme.border}` }}>
+                            <td style={{ padding: '10px 12px', fontSize: '12.5px', fontWeight: 700, color: theme.textMuted }}>
+                              {specName}
+                            </td>
+                            {comparedProducts.map((p) => {
+                              const found = (p.specs || []).find((s) => s.name === specName);
+                              return (
+                                <td
+                                  key={p.id}
+                                  style={{
+                                    padding: '10px 12px',
+                                    textAlign: 'center',
+                                    fontSize: '13px',
+                                    fontWeight: 600,
+                                    color: theme.text,
+                                  }}
+                                >
+                                  {found ? found.value : '-'}
+                                </td>
+                              );
+                            })}
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Mobile Responsive Filter Drawer */}
       {isMobileDrawerOpen && (

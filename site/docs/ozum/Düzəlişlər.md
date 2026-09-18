@@ -39,12 +39,19 @@ Sənə mərhələ mərhələ nə edəcəyini deyirəm.
 
 #14. Burada katalog görünüşünü yaratmalıyıq. Həm katalog səhifəsi həmdə paneldə katalog üstünə gələndə açılan katalog hissəsi . Deməli bizim katalogumuzda panel açılan hissədə seçimlər və kategoryalar olmalıdır. Məsələn məişət əşyaarı və s kategoryalarda məsələn paltaryuyan və s. Sağ tərəfdə brendlər. Hər brend orginila logosundan istifadə et. Diqqət çəkici və gözəl et. Katalog səhifəsində isə daha mürəkkəb seçim filtr və s .Saytları incələ məsələn [bakuelectronics.com](https://bakuelectronics.az/) https://kontakt.az/ . Xarici saytlara da bax. Dizaynı ssaytımıza uyğun et. 
 
-15. Bu video hissəsində 2 və 3 cü seçim olsada heçbir şey yoxdur. 2 və 3 üçün yerni şəkillər tap dizaynımıza uyğun əlavə yazılar olmayan səliqəli elekronika müştəriləri üçün cəlbedici. Bundan sonra 1 məsələ video neçə saniyədirsə qırmızı dolsun. Hiss olunsunki növbətiyə keçəcək. Sanki youtubeda videoya baxanda olure elə. Şəkillər üçündü qalma aralığında elə olsun. 
+#15. Bu video hissəsində 2 və 3 cü seçim olsada heçbir şey yoxdur. 2 və 3 üçün yerni şəkillər tap dizaynımıza uyğun əlavə yazılar olmayan səliqəli elekronika müştəriləri üçün cəlbedici. Bundan sonra 1 məsələ video neçə saniyədirsə qırmızı dolsun. Hiss olunsunki növbətiyə keçəcək. Sanki youtubeda videoya baxanda olure elə. Şəkillər üçündü qalma aralığında elə olsun. 
 
-16. Yuxarıda paneldə səbətə toxunanda kataloga aparır amma bu doğru deyil deməli bunun üçün əsasən xarici saytları incələ kreativ və unikal bir səbət səhifəsi yarat. İncəliklərlə gözəllik istifadəçini valeh etsin istəyirəm. Gözəl və cəlbedici bir şeylər et. Bəyədiyimiz məhsullar səhifəsi üçündə bunları et.
+#16. Yuxarıda paneldə səbətə toxunanda kataloga aparır amma bu doğru deyil deməli bunun üçün əsasən xarici saytları incələ kreativ və unikal bir səbət səhifəsi yarat. İncəliklərlə gözəllik istifadəçini valeh etsin istəyirəm. Gözəl və cəlbedici bir şeylər et. Bəyədiyimiz məhsullar səhifəsi üçündə bunları et.
 
-17. Biz necə səhifəni aşağl scrool edəndə yavaş yavaş gəlire məhsul kartı içində. Belə et. İndi çox sürətldir bunu elə etki gözə çarpan şəkildə görsənsin. Həmçinin hamısı aşağıdan yuxarı yox fərqli fərqli uyğun kontentlərlə olsun. Birdə hər hissədə bu olsun kart daxilindəki yazı və s hissələr.
+#17. Biz necə səhifəni aşağl scrool edəndə yavaş yavaş gəlire məhsul kartı içində. Belə et. İndi çox sürətldir bunu elə etki gözə çarpan şəkildə görsənsin. Həmçinin hamısı aşağıdan yuxarı yox fərqli fərqli uyğun kontentlərlə olsun. Birdə hər hissədə bu olsun kart daxilindəki yazı və s hissələr.
 
 18. Paneldə katalog hissəsində belə olsun deməli seçim alt alta böyük məişət və s. Qutuda yox sadəcə söz olaraq amma üstünə gələndə açılacaq hissi görünüşü və uyğun icon sözün önündə. Üstünəə gələndə uyğun açılış. Böyük məişət iconu ilə katalog iconunu eyni qoymusan bunu düzəlt ayrı olsun.Sağ tərəfdə brendlərin qutusunu çox enli etmisən bunu biraz azalt. 
 
-19. Useer hisəsi vare ona vuranda seçilmişlərə gedir. Onuda düzəlt. Tam unikal müasir şəkildə. aytları incələ məsələn [bakuelectronics.com](https://bakuelectronics.az/) https://kontakt.az/ . Xarici saytlara da bax. Dizaynı ssaytımıza uyğun et.Xarici saytlara baxdığından əmin ol. 
+#19. Useer hisəsi vare ona vuranda seçilmişlərə gedir. Onuda düzəlt. Tam unikal müasir şəkildə. aytları incələ məsələn [bakuelectronics.com](https://bakuelectronics.az/) https://kontakt.az/ . Xarici saytlara da bax. Dizaynı ssaytımıza uyğun et.Xarici saytlara baxdığından əmin ol. 
+
+#20. Kataloq səhifəsinin təkmilləşdirilməsi və Məhsul Müqayisə Sistemi:
+- Kataloq daxili məhsul müqayisəsi: Kartlarda müqayisə tərəzisi (Scale), ekranın altında yapışıq (sticky) müqayisə doku (önbaxış, sayğac və silmə), parametrləri və fərqləri müqayisə edən tam modal.
+- Rəsmi brendlər bölməsinin susmaya görə yığılmış (collapsed) olması.
+- Çeşidləmə üçün interaktiv xüsusi popover menyusu (ikonlar və aktiv işarə ilə).
+- Bütün kateqoriya filterlərində və naviqasiya düymələrində uyğun zərif ikonlar.
+- Məhsul kartında hover zamanı üzən frosted-glass əlaqə və səbət klasteri (WhatsApp, Zəng, Səbət).
