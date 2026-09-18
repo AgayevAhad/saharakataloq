@@ -35,6 +35,10 @@ import { AdminLogin } from './components/AdminLogin';
 import { Footer } from './components/Footer';
 import { ProductDetailPage } from './pages/ProductDetailPage';
 import { AccountPage } from './pages/AccountPage';
+import { AboutPage } from './pages/AboutPage';
+import { CareersPage } from './pages/CareersPage';
+import { TermsPage } from './pages/TermsPage';
+import { PrivacyPage } from './pages/PrivacyPage';
 import { AuthUser, LoginCredentials, RegisterCredentials } from './types/auth';
 
 
@@ -67,6 +71,10 @@ type RouteName =
   | 'favorites'
   | 'account'
   | 'product'
+  | 'about'
+  | 'careers'
+  | 'terms'
+  | 'privacy'
   | '404';
 
 export interface AppProps {
@@ -84,10 +92,15 @@ export const resolveRouteFromPath = (
   if (clean === '/catalog') return { route: 'catalog' };
   if (clean === '/brands') return { route: 'brands' };
   if (clean === '/services') return { route: 'services' };
-  if (clean === '/stores') return { route: 'stores' };
-  if (clean === '/support') return { route: 'support' };
+  if (clean === '/support' || clean === '/elaqe' || clean === '/faq' || clean === '/komek' || clean === '/qaytarma') return { route: 'support' };
+  if (clean === '/stores' || clean === '/magazalar') return { route: 'stores' };
+  if (clean === '/services' || clean === '/catdirilma' || clean === '/zemanet') return { route: 'services' };
   if (clean === '/cart') return { route: 'cart' };
   if (clean === '/favorites' || clean === '/wishlist') return { route: 'favorites' };
+  if (clean === '/about' || clean === '/haqqimizda') return { route: 'about' };
+  if (clean === '/careers' || clean === '/karyera') return { route: 'careers' };
+  if (clean === '/terms' || clean === '/istifade-sertleri' || clean === '/qaydalar') return { route: 'terms' };
+  if (clean === '/privacy' || clean === '/mexfilik-siyaseti' || clean === '/mexfilik') return { route: 'privacy' };
   if (
     clean === '/account' ||
     clean === '/profile' ||
@@ -820,6 +833,30 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
         { label: selectedProduct.title || selectedProduct.code, href: `/product/${selectedProduct.id}` },
       ];
     }
+    if (currentRoute === 'about') {
+      return [
+        { label: 'Ana Səhifə', href: '/' },
+        { label: 'Haqqımızda', href: '/about' },
+      ];
+    }
+    if (currentRoute === 'careers') {
+      return [
+        { label: 'Ana Səhifə', href: '/' },
+        { label: 'Karyera', href: '/careers' },
+      ];
+    }
+    if (currentRoute === 'terms') {
+      return [
+        { label: 'Ana Səhifə', href: '/' },
+        { label: 'İstifadə Şərtləri', href: '/terms' },
+      ];
+    }
+    if (currentRoute === 'privacy') {
+      return [
+        { label: 'Ana Səhifə', href: '/' },
+        { label: 'Məxfilik Siyasəti', href: '/privacy' },
+      ];
+    }
     return [
       { label: 'Ana Səhifə', href: '/' },
       { label: 'Səhifə tapılmadı', href: '/404' },
@@ -842,6 +879,10 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
         login: true,
         register: true,
         auth: true,
+        about: true,
+        careers: true,
+        terms: true,
+        privacy: true,
         compare: featureFlags.isEnabled('enableCompare'),
         guides: featureFlags.isEnabled('enableGuides'),
         brandDetail: featureFlags.isEnabled('enableBrandDetail'),
@@ -910,6 +951,10 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
       else if (validRoute === 'favorites') cleanUrl = '/favorites';
       else if (validRoute === 'account') cleanUrl = '/account';
       else if (validRoute === 'compare') cleanUrl = '/compare';
+      else if (validRoute === 'about') cleanUrl = '/about';
+      else if (validRoute === 'careers') cleanUrl = '/careers';
+      else if (validRoute === 'terms') cleanUrl = '/terms';
+      else if (validRoute === 'privacy') cleanUrl = '/privacy';
       else if (validRoute === '404') cleanUrl = '/404';
 
 
@@ -1548,6 +1593,39 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
                     onNavigate={handleNavigate}
                   />
                 )}
+                {currentRoute === 'about' && (
+                  <AboutPage
+                    settings={catalog.settings}
+                    theme={activeTheme}
+                    themeMode={themeMode}
+                    onNavigate={handleNavigate}
+                    onWhatsApp={() => openWhatsApp(null)}
+                    onCall={openCall}
+                  />
+                )}
+                {currentRoute === 'careers' && (
+                  <CareersPage
+                    settings={catalog.settings}
+                    theme={activeTheme}
+                    themeMode={themeMode}
+                    onNavigate={handleNavigate}
+                    onWhatsApp={() => openWhatsApp(null)}
+                  />
+                )}
+                {currentRoute === 'terms' && (
+                  <TermsPage
+                    theme={activeTheme}
+                    themeMode={themeMode}
+                    onNavigate={handleNavigate}
+                  />
+                )}
+                {currentRoute === 'privacy' && (
+                  <PrivacyPage
+                    theme={activeTheme}
+                    themeMode={themeMode}
+                    onNavigate={handleNavigate}
+                  />
+                )}
                 {currentRoute === '404' && (
                   <NotFoundPage theme={activeTheme} onNavigate={handleNavigate} />
                 )}
@@ -1564,6 +1642,7 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
         settings={catalog.settings}
         categories={catalog.categories}
         theme={activeTheme}
+        onNavigate={handleNavigate}
         onSelectCategory={(catId) => {
           setSelectedCategory(catId);
           setSelectedBrand('all');
