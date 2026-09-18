@@ -217,7 +217,7 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
         </button>
       </div>
 
-      {/* Floating Hover Action Cluster: WhatsApp, Call, and Cart (Frosted Translucent Bar) */}
+      {/* Floating Hover Action Cluster: WhatsApp, Call, Cart, and Details (Frosted Translucent Bar) */}
       <div
         className="card-hover-actions-cluster"
         style={{
@@ -233,9 +233,9 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
           gap: '6px',
           padding: '4px 8px',
           borderRadius: '24px',
-          backgroundColor: 'rgba(255, 255, 255, 0.92)',
-          backdropFilter: 'blur(10px)',
-          WebkitBackdropFilter: 'blur(10px)',
+          backgroundColor: 'rgba(255, 255, 255, 0.94)',
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
           border: '1px solid rgba(226, 232, 240, 0.85)',
           boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
           transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -244,6 +244,7 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
         {/* WhatsApp Icon */}
         <button
           type="button"
+          className="card-action-btn-wa card-action-btn-item"
           onClick={handleWhatsAppClick}
           style={{
             width: '32px',
@@ -268,6 +269,7 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
         {/* Call Icon */}
         <button
           type="button"
+          className="card-action-btn-call card-action-btn-item"
           onClick={handleCallClick}
           style={{
             width: '32px',
@@ -292,6 +294,7 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
         {/* Add to Cart Icon */}
         <button
           type="button"
+          className="card-action-btn-cart card-action-btn-item"
           onClick={handleCartClick}
           style={{
             width: '32px',
@@ -311,6 +314,36 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
           title="Səbətə əlavə et"
         >
           <ShoppingCart size={15} color="#ffffff" />
+        </button>
+
+        {/* Details / Ətraflı Button */}
+        <button
+          type="button"
+          className="card-action-btn-details card-action-btn-item"
+          onClick={(e) => {
+            e.stopPropagation();
+            onSelect(product);
+          }}
+          style={{
+            height: '32px',
+            padding: '0 10px',
+            borderRadius: '16px',
+            backgroundColor: 'rgba(15, 23, 42, 0.08)',
+            color: '#0f172a',
+            border: 'none',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            fontSize: '11.5px',
+            fontWeight: 700,
+            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)',
+            transition: 'transform 0.15s ease, background-color 0.15s ease',
+          }}
+          title="Ətraflı bax"
+          aria-label="Ətraflı bax"
+        >
+          <span>Ətraflı</span>
         </button>
       </div>
 

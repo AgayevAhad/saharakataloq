@@ -289,4 +289,48 @@ describe('Item 20: Catalog Refinements & Comparison System Tests', () => {
     fireEvent.click(compareBtn);
     expect(handleCompare).toHaveBeenCalledWith(mockProducts[0]);
   });
+
+  it('7. ProductCard has no rank badges, no Sahara text, and includes Details button in hover cluster', () => {
+    const handleSelect = vi.fn();
+    const { container } = render(
+      <ProductCard
+        product={mockProducts[0]}
+        theme={lightTheme}
+        onSelect={handleSelect}
+      />
+    );
+
+    // No rank numbers or rank badge
+    expect(container.querySelector('.netflix-rank-badge')).toBeNull();
+
+    // No fallback "Sahara Kataloq" text
+    expect(screen.queryByText(/Sahara Kataloq/i)).toBeNull();
+
+    // Details "Ətraflı" button is inside the hover action cluster
+    const detailsBtn = container.querySelector('.card-action-btn-details') as HTMLElement;
+    expect(detailsBtn).toBeDefined();
+    fireEvent.click(detailsBtn);
+    expect(handleSelect).toHaveBeenCalledWith(mockProducts[0]);
+  });
+
+  it('8. Hover action cluster contains staggered animation items (.card-action-btn-item)', () => {
+    const { container } = render(
+      <ProductCard
+        product={mockProducts[0]}
+        theme={lightTheme}
+        onSelect={vi.fn()}
+        onWhatsApp={vi.fn()}
+        onCall={vi.fn()}
+        onAddToCart={vi.fn()}
+        onShare={vi.fn()}
+      />
+    );
+
+    const cluster = container.querySelector('.card-hover-actions-cluster') as HTMLElement;
+    expect(cluster).toBeDefined();
+
+    const staggeredItems = cluster.querySelectorAll('.card-action-btn-item');
+    expect(staggeredItems.length).toBeGreaterThanOrEqual(4); // WhatsApp, Call, Cart, Details, Share
+  });
 });
+

@@ -6752,7 +6752,8 @@ select {
   }
 }
 
-.featured-product-card {
+.featured-product-card,
+.product-card {
   width: 100% !important;
   max-width: 339px !important;
   height: 339px !important;
@@ -6770,19 +6771,99 @@ select {
 .featured-product-card:hover,
 .featured-product-card.is-card-hovered,
 .product-card:hover,
-.product-card.is-card-hovered {
+.product-card.hovered,
+.product-card.is-card-hovered,
+.product-card.is-focused {
   transform: translateY(-4px) !important;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12) !important;
   opacity: 1 !important;
 }
 
-.featured-product-card .featured-product-img-inner {
+.featured-product-card .featured-product-img-inner,
+.product-card .product-card-img-inner {
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
-.featured-product-card:hover .featured-product-img-inner {
+.featured-product-card:hover .featured-product-img-inner,
+.featured-product-card.is-card-hovered .featured-product-img-inner,
+.product-card:hover .product-card-img-inner,
+.product-card.hovered .product-card-img-inner,
+.product-card.mobile-focused .product-card-img-inner {
   transform: scale(1.08) !important;
 }
+
+/* Card Hover Floating Actions & Staggered Micro-Animations */
+.card-hover-actions-cluster {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 8px;
+  border-radius: 24px;
+  background-color: rgba(255, 255, 255, 0.94);
+  backdrop-filter: blur(12px) saturate(180%);
+  -webkit-backdrop-filter: blur(12px) saturate(180%);
+  border: 1px solid rgba(226, 232, 240, 0.85);
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.14);
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+  z-index: 10;
+}
+
+.theme-dark .card-hover-actions-cluster {
+  background-color: rgba(15, 23, 42, 0.92);
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.5);
+}
+
+.card-hover-actions-cluster .card-action-btn-item {
+  opacity: 0;
+  transform: translateY(8px) scale(0.7);
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.18s ease;
+}
+
+.product-card:hover .card-hover-actions-cluster .card-action-btn-item,
+.product-card.hovered .card-hover-actions-cluster .card-action-btn-item,
+.product-card.mobile-focused .card-hover-actions-cluster .card-action-btn-item,
+.featured-product-card:hover .card-hover-actions-cluster .card-action-btn-item,
+.featured-product-card.is-card-hovered .card-hover-actions-cluster .card-action-btn-item {
+  animation: cardActionPopIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.card-hover-actions-cluster .card-action-btn-item:nth-child(1) {
+  animation-delay: 0.04s;
+}
+
+.card-hover-actions-cluster .card-action-btn-item:nth-child(2) {
+  animation-delay: 0.09s;
+}
+
+.card-hover-actions-cluster .card-action-btn-item:nth-child(3) {
+  animation-delay: 0.14s;
+}
+
+.card-hover-actions-cluster .card-action-btn-item:nth-child(4) {
+  animation-delay: 0.19s;
+}
+
+.card-hover-actions-cluster .card-action-btn-item:nth-child(5) {
+  animation-delay: 0.24s;
+}
+
+@keyframes cardActionPopIn {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.65);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(-2px) scale(1.08);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
 
 .visual-category-card {
   width: 339px !important;

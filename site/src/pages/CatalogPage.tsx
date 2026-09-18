@@ -1380,11 +1380,12 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                 style={{
                   display: 'grid',
                   gridTemplateColumns:
-                    viewMode === 'list' ? '1fr' : 'repeat(auto-fill, minmax(260px, 1fr))',
+                    viewMode === 'list' ? '1fr' : 'repeat(auto-fill, minmax(280px, 339px))',
                   gap: '20px',
+                  justifyContent: 'start',
                 }}
               >
-                {sortedProducts.map((product, idx) => {
+                {sortedProducts.map((product) => {
                   const brand = activeBrands.find((b) => b.id === product.brandId);
                   return (
                     <ProductCard
@@ -1393,7 +1394,6 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                       theme={theme}
                       brandName={brand?.name}
                       brandOrigin={brand?.originCountry ? `${brand.originCountry} brendi` : ''}
-                      rank={idx + 1}
                       whatsappButtonText={settings?.whatsappButtonText}
                       callButtonText={settings?.callButtonText}
                       shareButtonText={settings?.shareButtonText}
