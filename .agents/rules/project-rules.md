@@ -32,3 +32,9 @@ trigger: always_on
 - The initial splash screen (`#app-splash-screen`) and SSR rendering state MUST strictly match the latest active design tokens, theme modes (Light & Dark), and brand identity (Sahara spiral mark, Outfit typography).
 - On browser refresh or initial load, stale/deprecated layout structures, old promo placeholders, or obsolete catalog information MUST NEVER flash or be visible before hydration. The server ISR cache and client hydration MUST immediately deliver the freshest live catalog state.
 
+## 8. Strict Prohibition of Fake Data, Mock Reviews & Hallucinated Content
+- Never inject, hardcode, or seed fake/synthetic user reviews, dummy customer ratings, or fictitious product descriptions into catalog products or public interfaces.
+- If data does not exist in the database or has not been authored by an administrator, the interface MUST present clean, authentic empty states.
+- All reviews must be authored strictly by authenticated, registered users with zero automated or fake test seeds in production.
+
+

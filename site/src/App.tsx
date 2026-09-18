@@ -34,8 +34,8 @@ import { Drawer } from './components/ui/Drawer';
 import { AdminLogin } from './components/AdminLogin';
 import { Footer } from './components/Footer';
 import { FloatingActions } from './components/FloatingActions';
-import { BrandCategoryFilter } from './components/BrandCategoryFilter';
 import { ProductDetailPage } from './pages/ProductDetailPage';
+import { AuthUser, LoginCredentials, RegisterCredentials } from './types/auth';
 
 const CatalogAdmin = lazy(() =>
   import('./components/CatalogAdmin').then((m) => ({ default: m.CatalogAdmin }))
@@ -198,6 +198,17 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
     visible: false,
   });
 
+  // Auth state
+  const [authUser, setAuthUser] = useState<AuthUser | null>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('sahara_auth_user');
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return null;
+  });
+
   // Admin state
   const [adminChecked, setAdminChecked] = useState(false);
   const [adminData, setAdminData] = useState<AdminPayload | null>(null);
@@ -210,6 +221,84 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
     setToast({ message, visible: true });
     window.setTimeout(() => setToast((prev) => ({ ...prev, visible: false })), 2600);
   }, []);
+
+  const handleLogin = useCallback((credentials: LoginCredentials) => {
+    let matchedUser: AuthUser | null = null;
+    try {
+      const usersList: any[] = JSON.parse(localStorage.getItem('sahara_registered_users') || '[]');
+      const cleanId = credentials.identifier.replace(/\D/g, '');
+      const found = usersList.find(
+        (u) =>
+          (u.phone && cleanId && u.phone.includes(cleanId)) ||
+          (u.email && u.email.toLowerCase() === credentials.identifier.toLowerCase())
+      );
+      if (found) {
+        matchedUser = found;
+      }
+    } catch {}
+
+    if (!matchedUser) {
+      const isPhone = !credentials.identifier.includes('@');
+      matchedUser = {
+        id: `user-${Date.now()}`,
+        fullName: isPhone ? `İstifadəçi (+994 ${credentials.identifier})` : credentials.identifier.split('@')[0],
+        phone: isPhone ? credentials.identifier.replace(/\D/g, '') : '',
+        email: isPhone ? undefined : credentials.identifier,
+        role: 'customer',
+        registeredAt: new Date().toISOString(),
+      };
+    }
+
+    setAuthUser(matchedUser);
+    try {
+      localStorage.setItem('sahara_auth_user', JSON.stringify(matchedUser));
+    } catch {}
+    showToast('Hesabınıza uğurla daxil oldunuz.');
+    return true;
+  }, [showToast]);
+
+  const handleRegister = useCallback((credentials: RegisterCredentials) => {
+    const newUser: AuthUser = {
+      id: `user-${Date.now()}`,
+      fullName: credentials.fullName,
+      phone: credentials.phone,
+      email: credentials.email,
+      role: 'customer',
+      registeredAt: new Date().toISOString(),
+    };
+
+    try {
+      const usersList: any[] = JSON.parse(localStorage.getItem('sahara_registered_users') || '[]');
+      usersList.push({ ...newUser, password: credentials.password });
+      localStorage.setItem('sahara_registered_users', JSON.stringify(usersList));
+      localStorage.setItem('sahara_auth_user', JSON.stringify(newUser));
+    } catch {}
+
+    setAuthUser(newUser);
+    showToast(`Xoş gəlmisiniz, ${newUser.fullName}! Qeydiyyat tamamlandı.`);
+    return true;
+  }, [showToast]);
+
+  const handleLogout = useCallback(() => {
+    setAuthUser(null);
+    try {
+      localStorage.removeItem('sahara_auth_user');
+    } catch {}
+    showToast('Hesabdan çıxış edildi.');
+  }, [showToast]);
+
+  const handleUpdateProfile = useCallback((updated: Partial<AuthUser>) => {
+    setAuthUser((prev) => {
+      if (!prev) return null;
+      const nextUser = { ...prev, ...updated };
+      try {
+        localStorage.setItem('sahara_auth_user', JSON.stringify(nextUser));
+      } catch {}
+      return nextUser;
+    });
+    showToast('Profil məlumatları yeniləndi.');
+  }, [showToast]);
+
 
   const parseDeepLink = useCallback(
     (items: Product[]) => {
@@ -1384,7 +1473,10 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
                     onToggleCompare={toggleCompare}
                     isComparing={comparisonIds.includes(selectedProduct.id)}
                     cartCount={cartItems.reduce((acc, i) => acc + i.quantity, 0)}
+                    currentUser={authUser}
+                    onOpenAuth={() => setIsUserDrawerOpen(true)}
                   />
+
                 )}
                 {currentRoute === 'favorites' && (
                   <FavoritesPage
@@ -1590,7 +1682,13 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
         cartCount={cartItems.reduce((acc, i) => acc + i.quantity, 0)}
         favoritesCount={favoriteIds.length}
         onWhatsAppSupport={openWhatsApp}
+        authUser={authUser}
+        onLogin={handleLogin}
+        onRegister={handleRegister}
+        onLogout={handleLogout}
+        onUpdateProfile={handleUpdateProfile}
       />
+
       <Toast message={toast.message} visible={toast.visible} theme={activeTheme} />
     </div>
   );

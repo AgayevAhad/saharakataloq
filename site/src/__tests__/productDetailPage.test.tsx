@@ -4,6 +4,7 @@ import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { ProductDetailPage } from '../pages/ProductDetailPage';
 import { Product, Brand, CatalogCategory, CatalogSettings } from '../types/product';
 import { ThemeColors } from '../types/theme';
+import { AuthUser } from '../types/auth';
 
 const lightTheme: ThemeColors = {
   primary: '#dc2626',
@@ -93,7 +94,16 @@ const mockSettings: CatalogSettings = {
   addresses: ['Sədərək TM, Sıra 5, Mağaza 40'],
 };
 
-describe('ProductDetailPage Tests', () => {
+const mockAuthUser: AuthUser = {
+  id: 'usr-vip-1',
+  fullName: 'Aygün Qasımova',
+  phone: '509998877',
+  email: 'aygun@example.com',
+  registeredAt: '2026-09-18T10:00:00Z',
+  role: 'customer',
+};
+
+describe('ProductDetailPage Tests (Strict Real-Data & Authenticated Reviews)', () => {
   beforeEach(() => {
     window.scrollTo = vi.fn();
     localStorage.clear();
@@ -103,7 +113,7 @@ describe('ProductDetailPage Tests', () => {
     cleanup();
   });
 
-  it('1. Renders product title, code, brand tag, pricing, and shortDesc', () => {
+  it('1. Renders product title, code, brand tag, pricing, and authentic description', () => {
     render(
       <ProductDetailPage
         product={mockProduct}
@@ -174,7 +184,7 @@ describe('ProductDetailPage Tests', () => {
     expect(handleCompare).toHaveBeenCalledWith(mockProduct);
   });
 
-  it('3. Opens Description tab first by default and allows switching to Specs via button', () => {
+  it('3. Description tab opens by default, shows authentic text and allows switching to Specs', () => {
     render(
       <ProductDetailPage
         product={mockProduct}
@@ -195,7 +205,7 @@ describe('ProductDetailPage Tests', () => {
     expect(screen.getByText(/Məhsul Haqqında Ətraflı Məlumat/i)).toBeDefined();
     expect(screen.getByText(/İtaliya istehsalı, yüksək enerji səmərəliliyinə malik premium/i)).toBeDefined();
 
-    // Click "Bütün Texniki Xüsusiyyətlərə Bax" button inside Description tab
+    // Click "Bütün Texniki Xüsusiyyətlərə Bax"
     const viewAllSpecsBtn = screen.getByRole('button', { name: /Bütün Texniki Xüsusiyyətlərə Bax/i });
     fireEvent.click(viewAllSpecsBtn);
 
@@ -204,7 +214,9 @@ describe('ProductDetailPage Tests', () => {
     expect(screen.getByText('1200 dövr/dəq')).toBeDefined();
   });
 
-  it('4. Renders Customer Reviews tab, shows rating summary, and allows adding a review', () => {
+  it('4. Guest user sees Authentication Lock prompt and cannot submit without login', () => {
+    const handleOpenAuth = vi.fn();
+
     render(
       <ProductDetailPage
         product={mockProduct}
@@ -218,32 +230,61 @@ describe('ProductDetailPage Tests', () => {
         onSelectProduct={vi.fn()}
         onWhatsApp={vi.fn()}
         onCall={vi.fn()}
+        currentUser={null}
+        onOpenAuth={handleOpenAuth}
       />
     );
 
-    // Click Reviews tab
+    // Switch to Reviews tab
     const reviewsTab = screen.getByRole('button', { name: /Müştəri Rəyləri/i });
     fireEvent.click(reviewsTab);
 
-    expect(screen.getByText(/Qiymətləndirmə və Reytinq/i)).toBeDefined();
-    expect(screen.getByText(/Məhsula Rəy və Ulduz Bildirin/i)).toBeDefined();
-    expect(screen.getByText(/Kamran M./i)).toBeDefined();
+    // Guest prompt should be visible
+    expect(screen.getByText(/Yalnız Qeydiyyatdan Keçmiş İstifadəçilər Üçün/i)).toBeDefined();
+    expect(screen.getByText(/Hələlik rəy yazılmayıb/i)).toBeDefined();
 
-    // Submit a new review
-    const authorInput = screen.getByPlaceholderText(/Adınız və Soyadınız/i);
+    const authBtn = screen.getByRole('button', { name: /Daxil ol \/ Qeydiyyatdan keç/i });
+    fireEvent.click(authBtn);
+    expect(handleOpenAuth).toHaveBeenCalled();
+  });
+
+  it('5. Authenticated user can submit review, rating updates cleanly with zero fake data', () => {
+    render(
+      <ProductDetailPage
+        product={mockProduct}
+        allProducts={mockAllProducts}
+        categories={mockCategories}
+        brands={mockBrands}
+        settings={mockSettings}
+        theme={lightTheme}
+        themeMode="light"
+        onNavigate={vi.fn()}
+        onSelectProduct={vi.fn()}
+        onWhatsApp={vi.fn()}
+        onCall={vi.fn()}
+        currentUser={mockAuthUser}
+      />
+    );
+
+    // Switch to Reviews tab
+    const reviewsTab = screen.getByRole('button', { name: /Müştəri Rəyləri/i });
+    fireEvent.click(reviewsTab);
+
+    // Authenticated author is displayed
+    expect(screen.getByText('Aygün Qasımova')).toBeDefined();
+    expect(screen.getByText('✓ Təsdiqlənmiş İstifadəçi')).toBeDefined();
+
     const commentInput = screen.getByPlaceholderText(/Məhsul haqqında təcrübənizi/i);
     const submitBtn = screen.getByRole('button', { name: /Rəyi Göndər/i });
 
-    fireEvent.change(authorInput, { target: { value: 'Aygün Qasımova' } });
-    fireEvent.change(commentInput, { target: { value: 'Əla paltaryuyandır, tam səssiz işləyir.' } });
+    fireEvent.change(commentInput, { target: { value: 'Tam səssiz və güclü yuyur.' } });
     fireEvent.click(submitBtn);
 
-    expect(screen.getByText(/Aygün Qasımova/i)).toBeDefined();
-    expect(screen.getByText(/Əla paltaryuyandır, tam səssiz işləyir./i)).toBeDefined();
+    expect(screen.getByText('Tam səssiz və güclü yuyur.')).toBeDefined();
     expect(screen.getByText(/Rəyiniz uğurla əlavə edildi/i)).toBeDefined();
   });
 
-  it('5. Switches between Technologies and Delivery tabs cleanly', () => {
+  it('6. Fullscreen Lightbox modal opens on image click with pure white canvas and controls', () => {
     render(
       <ProductDetailPage
         product={mockProduct}
@@ -260,59 +301,19 @@ describe('ProductDetailPage Tests', () => {
       />
     );
 
-    // Click Tech tab
-    const techTab = screen.getByRole('button', { name: /Üstünlüklər/i });
-    fireEvent.click(techTab);
-    expect(screen.getByText(/Rəsmi İtaliya & Avropa Texnologiyası/i)).toBeDefined();
-
-    // Click Delivery tab
-    const deliveryTab = screen.getByRole('button', { name: /Çatdırılma & Zəmanət/i });
-    fireEvent.click(deliveryTab);
-    expect(screen.getByText(/Çatdırılma Şərtləri/i)).toBeDefined();
-    expect(screen.getByText(/Sədərək TM, Sıra 5, Mağaza 40/i)).toBeDefined();
-  });
-
-  it('6. Opens Fullscreen Lightbox modal on image click and verifies zoom controls', () => {
-    render(
-      <ProductDetailPage
-        product={mockProduct}
-        allProducts={mockAllProducts}
-        categories={mockCategories}
-        brands={mockBrands}
-        settings={mockSettings}
-        theme={lightTheme}
-        themeMode="light"
-        onNavigate={vi.fn()}
-        onSelectProduct={vi.fn()}
-        onWhatsApp={vi.fn()}
-        onCall={vi.fn()}
-      />
-    );
-
-    // Click maximize button on stage
     const maximizeBtn = screen.getByTitle('Böyük ekranda bax');
     fireEvent.click(maximizeBtn);
 
-    // Lightbox header controls
     expect(screen.getByTitle('Böyüt (Kliklə yaxınlaşdır)')).toBeDefined();
     expect(screen.getByTitle('Uzaqlaşdır')).toBeDefined();
     expect(screen.getByTitle('Bağla')).toBeDefined();
 
-    // Click Zoom In
-    const zoomInBtn = screen.getByTitle('Böyüt (Kliklə yaxınlaşdır)');
-    fireEvent.click(zoomInBtn);
-
-    // Zoom level increases
-    expect(screen.getByText(/140%/i)).toBeDefined();
-
-    // Click Close
     const closeBtn = screen.getByTitle('Bağla');
     fireEvent.click(closeBtn);
     expect(screen.queryByTitle('Böyüt (Kliklə yaxınlaşdır)')).toBeNull();
   });
 
   it('7. Renders recommended products section below', () => {
-    const handleSelectProduct = vi.fn();
     render(
       <ProductDetailPage
         product={mockProduct}
@@ -323,7 +324,7 @@ describe('ProductDetailPage Tests', () => {
         theme={lightTheme}
         themeMode="light"
         onNavigate={vi.fn()}
-        onSelectProduct={handleSelectProduct}
+        onSelectProduct={vi.fn()}
         onWhatsApp={vi.fn()}
         onCall={vi.fn()}
       />

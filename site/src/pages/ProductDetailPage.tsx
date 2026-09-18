@@ -31,9 +31,12 @@ import {
   Send,
   UserCheck,
   RefreshCw,
+  LogIn,
+  Lock,
 } from 'lucide-react';
 import { Product, Brand, CatalogCategory, CatalogSettings } from '../types/product';
 import { ThemeColors } from '../types/theme';
+import { AuthUser } from '../types/auth';
 import { ShimmerImage } from '../components/ShimmerImage';
 import { WhatsAppIcon } from '../components/WhatsAppIcon';
 import { ProductCard } from '../components/ProductCard';
@@ -68,34 +71,9 @@ interface ProductDetailPageProps {
   onToggleCompare?: (product: Product) => void;
   isComparing?: boolean;
   cartCount?: number;
+  currentUser?: AuthUser | null;
+  onOpenAuth?: () => void;
 }
-
-const getDefaultReviews = (productId: string): ProductReview[] => [
-  {
-    id: `rev-1-${productId}`,
-    author: 'Kamran M.',
-    rating: 5,
-    comment: 'Məhsulu çox bəyəndik, dizaynı və keyfiyyəti əladır. Çatdırılma da vaxtında gəldi.',
-    date: '12 sentyabr 2026',
-    isVerified: true,
-  },
-  {
-    id: `rev-2-${productId}`,
-    author: 'Leyla Ə.',
-    rating: 5,
-    comment: 'İstifadəsi çox rahatdır və olduqca səssiz işləyir. Sahara Electronics komandasına təşəkkürlər!',
-    date: '5 sentyabr 2026',
-    isVerified: true,
-  },
-  {
-    id: `rev-3-${productId}`,
-    author: 'Rəşad Q.',
-    rating: 5,
-    comment: 'Rəsmi zəmanətli və orijinal məhsuldur. Quraşdırma və servis xidməti də operativ oldu.',
-    date: '28 avqust 2026',
-    isVerified: true,
-  },
-];
 
 export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   product,
@@ -117,6 +95,8 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   onToggleCompare,
   isComparing = false,
   cartCount: _cartCount,
+  currentUser = null,
+  onOpenAuth,
 }) => {
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   // Default tab: 'description' (Təsvir & İcmal first)
@@ -129,21 +109,20 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
   const [isCopied, setIsCopied] = useState(false);
 
-  // Reviews state & form
+  // Real Reviews state (Zero fake seeds!)
   const [reviews, setReviews] = useState<ProductReview[]>(() => {
     try {
       const saved = localStorage.getItem(`sahara_product_reviews_${product.id}`);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed)) return parsed;
       }
     } catch {
       // ignore
     }
-    return getDefaultReviews(product.id);
+    return [];
   });
 
-  const [newAuthor, setNewAuthor] = useState('');
   const [newRating, setNewRating] = useState(5);
   const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [newComment, setNewComment] = useState('');
@@ -171,7 +150,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
       const saved = localStorage.getItem(`sahara_product_reviews_${product.id}`);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed) && parsed.length > 0) {
+        if (Array.isArray(parsed)) {
           setReviews(parsed);
           window.scrollTo({ top: 0, behavior: 'smooth' });
           return;
@@ -180,7 +159,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     } catch {
       // ignore
     }
-    setReviews(getDefaultReviews(product.id));
+    setReviews([]);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }, [product.id]);
 
@@ -295,9 +274,9 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const discountPercent =
     currentPrice && oldPrice ? Math.round(((oldPrice - currentPrice) / oldPrice) * 100) : null;
 
-  // Rating calculations
+  // Real Rating calculations
   const averageRating = useMemo(() => {
-    if (!reviews.length) return 5.0;
+    if (!reviews.length) return null;
     const total = reviews.reduce((sum, r) => sum + r.rating, 0);
     return Number((total / reviews.length).toFixed(1));
   }, [reviews]);
@@ -331,14 +310,19 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     });
   };
 
-  // Review submission handler
+  // Review submission handler (strictly for authenticated users)
   const handleReviewSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newAuthor.trim() || !newComment.trim()) return;
+    if (!currentUser) {
+      if (onOpenAuth) onOpenAuth();
+      return;
+    }
+
+    if (!newComment.trim()) return;
 
     const newRev: ProductReview = {
       id: `review-${Date.now()}`,
-      author: newAuthor.trim(),
+      author: currentUser.fullName,
       rating: newRating,
       comment: newComment.trim(),
       date: new Date().toLocaleDateString('az-AZ', { day: 'numeric', month: 'long', year: 'numeric' }),
@@ -353,7 +337,6 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
       // ignore
     }
 
-    setNewAuthor('');
     setNewComment('');
     setNewRating(5);
     setReviewSuccessMessage('Təşəkkür edirik! Rəyiniz uğurla əlavə edildi.');
@@ -940,33 +923,57 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   {category?.name || product.categoryName}
                 </span>
 
-                {/* Rating Badge with Direct Scroll to Reviews */}
-                <button
-                  type="button"
-                  onClick={() => scrollToTabs('reviews')}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    backgroundColor: 'rgba(234, 179, 8, 0.12)',
-                    color: '#ca8a04',
-                    border: 'none',
-                    borderRadius: '8px',
-                    padding: '4px 9px',
-                    fontSize: '12px',
-                    fontWeight: 800,
-                    cursor: 'pointer',
-                    transition: 'opacity 0.15s ease',
-                  }}
-                  title="Müştəri rəylərinə bax"
-                >
-                  <Star size={13} fill="#eab308" color="#eab308" />
-                  <span>{averageRating}</span>
-                  <span style={{ color: theme.textMuted, fontWeight: 600 }}>({reviews.length} rəy)</span>
-                </button>
+                {/* Rating Badge (Only shows if real reviews exist) */}
+                {averageRating !== null ? (
+                  <button
+                    type="button"
+                    onClick={() => scrollToTabs('reviews')}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      backgroundColor: 'rgba(234, 179, 8, 0.12)',
+                      color: '#ca8a04',
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '4px 9px',
+                      fontSize: '12px',
+                      fontWeight: 800,
+                      cursor: 'pointer',
+                      transition: 'opacity 0.15s ease',
+                    }}
+                    title="Müştəri rəylərinə bax"
+                  >
+                    <Star size={13} fill="#eab308" color="#eab308" />
+                    <span>{averageRating}</span>
+                    <span style={{ color: theme.textMuted, fontWeight: 600 }}>({reviews.length} rəy)</span>
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => scrollToTabs('reviews')}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f1f5f9',
+                      color: theme.textSecondary,
+                      border: 'none',
+                      borderRadius: '8px',
+                      padding: '4px 9px',
+                      fontSize: '11.5px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                    }}
+                    title="Rəy yazmaq"
+                  >
+                    <Star size={13} color="#94a3b8" />
+                    <span>0 rəy</span>
+                  </button>
+                )}
               </div>
 
-              {/* Status without "Rəsmi" */}
+              {/* Stock Status */}
               <span
                 style={{
                   display: 'inline-flex',
@@ -1571,16 +1578,16 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               ) : (
                 <div
                   style={{
-                    fontSize: '14.5px',
-                    color: theme.textSecondary,
-                    lineHeight: 1.7,
+                    fontSize: '14px',
+                    color: theme.textMuted,
+                    lineHeight: 1.6,
                     padding: '16px 20px',
                     borderRadius: '14px',
                     backgroundColor: themeMode === 'dark' ? 'rgba(15, 23, 42, 0.4)' : '#f8fafc',
-                    borderLeft: '4px solid #94a3b8',
+                    borderLeft: `4px solid ${theme.border}`,
                   }}
                 >
-                  {product.title} modeli üçün ətraflı təsvir mətni administrator tərəfindən tənzimlənir. Bütün texniki göstəricilər və parametrlər rəsmi istehsalçı zəmanəti ilə təmin olunur.
+                  Bu məhsul üçün təsvir qeyd edilməyib.
                 </div>
               )}
             </div>
@@ -1759,83 +1766,91 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   Qiymətləndirmə və Reytinq
                 </h3>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                  <div style={{ textAlign: 'center' }}>
-                    <div style={{ fontSize: '44px', fontWeight: 900, color: theme.text, lineHeight: 1 }}>
-                      {averageRating}
+                {reviews.length > 0 ? (
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: '44px', fontWeight: 900, color: theme.text, lineHeight: 1 }}>
+                        {averageRating}
+                      </div>
+                      <div style={{ display: 'flex', justifyContent: 'center', gap: '2px', margin: '6px 0 4px' }}>
+                        {[1, 2, 3, 4, 5].map((s) => (
+                          <Star
+                            key={s}
+                            size={16}
+                            fill={s <= Math.round(averageRating || 5) ? '#eab308' : 'none'}
+                            color={s <= Math.round(averageRating || 5) ? '#eab308' : '#cbd5e1'}
+                          />
+                        ))}
+                      </div>
+                      <div style={{ fontSize: '12px', color: theme.textMuted }}>
+                        {reviews.length} müştəri rəyi
+                      </div>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'center', gap: '2px', margin: '6px 0 4px' }}>
-                      {[1, 2, 3, 4, 5].map((s) => (
-                        <Star
-                          key={s}
-                          size={16}
-                          fill={s <= Math.round(averageRating) ? '#eab308' : 'none'}
-                          color={s <= Math.round(averageRating) ? '#eab308' : '#cbd5e1'}
-                        />
-                      ))}
-                    </div>
-                    <div style={{ fontSize: '12px', color: theme.textMuted }}>
-                      {reviews.length} müştəri rəyi
-                    </div>
-                  </div>
 
-                  {/* Star Distribution Progress Bars */}
-                  <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                    {[5, 4, 3, 2, 1].map((starNum) => {
-                      const count = (ratingCounts as any)[starNum] || 0;
-                      const pct = reviews.length > 0 ? Math.round((count / reviews.length) * 100) : 0;
-                      return (
-                        <div key={starNum} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
-                          <span style={{ width: '28px', color: theme.textSecondary, fontWeight: 700 }}>
-                            {starNum} ★
-                          </span>
-                          <div
-                            style={{
-                              flex: 1,
-                              height: '7px',
-                              borderRadius: '4px',
-                              backgroundColor: themeMode === 'dark' ? '#334155' : '#e2e8f0',
-                              overflow: 'hidden',
-                            }}
-                          >
+                    {/* Star Distribution Progress Bars */}
+                    <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                      {[5, 4, 3, 2, 1].map((starNum) => {
+                        const count = (ratingCounts as any)[starNum] || 0;
+                        const pct = reviews.length > 0 ? Math.round((count / reviews.length) * 100) : 0;
+                        return (
+                          <div key={starNum} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
+                            <span style={{ width: '28px', color: theme.textSecondary, fontWeight: 700 }}>
+                              {starNum} ★
+                            </span>
                             <div
                               style={{
-                                width: `${pct}%`,
-                                height: '100%',
-                                backgroundColor: '#eab308',
+                                flex: 1,
+                                height: '7px',
                                 borderRadius: '4px',
-                                transition: 'width 0.3s ease',
+                                backgroundColor: themeMode === 'dark' ? '#334155' : '#e2e8f0',
+                                overflow: 'hidden',
                               }}
-                            />
+                            >
+                              <div
+                                style={{
+                                  width: `${pct}%`,
+                                  height: '100%',
+                                  backgroundColor: '#eab308',
+                                  borderRadius: '4px',
+                                  transition: 'width 0.3s ease',
+                                }}
+                              />
+                            </div>
+                            <span style={{ width: '24px', textAlign: 'right', color: theme.textMuted, fontSize: '11px' }}>
+                              {count}
+                            </span>
                           </div>
-                          <span style={{ width: '24px', textAlign: 'right', color: theme.textMuted, fontSize: '11px' }}>
-                            {count}
-                          </span>
-                        </div>
-                      );
-                    })}
+                        );
+                      })}
+                    </div>
                   </div>
-                </div>
+                ) : (
+                  <div style={{ textAlign: 'center', padding: '16px 0', color: theme.textMuted, fontSize: '13.5px' }}>
+                    Bu məhsul üçün hələlik rəy bildirilməyib.
+                  </div>
+                )}
 
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '8px',
-                    padding: '10px 14px',
-                    borderRadius: '12px',
-                    backgroundColor: 'rgba(22, 163, 74, 0.1)',
-                    color: '#16a34a',
-                    fontSize: '12.5px',
-                    fontWeight: 700,
-                  }}
-                >
-                  <CheckCircle2 size={16} />
-                  <span>100% alıcılar bu modeli tövsiyə edir</span>
-                </div>
+                {reviews.length > 0 && (
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '10px 14px',
+                      borderRadius: '12px',
+                      backgroundColor: 'rgba(22, 163, 74, 0.1)',
+                      color: '#16a34a',
+                      fontSize: '12.5px',
+                      fontWeight: 700,
+                    }}
+                  >
+                    <CheckCircle2 size={16} />
+                    <span>Real müştəri rəyləri əsasında hesablanmışdır</span>
+                  </div>
+                )}
               </div>
 
-              {/* Add New Review Form */}
+              {/* Add New Review Form (Strictly for Authenticated Users) */}
               <div
                 style={{
                   padding: '24px',
@@ -1849,143 +1864,206 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   Məhsula Rəy və Ulduz Bildirin
                 </h3>
 
-                {reviewSuccessMessage && (
+                {/* If user is NOT authenticated, display Login/Register Gate */}
+                {!currentUser ? (
                   <div
                     style={{
-                      padding: '10px 14px',
-                      borderRadius: '10px',
-                      backgroundColor: 'rgba(22, 163, 74, 0.15)',
-                      color: '#16a34a',
-                      fontSize: '13px',
-                      fontWeight: 700,
-                      marginBottom: '14px',
+                      padding: '20px',
+                      borderRadius: '14px',
+                      backgroundColor: themeMode === 'dark' ? 'rgba(15, 23, 42, 0.6)' : '#f8fafc',
+                      border: `1px solid ${theme.border}`,
+                      textAlign: 'center',
                       display: 'flex',
+                      flexDirection: 'column',
                       alignItems: 'center',
-                      gap: '8px',
+                      gap: '12px',
                     }}
                   >
-                    <Check size={16} />
-                    <span>{reviewSuccessMessage}</span>
-                  </div>
-                )}
+                    <div
+                      style={{
+                        width: '44px',
+                        height: '44px',
+                        borderRadius: '50%',
+                        backgroundColor: 'rgba(220, 38, 38, 0.12)',
+                        color: '#dc2626',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <Lock size={20} />
+                    </div>
 
-                <form onSubmit={handleReviewSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                  {/* Interactive Star Rating Selector */}
-                  <div>
-                    <label style={{ display: 'block', fontSize: '12.5px', fontWeight: 700, color: theme.text, marginBottom: '6px' }}>
-                      Qiymətiniz (Ulduz seçin) *
-                    </label>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      {[1, 2, 3, 4, 5].map((starVal) => {
-                        const isFilled = starVal <= (hoverRating !== null ? hoverRating : newRating);
-                        return (
-                          <button
-                            key={starVal}
-                            type="button"
-                            onClick={() => setNewRating(starVal)}
-                            onMouseEnter={() => setHoverRating(starVal)}
-                            onMouseLeave={() => setHoverRating(null)}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              padding: '4px',
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                            }}
-                            title={`${starVal} ulduz`}
-                          >
-                            <Star
-                              size={24}
-                              fill={isFilled ? '#eab308' : 'none'}
-                              color={isFilled ? '#eab308' : '#cbd5e1'}
-                              strokeWidth={2}
-                            />
-                          </button>
-                        );
-                      })}
-                      <span style={{ fontSize: '13px', fontWeight: 700, color: '#ca8a04', marginLeft: '6px' }}>
-                        {newRating === 5
-                          ? 'Əla (5/5)'
-                          : newRating === 4
-                            ? 'Çox yaxşı (4/5)'
-                            : newRating === 3
-                              ? 'Yaxşı (3/5)'
-                              : newRating === 2
-                                ? 'Kafi (2/5)'
-                                : 'Zəif (1/5)'}
+                    <div>
+                      <h4 style={{ margin: '0 0 4px 0', fontSize: '14.5px', fontWeight: 800, color: theme.text }}>
+                        Yalnız Qeydiyyatdan Keçmiş İstifadəçilər Üçün
+                      </h4>
+                      <p style={{ margin: 0, fontSize: '12.5px', color: theme.textSecondary, lineHeight: 1.5, maxWidth: '280px' }}>
+                        Məhsula rəy və ulduz bildirmək üçün zəhmət olmasa şəxsi hesabınıza daxil olun və ya qeydiyyatdan keçin.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={onOpenAuth}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '10px 20px',
+                        borderRadius: '10px',
+                        backgroundColor: '#dc2626',
+                        color: '#ffffff',
+                        border: 'none',
+                        fontSize: '13px',
+                        fontWeight: 800,
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)',
+                      }}
+                    >
+                      <LogIn size={15} />
+                      <span>Daxil ol / Qeydiyyatdan keç</span>
+                    </button>
+                  </div>
+                ) : (
+                  /* Authenticated Review Submission Form */
+                  <form onSubmit={handleReviewSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    {reviewSuccessMessage && (
+                      <div
+                        style={{
+                          padding: '10px 14px',
+                          borderRadius: '10px',
+                          backgroundColor: 'rgba(22, 163, 74, 0.15)',
+                          color: '#16a34a',
+                          fontSize: '13px',
+                          fontWeight: 700,
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                        }}
+                      >
+                        <Check size={16} />
+                        <span>{reviewSuccessMessage}</span>
+                      </div>
+                    )}
+
+                    {/* Authenticated Author Badge */}
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        padding: '8px 12px',
+                        borderRadius: '8px',
+                        backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f1f5f9',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '12.5px', color: theme.textMuted }}>Müəllif:</span>
+                        <span style={{ fontSize: '13px', fontWeight: 800, color: theme.text }}>
+                          {currentUser.fullName}
+                        </span>
+                      </div>
+                      <span style={{ fontSize: '11px', fontWeight: 700, color: '#16a34a' }}>
+                        ✓ Təsdiqlənmiş İstifadəçi
                       </span>
                     </div>
-                  </div>
 
-                  {/* Author Name */}
-                  <div>
-                    <input
-                      type="text"
-                      value={newAuthor}
-                      onChange={(e) => setNewAuthor(e.target.value)}
-                      placeholder="Adınız və Soyadınız *"
-                      required
+                    {/* Interactive Star Rating Selector */}
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: theme.text, marginBottom: '6px' }}>
+                        Qiymətiniz (Ulduz seçin) *
+                      </label>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        {[1, 2, 3, 4, 5].map((starVal) => {
+                          const isFilled = starVal <= (hoverRating !== null ? hoverRating : newRating);
+                          return (
+                            <button
+                              key={starVal}
+                              type="button"
+                              onClick={() => setNewRating(starVal)}
+                              onMouseEnter={() => setHoverRating(starVal)}
+                              onMouseLeave={() => setHoverRating(null)}
+                              style={{
+                                background: 'none',
+                                border: 'none',
+                                padding: '4px',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                              title={`${starVal} ulduz`}
+                            >
+                              <Star
+                                size={24}
+                                fill={isFilled ? '#eab308' : 'none'}
+                                color={isFilled ? '#eab308' : '#cbd5e1'}
+                                strokeWidth={2}
+                              />
+                            </button>
+                          );
+                        })}
+                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#ca8a04', marginLeft: '6px' }}>
+                          {newRating === 5
+                            ? 'Əla (5/5)'
+                            : newRating === 4
+                              ? 'Çox yaxşı (4/5)'
+                              : newRating === 3
+                                ? 'Yaxşı (3/5)'
+                                : newRating === 2
+                                  ? 'Kafi (2/5)'
+                                  : 'Zəif (1/5)'}
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* Comment Textarea */}
+                    <div>
+                      <textarea
+                        value={newComment}
+                        onChange={(e) => setNewComment(e.target.value)}
+                        placeholder="Məhsul haqqında təcrübənizi və fikirlərinizi bölüşün... *"
+                        rows={3}
+                        required
+                        style={{
+                          width: '100%',
+                          padding: '10px 14px',
+                          borderRadius: '10px',
+                          border: `1px solid ${theme.border}`,
+                          backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f8fafc',
+                          color: theme.text,
+                          fontSize: '13.5px',
+                          boxSizing: 'border-box',
+                          outline: 'none',
+                          resize: 'vertical',
+                        }}
+                      />
+                    </div>
+
+                    <button
+                      type="submit"
                       style={{
-                        width: '100%',
-                        padding: '10px 14px',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        padding: '11px 20px',
                         borderRadius: '10px',
-                        border: `1px solid ${theme.border}`,
-                        backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f8fafc',
-                        color: theme.text,
+                        backgroundColor: '#dc2626',
+                        color: '#ffffff',
+                        border: 'none',
                         fontSize: '13.5px',
-                        boxSizing: 'border-box',
-                        outline: 'none',
+                        fontWeight: 800,
+                        cursor: 'pointer',
+                        boxShadow: '0 4px 14px rgba(220, 38, 38, 0.3)',
                       }}
-                    />
-                  </div>
-
-                  {/* Comment Textarea */}
-                  <div>
-                    <textarea
-                      value={newComment}
-                      onChange={(e) => setNewComment(e.target.value)}
-                      placeholder="Məhsul haqqında təcrübənizi və fikirlərinizi bölüşün... *"
-                      rows={3}
-                      required
-                      style={{
-                        width: '100%',
-                        padding: '10px 14px',
-                        borderRadius: '10px',
-                        border: `1px solid ${theme.border}`,
-                        backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f8fafc',
-                        color: theme.text,
-                        fontSize: '13.5px',
-                        boxSizing: 'border-box',
-                        outline: 'none',
-                        resize: 'vertical',
-                      }}
-                    />
-                  </div>
-
-                  <button
-                    type="submit"
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      gap: '8px',
-                      padding: '11px 20px',
-                      borderRadius: '10px',
-                      backgroundColor: '#dc2626',
-                      color: '#ffffff',
-                      border: 'none',
-                      fontSize: '13.5px',
-                      fontWeight: 800,
-                      cursor: 'pointer',
-                      boxShadow: '0 4px 14px rgba(220, 38, 38, 0.3)',
-                    }}
-                  >
-                    <Send size={15} />
-                    <span>Rəyi Göndər</span>
-                  </button>
-                </form>
+                    >
+                      <Send size={15} />
+                      <span>Rəyi Göndər</span>
+                    </button>
+                  </form>
+                )}
               </div>
             </div>
 
@@ -1995,66 +2073,82 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 Müştəri Şərhləri ({reviews.length})
               </h4>
 
-              {reviews.map((r) => (
+              {reviews.length > 0 ? (
+                reviews.map((r) => (
+                  <div
+                    key={r.id}
+                    style={{
+                      padding: '18px 22px',
+                      borderRadius: '16px',
+                      backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#ffffff',
+                      border: `1px solid ${theme.border}`,
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '8px',
+                    }}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '14.5px', fontWeight: 800, color: theme.text }}>
+                          {r.author}
+                        </span>
+                        {r.isVerified && (
+                          <span
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              fontSize: '11px',
+                              fontWeight: 700,
+                              color: '#16a34a',
+                              backgroundColor: 'rgba(22, 163, 74, 0.1)',
+                              padding: '2px 8px',
+                              borderRadius: '6px',
+                            }}
+                          >
+                            <UserCheck size={12} />
+                            <span>Təsdiqlənmiş İstifadəçi</span>
+                          </span>
+                        )}
+                      </div>
+
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <div style={{ display: 'flex', gap: '2px' }}>
+                          {[1, 2, 3, 4, 5].map((st) => (
+                            <Star
+                              key={st}
+                              size={14}
+                              fill={st <= r.rating ? '#eab308' : 'none'}
+                              color={st <= r.rating ? '#eab308' : '#cbd5e1'}
+                            />
+                          ))}
+                        </div>
+                        <span style={{ fontSize: '12px', color: theme.textMuted }}>
+                          {r.date}
+                        </span>
+                      </div>
+                    </div>
+
+                    <p style={{ fontSize: '14px', color: theme.textSecondary, lineHeight: 1.6, margin: 0 }}>
+                      {r.comment}
+                    </p>
+                  </div>
+                ))
+              ) : (
                 <div
-                  key={r.id}
                   style={{
-                    padding: '18px 22px',
+                    padding: '28px',
                     borderRadius: '16px',
-                    backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#ffffff',
-                    border: `1px solid ${theme.border}`,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px',
+                    backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.2)' : '#f8fafc',
+                    border: `1px dashed ${theme.border}`,
+                    textAlign: 'center',
+                    color: theme.textMuted,
+                    fontSize: '13.5px',
                   }}
                 >
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '14.5px', fontWeight: 800, color: theme.text }}>
-                        {r.author}
-                      </span>
-                      {r.isVerified && (
-                        <span
-                          style={{
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                            fontSize: '11px',
-                            fontWeight: 700,
-                            color: '#16a34a',
-                            backgroundColor: 'rgba(22, 163, 74, 0.1)',
-                            padding: '2px 8px',
-                            borderRadius: '6px',
-                          }}
-                        >
-                          <UserCheck size={12} />
-                          <span>Təsdiqlənmiş Alıcı</span>
-                        </span>
-                      )}
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <div style={{ display: 'flex', gap: '2px' }}>
-                        {[1, 2, 3, 4, 5].map((st) => (
-                          <Star
-                            key={st}
-                            size={14}
-                            fill={st <= r.rating ? '#eab308' : 'none'}
-                            color={st <= r.rating ? '#eab308' : '#cbd5e1'}
-                          />
-                        ))}
-                      </div>
-                      <span style={{ fontSize: '12px', color: theme.textMuted }}>
-                        {r.date}
-                      </span>
-                    </div>
-                  </div>
-
-                  <p style={{ fontSize: '14px', color: theme.textSecondary, lineHeight: 1.6, margin: 0 }}>
-                    {r.comment}
-                  </p>
+                  Hələlik rəy yazılmayıb. Qeydiyyatdan keçmiş istifadəçilər məhsul haqqında ilk rəyi bildirə bilərlər.
                 </div>
-              ))}
+              )}
             </div>
           </div>
         )}
@@ -2155,7 +2249,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             </div>
 
             <div style={{ display: 'flex', gap: '16px', alignItems: 'start' }}>
-              <div style={{ width: '44px', height: '44px', borderRadius: '12px', backgroundColor: 'rgba(220, 38, 38, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div style={{ width: '44px', height: '44px', borderRadius: '12px', backgroundColor: 'rgba(22, 163, 74, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                 <ShieldCheck size={22} color="#16a34a" />
               </div>
               <div>
