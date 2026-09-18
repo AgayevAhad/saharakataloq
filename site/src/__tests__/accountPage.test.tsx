@@ -205,11 +205,12 @@ describe('AccountPage & User Dashboard Full-Page Suite', () => {
     expect(screen.getByText('1450 ₼')).toBeDefined();
 
     // Search order
-    const orderInput = screen.getByPlaceholderText(/Məs: SHR-9021/i);
+    const orderInput = screen.getByPlaceholderText(/Məs: SHR-8822/i);
     const trackBtn = screen.getByRole('button', { name: /^İzlə$/i });
     fireEvent.change(orderInput, { target: { value: 'SHR-8822' } });
     fireEvent.click(trackBtn);
     expect(screen.getByText(/Sifariş #SHR-8822/i)).toBeDefined();
+
 
     // Switch to Addresses Tab
     const addrTab = screen.getByRole('button', { name: /Tab: Çatdırılma Ünvanlarım/i });

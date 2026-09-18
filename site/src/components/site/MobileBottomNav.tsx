@@ -1,5 +1,6 @@
 import React from 'react';
 import { Home, Layers, ShoppingCart, User, Heart } from 'lucide-react';
+import { AuthUser } from '../../types/auth';
 import { ThemeColors, DESIGN_TOKENS } from '../../types/theme';
 
 interface MobileBottomNavProps {
@@ -10,6 +11,7 @@ interface MobileBottomNavProps {
   comparisonCount?: number;
   cartCount?: number;
   favoritesCount?: number;
+  authUser?: AuthUser | null;
   theme: ThemeColors;
 }
 
@@ -19,8 +21,10 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   onOpenUserDrawer,
   cartCount = 0,
   favoritesCount = 0,
+  authUser,
   theme,
 }) => {
+
   return (
     <nav
       className="mobile-bottom-nav no-print hide-on-desktop"
@@ -148,10 +152,10 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             if (onOpenUserDrawer) {
               onOpenUserDrawer();
             } else {
-              onNavigate('favorites');
+              onNavigate('account');
             }
           }}
-          className={`mobile-nav-item ${currentRoute === 'favorites' ? 'active' : ''}`}
+          className={`mobile-nav-item ${currentRoute === 'account' ? 'active' : ''}`}
           style={{
             position: 'relative',
             background: 'transparent',
@@ -160,39 +164,40 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             flexDirection: 'column',
             alignItems: 'center',
             gap: '3px',
-            color: currentRoute === 'favorites' ? '#e31e24' : theme.textMuted,
+            color: currentRoute === 'account' ? '#e31e24' : theme.textMuted,
             fontSize: '11px',
-            fontWeight: currentRoute === 'favorites' ? 800 : 500,
+            fontWeight: currentRoute === 'account' ? 800 : 500,
             cursor: 'pointer',
             padding: '4px 8px',
           }}
         >
           <div style={{ position: 'relative' }}>
-            <User size={20} />
-            {favoritesCount > 0 && (
-              <span
+            {authUser ? (
+              <div
                 style={{
-                  position: 'absolute',
-                  top: '-4px',
-                  right: '-6px',
-                  backgroundColor: '#dc2626',
-                  color: '#ffffff',
-                  fontSize: '9px',
-                  fontWeight: 800,
-                  width: '15px',
-                  height: '15px',
+                  width: '20px',
+                  height: '20px',
                   borderRadius: '50%',
+                  backgroundColor: currentRoute === 'account' ? '#dc2626' : (theme.mode === 'dark' ? '#334155' : '#e2e8f0'),
+                  color: currentRoute === 'account' ? '#ffffff' : theme.text,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
+                  fontSize: '10px',
+                  fontWeight: 900,
                 }}
               >
-                {favoritesCount > 99 ? '99+' : favoritesCount}
-              </span>
+                {authUser.fullName.charAt(0).toUpperCase()}
+              </div>
+            ) : (
+              <User size={20} />
             )}
           </div>
-          <span>Profil</span>
+          <span style={{ maxWidth: '60px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+            {authUser ? authUser.fullName.split(' ')[0] : 'Profil'}
+          </span>
         </button>
+
       </div>
     </nav>
   );

@@ -35,7 +35,9 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { Brand, CatalogCategory, Product, CatalogSettings } from '../../types/product';
+import { AuthUser } from '../../types/auth';
 import { ThemeColors, DESIGN_TOKENS } from '../../types/theme';
+
 import { TopServiceBar } from './TopServiceBar';
 import { MegaMenu } from './MegaMenu';
 import { MobileCategoryDrawer } from './MobileCategoryDrawer';
@@ -77,6 +79,7 @@ interface SiteHeaderProps {
   onOpenSaharaMatch: () => void;
   onOpenDrawer?: () => void;
   onOpenUserDrawer?: () => void;
+  authUser?: AuthUser | null;
 }
 
 export const SiteHeader: React.FC<SiteHeaderProps> = ({
@@ -98,7 +101,9 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
   onOpenSaharaMatch,
   onOpenDrawer,
   onOpenUserDrawer,
+  authUser,
 }) => {
+
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
   const [isUserDrawerOpen, setIsUserDrawerOpen] = useState(false);
@@ -586,7 +591,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 )}
               </button>
 
-              {/* Profile 👤 */}
+              {/* Profile 👤 / Logged-in User Pill */}
               <button
                 type="button"
                 data-testid="header-user-btn"
@@ -598,20 +603,66 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   }
                 }}
                 style={{
-                  background: 'transparent',
-                  border: 'none',
-                  padding: '6px',
-                  color: isUserDrawerOpen ? '#e31e24' : theme.text,
+                  background: authUser
+                    ? (themeMode === 'dark' ? 'rgba(220, 38, 38, 0.15)' : 'rgba(220, 38, 38, 0.08)')
+                    : 'transparent',
+                  border: authUser
+                    ? `1px solid ${themeMode === 'dark' ? 'rgba(220, 38, 38, 0.3)' : 'rgba(220, 38, 38, 0.2)'}`
+                    : 'none',
+                  borderRadius: authUser ? '999px' : '8px',
+                  padding: authUser ? '4px 12px 4px 6px' : '6px',
+                  color: isUserDrawerOpen || currentRoute === 'account' ? '#e31e24' : theme.text,
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
+                  gap: '8px',
                   justifyContent: 'center',
-                  transition: 'color 0.15s ease',
+                  transition: 'all 0.15s ease',
+                  maxWidth: '180px',
                 }}
-                aria-label="İstifadəçi Kabineti və Hesab"
+                aria-label={authUser ? `İstifadəçi: ${authUser.fullName}` : "İstifadəçi Kabineti və Hesab"}
+                title={authUser ? authUser.fullName : "Giriş və Qeydiyyat"}
               >
-                <User size={20} color={isUserDrawerOpen ? '#e31e24' : theme.text} />
+                <div
+                  style={{
+                    width: authUser ? '26px' : 'auto',
+                    height: authUser ? '26px' : 'auto',
+                    borderRadius: authUser ? '50%' : '0',
+                    backgroundColor: authUser ? '#dc2626' : 'transparent',
+                    color: authUser ? '#ffffff' : (isUserDrawerOpen || currentRoute === 'account' ? '#e31e24' : theme.text),
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '12px',
+                    fontWeight: 900,
+                    flexShrink: 0,
+                  }}
+                >
+                  {authUser ? (
+                    authUser.fullName.charAt(0).toUpperCase()
+                  ) : (
+                    <User size={20} color={isUserDrawerOpen || currentRoute === 'account' ? '#e31e24' : theme.text} />
+                  )}
+                </div>
+
+                {authUser && (
+                  <span
+                    data-testid="header-user-name"
+                    style={{
+                      fontSize: '13px',
+                      fontWeight: 800,
+                      color: theme.text,
+                      whiteSpace: 'nowrap',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      maxWidth: '110px',
+                    }}
+                  >
+                    {authUser.fullName.split(' ')[0]}
+                  </span>
+                )}
               </button>
+
 
 
               {/* Theme Toggle ☀️ / 🌙 */}

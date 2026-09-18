@@ -1303,7 +1303,9 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
           onOpenSaharaMatch={() => setIsSaharaMatchOpen(true)}
           onOpenDrawer={() => setIsDrawerOpen(true)}
           onOpenUserDrawer={() => handleNavigate('account')}
+          authUser={authUser}
         />
+
 
       ) : (
         <Header
@@ -1595,8 +1597,10 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
           comparisonCount={comparisonIds.length}
           cartCount={cartItems.reduce((acc, i) => acc + i.quantity, 0)}
           favoritesCount={favoriteIds.length}
+          authUser={authUser}
           theme={activeTheme}
         />
+
       )}
 
 

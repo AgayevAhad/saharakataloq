@@ -45,13 +45,15 @@ Sənə mərhələ mərhələ nə edəcəyini deyirəm.
 
 #17. Biz necə səhifəni aşağl scrool edəndə yavaş yavaş gəlire məhsul kartı içində. Belə et. İndi çox sürətldir bunu elə etki gözə çarpan şəkildə görsənsin. Həmçinin hamısı aşağıdan yuxarı yox fərqli fərqli uyğun kontentlərlə olsun. Birdə hər hissədə bu olsun kart daxilindəki yazı və s hissələr.
 
-18. Paneldə katalog hissəsində belə olsun deməli seçim alt alta böyük məişət və s. Qutuda yox sadəcə söz olaraq amma üstünə gələndə açılacaq hissi görünüşü və uyğun icon sözün önündə. Üstünəə gələndə uyğun açılış. Böyük məişət iconu ilə katalog iconunu eyni qoymusan bunu düzəlt ayrı olsun.Sağ tərəfdə brendlərin qutusunu çox enli etmisən bunu biraz azalt. 
+#18. Paneldə katalog hissəsində belə olsun deməli seçim alt alta böyük məişət və s. Qutuda yox sadəcə söz olaraq amma üstünə gələndə açılacaq hissi görünüşü və uyğun icon sözün önündə. Üstünəə gələndə uyğun açılış. Böyük məişət iconu ilə katalog iconunu eyni qoymusan bunu düzəlt ayrı olsun.Sağ tərəfdə brendlərin qutusunu çox enli etmisən bunu biraz azalt. 
 
 #19. Useer hisəsi vare ona vuranda seçilmişlərə gedir. Onuda düzəlt. Tam unikal müasir şəkildə. aytları incələ məsələn [bakuelectronics.com](https://bakuelectronics.az/) https://kontakt.az/ . Xarici saytlara da bax. Dizaynı ssaytımıza uyğun et.Xarici saytlara baxdığından əmin ol. 
 
-#20. Kataloq səhifəsinin təkmilləşdirilməsi və Məhsul Müqayisə Sistemi:
-- Kataloq daxili məhsul müqayisəsi: Kartlarda müqayisə tərəzisi (Scale), ekranın altında yapışıq (sticky) müqayisə doku (önbaxış, sayğac və silmə), parametrləri və fərqləri müqayisə edən tam modal.
-- Rəsmi brendlər bölməsinin susmaya görə yığılmış (collapsed) olması.
-- Çeşidləmə üçün interaktiv xüsusi popover menyusu (ikonlar və aktiv işarə ilə).
-- Bütün kateqoriya filterlərində və naviqasiya düymələrində uyğun zərif ikonlar.
-- Məhsul kartında hover zamanı üzən frosted-glass əlaqə və səbət klasteri (WhatsApp, Zəng, Səbət).
+#20. Deməli katalog hissəsində bəzi dəyişikliklər edəcəyik. Katalog bölməsində müqayisə yaradaq. İnsanlar istədiyi kimi məhsulları müqayisə edə bilsin. Burada sadəlik yox mürəkkəb və funksionallıq istəyirəm. Diqqətli və gözəl etdiyindən əmin ol.
+Rəsmi brendlər hissəsi default olaraq bağlı gəlsin istəyə uyğun açılsın. Filtrlərdə Tövsüyə olunana vuranda seçimlər gəlire oranı sadə etmisən görünüşü seçimləri dizaynımıza uyğun gözəl et. Kategorya seçimlərində Bütün məhsullarda necə icon varsa digərlərində də icon olsun.Kataloqda məhsul kartları stilini ana səhifədə necədirsə orda da elə et. Ölçüləri və s.Katalogda da hər bir bölmədə olanda ana səhifədə necə scrool etdikcə animasya ilə gəlire burada da elə olsun. Hiss olunan aralıqda çox sürətli yox. Ana səhifədədə biraz gec gəlsin hiss olunsun. Məhsul kartında ətraflı bax zəng et wp ləğv et. deməli . Bizim ana səhifəmizdəki kart stili olacaq amma fərqli olan şey məhsul üzərinə gələndə animasya ilə wp iconu gəlsin zəng et iconu gəlsin səliqə ilə sonra şəffaflaşsınki məhsulun üzərini çox örtməsin. 
+
+#20.1 Deməli kataloqda məhsul detalında aşağıda ulduz vermək  rəy yazmaq (userlər üçün) Təsvir hissələri olsun. Müştəri ilk olaraq təsvir görsün. İstəsə bütün xüsusiyyətlərə keçid edə bilsin. Təsviri aftomatik yazma . Bu tip şeyləri admin paneldə tənzimləy bilməliyik. Bundan başqa isə sənə desəmdə etmədin şəkili tam böyüdəndə demişdimki kəanrlar şəkilin ağ tonuna uyğun ağ olsun amma hələdə qaradır.Bunuda düzəlt. həmçinin kliklə axınlaşdırma və s mümkün olsun. Bax normalda necə olur başqa saytlarda yaxınlaşdırma sürüşdürmə elə olsun. Professsional və senior kimi davran. 
+
+#21. Profil hissəsini sadə sağda etmisən. Bunu dəyişək. deməli belə olsun hal hazırdaa user daxil olmaq qeydiyyatdan keçmək və s olsun. Diqqətli və təhlükəsiz et.
+
+22. Ana səhifədə video üçün müddət izləmə vare rəqəmin yanında o qeyri stabildir tam uyğunluq təşkil etmir araşdır düzəlt.Birdə video hissəni kənarları çox şey olub yənu video az görsənir bunu necə düzəltmək olar ?

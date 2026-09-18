@@ -15,6 +15,7 @@ import {
   Edit3,
   Save,
   Package,
+  PackageSearch,
   MapPin,
   Plus,
   Trash2,
@@ -24,10 +25,12 @@ import {
   KeyRound,
   ArrowRight,
   ArrowLeft,
+  Info,
 } from 'lucide-react';
 import { AuthUser, LoginCredentials, RegisterCredentials, AuthUserAddress, AuthUserOrder } from '../types/auth';
 import { ThemeColors } from '../types/theme';
 import { WhatsAppIcon } from '../components/WhatsAppIcon';
+import { SaharaDatePicker } from '../components/SaharaDatePicker';
 
 interface AccountPageProps {
   authUser: AuthUser | null;
@@ -1033,8 +1036,8 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                       gap: '4px',
                       padding: '3px 9px',
                       borderRadius: '6px',
-                      backgroundColor: 'rgba(22, 163, 74, 0.12)',
-                      color: '#16a34a',
+                      backgroundColor: 'rgba(220, 38, 38, 0.12)',
+                      color: '#dc2626',
                       fontSize: '11.5px',
                       fontWeight: 800,
                     }}
@@ -1148,8 +1151,8 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                   {favoritesCount} məhsul
                 </div>
               </div>
-              <div style={{ width: '44px', height: '44px', borderRadius: '12px', backgroundColor: 'rgba(234, 179, 8, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <Heart size={22} color="#ca8a04" />
+              <div style={{ width: '44px', height: '44px', borderRadius: '12px', backgroundColor: 'rgba(220, 38, 38, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <Heart size={22} color="#dc2626" />
               </div>
             </div>
 
@@ -1431,7 +1434,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                       style={{
                         width: '100%',
                         padding: '11px 14px',
-                        borderRadius: '10px',
+                        borderRadius: '12px',
                         border: `1px solid ${theme.border}`,
                         backgroundColor: themeMode === 'dark' ? '#0f172a' : '#f8fafc',
                         color: theme.text,
@@ -1453,7 +1456,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                       style={{
                         width: '100%',
                         padding: '11px 14px',
-                        borderRadius: '10px',
+                        borderRadius: '12px',
                         border: `1px solid ${theme.border}`,
                         backgroundColor: themeMode === 'dark' ? '#0f172a' : '#f8fafc',
                         color: theme.text,
@@ -1463,24 +1466,17 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                     />
                   </div>
 
+                  {/* Luxury Sahara Custom Calendar Date Picker */}
                   <div>
                     <label style={{ display: 'block', fontSize: '12.5px', fontWeight: 800, color: theme.text, marginBottom: '6px' }}>
-                      Doğum Tarixi (İstəyə bağlı)
+                      Doğum Tarixi
                     </label>
-                    <input
-                      type="date"
+                    <SaharaDatePicker
                       value={editBirthDate}
-                      onChange={(e) => setEditBirthDate(e.target.value)}
-                      style={{
-                        width: '100%',
-                        padding: '11px 14px',
-                        borderRadius: '10px',
-                        border: `1px solid ${theme.border}`,
-                        backgroundColor: themeMode === 'dark' ? '#0f172a' : '#f8fafc',
-                        color: theme.text,
-                        fontSize: '14px',
-                        boxSizing: 'border-box',
-                      }}
+                      onChange={(date) => setEditBirthDate(date)}
+                      theme={theme}
+                      themeMode={themeMode}
+                      placeholder="Təqvimdən seçin"
                     />
                   </div>
 
@@ -1551,6 +1547,47 @@ export const AccountPage: React.FC<AccountPageProps> = ({
           {/* TAB 2 CONTENT: ORDERS & TRACKING */}
           {activeDashboardTab === 'orders' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+              {/* Dynamic Orders Overview & Search Guidance Card */}
+              {userOrders.length > 0 ? (
+                <div
+                  style={{
+                    padding: '16px 20px',
+                    borderRadius: '16px',
+                    backgroundColor: themeMode === 'dark' ? 'rgba(220, 38, 38, 0.12)' : 'rgba(220, 38, 38, 0.08)',
+                    border: `1px solid ${themeMode === 'dark' ? 'rgba(220, 38, 38, 0.3)' : '#fecaca'}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '14px',
+                  }}
+                >
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: '#dc2626', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Package size={18} />
+                  </div>
+                  <div style={{ fontSize: '13px', color: theme.text, lineHeight: 1.5 }}>
+                    <strong style={{ color: '#dc2626' }}>Aktiv Sifarişləriniz mövcuddur:</strong> Bütün cari və tamamlanmış sifarişləriniz aşağıdakı siyahıda əks olunub. Əgər əlavə və ya fərqli sifariş qəbziniz varsa, kodu aşağıdakı xanaya daxil edərək onu da dərhal axtara bilərsiniz.
+                  </div>
+                </div>
+              ) : (
+                <div
+                  style={{
+                    padding: '16px 20px',
+                    borderRadius: '16px',
+                    backgroundColor: themeMode === 'dark' ? 'rgba(2, 132, 199, 0.12)' : 'rgba(2, 132, 199, 0.08)',
+                    border: `1px solid ${themeMode === 'dark' ? 'rgba(2, 132, 199, 0.3)' : '#bae6fd'}`,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '14px',
+                  }}
+                >
+                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: '#0284c7', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <Info size={18} />
+                  </div>
+                  <div style={{ fontSize: '13px', color: theme.text, lineHeight: 1.5 }}>
+                    <strong style={{ color: '#0284c7' }}>Sifariş Məlumatı:</strong> Hazırda qeydiyyatınızda aktiv sifariş tapılmadı. Əgər mağazada, telefonla və ya qapıda sifariş etmisinizsə, sizə təqdim olunan sifariş kodunu daxil edərək statusu izləyə bilərsiniz.
+                  </div>
+                </div>
+              )}
+
               {/* Sifariş İzləmə Axtarış Qutusu */}
               <div
                 style={{
@@ -1561,15 +1598,22 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                   boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
                 }}
               >
-                <h3 style={{ margin: '0 0 8px 0', fontSize: '16px', fontWeight: 800, color: theme.text }}>
-                  Sifariş Kodu ilə Axtarış və Canlı İzləmə
-                </h3>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                  <PackageSearch size={20} color="#dc2626" />
+                  <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: theme.text }}>
+                    Sifariş Kodu ilə Axtarış və Canlı İzləmə
+                  </h3>
+                </div>
+                <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: theme.textSecondary }}>
+                  Kuryer və ya menecer tərəfindən sizə verilən qəbz kodunu (məsələn: <strong>SHR-8822</strong>) daxil edin.
+                </p>
+
                 <form onSubmit={handleTrackOrder} style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
                   <input
                     type="text"
                     value={orderQuery}
                     onChange={(e) => setOrderQuery(e.target.value)}
-                    placeholder="Məs: SHR-9021"
+                    placeholder="Məs: SHR-8822"
                     style={{
                       flex: 1,
                       minWidth: '220px',
@@ -1604,8 +1648,8 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                       marginTop: '16px',
                       padding: '14px 18px',
                       borderRadius: '12px',
-                      backgroundColor: 'rgba(22, 163, 74, 0.12)',
-                      color: '#16a34a',
+                      backgroundColor: 'rgba(220, 38, 38, 0.12)',
+                      color: '#dc2626',
                       fontSize: '13.5px',
                       fontWeight: 700,
                     }}
@@ -1679,7 +1723,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                       fontSize: '14px',
                     }}
                   >
-                    Hələlik heç bir tamamlanmış sifarişiniz yoxdur.
+                    Hələlik heç bir tamamlanmış sifarişiniz qeydiyyata alınmayıb.
                   </div>
                 )}
               </div>
@@ -1871,7 +1915,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                           </span>
                         </div>
                         {a.isDefault && (
-                          <span style={{ fontSize: '11px', fontWeight: 800, color: '#16a34a', backgroundColor: 'rgba(22,163,74,0.12)', padding: '2px 8px', borderRadius: '6px' }}>
+                          <span style={{ fontSize: '11px', fontWeight: 800, color: '#dc2626', backgroundColor: 'rgba(220,38,38,0.12)', padding: '2px 8px', borderRadius: '6px' }}>
                             Əsas Ünvan
                           </span>
                         )}
