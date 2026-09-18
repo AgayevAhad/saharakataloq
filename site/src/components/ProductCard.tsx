@@ -340,7 +340,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         borderRadius: '16px',
         padding: '16px 20px',
         width: '100%',
-        maxWidth: '339px',
+        maxWidth: '100%',
         height: '100%',
         minHeight: '339px',
         maxHeight: '339px',

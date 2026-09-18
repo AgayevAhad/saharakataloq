@@ -6752,10 +6752,24 @@ select {
   }
 }
 
-.featured-product-card,
-.product-card {
+.featured-product-card {
   width: 100% !important;
   max-width: 339px !important;
+  height: 339px !important;
+  min-height: 339px !important;
+  max-height: 339px !important;
+  padding: 16px 20px !important;
+  background-color: #ffffff !important;
+  border: none !important;
+  border-radius: 16px !important;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05) !important;
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease !important;
+  box-sizing: border-box !important;
+}
+
+.product-card {
+  width: 100% !important;
+  max-width: 100% !important;
   height: 339px !important;
   min-height: 339px !important;
   max-height: 339px !important;
@@ -6867,14 +6881,15 @@ select {
 /* Catalog 3-Column Grid Layout */
 .catalog-products-container.is-grid-view {
   display: grid !important;
-  grid-template-columns: repeat(3, minmax(0, 339px)) !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
   gap: 20px !important;
-  justify-content: start !important;
+  width: 100% !important;
+  justify-content: stretch !important;
 }
 
-@media (max-width: 1280px) and (min-width: 900px) {
+@media (max-width: 1200px) and (min-width: 900px) {
   .catalog-products-container.is-grid-view {
-    grid-template-columns: repeat(auto-fill, minmax(260px, 339px)) !important;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)) !important;
   }
 }
 

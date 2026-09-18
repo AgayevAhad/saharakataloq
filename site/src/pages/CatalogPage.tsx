@@ -351,7 +351,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
 
   return (
     <div className="catalog-page-wrapper" style={{ minHeight: '100vh', padding: '16px 0 64px', width: '100%', boxSizing: 'border-box' }}>
-      <div className="catalog-container" style={{ maxWidth: '1480px', margin: '0 auto', padding: '0 clamp(16px, 2.5vw, 36px)', width: '100%', boxSizing: 'border-box' }}>
+      <div className="catalog-container" style={{ maxWidth: '1360px', margin: '0 auto', padding: '0 clamp(16px, 2.5vw, 36px)', width: '100%', boxSizing: 'border-box' }}>
         {/* Page Header Bar */}
         <div
           style={{
@@ -1380,9 +1380,9 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                 style={{
                   display: 'grid',
                   gridTemplateColumns:
-                    viewMode === 'list' ? '1fr' : 'repeat(3, minmax(0, 339px))',
+                    viewMode === 'list' ? '1fr' : 'repeat(3, minmax(0, 1fr))',
                   gap: '20px',
-                  justifyContent: 'start',
+                  width: '100%',
                 }}
               >
                 {sortedProducts.map((product) => {
