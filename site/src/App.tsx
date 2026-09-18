@@ -33,9 +33,10 @@ import { Toast } from './components/Toast';
 import { Drawer } from './components/ui/Drawer';
 import { AdminLogin } from './components/AdminLogin';
 import { Footer } from './components/Footer';
-import { FloatingActions } from './components/FloatingActions';
 import { ProductDetailPage } from './pages/ProductDetailPage';
+import { AccountPage } from './pages/AccountPage';
 import { AuthUser, LoginCredentials, RegisterCredentials } from './types/auth';
+
 
 const CatalogAdmin = lazy(() =>
   import('./components/CatalogAdmin').then((m) => ({ default: m.CatalogAdmin }))
@@ -64,6 +65,7 @@ type RouteName =
   | 'support'
   | 'cart'
   | 'favorites'
+  | 'account'
   | 'product'
   | '404';
 
@@ -86,8 +88,17 @@ export const resolveRouteFromPath = (
   if (clean === '/support') return { route: 'support' };
   if (clean === '/cart') return { route: 'cart' };
   if (clean === '/favorites' || clean === '/wishlist') return { route: 'favorites' };
+  if (
+    clean === '/account' ||
+    clean === '/profile' ||
+    clean === '/login' ||
+    clean === '/register' ||
+    clean === '/auth'
+  )
+    return { route: 'account' };
   if (clean === '/compare')
     return { route: featureFlags.isEnabled('enableCompare') ? 'compare' : '404' };
+
   if (clean.startsWith('/product/')) {
     const id = clean.replace('/product/', '');
     return { route: 'product', productId: id };
@@ -788,6 +799,12 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
         { label: 'Seçilmişlər', href: '/favorites' },
       ];
     }
+    if (currentRoute === 'account') {
+      return [
+        { label: 'Ana Səhifə', href: '/' },
+        { label: authUser ? 'Şəxsi Kabinet / Profil' : 'Giriş və Qeydiyyat', href: '/account' },
+      ];
+    }
     if (currentRoute === 'compare') {
       return [
         { label: 'Ana Səhifə', href: '/' },
@@ -807,7 +824,7 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
       { label: 'Ana Səhifə', href: '/' },
       { label: 'Səhifə tapılmadı', href: '/404' },
     ];
-  }, [currentRoute, selectedCategory, selectedBrand, selectedProduct, catalog.categories, catalog.brands]);
+  }, [currentRoute, selectedCategory, selectedBrand, selectedProduct, catalog.categories, catalog.brands, authUser]);
 
   const handleNavigate = useCallback(
     (route: string, param?: string) => {
@@ -820,6 +837,11 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
         support: true,
         favorites: true,
         cart: true,
+        account: true,
+        profile: true,
+        login: true,
+        register: true,
+        auth: true,
         compare: featureFlags.isEnabled('enableCompare'),
         guides: featureFlags.isEnabled('enableGuides'),
         brandDetail: featureFlags.isEnabled('enableBrandDetail'),
@@ -840,7 +862,15 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
         return;
       }
 
-      const validRoute = route as RouteName;
+      let validRoute = route as RouteName;
+      if (
+        route === 'profile' ||
+        route === 'login' ||
+        route === 'register' ||
+        route === 'auth'
+      ) {
+        validRoute = 'account';
+      }
       setCurrentRoute(validRoute);
 
       let cleanUrl = '/';
@@ -878,8 +908,10 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
       else if (validRoute === 'support') cleanUrl = '/support';
       else if (validRoute === 'cart') cleanUrl = '/cart';
       else if (validRoute === 'favorites') cleanUrl = '/favorites';
+      else if (validRoute === 'account') cleanUrl = '/account';
       else if (validRoute === 'compare') cleanUrl = '/compare';
       else if (validRoute === '404') cleanUrl = '/404';
+
 
       if (typeof window !== 'undefined') {
         if (window.location.pathname !== cleanUrl) {
@@ -1270,8 +1302,9 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
           cartCount={cartItems.reduce((acc, i) => acc + i.quantity, 0)}
           onOpenSaharaMatch={() => setIsSaharaMatchOpen(true)}
           onOpenDrawer={() => setIsDrawerOpen(true)}
-          onOpenUserDrawer={() => setIsUserDrawerOpen(true)}
+          onOpenUserDrawer={() => handleNavigate('account')}
         />
+
       ) : (
         <Header
           theme={activeTheme}
@@ -1474,9 +1507,24 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
                     isComparing={comparisonIds.includes(selectedProduct.id)}
                     cartCount={cartItems.reduce((acc, i) => acc + i.quantity, 0)}
                     currentUser={authUser}
-                    onOpenAuth={() => setIsUserDrawerOpen(true)}
+                    onOpenAuth={() => handleNavigate('account')}
                   />
-
+                )}
+                {currentRoute === 'account' && (
+                  <AccountPage
+                    authUser={authUser}
+                    theme={activeTheme}
+                    themeMode={themeMode}
+                    cartCount={cartItems.reduce((acc, i) => acc + i.quantity, 0)}
+                    favoritesCount={favoriteIds.length}
+                    onLogin={handleLogin}
+                    onRegister={handleRegister}
+                    onLogout={handleLogout}
+                    onUpdateProfile={handleUpdateProfile}
+                    onNavigate={handleNavigate}
+                    onWhatsAppSupport={() => openWhatsApp(null)}
+                    onCallSupport={openCall}
+                  />
                 )}
                 {currentRoute === 'favorites' && (
                   <FavoritesPage
@@ -1543,13 +1591,14 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
           currentRoute={currentRoute}
           onNavigate={handleNavigate}
           onOpenSearch={() => setIsSearchOverlayOpen(true)}
-          onOpenUserDrawer={() => setIsUserDrawerOpen(true)}
+          onOpenUserDrawer={() => handleNavigate('account')}
           comparisonCount={comparisonIds.length}
           cartCount={cartItems.reduce((acc, i) => acc + i.quantity, 0)}
           favoritesCount={favoriteIds.length}
           theme={activeTheme}
         />
       )}
+
 
       {/* Modals & Overlays (Only in legacy standalone catalog mode) */}
       <ProductDetailModal

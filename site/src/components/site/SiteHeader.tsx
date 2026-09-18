@@ -589,6 +589,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               {/* Profile 👤 */}
               <button
                 type="button"
+                data-testid="header-user-btn"
                 onClick={() => {
                   if (onOpenUserDrawer) {
                     onOpenUserDrawer();
@@ -611,6 +612,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               >
                 <User size={20} color={isUserDrawerOpen ? '#e31e24' : theme.text} />
               </button>
+
 
               {/* Theme Toggle ☀️ / 🌙 */}
               <button
