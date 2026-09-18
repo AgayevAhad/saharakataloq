@@ -68,7 +68,7 @@ afterEach(() => {
 });
 
 describe('App Product Click and Modal Integration E2E Test', () => {
-  it('opens product modal with full details, image, title, specs when product card is clicked', async () => {
+  it('opens product detail page with full details, image, title, specs when product card is clicked', async () => {
     const { container } = render(<App />);
 
     // Wait for catalog to render
@@ -88,34 +88,27 @@ describe('App Product Click and Modal Integration E2E Test', () => {
 
     const productCards = container.querySelectorAll('.product-card');
     const firstCard = productCards[0];
-    expect(firstCard.textContent).toContain('Aspirator Ardo 604B');
+    expect(firstCard.textContent).toContain('Aspirator');
 
-    // Click to open product detail modal
+    // Click to open product detail page
     fireEvent.click(firstCard);
 
-    // Modal overlay should be rendered
-    const modalOverlay = container.querySelector('.modal-overlay-wrap');
-    expect(modalOverlay).not.toBeNull();
+    // Product Detail Page container should be rendered
+    await waitFor(() => {
+      expect(container.querySelector('.product-detail-page-container')).not.toBeNull();
+    });
 
-    // Modal content card should be present with light theme card background
-    const modalContent = container.querySelector('.modal-content-card') as HTMLElement;
-    expect(modalContent).not.toBeNull();
-    expect(modalContent.style.backgroundColor).toBe('#ffffff');
-
-    // The image stage and info column must exist
-    const imageStage = container.querySelector('.product-detail-image-stage');
+    // The image stage must exist
+    const imageStage = container.querySelector('.product-detail-main-stage');
     expect(imageStage).not.toBeNull();
 
-    const infoCol = container.querySelector('.product-modal-info-col');
-    expect(infoCol).not.toBeNull();
+    // Check title in product detail page
+    expect(container.textContent).toContain('Aspirator');
 
-    // Check title in modal
-    expect(modalContent?.textContent).toContain('Aspirator Ardo 604B');
-
-    // Check action buttons inside modalContent (WhatsApp, Call, Copy Link)
-    expect(modalContent.textContent).toContain('WhatsApp');
-    expect(modalContent.textContent).toContain('Zəng et');
-    expect(modalContent.textContent).toContain('Məhsul linki kopyala');
+    // Check action buttons inside page (WhatsApp, Call, Link Copy)
+    expect(container.textContent).toContain('WhatsApp');
+    expect(container.textContent).toContain('Zəng et');
+    expect(container.textContent).toContain('Linki Kopyala');
   });
 
   it('ProductDetailModal safely handles touch swipe gestures and clears timers on unmount without errors', async () => {

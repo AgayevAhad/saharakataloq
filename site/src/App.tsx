@@ -35,6 +35,7 @@ import { AdminLogin } from './components/AdminLogin';
 import { Footer } from './components/Footer';
 import { FloatingActions } from './components/FloatingActions';
 import { BrandCategoryFilter } from './components/BrandCategoryFilter';
+import { ProductDetailPage } from './pages/ProductDetailPage';
 
 const CatalogAdmin = lazy(() =>
   import('./components/CatalogAdmin').then((m) => ({ default: m.CatalogAdmin }))
@@ -63,6 +64,7 @@ type RouteName =
   | 'support'
   | 'cart'
   | 'favorites'
+  | 'product'
   | '404';
 
 export interface AppProps {
@@ -73,7 +75,7 @@ export interface AppProps {
 
 export const resolveRouteFromPath = (
   path: string
-): { route: RouteName; category?: string; brand?: string } => {
+): { route: RouteName; category?: string; brand?: string; productId?: string } => {
   if (!path) return { route: 'home' };
   const clean = path.split('?')[0].replace(/\/$/, '') || '/';
   if (clean === '/' || clean === '') return { route: 'home' };
@@ -86,6 +88,10 @@ export const resolveRouteFromPath = (
   if (clean === '/favorites' || clean === '/wishlist') return { route: 'favorites' };
   if (clean === '/compare')
     return { route: featureFlags.isEnabled('enableCompare') ? 'compare' : '404' };
+  if (clean.startsWith('/product/')) {
+    const id = clean.replace('/product/', '');
+    return { route: 'product', productId: id };
+  }
   if (clean.startsWith('/category/')) {
     const slug = clean.replace('/category/', '');
     return { route: 'catalog', category: slug };
@@ -205,41 +211,61 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
     window.setTimeout(() => setToast((prev) => ({ ...prev, visible: false })), 2600);
   }, []);
 
-  const parseDeepLink = useCallback((items: Product[]) => {
-    const params = new URLSearchParams(window.location.search);
-    const id = params.get('product');
-    if (id) {
-      const found = items.find(
-        (item) => item.id === id || item.code.toLocaleLowerCase('az') === id.toLocaleLowerCase('az')
-      );
-      if (found) setSelectedProduct(found);
-    }
-
-    const page = params.get('page') || params.get('route');
-    if (page) {
-      const allowedRoutes: Record<string, boolean> = {
-        home: true,
-        catalog: true,
-        brands: true,
-        services: true,
-        stores: true,
-        support: true,
-        favorites: true,
-        cart: true,
-        compare: featureFlags.isEnabled('enableCompare'),
-        guides: featureFlags.isEnabled('enableGuides'),
-        brandDetail: featureFlags.isEnabled('enableBrandDetail'),
-        checkout: featureFlags.isEnabled('enableCheckout'),
-        onlinePayment: featureFlags.isEnabled('enableOnlinePayment'),
-        saharaMatch: featureFlags.isEnabled('enableSaharaMatch'),
-      };
-      if (allowedRoutes[page]) {
-        setCurrentRoute(page as RouteName);
-      } else {
-        setCurrentRoute('404');
+  const parseDeepLink = useCallback(
+    (items: Product[]) => {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('product');
+      if (id) {
+        const found = items.find(
+          (item) => item.id === id || item.code.toLocaleLowerCase('az') === id.toLocaleLowerCase('az')
+        );
+        if (found) {
+          setSelectedProduct(found);
+          if (isSiteMode) setCurrentRoute('product');
+        }
       }
-    }
-  }, []);
+
+      const pathParsed = resolveRouteFromPath(window.location.pathname);
+      if (pathParsed.productId) {
+        const found = items.find(
+          (item) =>
+            item.id === pathParsed.productId ||
+            item.code.toLocaleLowerCase('az') === pathParsed.productId?.toLocaleLowerCase('az')
+        );
+        if (found) {
+          setSelectedProduct(found);
+          if (isSiteMode) setCurrentRoute('product');
+        }
+      }
+
+      const page = params.get('page') || params.get('route');
+      if (page) {
+        const allowedRoutes: Record<string, boolean> = {
+          home: true,
+          catalog: true,
+          brands: true,
+          services: true,
+          stores: true,
+          support: true,
+          favorites: true,
+          cart: true,
+          compare: featureFlags.isEnabled('enableCompare'),
+          guides: featureFlags.isEnabled('enableGuides'),
+          brandDetail: featureFlags.isEnabled('enableBrandDetail'),
+          checkout: featureFlags.isEnabled('enableCheckout'),
+          onlinePayment: featureFlags.isEnabled('enableOnlinePayment'),
+          saharaMatch: featureFlags.isEnabled('enableSaharaMatch'),
+          product: true,
+        };
+        if (allowedRoutes[page]) {
+          setCurrentRoute(page as RouteName);
+        } else {
+          setCurrentRoute('404');
+        }
+      }
+    },
+    [isSiteMode]
+  );
 
   useEffect(() => {
     const handleGlobalSpace = (e: KeyboardEvent) => {
@@ -293,7 +319,7 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
         const isTestEnv = typeof process !== 'undefined' && process.env?.NODE_ENV === 'test';
         const elapsed = Date.now() - startTime;
         const splashDismissDelay = isTestEnv ? 0 : Math.max(300 - elapsed, 100);
-        const shimmerHoldTime = isTestEnv ? 0 : 800;
+        const _shimmerHoldTime = isTestEnv ? 0 : 800;
 
         setTimeout(() => {
           if (typeof document !== 'undefined') {
@@ -321,13 +347,24 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
     };
   }, [parseDeepLink]);
 
-  const selectProduct = useCallback((product: Product) => {
-    setSelectedProduct(product);
-    catalogApi.track('product_view', product.id);
-    const url = new URL(window.location.href);
-    url.searchParams.set('product', product.id);
-    window.history.replaceState({}, '', url.toString());
-  }, []);
+  const selectProduct = useCallback(
+    (product: Product) => {
+      setSelectedProduct(product);
+      catalogApi.track('product_view', product.id);
+      if (isSiteMode) {
+        setCurrentRoute('product');
+        if (typeof window !== 'undefined') {
+          window.history.pushState({}, '', `/product/${product.id}`);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+      } else {
+        const url = new URL(window.location.href);
+        url.searchParams.set('product', product.id);
+        window.history.replaceState({}, '', url.toString());
+      }
+    },
+    [isSiteMode]
+  );
 
   const closeProduct = useCallback(() => {
     setSelectedProduct(null);
@@ -668,11 +705,20 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
         { label: 'Müqayisə', href: '/compare' },
       ];
     }
+    if (currentRoute === 'product' && selectedProduct) {
+      const cat = catalog.categories.find((c) => c.id === selectedProduct.category);
+      return [
+        { label: 'Ana Səhifə', href: '/' },
+        { label: 'Kataloq', href: '/catalog' },
+        ...(cat ? [{ label: cat.name, href: `/category/${cat.id}` }] : []),
+        { label: selectedProduct.code, href: `/product/${selectedProduct.id}` },
+      ];
+    }
     return [
       { label: 'Ana Səhifə', href: '/' },
       { label: 'Səhifə tapılmadı', href: '/404' },
     ];
-  }, [currentRoute, selectedCategory, selectedBrand, catalog.categories, catalog.brands]);
+  }, [currentRoute, selectedCategory, selectedBrand, selectedProduct, catalog.categories, catalog.brands]);
 
   const handleNavigate = useCallback(
     (route: string, param?: string) => {
@@ -691,6 +737,7 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
         checkout: featureFlags.isEnabled('enableCheckout'),
         onlinePayment: featureFlags.isEnabled('enableOnlinePayment'),
         saharaMatch: featureFlags.isEnabled('enableSaharaMatch'),
+        product: true,
       };
 
       if (!allowedRoutes[route]) {
@@ -728,6 +775,14 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
           setSelectedBrand(null);
           cleanUrl = '/catalog';
         }
+      } else if (validRoute === 'product') {
+        if (param) {
+          const found = catalog.products.find(
+            (p) => p.id === param || p.code.toLowerCase() === param.toLowerCase()
+          );
+          if (found) setSelectedProduct(found);
+          cleanUrl = `/product/${param}`;
+        }
       } else if (validRoute === 'brands') cleanUrl = '/brands';
       else if (validRoute === 'services') cleanUrl = '/services';
       else if (validRoute === 'stores') cleanUrl = '/stores';
@@ -744,7 +799,7 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     },
-    [catalog.brands]
+    [catalog.brands, catalog.products]
   );
 
   useEffect(() => {
@@ -752,6 +807,12 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
     const handlePopState = () => {
       const parsed = resolveRouteFromPath(window.location.pathname);
       setCurrentRoute(parsed.route);
+      if (parsed.productId) {
+        const found = catalog.products.find(
+          (p) => p.id === parsed.productId || p.code.toLowerCase() === parsed.productId?.toLowerCase()
+        );
+        if (found) setSelectedProduct(found);
+      }
       if (parsed.category) setSelectedCategory(parsed.category);
       if (parsed.brand) setSelectedBrand(parsed.brand);
       parseDeepLink(catalog.products);
@@ -1302,6 +1363,29 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
                     onCall={openCall}
                   />
                 )}
+                {currentRoute === 'product' && selectedProduct && (
+                  <ProductDetailPage
+                    product={selectedProduct}
+                    allProducts={catalog.products}
+                    categories={catalog.categories}
+                    brands={catalog.brands}
+                    settings={catalog.settings}
+                    theme={activeTheme}
+                    themeMode={themeMode}
+                    onNavigate={handleNavigate}
+                    onSelectProduct={selectProduct}
+                    onWhatsApp={openWhatsApp}
+                    onCall={openCall}
+                    onShare={openShare}
+                    onCopyLink={copyLink}
+                    onAddToCart={addToCart}
+                    onToggleFavorite={toggleFavorite}
+                    isFavorite={favoriteIds.includes(selectedProduct.id)}
+                    onToggleCompare={toggleCompare}
+                    isComparing={comparisonIds.includes(selectedProduct.id)}
+                    cartCount={cartItems.reduce((acc, i) => acc + i.quantity, 0)}
+                  />
+                )}
                 {currentRoute === 'favorites' && (
                   <FavoritesPage
                     favoriteIds={favoriteIds}
@@ -1375,12 +1459,12 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
         />
       )}
 
-      {/* Modals & Overlays */}
+      {/* Modals & Overlays (Only in legacy standalone catalog mode) */}
       <ProductDetailModal
         product={selectedProduct}
         brand={selectedBrandInfo}
         theme={activeTheme}
-        visible={!!selectedProduct}
+        visible={!isSiteMode && !!selectedProduct}
         whatsappButtonText={catalog.settings?.whatsappButtonText}
         callButtonText={catalog.settings?.callButtonText}
         onClose={closeProduct}
