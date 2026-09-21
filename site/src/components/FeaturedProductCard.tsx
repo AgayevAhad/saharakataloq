@@ -1,9 +1,16 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useRef, useState } from 'react';
+import { animateProductToCart, animateProductToFavorites } from '../utils/cartFlight';
 import { Heart, ShoppingCart, Scale, Phone } from 'lucide-react';
-import { Product } from '../types/product';
+import { Brand, Product } from '../types/product';
 import { ThemeColors } from '../types/theme';
 import { ShimmerImage } from './ShimmerImage';
 import { WhatsAppIcon } from './WhatsAppIcon';
+import { ProductBrandBadge } from './ProductBrandBadge';
+import { CategoryGlyph } from './CategoryGlyph';
+import { verifiedManufacturingCountry } from '../utils/manufacturingCountry';
+import { manufacturingCountryFlag } from '../utils/countryFlag';
+import { useCenteredMobileCard } from '../hooks/useCenteredMobileCard';
+import { getProductBadgeColor, getVisibleBadgeText } from './productCardVisuals';
 
 interface FeaturedProductCardProps {
   product: Product;
@@ -16,6 +23,7 @@ interface FeaturedProductCardProps {
   isComparing?: boolean;
   onWhatsApp?: (product: Product) => void;
   onCall?: (product: Product) => void;
+  brand?: Brand;
 }
 
 export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
@@ -29,36 +37,14 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
   isComparing = false,
   onWhatsApp,
   onCall,
+  brand,
 }) => {
   const [internalFavorite, setInternalFavorite] = useState(false);
   const isFavorite = isFavoriteProp !== undefined ? isFavoriteProp : internalFavorite;
   const [isHovered, setIsHovered] = useState(false);
-  const [isRevealed, setIsRevealed] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const el = cardRef.current;
-    if (!el) return;
-
-    if (!('IntersectionObserver' in window)) {
-      setIsRevealed(true);
-      return;
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries[0]?.isIntersecting) {
-          setIsRevealed(true);
-          observer.disconnect();
-        }
-      },
-      { rootMargin: '0px 0px -40px 0px', threshold: 0.1 }
-    );
-
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, []);
+  const isMobileFocused = useCenteredMobileCard(cardRef);
+  const isActive = isHovered || isMobileFocused;
 
   const rawPrice = product.price ?? (product as any).priceCash;
   const displayPrice =
@@ -74,6 +60,7 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
 
   const handleFavoriteClick = (e: React.MouseEvent) => {
     e.stopPropagation();
+    if (!isFavorite) animateProductToFavorites(e.currentTarget as HTMLElement, coverImage);
     if (onToggleFavorite) {
       onToggleFavorite(product);
     } else {
@@ -89,6 +76,7 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
   const handleCartClick = (e: React.MouseEvent) => {
     e.stopPropagation();
     if (onAddToCart) {
+      animateProductToCart(e.currentTarget as HTMLElement, coverImage);
       onAddToCart(product);
     } else {
       onSelect(product);
@@ -116,7 +104,8 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
   return (
     <div
       ref={cardRef}
-      className={`featured-product-card product-card scroll-reveal-item ${isRevealed ? 'is-revealed' : ''} ${isHovered ? 'is-card-hovered' : ''}`}
+      data-featured-product-card-id={product.id}
+      className={`featured-product-card product-card ${isActive ? 'is-card-hovered' : ''} ${isMobileFocused ? 'mobile-focused' : ''}`}
       onClick={() => onSelect(product)}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
@@ -133,11 +122,9 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
         flexDirection: 'column',
         position: 'relative',
         cursor: 'pointer',
-        boxShadow: isHovered
-          ? '0 12px 32px rgba(0, 0, 0, 0.12)'
-          : '0 4px 20px rgba(0, 0, 0, 0.05)',
+        boxShadow: isActive ? '0 12px 32px rgba(0, 0, 0, 0.12)' : '0 4px 20px rgba(0, 0, 0, 0.05)',
         transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease',
-        overflow: 'hidden',
+        overflow: 'visible',
       }}
       role="button"
       tabIndex={0}
@@ -148,8 +135,34 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
         }
       }}
     >
+      <ProductBrandBadge brand={brand} />
+      <div className="product-card-category-top" aria-label={`Kateqoriya: ${product.categoryName}`}>
+        <CategoryGlyph id={product.category} compact plain />
+        <span>{product.categoryName}</span>
+      </div>
+      {manufacturingCountryFlag(verifiedManufacturingCountry(product)) && (
+        <span
+          className="product-card-country-flag"
+          data-country={verifiedManufacturingCountry(product)}
+          title={`İstehsal ölkəsi: ${verifiedManufacturingCountry(product)}`}
+          aria-label={`İstehsal ölkəsi: ${verifiedManufacturingCountry(product)}`}
+        >
+          {manufacturingCountryFlag(verifiedManufacturingCountry(product))}
+        </span>
+      )}
+
+      {getVisibleBadgeText(product) && (
+        <span
+          className="featured-product-badge"
+          style={{ backgroundColor: getProductBadgeColor(product.badgeColor) }}
+        >
+          {getVisibleBadgeText(product)}
+        </span>
+      )}
+
       {/* Top Right: Favorite & Compare Action Buttons */}
       <div
+        className="product-card-top-actions"
         style={{
           position: 'absolute',
           top: '10px',
@@ -158,9 +171,9 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
           display: 'flex',
           alignItems: 'center',
           gap: '6px',
-          opacity: isHovered || isFavorite || isComparing ? 1 : 0,
-          pointerEvents: isHovered || isFavorite || isComparing ? 'auto' : 'none',
-          transform: isHovered || isFavorite || isComparing ? 'scale(1)' : 'scale(0.85)',
+          opacity: isActive || isFavorite || isComparing ? 1 : 0,
+          pointerEvents: isActive || isFavorite || isComparing ? 'auto' : 'none',
+          transform: isActive || isFavorite || isComparing ? 'scale(1)' : 'scale(0.85)',
           transition: 'opacity 0.2s ease, transform 0.2s ease',
         }}
       >
@@ -168,6 +181,7 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
         {onToggleCompare && (
           <button
             type="button"
+            className={isComparing ? 'sahara-soft-blue-action' : undefined}
             onClick={handleCompareClick}
             style={{
               width: '32px',
@@ -187,13 +201,14 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
             aria-label={isComparing ? 'Müqayisədən çıxar' : 'Müqayisə et'}
             title={isComparing ? 'Müqayisədən çıxar' : 'Müqayisə et'}
           >
-            <Scale size={15} color={isComparing ? '#ffffff' : '#64748b'} />
+            <Scale size={15} color={isComparing ? 'currentColor' : '#64748b'} />
           </button>
         )}
 
         {/* Heart/Favorite Button */}
         <button
           type="button"
+          className={isFavorite ? 'sahara-soft-red-action' : undefined}
           onClick={handleFavoriteClick}
           style={{
             width: '32px',
@@ -213,7 +228,11 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
           aria-label={isFavorite ? 'Sevimlilərdən çıxar' : 'Sevimlilərə əlavə et'}
           title={isFavorite ? 'Sevimlilərdən çıxar' : 'Sevimlilərə əlavə et'}
         >
-          <Heart size={16} fill={isFavorite ? '#ffffff' : 'none'} color={isFavorite ? '#ffffff' : '#64748b'} />
+          <Heart
+            size={16}
+            fill={isFavorite ? 'currentColor' : 'none'}
+            color={isFavorite ? 'currentColor' : '#64748b'}
+          />
         </button>
       </div>
 
@@ -224,20 +243,17 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
           position: 'absolute',
           bottom: '42px',
           left: '50%',
-          transform: `translateX(-50%) ${isHovered ? 'translateY(0)' : 'translateY(8px)'}`,
+          transform: `translateX(-50%) ${isActive ? 'translateY(0)' : 'translateY(8px)'}`,
           zIndex: 6,
-          opacity: isHovered ? 1 : 0,
-          pointerEvents: isHovered ? 'auto' : 'none',
+          opacity: isActive ? 1 : 0,
+          pointerEvents: isActive ? 'auto' : 'none',
           display: 'flex',
           alignItems: 'center',
-          gap: '6px',
-          padding: '4px 8px',
-          borderRadius: '24px',
-          backgroundColor: 'rgba(255, 255, 255, 0.94)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          border: '1px solid rgba(226, 232, 240, 0.85)',
-          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.12)',
+          gap: '8px',
+          padding: 0,
+          border: 'none',
+          backgroundColor: 'transparent',
+          boxShadow: 'none',
           transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
       >
@@ -250,20 +266,20 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
             width: '32px',
             height: '32px',
             borderRadius: '50%',
-            backgroundColor: '#25D366',
-            color: '#ffffff',
+            backgroundColor: 'rgba(34, 197, 94, 0.12)',
+            color: '#16a34a',
             border: 'none',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 2px 6px rgba(37, 211, 102, 0.3)',
-            transition: 'transform 0.15s ease',
+            boxShadow: 'none',
+            transition: 'transform 0.15s ease, background-color 0.15s ease',
           }}
           title="WhatsApp ilə soruş"
           aria-label="WhatsApp"
         >
-          <WhatsAppIcon size={16} color="#ffffff" />
+          <WhatsAppIcon size={16} color="#16a34a" />
         </button>
 
         {/* Call Icon */}
@@ -275,20 +291,20 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
             width: '32px',
             height: '32px',
             borderRadius: '50%',
-            backgroundColor: '#0284c7',
-            color: '#ffffff',
+            backgroundColor: 'rgba(220, 38, 38, 0.10)',
+            color: '#dc2626',
             border: 'none',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 2px 6px rgba(2, 132, 199, 0.3)',
-            transition: 'transform 0.15s ease',
+            boxShadow: 'none',
+            transition: 'transform 0.15s ease, background-color 0.15s ease',
           }}
           title="Zəng et"
           aria-label="Zəng et"
         >
-          <Phone size={14} color="#ffffff" />
+          <Phone size={14} color="#dc2626" />
         </button>
 
         {/* Add to Cart Icon */}
@@ -300,20 +316,20 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
             width: '32px',
             height: '32px',
             borderRadius: '50%',
-            backgroundColor: '#dc2626',
-            color: '#ffffff',
+            backgroundColor: 'rgba(220, 38, 38, 0.10)',
+            color: '#dc2626',
             border: 'none',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 2px 6px rgba(220, 38, 38, 0.35)',
-            transition: 'transform 0.15s ease',
+            boxShadow: 'none',
+            transition: 'transform 0.15s ease, background-color 0.15s ease',
           }}
           aria-label="Səbətə əlavə et"
           title="Səbətə əlavə et"
         >
-          <ShoppingCart size={15} color="#ffffff" />
+          <ShoppingCart size={15} color="#dc2626" />
         </button>
 
         {/* Details / Ətraflı Button */}
@@ -449,4 +465,3 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
     </div>
   );
 };
-

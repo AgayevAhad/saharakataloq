@@ -352,4 +352,61 @@ describe('SmartSearchOverlay & Multi-Brand Search Tests', () => {
       expect(onClose).toHaveBeenCalledTimes(2);
     }
   });
+
+  it('renders CategoryGlyph icons in front of category names and renders more button in the same row', () => {
+    // 10 categories to trigger more button
+    const tenCategories: CatalogCategory[] = [
+      ...mockCategories,
+      { id: 'refrigerator', name: 'Soyuducular', slug: 'soyuducular', active: true },
+      { id: 'dishwasher', name: 'Qabyuyanlar', slug: 'qabyuyanlar', active: true },
+      { id: 'washingmachine', name: 'Paltaryuyanlar', slug: 'paltaryuyanlar', active: true },
+      { id: 'microwave', name: 'Mikrodalğalı sobalar', slug: 'mikrodalgali-sobalar', active: true },
+      { id: 'vacuum', name: 'Tozsoranlar', slug: 'tozsoranlar', active: true },
+      { id: 'ac', name: 'Kondisionerlər', slug: 'kondisionerler', active: true },
+    ];
+    const matchingProducts: Product[] = tenCategories.map((c, i) => ({
+      id: `p-${i}`,
+      code: `CODE-${i}`,
+      title: `${c.name} Model ${i}`,
+      brandId: 'ardo',
+      category: c.id,
+      categoryName: c.name,
+      image: '',
+      shortDesc: '',
+      specs: [],
+      highlights: [],
+      status: 'published',
+    }));
+
+    const { container } = render(
+      <SmartSearchOverlay
+        visible={true}
+        searchQuery=""
+        onSearchChange={vi.fn()}
+        onClose={vi.fn()}
+        products={matchingProducts}
+        categories={tenCategories}
+        brands={mockBrands}
+        theme={lightTheme}
+        isDarkMode={false}
+        onSelectCategory={vi.fn()}
+        onSelectBrand={vi.fn()}
+      />
+    );
+
+    // Verify category pills have CategoryGlyph icons
+    const categoryPills = container.querySelectorAll('.smart-search-category-pill');
+    expect(categoryPills.length).toBeGreaterThan(0);
+    categoryPills.forEach((pill) => {
+      const glyph = pill.querySelector('.category-glyph');
+      expect(glyph).toBeTruthy();
+    });
+
+    // Verify more button is inside .smart-search-categories-row alongside the category pills
+    const categoriesRow = container.querySelector('.smart-search-categories-row');
+    const moreBtn = container.querySelector('.smart-search-categories-more');
+    expect(categoriesRow).toBeTruthy();
+    expect(moreBtn).toBeTruthy();
+    expect(moreBtn?.parentElement).toBe(categoriesRow);
+  });
 });

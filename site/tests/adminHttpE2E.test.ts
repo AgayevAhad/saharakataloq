@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { resolve, join } from 'node:path';
 import http from 'node:http';
 import { createConsistentDatabaseSnapshot } from '../backend/catalogDatabase.mjs';
+import { DatabaseSync } from 'node:sqlite';
 
 function sendHttpRequest(
   options: http.RequestOptions,
@@ -172,9 +173,14 @@ describe('Real Admin HTTP E2E Integration Suite', () => {
       expect(adminDataRes.json).toBeDefined();
       expect(adminDataRes.json.csrfToken).toBeDefined();
 
-      // Verify exact complete product inventory is available to admin
+      // Verify admin sees every record from the current (not an old 646-row) snapshot.
       const adminProducts = adminDataRes.json.products;
-      expect(adminProducts.length).toBe(350);
+      const snapshot = new DatabaseSync(tempDbPath, { readOnly: true });
+      const expectedProductCount = (
+        snapshot.prepare('SELECT COUNT(*) AS count FROM products').get() as { count: number }
+      ).count;
+      snapshot.close();
+      expect(adminProducts.length).toBe(expectedProductCount);
 
       const adminLotusProducts = adminProducts.filter((p: any) => p.brandId === 'lotus');
       expect(adminLotusProducts.length).toBe(220);

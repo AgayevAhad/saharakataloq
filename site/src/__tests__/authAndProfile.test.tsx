@@ -2,21 +2,8 @@ import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
 import { render, screen, fireEvent, cleanup, waitFor } from '@testing-library/react';
 import { UserAccountDrawer } from '../components/site/UserAccountDrawer';
-import { ThemeColors } from '../types/theme';
+import { lightTheme } from '../types/theme';
 import { AuthUser } from '../types/auth';
-
-const lightTheme: ThemeColors = {
-  primary: '#dc2626',
-  primaryHover: '#b91c1c',
-  bg: '#ffffff',
-  bgSecondary: '#f8fafc',
-  cardBg: '#ffffff',
-  text: '#0f172a',
-  textSecondary: '#475569',
-  textMuted: '#94a3b8',
-  border: '#e2e8f0',
-  mode: 'light',
-};
 
 describe('User Authentication & Profile (Item 21) Tests', () => {
   beforeEach(() => {
@@ -52,11 +39,9 @@ describe('User Authentication & Profile (Item 21) Tests', () => {
     expect(screen.getAllByText('Qeydiyyat').length).toBeGreaterThan(0);
     expect(screen.getByPlaceholderText(/50 123 45 67 və ya email/i)).toBeDefined();
 
-
     const idInput = screen.getByPlaceholderText(/50 123 45 67 və ya email/i);
     const passInput = screen.getByPlaceholderText(/Şifrəniz/i);
     const submitBtn = screen.getAllByRole('button', { name: /Daxil ol/i })[1];
-
 
     fireEvent.change(idInput, { target: { value: '501234567' } });
     fireEvent.change(passInput, { target: { value: '123456' } });
@@ -94,7 +79,6 @@ describe('User Authentication & Profile (Item 21) Tests', () => {
     const regTab = screen.getAllByRole('button', { name: /Qeydiyyat/i })[0];
     fireEvent.click(regTab);
 
-
     expect(screen.getByPlaceholderText(/Məs: Əli Əliyev/i)).toBeDefined();
     expect(screen.getByPlaceholderText(/Şifrə təyin edin/i)).toBeDefined();
 
@@ -106,8 +90,10 @@ describe('User Authentication & Profile (Item 21) Tests', () => {
 
     fireEvent.change(nameInput, { target: { value: 'Rəşad Əliyev' } });
     fireEvent.change(phoneInput, { target: { value: '559876543' } });
-    fireEvent.change(passInput, { target: { value: 'sahara2026' } });
-    fireEvent.change(confirmPassInput, { target: { value: 'sahara2026' } });
+    fireEvent.click(screen.getByTestId('sahara-date-picker-trigger'));
+    fireEvent.click(screen.getByRole('button', { name: '15' }));
+    fireEvent.change(passInput, { target: { value: 'Sahara2026' } });
+    fireEvent.change(confirmPassInput, { target: { value: 'Sahara2026' } });
     fireEvent.click(submitRegBtn);
 
     await waitFor(() => {
@@ -115,7 +101,8 @@ describe('User Authentication & Profile (Item 21) Tests', () => {
         fullName: 'Rəşad Əliyev',
         phone: '559876543',
         email: undefined,
-        password: 'sahara2026',
+        birthDate: '1995-01-15',
+        password: 'Sahara2026',
         termsAccepted: true,
       });
     });

@@ -1,9 +1,19 @@
 import React, { useState, useMemo } from 'react';
-import { ArrowUp, ArrowRight, Instagram, Facebook, Youtube, MapPin, Phone, Mail, ExternalLink } from 'lucide-react';
+import {
+  ArrowUp,
+  ArrowRight,
+  Instagram,
+  Facebook,
+  MapPin,
+  Phone,
+  Mail,
+  ExternalLink,
+} from 'lucide-react';
 import { CatalogCategory, CatalogSettings } from '../types/product';
 import { ThemeColors } from '../types/theme';
 import { WhatsAppIcon } from './WhatsAppIcon';
 import { phoneHref, whatsappHref } from '../utils/contact';
+import { ShimmerImage } from './ShimmerImage';
 
 interface FooterProps {
   settings: CatalogSettings;
@@ -23,7 +33,6 @@ export const Footer: React.FC<FooterProps> = ({
   const [emailInput, setEmailInput] = useState('');
   const [isSubscribed, setIsSubscribed] = useState(false);
 
-  const address = settings?.address || '';
   const workingHours = settings?.workingHours || '';
   const locationNote = settings?.locationNote || '';
 
@@ -113,12 +122,21 @@ export const Footer: React.FC<FooterProps> = ({
           }}
         >
           {/* Column 1: Brand & Slogan */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div
+            className="footer-column footer-brand-column"
+            style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}
+          >
             <div style={{ display: 'flex', alignItems: 'center' }}>
-              <img
+              <ShimmerImage
                 src={theme.mode === 'dark' ? '/media/SaharaLogo-dark.png' : '/media/SaharaLogo.png'}
                 alt="Sahara Electronics"
-                style={{ height: '42px', width: 'auto', objectFit: 'contain' }}
+                containerStyle={{ height: '42px', width: '150px' }}
+                style={{
+                  height: '42px',
+                  width: '100%',
+                  objectFit: 'contain',
+                  objectPosition: 'left center',
+                }}
               />
             </div>
             <p
@@ -137,7 +155,10 @@ export const Footer: React.FC<FooterProps> = ({
           </div>
 
           {/* Column 2: Şirkət */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div
+            className="footer-column"
+            style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}
+          >
             <h4
               style={{
                 fontSize: '14px',
@@ -178,7 +199,10 @@ export const Footer: React.FC<FooterProps> = ({
           </div>
 
           {/* Column 3: Müştəri üçün */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div
+            className="footer-column"
+            style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}
+          >
             <h4
               style={{
                 fontSize: '14px',
@@ -191,10 +215,10 @@ export const Footer: React.FC<FooterProps> = ({
               Müştəri üçün
             </h4>
             {[
-              { label: 'Çatdırılma', route: 'services' },
-              { label: 'Zəmanət', route: 'services' },
-              { label: 'Qaytarma', route: 'support' },
-              { label: 'Tez-tez verilən suallar', route: 'support' },
+              { label: 'Çatdırılma', route: 'delivery' },
+              { label: 'Zəmanət', route: 'warranty' },
+              { label: 'Qaytarma', route: 'returns' },
+              { label: 'Tez-tez verilən suallar', route: 'faq' },
             ].map((link, idx) => (
               <button
                 key={idx}
@@ -219,7 +243,10 @@ export const Footer: React.FC<FooterProps> = ({
           </div>
 
           {/* Column 4: Kömək */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+          <div
+            className="footer-column"
+            style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}
+          >
             <h4
               style={{
                 fontSize: '14px',
@@ -258,7 +285,10 @@ export const Footer: React.FC<FooterProps> = ({
           </div>
 
           {/* Column 5: Yeniliklərdən xəbərdar olun */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div
+            className="footer-column footer-subscribe-column"
+            style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
+          >
             <h4
               style={{
                 fontSize: '14px',
@@ -300,6 +330,7 @@ export const Footer: React.FC<FooterProps> = ({
               />
               <button
                 type="submit"
+                className="sahara-soft-red-action"
                 style={{
                   width: '40px',
                   height: '40px',
@@ -329,7 +360,12 @@ export const Footer: React.FC<FooterProps> = ({
         </div>
 
         {/* Showroom Addresses & Contact Row when configured */}
-        {(addressList.length > 0 || phoneList.length > 0 || waHref || settings?.instagramUsername || settings?.facebookUsername || settings?.email) && (
+        {(addressList.length > 0 ||
+          phoneList.length > 0 ||
+          waHref ||
+          settings?.instagramUsername ||
+          settings?.facebookUsername ||
+          settings?.email) && (
           <div
             className="footer-showrooms-contact-row"
             style={{
@@ -344,7 +380,7 @@ export const Footer: React.FC<FooterProps> = ({
           >
             {/* Showrooms & Addresses */}
             {addressList.length > 0 && (
-              <div style={{ flex: '1 1 300px' }}>
+              <div className="footer-addresses" style={{ flex: '1 1 300px' }}>
                 <h4
                   style={{
                     fontSize: '13px',
@@ -357,13 +393,20 @@ export const Footer: React.FC<FooterProps> = ({
                   }}
                 >
                   <MapPin size={15} color="#e31e24" />
-                  <span>{addressList.length > 1 ? 'Mağaza və Filiallarımız' : 'Ünvan və Lokasiya'}</span>
+                  <span>
+                    {addressList.length > 1 ? 'Mağaza və Filiallarımız' : 'Ünvan və Lokasiya'}
+                  </span>
                 </h4>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                   {addressList.length > 1 ? (
                     addressList.map((addr, idx) => (
-                      <div key={idx} style={{ fontSize: '12.5px', color: theme.textMuted || '#64748b' }}>
-                        <span style={{ fontWeight: 700, color: theme.text }}>{addr.title || `Filial ${idx + 1}`}</span>
+                      <div
+                        key={idx}
+                        style={{ fontSize: '12.5px', color: theme.textMuted || '#64748b' }}
+                      >
+                        <span style={{ fontWeight: 700, color: theme.text }}>
+                          {addr.title || `Filial ${idx + 1}`}
+                        </span>
                         <span>: </span>
                         <span>{addr.address}</span>
                         {addr.mapUrl && (
@@ -372,7 +415,12 @@ export const Footer: React.FC<FooterProps> = ({
                             title="Xəritədə açmaq üçün toxunun"
                             target="_blank"
                             rel="noopener noreferrer"
-                            style={{ marginLeft: '6px', color: '#e31e24', display: 'inline-flex', alignItems: 'center' }}
+                            style={{
+                              marginLeft: '6px',
+                              color: '#e31e24',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                            }}
                           >
                             <ExternalLink size={11} />
                           </a>
@@ -387,7 +435,12 @@ export const Footer: React.FC<FooterProps> = ({
                         title="Xəritədə açmaq üçün toxunun"
                         target="_blank"
                         rel="noopener noreferrer"
-                        style={{ marginLeft: '6px', color: '#e31e24', display: 'inline-flex', alignItems: 'center' }}
+                        style={{
+                          marginLeft: '6px',
+                          color: '#e31e24',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                        }}
                       >
                         <ExternalLink size={11} />
                       </a>
@@ -398,12 +451,58 @@ export const Footer: React.FC<FooterProps> = ({
             )}
 
             {/* Direct Contacts, Socials & WhatsApp */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+            <div
+              className="footer-direct-contacts"
+              style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}
+            >
+              {(settings?.email || !phoneList.length) && (
+                <a
+                  href={`mailto:${settings?.email || 'info@saharaelectronics.az'}`}
+                  data-contact-kind="email"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '12.5px',
+                    fontWeight: 700,
+                    color: theme.text,
+                    textDecoration: 'none',
+                  }}
+                >
+                  <Mail size={14} color="#e31e24" />
+                  <span>{settings?.email || 'info@saharaelectronics.az'}</span>
+                </a>
+              )}
+
+              {phoneList.map((ph, idx) => (
+                <a
+                  key={idx}
+                  href={phoneHref(ph)}
+                  data-contact-kind="phone"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '6px',
+                    fontSize: '12.5px',
+                    fontWeight: 700,
+                    color: theme.text,
+                    textDecoration: 'none',
+                  }}
+                >
+                  <Phone size={14} color="#e31e24" />
+                  <span>{ph}</span>
+                </a>
+              ))}
+
               {settings?.instagramUsername && (
                 <a
-                  href={settings.instagramUrl || `https://instagram.com/${settings.instagramUsername.replace('@', '')}`}
+                  href={
+                    settings.instagramUrl ||
+                    `https://instagram.com/${settings.instagramUsername.replace('@', '')}`
+                  }
                   target="_blank"
                   rel="noopener noreferrer"
+                  data-contact-kind="instagram"
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -424,6 +523,7 @@ export const Footer: React.FC<FooterProps> = ({
                   href={settings.facebookUrl || 'https://facebook.com'}
                   target="_blank"
                   rel="noopener noreferrer"
+                  data-contact-kind="facebook"
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -444,6 +544,7 @@ export const Footer: React.FC<FooterProps> = ({
                   href={waHref}
                   target="_blank"
                   rel="noopener noreferrer"
+                  data-contact-kind="whatsapp"
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -458,49 +559,13 @@ export const Footer: React.FC<FooterProps> = ({
                   <span>{settings.whatsappNumber}</span>
                 </a>
               )}
-
-              {(settings?.email || !phoneList.length) && (
-                <a
-                  href={`mailto:${settings?.email || 'info@saharaelectronics.az'}`}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    fontSize: '12.5px',
-                    fontWeight: 700,
-                    color: theme.text,
-                    textDecoration: 'none',
-                  }}
-                >
-                  <Mail size={14} color="#e31e24" />
-                  <span>{settings?.email || 'info@saharaelectronics.az'}</span>
-                </a>
-              )}
-
-              {phoneList.map((ph, idx) => (
-                <a
-                  key={idx}
-                  href={phoneHref(ph)}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    fontSize: '12.5px',
-                    fontWeight: 700,
-                    color: theme.text,
-                    textDecoration: 'none',
-                  }}
-                >
-                  <Phone size={14} color="#e31e24" />
-                  <span>{ph}</span>
-                </a>
-              ))}
             </div>
           </div>
         )}
 
         {/* Sub-Footer Row */}
         <div
+          className="footer-subfooter"
           style={{
             borderTop: `1px solid ${theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : '#f1f5f9'}`,
             paddingTop: '20px',

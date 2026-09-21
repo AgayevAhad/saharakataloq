@@ -22,7 +22,11 @@ const mockProducts: Product[] = [
     price: 1200,
     oldPrice: 1400,
     image: '/media/ardo-fridge.jpg',
-    specs: { 'Tutumu': '450L', 'Kompressor': 'Inverter' },
+    shortDesc: 'Soyuducu',
+    specs: [
+      { id: 'capacity', name: 'Tutumu', value: '450L' },
+      { id: 'compressor', name: 'Kompressor', value: 'Inverter' },
+    ],
     highlights: ['A+++ Enerji', 'No Frost'],
   },
   {
@@ -35,14 +39,18 @@ const mockProducts: Product[] = [
     status: 'published',
     price: 850,
     image: '/media/lotus-washer.jpg',
-    specs: { 'Yükləmə': '8 kq', 'Dövr': '1400 rpm' },
+    shortDesc: 'Paltaryuyan',
+    specs: [
+      { id: 'load', name: 'Yükləmə', value: '8 kq' },
+      { id: 'spin', name: 'Dövr', value: '1400 rpm' },
+    ],
     highlights: ['Buxar rejimi', 'Sakit mühərrik'],
   },
 ];
 
 const mockCategories: CatalogCategory[] = [
-  { id: 'refrigerator', name: 'Soyuducular', slug: 'refrigerator', count: 1 },
-  { id: 'washer', name: 'Paltaryuyanlar', slug: 'washer', count: 1 },
+  { id: 'refrigerator', name: 'Soyuducular', slug: 'refrigerator', active: true },
+  { id: 'washer', name: 'Paltaryuyanlar', slug: 'washer', active: true },
 ];
 
 describe('Item 15 — BannerHero Video & Slides with Red Progress Fill Bar', () => {
@@ -56,12 +64,13 @@ describe('Item 15 — BannerHero Video & Slides with Red Progress Fill Bar', () 
         theme={lightTheme}
         heroTitle="Sahara Premium Elektronika"
         heroSubtitle="Bütün məhsullar üçün rəsmi zəmanət"
+        onOpenArticle={vi.fn()}
       />
     );
 
     // Initial video slide is active
     expect(screen.getByText('Texnologiya')).toBeDefined();
-    
+
     // Pagination buttons 01, 02, 03 exist
     const paginationButtons = container.querySelectorAll('.hero-pagination-btn');
     expect(paginationButtons.length).toBe(3);
@@ -79,11 +88,7 @@ describe('Item 15 — BannerHero Video & Slides with Red Progress Fill Bar', () 
   });
 
   it('progress bar advances over time', () => {
-    const { container } = render(
-      <BannerHero
-        theme={lightTheme}
-      />
-    );
+    const { container } = render(<BannerHero theme={lightTheme} onOpenArticle={vi.fn()} />);
 
     act(() => {
       vi.advanceTimersByTime(2000);
@@ -142,14 +147,12 @@ describe('Item 16 — CartPage Experience & Functionality', () => {
     fireEvent.click(deleteButtons[0]);
     expect(removeItem).toHaveBeenCalledWith('prod-1');
 
-    // Promo code input
-    const promoInput = screen.getByPlaceholderText(/məs: SAHARA10/i);
-    fireEvent.change(promoInput, { target: { value: 'SAHARA10' } });
-    fireEvent.click(screen.getByText('Tətbiq et'));
-    expect(screen.getByText(/10% endirim tətbiq edildi/i)).toBeDefined();
+    // No fabricated campaign or delivery claim is shown.
+    expect(screen.queryByText(/SAHARA10/i)).toBeNull();
+    expect(screen.queryByText(/pulsuz çatdırılma/i)).toBeNull();
 
     // WhatsApp Checkout button
-    const waOrderBtn = screen.getByText(/WhatsApp ilə Sifariş et/i);
+    const waOrderBtn = screen.getByTestId('cart-whatsapp-checkout');
     fireEvent.click(waOrderBtn);
     expect(checkout).toHaveBeenCalled();
   });
@@ -187,7 +190,7 @@ describe('Item 16 — FavoritesPage Experience & Functionality', () => {
     const addAllToCart = vi.fn();
     const navigate = vi.fn();
 
-    render(
+    const { container } = render(
       <FavoritesPage
         favoriteIds={['prod-1', 'prod-2']}
         allProducts={mockProducts}
@@ -212,6 +215,13 @@ describe('Item 16 — FavoritesPage Experience & Functionality', () => {
 
     // Category filter pills
     expect(screen.getByText('Hamısı (2)')).toBeDefined();
+
+    // A single favorite card must use the same working quick-cart handler.
+    const firstCardCartButton = container.querySelector(
+      '.card-action-btn-cart'
+    ) as HTMLButtonElement;
+    fireEvent.click(firstCardCartButton);
+    expect(addToCart).toHaveBeenCalledWith(mockProducts[0]);
 
     // Bulk Add all to cart button
     const addAllBtn = screen.getByText('Hamısını Səbətə At');
@@ -278,6 +288,8 @@ describe('Item 16 & 17 — ProductCard Quick Hover Buttons and Header Badges', (
         onOpenSearchModal={vi.fn()}
         cartCount={3}
         favoritesCount={2}
+        comparisonCount={0}
+        onOpenSaharaMatch={vi.fn()}
       />
     );
 
@@ -287,7 +299,7 @@ describe('Item 16 & 17 — ProductCard Quick Hover Buttons and Header Badges', (
     expect(navigate).toHaveBeenCalledWith('cart');
 
     // MobileBottomNav test
-    const { getByRole } = render(
+    render(
       <MobileBottomNav
         currentRoute="home"
         onNavigate={navigate}
@@ -304,7 +316,7 @@ describe('Item 16 & 17 — ProductCard Quick Hover Buttons and Header Badges', (
 
   it('renders CartPage and FavoritesPage directly without 404 when navigating via URL or history', async () => {
     const { App } = await import('../App');
-    
+
     // Test Cart route
     window.history.pushState({}, '', '/cart');
     const { container: cartContainer, unmount: unmountCart } = render(<App />);

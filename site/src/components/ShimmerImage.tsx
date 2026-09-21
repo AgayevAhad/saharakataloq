@@ -34,8 +34,10 @@ export const ShimmerImage = React.forwardRef<HTMLImageElement, ShimmerImageProps
     },
     ref
   ) => {
-    const [isLoaded, setIsLoaded] = useState(false);
-    const [hasError, setHasError] = useState(false);
+    const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
+    const [failedSrc, setFailedSrc] = useState<string | null>(null);
+    const isLoaded = loadedSrc === src;
+    const hasError = failedSrc === src;
     const internalImgRef = useRef<HTMLImageElement | null>(null);
 
     const setRefs = (node: HTMLImageElement | null) => {
@@ -48,26 +50,23 @@ export const ShimmerImage = React.forwardRef<HTMLImageElement, ShimmerImageProps
     };
 
     useEffect(() => {
-      setIsLoaded(false);
-      setHasError(false);
-
       // If image is already cached and loaded by the browser
       if (
         internalImgRef.current &&
         internalImgRef.current.complete &&
         internalImgRef.current.naturalWidth > 0
       ) {
-        setIsLoaded(true);
+        setLoadedSrc(src);
       }
     }, [src]);
 
     const handleLoad = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-      setIsLoaded(true);
+      setLoadedSrc(src);
       if (onLoad) onLoad(e);
     };
 
     const handleError = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-      setHasError(true);
+      setFailedSrc(src);
       if (onError) onError(e);
     };
 
@@ -108,9 +107,9 @@ export const ShimmerImage = React.forwardRef<HTMLImageElement, ShimmerImageProps
             height: '100%',
             objectFit,
             objectPosition,
-            opacity: isLoaded ? 1 : 0,
             transition: 'opacity 0.28s cubic-bezier(0.16, 1, 0.3, 1), transform 0.35s ease',
             ...style,
+            opacity: style?.opacity ?? (isLoaded ? 1 : 0),
           }}
           {...rest}
         />

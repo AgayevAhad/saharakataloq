@@ -50,7 +50,7 @@ export class BrandRailService {
       enabled: Boolean(row.enabled),
       title: row.title || 'Brendlər',
       animationEnabled: Boolean(row.animation_enabled),
-      speedSeconds: Number(row.speed_seconds) || 30,
+      speedSeconds: Number(row.speed_seconds) || 52,
       direction: row.direction || 'left',
       pauseOnHover: Boolean(row.pause_on_hover),
       edgeFade: Boolean(row.edge_fade),
@@ -89,7 +89,7 @@ export class BrandRailService {
     const enabled = data.enabled !== undefined ? (data.enabled ? 1 : 0) : (current.enabled ? 1 : 0);
     const title = (data.title !== undefined ? String(data.title).trim() : current.title) || 'Brendlər';
     const animationEnabled = data.animationEnabled !== undefined ? (data.animationEnabled ? 1 : 0) : (current.animationEnabled ? 1 : 0);
-    const speedSeconds = Number(data.speedSeconds) || current.speedSeconds || 30;
+    const speedSeconds = Math.max(20, Math.min(120, Number(data.speedSeconds) || current.speedSeconds || 52));
     const direction = data.direction === 'right' ? 'right' : 'left';
     const pauseOnHover = data.pauseOnHover !== undefined ? (data.pauseOnHover ? 1 : 0) : (current.pauseOnHover ? 1 : 0);
     const edgeFade = data.edgeFade !== undefined ? (data.edgeFade ? 1 : 0) : (current.edgeFade ? 1 : 0);
@@ -166,6 +166,15 @@ export class BrandRailService {
       }
     }
 
+    const brandColumns = this.db.prepare("PRAGMA table_info('brands')").all();
+    const hasComingSoon = brandColumns.some((column) => column.name === 'coming_soon');
+    const publicWhere = includeDisabled
+      ? ''
+      : `WHERE bri.enabled = 1
+          AND b.active = 1
+          ${hasComingSoon ? 'AND COALESCE(b.coming_soon, 0) = 0' : ''}
+          AND ${productCountSubquery} > 0`;
+
     const query = `
       SELECT 
         bri.id,
@@ -182,7 +191,7 @@ export class BrandRailService {
         ${productCountSubquery} AS published_product_count
       FROM brand_rail_items bri
       JOIN brands b ON bri.brand_id = b.id
-      ${includeDisabled ? '' : 'WHERE bri.enabled = 1 AND b.active = 1'}
+      ${publicWhere}
       ORDER BY bri.sort_order ASC
     `;
 

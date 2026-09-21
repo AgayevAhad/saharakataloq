@@ -110,12 +110,23 @@ describe('Phase 3: Brand Registry & Verification Service', () => {
     expect(candidate.id).toBeDefined();
     expect(candidate.verificationStatus).toBe('candidate');
 
-    // Public list should strictly contain ONLY published or legacy_unreviewed brands
+    // Candidate brands stay private while existing catalog brands remain visible.
     const publicBrands = service.getPublicBrands();
     const publicSlugs = publicBrands.map((b) => b.slug);
 
     expect(publicSlugs).toContain('ardo');
     expect(publicSlugs).not.toContain('bosch');
+  });
+
+  it('keeps legacy PIM-unverified brands with published products public without exposing candidates', () => {
+    db.prepare(
+      "UPDATE brands SET verification_status = 'unverified' WHERE id = 'brand_ardo'"
+    ).run();
+    const publicBrands = service.getPublicBrands();
+    expect(publicBrands.some((brand) => brand.id === 'brand_ardo')).toBe(true);
+
+    service.addCandidateBrand({ name: 'Candidate', slug: 'candidate' });
+    expect(service.getPublicBrands().some((brand) => brand.slug === 'candidate')).toBe(false);
   });
 
   it('2. Slug and Alias Collisions: Rejects duplicate names, slugs, and aliases', () => {

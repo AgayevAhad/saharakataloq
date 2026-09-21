@@ -1,14 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import {
-  Heart,
-  ShoppingCart,
-  Trash2,
-  ArrowRight,
-  ArrowLeft,
-  Share2,
-  Sparkles,
-  LayoutGrid,
-} from 'lucide-react';
+import { Heart, ShoppingCart, Trash2, ArrowRight, ArrowLeft, LayoutGrid } from 'lucide-react';
 import { Product, CatalogSettings, CatalogCategory } from '../types/product';
 import { ThemeColors } from '../types/theme';
 import { ProductCard } from '../components/ProductCard';
@@ -146,8 +137,8 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
                   style={{
                     fontSize: '13.5px',
                     fontWeight: 800,
-                    backgroundColor: '#e31e24',
-                    color: '#ffffff',
+                    backgroundColor: 'rgba(220, 38, 38, 0.12)',
+                    color: '#dc2626',
                     padding: '4px 12px',
                     borderRadius: '20px',
                   }}
@@ -157,7 +148,8 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
               )}
             </h1>
             <p style={{ fontSize: '13.5px', color: theme.textMuted, margin: '6px 0 0 0' }}>
-              Bəyəndiyiniz bütün modellər burada saxlanılır. İstədiyiniz vaxt səbətə ata və ya WhatsApp ilə göndərə bilərsiniz.
+              Bəyəndiyiniz bütün modellər burada saxlanılır. İstədiyiniz vaxt səbətə ata və ya
+              WhatsApp ilə göndərə bilərsiniz.
             </p>
           </div>
 
@@ -167,8 +159,8 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
                 type="button"
                 onClick={() => onAddAllToCart(favoriteProducts)}
                 style={{
-                  backgroundColor: '#e31e24',
-                  color: '#ffffff',
+                  backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                  color: '#dc2626',
                   border: 'none',
                   borderRadius: '12px',
                   padding: '10px 18px',
@@ -178,7 +170,7 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
                   display: 'inline-flex',
                   alignItems: 'center',
                   gap: '8px',
-                  boxShadow: '0 4px 14px rgba(227, 30, 36, 0.35)',
+                  boxShadow: 'none',
                 }}
               >
                 <ShoppingCart size={15} />
@@ -261,7 +253,9 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
               <Heart size={40} />
             </div>
 
-            <h2 style={{ fontSize: '22px', fontWeight: 800, color: theme.text, margin: '0 0 10px' }}>
+            <h2
+              style={{ fontSize: '22px', fontWeight: 800, color: theme.text, margin: '0 0 10px' }}
+            >
               Bəyəndiyiniz məhsul hələ yoxdur
             </h2>
             <p
@@ -273,15 +267,16 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
                 lineHeight: 1.5,
               }}
             >
-              Məhsul kartlarında olan qəlb ❤️ ikonuna toxunaraq sevdiyiniz modelləri bu siyahıya əlavə edə bilərsiniz.
+              Məhsul kartlarında olan qəlb ❤️ ikonuna toxunaraq sevdiyiniz modelləri bu siyahıya
+              əlavə edə bilərsiniz.
             </p>
 
             <button
               type="button"
               onClick={() => onNavigate('catalog')}
               style={{
-                backgroundColor: '#e31e24',
-                color: '#ffffff',
+                backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                color: '#dc2626',
                 border: 'none',
                 borderRadius: '14px',
                 padding: '14px 32px',
@@ -291,7 +286,7 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
-                boxShadow: '0 6px 20px rgba(227, 30, 36, 0.35)',
+                boxShadow: 'none',
               }}
             >
               <span>Kataloqa keçin</span>
@@ -314,11 +309,17 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
               >
                 <button
                   type="button"
+                  className={selectedCategory === 'all' ? 'sahara-soft-red-action' : undefined}
                   onClick={() => setSelectedCategory('all')}
                   style={{
                     padding: '8px 16px',
                     borderRadius: '20px',
-                    backgroundColor: selectedCategory === 'all' ? '#e31e24' : themeMode === 'dark' ? '#1e293b' : '#ffffff',
+                    backgroundColor:
+                      selectedCategory === 'all'
+                        ? '#e31e24'
+                        : themeMode === 'dark'
+                          ? '#1e293b'
+                          : '#ffffff',
                     color: selectedCategory === 'all' ? '#ffffff' : theme.text,
                     border: `1px solid ${selectedCategory === 'all' ? '#e31e24' : themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`,
                     fontSize: '13px',
@@ -341,11 +342,16 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
                     <button
                       key={c.id}
                       type="button"
+                      className={isSelected ? 'sahara-soft-red-action' : undefined}
                       onClick={() => setSelectedCategory(c.id)}
                       style={{
                         padding: '8px 16px',
                         borderRadius: '20px',
-                        backgroundColor: isSelected ? '#e31e24' : themeMode === 'dark' ? '#1e293b' : '#ffffff',
+                        backgroundColor: isSelected
+                          ? '#e31e24'
+                          : themeMode === 'dark'
+                            ? '#1e293b'
+                            : '#ffffff',
                         color: isSelected ? '#ffffff' : theme.text,
                         border: `1px solid ${isSelected ? '#e31e24' : themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`,
                         fontSize: '13px',
@@ -354,7 +360,9 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
                         whiteSpace: 'nowrap',
                       }}
                     >
-                      <span>{c.name} ({count})</span>
+                      <span>
+                        {c.name} ({count})
+                      </span>
                     </button>
                   );
                 })}
@@ -371,8 +379,9 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
                     onSelect={onSelectProduct}
                     onShare={onShare}
                     onWhatsApp={onWhatsApp}
-                    onCall={onCall}
+                    onCall={() => onCall()}
                     onCopyLink={onCopyLink}
+                    onAddToCart={onAddToCart}
                   />
                   {/* Quick Remove Floating Button */}
                   <button

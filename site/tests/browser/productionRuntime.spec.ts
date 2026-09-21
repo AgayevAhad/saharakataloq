@@ -237,4 +237,40 @@ test.describe('Production Runtime Integrity, CSP, Assets & Zero-Error Suite', ()
     expect(pageErrors).toEqual([]);
     expect(failedRequests).toEqual([]);
   });
+
+  test('4. Live catalog homepage shows eight rows in public brand order without exposing coming-soon products', async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1366, height: 900 });
+    await page.goto('/', { waitUntil: 'domcontentloaded' });
+
+    const grid = page.locator('.featured-products-grid');
+    const cards = grid.locator('.featured-product-card');
+    const columns = Number(await grid.getAttribute('data-column-count'));
+    expect(columns).toBeGreaterThanOrEqual(2);
+    await expect(cards).toHaveCount(columns * 8);
+    await expect(grid).toHaveAttribute('data-visible-rows', '8');
+
+    const firstBrands = await cards
+      .locator('.product-brand-badge')
+      .evaluateAll((badges) => badges.slice(0, 4).map((badge) => badge.getAttribute('aria-label')));
+    expect(firstBrands).toEqual(Array(4).fill('ARDO brendi'));
+
+    await page.getByTestId('featured-load-more').click();
+    await expect(cards).toHaveCount(columns * 16);
+    const liveCatalog = await (await page.request.get('/api/catalog')).json();
+    const initialData = JSON.parse((await page.locator('#__SAHARA_DATA__').textContent()) || '{}');
+    expect(initialData.catalog.brands.length).toBe(liveCatalog.brands.length);
+    expect(initialData.catalog.products.length).toBe(liveCatalog.products.length);
+    expect(liveCatalog.brands.some((brand: { id: string }) => brand.id === 'lg')).toBe(true);
+    await expect(cards.locator('.product-brand-badge')).toHaveCount(columns * 16);
+    const laterBrands = await cards
+      .locator('.product-brand-badge')
+      .evaluateAll((badges) =>
+        badges.slice(25, 29).map((badge) => badge.getAttribute('aria-label'))
+      );
+    expect(laterBrands).toContain('LG brendi');
+    expect(laterBrands).toContain('Bosch brendi');
+    expect(await cards.locator('[aria-label="ARTEL brendi"]').count()).toBe(0);
+  });
 });

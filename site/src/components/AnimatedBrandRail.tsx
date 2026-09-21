@@ -100,56 +100,33 @@ const PARTNER_PRIORITY: string[] = [
   'hoffmann',
 ];
 
-const EXCLUDED_BRAND_SLUGS = new Set([
-  'everest',
-  'ficher',
-  'finlux',
-  'goldmaster',
-  'hailang',
-  'hayland',
-  'konka',
-  'konko',
-  'lanova',
-  'mgi',
-  'neos',
-  'pozis',
-  'regal',
-  'rokos',
-  'skyworth',
-  'tesla',
-  'vegas',
-  'winsor',
-]);
-
 const resolveBrandLogo = (item: BrandRailItem): string => {
   const slug = (item.brandSlug || item.brandId || '').toLowerCase();
-  if (EXCLUDED_BRAND_SLUGS.has(slug)) return '';
   if (LOGO_MAP[slug]) return LOGO_MAP[slug];
   if (item.brandLogo && !item.brandLogo.includes('placeholder')) return item.brandLogo;
   return '';
 };
 
-const buildRhythmicBrandRailTrack = (items: BrandRailItem[]): BrandRailItem[] => {
+export const buildRhythmicBrandRailTrack = (items: BrandRailItem[]): BrandRailItem[] => {
   if (!items || items.length === 0) return [];
-  const heroSlugs = ['ardo', 'lotus', 'artel', 'midea'];
+  const heroSlugs = ['ardo', 'lotus', 'artel'];
 
   const heroMap = new Map<string, BrandRailItem>();
-  const partnerItems: BrandRailItem[] = [];
+  const partnerMap = new Map<string, BrandRailItem>();
 
   for (const item of items) {
     const slug = (item.brandSlug || item.brandId || '').toLowerCase();
-    if (EXCLUDED_BRAND_SLUGS.has(slug)) continue;
+    if (!slug || !item.enabled || !item.hasPublishedProducts || item.publishedProductCount <= 0)
+      continue;
     const resolvedItem = { ...item, brandLogo: resolveBrandLogo(item) };
     if (heroSlugs.includes(slug)) {
-      if (!heroMap.has(slug)) {
-        heroMap.set(slug, resolvedItem);
-      }
-    } else {
-      partnerItems.push(resolvedItem);
+      if (!heroMap.has(slug)) heroMap.set(slug, resolvedItem);
+    } else if (!partnerMap.has(slug)) {
+      partnerMap.set(slug, resolvedItem);
     }
   }
 
-  // Sort partner items to prioritize world-class recognized brands
+  const partnerItems = Array.from(partnerMap.values());
   partnerItems.sort((a, b) => {
     const slugA = (a.brandSlug || a.brandId || '').toLowerCase();
     const slugB = (b.brandSlug || b.brandId || '').toLowerCase();
@@ -157,100 +134,28 @@ const buildRhythmicBrandRailTrack = (items: BrandRailItem[]): BrandRailItem[] =>
     const idxB = PARTNER_PRIORITY.indexOf(slugB);
     const scoreA = idxA === -1 ? 999 : idxA;
     const scoreB = idxB === -1 ? 999 : idxB;
-    return scoreA - scoreB;
+    if (scoreA !== scoreB) return scoreA - scoreB;
+    return a.sortOrder - b.sortOrder;
   });
 
-  // Ensure all 4 heroes are available
-  if (!heroMap.has('ardo')) {
-    heroMap.set('ardo', {
-      id: 'rail_item_ardo',
-      brandId: 'ardo',
-      brandName: 'ARDO',
-      brandSlug: 'ardo',
-      brandLogo: '/media/brands/ardo-logo.png',
-      enabled: true,
-      sortOrder: 1,
-      linkEnabled: true,
-    } as BrandRailItem);
-  }
-  if (!heroMap.has('lotus')) {
-    heroMap.set('lotus', {
-      id: 'rail_item_lotus',
-      brandId: 'lotus',
-      brandName: 'LOTUS',
-      brandSlug: 'lotus',
-      brandLogo: '/media/brands/lotus-logo.png',
-      enabled: true,
-      sortOrder: 2,
-      linkEnabled: true,
-    } as BrandRailItem);
-  }
-  if (!heroMap.has('artel')) {
-    heroMap.set('artel', {
-      id: 'rail_item_artel',
-      brandId: 'artel',
-      brandName: 'ARTEL',
-      brandSlug: 'artel',
-      brandLogo: '/media/brands/artel-logo.svg',
-      enabled: true,
-      sortOrder: 3,
-      linkEnabled: true,
-    } as BrandRailItem);
-  }
-  if (!heroMap.has('midea')) {
-    heroMap.set('midea', {
-      id: 'rail_item_midea',
-      brandId: 'midea',
-      brandName: 'Midea',
-      brandSlug: 'midea',
-      brandLogo: '/media/brands/midea-logo.svg',
-      enabled: true,
-      sortOrder: 4,
-      linkEnabled: true,
-    } as BrandRailItem);
-  }
+  const heroList = heroSlugs.flatMap((slug) => {
+    const item = heroMap.get(slug);
+    return item ? [item] : [];
+  });
 
-  const heroList = heroSlugs.map((s) => heroMap.get(s)!);
+  if (heroList.length === 0) return partnerItems;
+  // Never place ARDO/LOTUS/ARTEL directly beside one another. If no partner
+  // currently has a published product, one verified hero is safer than a fake sequence.
+  if (partnerItems.length === 0) return [heroList[0]];
+
   const result: BrandRailItem[] = [];
-  let heroIdx = 0;
-  let partnerIdx = 0;
-
-  // We want to interleave all 4 hero brands repeatedly throughout the partner brands.
-  // We ensure every hero brand appears at least once, and repeats cyclically every 2 partner brands.
-  const totalPartnerSlots = Math.max(partnerItems.length, heroList.length * 2);
-  let pCursor = 0;
-
-  while (pCursor < totalPartnerSlots || heroIdx < heroList.length) {
-    const hero = heroList[heroIdx % heroList.length];
-    result.push({
-      ...hero,
-      id: `${hero.id || hero.brandId}-rhythm-${result.length}`,
-    });
-    heroIdx++;
-
-    for (let k = 0; k < 2; k++) {
-      if (partnerItems.length > 0) {
-        const partner = partnerItems[pCursor % partnerItems.length];
-        result.push({
-          ...partner,
-          id: `${partner.id || partner.brandId}-track-${result.length}`,
-        });
-        pCursor++;
-      }
-    }
-
-    if (pCursor >= totalPartnerSlots && heroIdx >= heroList.length) {
-      break;
-    }
+  const slotCount = Math.max(partnerItems.length, heroList.length * 2);
+  for (let index = 0; index < slotCount; index += 1) {
+    const hero = heroList[index % heroList.length];
+    const partner = partnerItems[index % partnerItems.length];
+    result.push({ ...hero, id: `${hero.id || hero.brandId}-rhythm-${index}` });
+    result.push({ ...partner, id: `${partner.id || partner.brandId}-partner-${index}` });
   }
-
-  // Final hero cap for smooth infinite marquee loop
-  const lastHero = heroList[heroIdx % heroList.length];
-  result.push({
-    ...lastHero,
-    id: `${lastHero.id || lastHero.brandId}-rhythm-${result.length}`,
-  });
-
   return result;
 };
 
@@ -264,6 +169,7 @@ export const AnimatedBrandRail: React.FC<AnimatedBrandRailProps> = ({
   const [isHovered, setIsHovered] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
   const [isReducedMotion, setIsReducedMotion] = useState(false);
   const dragStartXRef = useRef<number>(0);
   const dragMovedRef = useRef<boolean>(false);
@@ -287,7 +193,7 @@ export const AnimatedBrandRail: React.FC<AnimatedBrandRailProps> = ({
     enabled: true,
     title: 'Brendlər',
     animationEnabled: true,
-    speedSeconds: 32,
+    speedSeconds: 52,
     direction: 'left' as const,
     pauseOnHover: true,
     edgeFade: true,
@@ -297,10 +203,13 @@ export const AnimatedBrandRail: React.FC<AnimatedBrandRailProps> = ({
     version: 1,
   };
 
-  const rawEnabledItems = data.items.filter((item) => item.enabled);
+  const rawEnabledItems = data.items.filter(
+    (item) => item.enabled && item.hasPublishedProducts && item.publishedProductCount > 0
+  );
   if (rawEnabledItems.length === 0) return null;
 
   const enabledItems = buildRhythmicBrandRailTrack(rawEnabledItems);
+  if (enabledItems.length === 0) return null;
 
   const isPaused =
     isPausedOverride ||
@@ -310,7 +219,7 @@ export const AnimatedBrandRail: React.FC<AnimatedBrandRailProps> = ({
     !settings.animationEnabled ||
     isReducedMotion;
 
-  const speedDuration = Math.max(10, Math.min(120, settings.speedSeconds || 32));
+  const speedDuration = Math.max(20, Math.min(120, settings.speedSeconds || 52));
 
   const handleCardClick = (item: BrandRailItem) => {
     if (dragMovedRef.current) return;
@@ -319,23 +228,30 @@ export const AnimatedBrandRail: React.FC<AnimatedBrandRailProps> = ({
     }
   };
 
-  const handleTouchStart = (e: React.TouchEvent) => {
-    dragStartXRef.current = e.touches[0].clientX;
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    dragStartXRef.current = e.clientX;
     dragMovedRef.current = false;
+    e.currentTarget.setPointerCapture?.(e.pointerId);
     setIsDragging(true);
   };
 
-  const handleTouchMove = (e: React.TouchEvent) => {
-    if (Math.abs(e.touches[0].clientX - dragStartXRef.current) > 5) {
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDragging) return;
+    const delta = e.clientX - dragStartXRef.current;
+    if (Math.abs(delta) > 5) {
       dragMovedRef.current = true;
     }
+    setDragOffset(Math.max(-240, Math.min(240, delta)));
   };
 
-  const handleTouchEnd = () => {
+  const handlePointerEnd = (e: React.PointerEvent<HTMLDivElement>) => {
+    e.currentTarget.releasePointerCapture?.(e.pointerId);
+    setIsDragging(false);
+    setDragOffset(0);
     setTimeout(() => {
-      setIsDragging(false);
       dragMovedRef.current = false;
-    }, 120);
+    }, 180);
   };
 
   const renderBrandCard = (item: BrandRailItem, isDuplicate = false) => {
@@ -369,6 +285,7 @@ export const AnimatedBrandRail: React.FC<AnimatedBrandRailProps> = ({
             <ShimmerImage
               src={logoUrl}
               alt={displayName}
+              draggable={false}
               objectFit="contain"
               className={`brand-rail-logo-img brand-logo-${item.brandSlug || item.brandId}`}
               width={90}
@@ -427,35 +344,45 @@ export const AnimatedBrandRail: React.FC<AnimatedBrandRailProps> = ({
           ref={containerRef}
           className={`brand-rail-viewport ${settings.edgeFade ? 'has-edge-fade' : ''} ${
             isReducedMotion ? 'is-reduced-motion' : ''
-          }`}
+          } ${isDragging ? 'is-dragging' : ''}`}
           onMouseEnter={() => setIsHovered(true)}
           onMouseLeave={() => setIsHovered(false)}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          onTouchStart={handleTouchStart}
-          onTouchMove={handleTouchMove}
-          onTouchEnd={handleTouchEnd}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerEnd}
+          onPointerCancel={handlePointerEnd}
+          onDragStart={(event) => event.preventDefault()}
           data-testid="brand-rail-viewport"
         >
           <div
-            className={`brand-rail-track ${settings.direction === 'right' ? 'direction-right' : 'direction-left'}`}
+            className="brand-rail-drag-layer"
             style={{
-              animationDuration: `${speedDuration}s`,
-              animationPlayState: isPaused ? 'paused' : 'running',
+              transform: `translate3d(${dragOffset}px, 0, 0)`,
             }}
-            data-testid="brand-rail-track"
+            data-testid="brand-rail-drag-layer"
           >
-            {/* Primary Track */}
-            <div className="brand-rail-track-group">
-              {enabledItems.map((item) => renderBrandCard(item, false))}
-            </div>
-
-            {/* Seamless Duplicate Track for Infinite Loop (hidden from assistive tech) */}
-            {!isReducedMotion && (
-              <div className="brand-rail-track-group" aria-hidden="true">
-                {enabledItems.map((item) => renderBrandCard(item, true))}
+            <div
+              className={`brand-rail-track ${settings.direction === 'right' ? 'direction-right' : 'direction-left'}`}
+              style={{
+                animationDuration: `${speedDuration}s`,
+                animationPlayState: isPaused ? 'paused' : 'running',
+              }}
+              data-testid="brand-rail-track"
+            >
+              {/* Primary Track */}
+              <div className="brand-rail-track-group">
+                {enabledItems.map((item) => renderBrandCard(item, false))}
               </div>
-            )}
+
+              {/* Seamless Duplicate Track for Infinite Loop (hidden from assistive tech) */}
+              {!isReducedMotion && (
+                <div className="brand-rail-track-group" aria-hidden="true">
+                  {enabledItems.map((item) => renderBrandCard(item, true))}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

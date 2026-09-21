@@ -1,8 +1,7 @@
 import React from 'react';
 import { Brand, Product } from '../types/product';
 import { ThemeColors } from '../types/theme';
-import { ArrowRight, CheckCircle2, Globe, Sparkles } from 'lucide-react';
-import { Button } from '../components/ui/Button';
+import { ArrowRight, Boxes, Globe, Sparkles } from 'lucide-react';
 import { ShimmerImage } from '../components/ShimmerImage';
 
 interface BrandsPageProps {
@@ -44,139 +43,171 @@ export const BrandsPage: React.FC<BrandsPageProps> = ({ brands, products, theme,
           Elektronika və Məişət Texnikası Brendləri
         </h1>
         <p style={{ fontSize: '14px', color: theme.textMuted, margin: 0, lineHeight: 1.5 }}>
-          Sahara Electronics beynəlxalq standartlara cavab verən keyfiyyətli dünya brendlərinin
-          kataloq vitrinini təqdim edir.
+          Aktiv kataloqda dərc edilmiş brendləri, modelləri və mövcud istehsal məlumatlarını
+          nəzərdən keçirin.
         </p>
       </div>
 
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
-        {brands.map((brand) => {
-          const brandProducts = products.filter((p) => p.brandId === brand.id);
-          const publishedCount = brandProducts.filter((p) => p.status === 'published').length;
+      <div
+        className="brands-card-grid"
+        style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 270px), 1fr))',
+          gap: '20px',
+        }}
+      >
+        {brands
+          .filter((brand) => brand.active)
+          .map((brand) => {
+            const brandProducts = products.filter((p) => p.brandId === brand.id);
+            const publishedCount = brandProducts.filter((p) => p.status !== 'draft').length;
 
-          return (
-            <div
-              key={brand.id}
-              style={{
-                backgroundColor: theme.bgCard,
-                border: `1.5px solid ${theme.border}`,
-                borderRadius: '20px',
-                padding: '28px',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                flexWrap: 'wrap',
-                gap: '24px',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.04)',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
-                <div
+            return (
+              <article
+                key={brand.id}
+                className="brand-directory-card scroll-reveal-item"
+                style={{
+                  backgroundColor: theme.bgCard,
+                  border: `1.5px solid ${theme.border}`,
+                  borderRadius: '20px',
+                  padding: '18px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '16px',
+                  boxShadow: '0 8px 24px rgba(0,0,0,0.04)',
+                  minHeight: '330px',
+                }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', flex: 1 }}>
+                  <div
+                    className="brand-card-logo-box"
+                    style={{
+                      width: '100%',
+                      height: '150px',
+                      borderRadius: '16px',
+                      backgroundColor: '#ffffff',
+                      border: `1px solid ${theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.1)' : '#e2e8f0'}`,
+                      padding: '24px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow:
+                        theme.mode === 'dark'
+                          ? '0 4px 16px rgba(0,0,0,0.3)'
+                          : '0 2px 8px rgba(0,0,0,0.03)',
+                    }}
+                  >
+                    {brand.logo ? (
+                      <ShimmerImage
+                        src={brand.logo}
+                        alt={brand.name}
+                        objectFit="contain"
+                        containerStyle={{ width: '100%', height: '100%' }}
+                      />
+                    ) : (
+                      <span className="brand-logo-text-fallback">{brand.name}</span>
+                    )}
+                  </div>
+
+                  <div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        marginBottom: '6px',
+                      }}
+                    >
+                      <h2
+                        style={{ fontSize: '22px', fontWeight: 800, color: theme.text, margin: 0 }}
+                      >
+                        {brand.name}
+                      </h2>
+                      {brand.originCountry && (
+                        <span
+                          style={{
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            padding: '2px 8px',
+                            borderRadius: '6px',
+                            backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                            color: theme.primary,
+                          }}
+                        >
+                          {brand.originCountry} Mənşəli
+                        </span>
+                      )}
+                    </div>
+
+                    <p
+                      style={{
+                        fontSize: '13px',
+                        color: theme.textMuted,
+                        margin: '0 0 10px 0',
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      {brand.description || 'Brend haqqında əlavə təqdimat mətni daxil edilməyib.'}
+                    </p>
+
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '16px',
+                        fontSize: '12px',
+                        color: theme.text,
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <Boxes size={15} style={{ color: '#16a34a' }} />
+                        <span>
+                          {publishedCount > 0
+                            ? `${publishedCount} dərc edilmiş model`
+                            : 'Modellər tezliklə'}
+                        </span>
+                      </div>
+                      {brand.manufacturingCountries && brand.manufacturingCountries.length > 0 && (
+                        <div
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            color: theme.textMuted,
+                          }}
+                        >
+                          <Globe size={14} />
+                          <span>İstehsal: {brand.manufacturingCountries.join(', ')}</span>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => onNavigate('brand', brand.id)}
                   style={{
-                    width: '100px',
-                    height: '100px',
-                    borderRadius: '16px',
-                    backgroundColor: theme.mode === 'dark' ? '#0f172a' : '#f8fafc',
-                    border: `1px solid ${theme.border}`,
-                    padding: '12px',
-                    display: 'flex',
+                    minHeight: '44px',
+                    width: '100%',
+                    border: 0,
+                    borderRadius: '12px',
+                    background: 'rgba(220, 38, 38, 0.10)',
+                    color: '#dc2626',
+                    fontWeight: 800,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    gap: '8px',
+                    transition: 'background-color 0.15s ease, transform 0.15s ease',
                   }}
                 >
-                  <ShimmerImage
-                    src={brand.logo || '/media/placeholder.png'}
-                    alt={brand.name}
-                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                  />
-                </div>
-
-                <div style={{ maxWidth: '480px' }}>
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '10px',
-                      marginBottom: '6px',
-                    }}
-                  >
-                    <h2 style={{ fontSize: '22px', fontWeight: 800, color: theme.text, margin: 0 }}>
-                      {brand.name}
-                    </h2>
-                    {brand.originCountry && (
-                      <span
-                        style={{
-                          fontSize: '12px',
-                          fontWeight: 600,
-                          padding: '2px 8px',
-                          borderRadius: '6px',
-                          backgroundColor: 'rgba(220, 38, 38, 0.1)',
-                          color: theme.primary,
-                        }}
-                      >
-                        {brand.originCountry} Mənşəli
-                      </span>
-                    )}
-                  </div>
-
-                  <p
-                    style={{
-                      fontSize: '13px',
-                      color: theme.textMuted,
-                      margin: '0 0 10px 0',
-                      lineHeight: 1.5,
-                    }}
-                  >
-                    {brand.description ||
-                      `${brand.name} məişət texnikası və elektronika məhsulları.`}
-                  </p>
-
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '16px',
-                      fontSize: '12px',
-                      color: theme.text,
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <CheckCircle2 size={15} style={{ color: '#16a34a' }} />
-                      <span>
-                        {publishedCount > 0
-                          ? `${publishedCount} Təsdiqlənmiş Model`
-                          : 'Modellər tezliklə'}
-                      </span>
-                    </div>
-                    {brand.manufacturingCountries && brand.manufacturingCountries.length > 0 && (
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '4px',
-                          color: theme.textMuted,
-                        }}
-                      >
-                        <Globe size={14} />
-                        <span>İstehsal: {brand.manufacturingCountries.join(', ')}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-
-              <Button
-                variant={brand.comingSoon ? 'outline' : 'primary'}
-                size="md"
-                disabled={brand.comingSoon || publishedCount === 0}
-                onClick={() => onNavigate('catalog', brand.id)}
-                rightIcon={<ArrowRight size={15} />}
-              >
-                {brand.comingSoon ? 'Tezliklə Xidmətinizdə' : `${brand.name} Modellərinə Bax`}
-              </Button>
-            </div>
-          );
-        })}
+                  Brend haqqında <ArrowRight size={15} />
+                </button>
+              </article>
+            );
+          })}
       </div>
     </div>
   );

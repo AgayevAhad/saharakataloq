@@ -1,20 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   Search,
   Moon,
   Sun,
-  Scale,
   Heart,
   Sparkles,
   MapPin,
-  ChevronDown,
-  Layers,
   ShoppingCart,
   User,
   Home,
-  Menu,
   LayoutGrid,
-  Tag,
   ArrowRight,
   ShieldCheck,
   Phone,
@@ -24,41 +19,27 @@ import {
   Percent,
   X,
   Loader2,
-  Flame,
-  Package,
-  Snowflake,
-  RotateCw,
-  Grid,
-  Zap,
-  Wind,
-  Thermometer,
-  ChevronRight,
 } from 'lucide-react';
 import { Brand, CatalogCategory, Product, CatalogSettings } from '../../types/product';
 import { AuthUser } from '../../types/auth';
 import { ThemeColors, DESIGN_TOKENS } from '../../types/theme';
 
-import { TopServiceBar } from './TopServiceBar';
 import { MegaMenu } from './MegaMenu';
 import { MobileCategoryDrawer } from './MobileCategoryDrawer';
-import { UserAccountDrawer } from './UserAccountDrawer';
 import { SmartSearchOverlay } from '../SmartSearchOverlay';
 import { ShimmerImage } from '../ShimmerImage';
-import { featureFlags } from '../../utils/featureFlags';
+import { useMobileSearchHistory } from '../../hooks/useMobileSearchHistory';
 
-const getCategoryIcon = (id: string, slug?: string) => {
-  const key = `${id} ${slug || ''}`.toLowerCase();
-  if (key.includes('refrigerator') || key.includes('soyuducu')) return <Snowflake size={14} style={{ color: '#0ea5e9', flexShrink: 0 }} />;
-  if (key.includes('washer') || key.includes('paltaryuyan')) return <RotateCw size={14} style={{ color: '#e31e24', flexShrink: 0 }} />;
-  if (key.includes('oven') || key.includes('soba')) return <Flame size={14} style={{ color: '#f97316', flexShrink: 0 }} />;
-  if (key.includes('cooktop') || key.includes('bisirme') || key.includes('panel')) return <Grid size={14} style={{ color: '#e31e24', flexShrink: 0 }} />;
-  if (key.includes('hood') || key.includes('aspirator')) return <Wind size={14} style={{ color: '#64748b', flexShrink: 0 }} />;
-  if (key.includes('microwave') || key.includes('mikrodalga')) return <Zap size={14} style={{ color: '#eab308', flexShrink: 0 }} />;
-  if (key.includes('conditioner') || key.includes('iqlim') || key.includes('kondisioner')) return <Thermometer size={14} style={{ color: '#3b82f6', flexShrink: 0 }} />;
-  if (key.includes('vacuum') || key.includes('tozsoran')) return <Wind size={14} style={{ color: '#06b6d4', flexShrink: 0 }} />;
-  if (key.includes('airfryer')) return <Flame size={14} style={{ color: '#f43f5e', flexShrink: 0 }} />;
-  return <Package size={14} style={{ color: '#e31e24', flexShrink: 0 }} />;
-};
+const HEADER_BRAND_LOGOS = [
+  { slug: 'ardo', name: 'ARDO', logo: '/media/brands/ardo-logo.svg' },
+  { slug: 'artel', name: 'ARTEL', logo: '/media/brands/artel-logo.svg' },
+  { slug: 'lotus', name: 'LOTUS', logo: '/media/brands/lotus-logo.svg' },
+  { slug: 'bosch', name: 'Bosch', logo: '/media/brands/bosch-logo.svg' },
+  { slug: 'samsung', name: 'Samsung', logo: '/media/brands/samsung-logo.svg' },
+  { slug: 'lg', name: 'LG', logo: '/media/brands/lg-logo.svg' },
+] as const;
+
+const normalizeBrandKey = (brand: Brand) => (brand.slug || brand.id || brand.name).toLowerCase();
 
 interface SiteHeaderProps {
   currentRoute: string;
@@ -80,36 +61,34 @@ interface SiteHeaderProps {
   onOpenDrawer?: () => void;
   onOpenUserDrawer?: () => void;
   authUser?: AuthUser | null;
+  mobileMenuOpenSignal?: number;
 }
 
 export const SiteHeader: React.FC<SiteHeaderProps> = ({
   currentRoute,
   onNavigate,
-  categories,
-  brands,
-  products,
+  categories = [],
+  brands = [],
+  products = [],
   settings,
   theme,
   themeMode,
   onToggleTheme,
-  searchQuery,
+  searchQuery = '',
   onSearchChange,
-  onOpenSearchModal,
-  comparisonCount,
   favoritesCount,
   cartCount = 0,
-  onOpenSaharaMatch,
   onOpenDrawer,
   onOpenUserDrawer,
   authUser,
+  mobileMenuOpenSignal = 0,
 }) => {
-
   const [isMegaMenuOpen, setIsMegaMenuOpen] = useState(false);
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState(false);
-  const [isUserDrawerOpen, setIsUserDrawerOpen] = useState(false);
-  const [activeCatalogGroup, setActiveCatalogGroup] = useState<'large' | 'built_in' | 'small' | 'climate' | 'all'>('large');
   const [isCompact, setIsCompact] = useState(false);
   const [isSearchExpanded, setIsSearchExpanded] = useState(false);
+  const dismissSearch = useCallback(() => setIsSearchExpanded(false), []);
+  const closeSearch = useMobileSearchHistory(isSearchExpanded, dismissSearch);
   const [hoveredNavTab, setHoveredNavTab] = useState<string | null>(null);
   const hoverNavTimeoutRef = useRef<any>(null);
   const megaMenuBtnRef = useRef<HTMLButtonElement>(null);
@@ -118,24 +97,14 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
   const desktopSearchInputRef = useRef<HTMLInputElement>(null);
   const mobileSearchInputRef = useRef<HTMLInputElement>(null);
   const searchWrapRef = useRef<HTMLDivElement>(null);
-  const [searchBoxBounds, setSearchBoxBounds] = useState<{ left: number; width: number } | null>(null);
+  const [searchBoxBounds, setSearchBoxBounds] = useState<{ left: number; width: number } | null>(
+    null
+  );
   const headerRef = useRef<HTMLElement>(null);
-  const [headerBottom, setHeaderBottom] = useState<number>(96);
 
   useEffect(() => {
-    const updateHeaderPos = () => {
-      if (headerRef.current) {
-        setHeaderBottom(headerRef.current.getBoundingClientRect().bottom);
-      }
-    };
-    updateHeaderPos();
-    window.addEventListener('resize', updateHeaderPos, { passive: true });
-    window.addEventListener('scroll', updateHeaderPos, { passive: true });
-    return () => {
-      window.removeEventListener('resize', updateHeaderPos);
-      window.removeEventListener('scroll', updateHeaderPos);
-    };
-  }, [isCompact, isSearchExpanded, hoveredNavTab]);
+    if (mobileMenuOpenSignal > 0) setIsMobileDrawerOpen(true);
+  }, [mobileMenuOpenSignal]);
 
   // Dynamically measure search input pill bounds relative to catalog container for exact 1:1 alignment
   useEffect(() => {
@@ -157,9 +126,8 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
     };
     updateBounds();
     const timer = setTimeout(updateBounds, 30);
-    const ro = typeof ResizeObserver !== 'undefined'
-      ? new ResizeObserver(() => updateBounds())
-      : null;
+    const ro =
+      typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => updateBounds()) : null;
     if (searchWrapRef.current && ro) {
       ro.observe(searchWrapRef.current);
     }
@@ -180,14 +148,14 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
         setTimeout(() => desktopSearchInputRef.current?.focus(), 50);
       } else if (e.key === 'Escape' && isSearchExpanded) {
         e.preventDefault();
-        setIsSearchExpanded(false);
+        closeSearch();
         desktopSearchInputRef.current?.blur();
         mobileSearchInputRef.current?.blur();
       }
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isSearchExpanded]);
+  }, [isSearchExpanded, closeSearch]);
 
   const handleNavMouseEnter = (tab: string) => {
     if (hoverNavTimeoutRef.current) clearTimeout(hoverNavTimeoutRef.current);
@@ -227,40 +195,43 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
     };
   }, []);
 
-  // Sorted active categories for secondary navigation bar
-  const activeCategories = [...categories]
-    .filter((c) => c.active !== false)
-    .sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0));
-
   return (
     <>
       {/* Main Sticky Header (1:1 siteUI.png) */}
       <header
         ref={headerRef}
-        className={`site-header-sticky sticky-header ${isCompact ? 'is-compact' : ''}`}
+        className={`site-header-sticky sticky-header ${isCompact ? 'is-compact' : ''} ${isMegaMenuOpen || hoveredNavTab ? 'has-nav-overlay' : ''}`}
         style={{
           position: 'sticky',
           top: 0,
           backgroundColor:
             themeMode === 'dark'
-              ? (hoveredNavTab ? 'rgba(15, 23, 42, 0.85)' : 'rgba(8, 12, 18, 0.85)')
-              : (hoveredNavTab ? 'rgba(255, 255, 255, 0.85)' : 'rgba(255, 255, 255, 0.85)'),
+              ? 'rgba(15, 23, 42, 0.88)'
+              : 'rgba(255, 255, 255, 0.85)',
           backdropFilter: 'blur(28px) saturate(190%)',
           WebkitBackdropFilter: 'blur(28px) saturate(190%)',
           border: 'none',
-          borderBottom: isCompact && !hoveredNavTab
-            ? (themeMode === 'dark' ? '1px solid rgba(255, 255, 255, 0.08)' : '1px solid rgba(0, 0, 0, 0.06)')
-            : 'none',
-          boxShadow: isCompact && !hoveredNavTab
-            ? themeMode === 'dark'
-              ? '0 20px 48px -8px rgba(0, 0, 0, 0.7)'
-              : '0 16px 40px -8px rgba(0, 0, 0, 0.12)'
-            : 'none',
-          zIndex: isSearchExpanded || isMegaMenuOpen || hoveredNavTab
-            ? DESIGN_TOKENS.zIndex.modal + 15
-            : DESIGN_TOKENS.zIndex.sticky,
-          transition:
-            'box-shadow 0.2s ease, background-color 0.2s ease',
+          borderBottom:
+            isMegaMenuOpen || hoveredNavTab || isSearchExpanded || isCompact
+              ? themeMode === 'dark'
+                ? '1px solid rgba(255, 255, 255, 0.08)'
+                : '1px solid rgba(0, 0, 0, 0.08)'
+              : 'none',
+          boxShadow:
+            isMegaMenuOpen || hoveredNavTab || isSearchExpanded
+              ? themeMode === 'dark'
+                ? '0 28px 56px -10px rgba(0, 0, 0, 0.8)'
+                : '0 24px 48px -10px rgba(0, 0, 0, 0.14)'
+              : isCompact
+                ? themeMode === 'dark'
+                  ? '0 20px 48px -8px rgba(0, 0, 0, 0.7)'
+                  : '0 16px 40px -8px rgba(0, 0, 0, 0.12)'
+                : 'none',
+          zIndex:
+            isSearchExpanded || isMegaMenuOpen || hoveredNavTab
+              ? DESIGN_TOKENS.zIndex.modal + 15
+              : DESIGN_TOKENS.zIndex.sticky,
+          transition: 'box-shadow 0.2s ease, background-color 0.2s ease',
         }}
       >
         <div className="catalog-container" style={{ padding: '0 clamp(24px, 4vw, 56px)' }}>
@@ -311,20 +282,21 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 }}
                 aria-label="Sahara Electronics Əsas Səhifə"
               >
-                <img
+                <ShimmerImage
                   src={
                     themeMode === 'dark' ? '/media/SaharaLogo-dark.png' : '/media/SaharaLogo.png'
                   }
                   alt="Sahara Electronics"
-                  style={{
-                    height: isSearchExpanded ? '84px' : isCompact ? '46px' : '56px',
-                    width: 'auto',
-                    maxWidth: '340px',
-                    objectFit: 'contain',
-                    display: 'block',
-                    margin: '0 auto',
+                  loading="eager"
+                  objectFit="contain"
+                  spinnerSize={16}
+                  containerStyle={{
+                    height: isSearchExpanded ? '96px' : isCompact ? '46px' : '56px',
+                    width: isSearchExpanded ? '270px' : isCompact ? '160px' : '200px',
+                    maxWidth: '100%',
                     transition: 'height 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
                   }}
+                  fallback={<span className="sahara-logo-fallback">Sahara Electronics</span>}
                 />
               </button>
 
@@ -347,7 +319,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                     gap: '5px',
                   }}
                 >
-                  <span style={{ color: '#e31e24', fontSize: '11px' }}>✨</span>
+                  <Sparkles size={15} color="#e31e24" aria-hidden="true" />
                   <span>Arzuladığınız texnologiyanı asanlıqla kəşf edin</span>
                 </div>
               )}
@@ -392,7 +364,9 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   size={17}
                   style={{
                     color:
-                      searchQuery.trim().length > 0 ? '#e31e24' : theme.textMuted || '#94a3b8',
+                      (searchQuery || '').trim().length > 0
+                        ? '#e31e24'
+                        : theme?.textMuted || '#94a3b8',
                     transition: 'color 0.2s ease',
                     flexShrink: 0,
                   }}
@@ -480,7 +454,16 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
             </div>
 
             {/* Right Action Icons & Utilities matching siteUI.png */}
-            <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexShrink: 0, minWidth: '240px', justifyContent: 'flex-end' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '16px',
+                flexShrink: 0,
+                minWidth: '240px',
+                justifyContent: 'flex-end',
+              }}
+            >
               {/* Location: 📍 Bakı */}
               <button
                 type="button"
@@ -516,7 +499,8 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   background: 'transparent',
                   border: 'none',
                   padding: '6px',
-                  color: theme.text,
+                  color:
+                    currentRoute === 'favorites' || favoritesCount > 0 ? '#ef4444' : theme.text,
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -524,8 +508,17 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   transition: 'color 0.15s ease',
                 }}
                 aria-label="Seçilmiş Məhsullar"
+                title="Seçilmiş Məhsullar"
+                className="header-favorites-btn"
+                data-favorite-target
               >
-                <Heart size={20} color={favoritesCount > 0 ? '#ef4444' : theme.text} fill={favoritesCount > 0 ? '#ef4444' : 'none'} />
+                <Heart
+                  size={20}
+                  color={
+                    currentRoute === 'favorites' || favoritesCount > 0 ? '#ef4444' : theme?.text
+                  }
+                  fill="none"
+                />
                 {favoritesCount > 0 && (
                   <span
                     style={{
@@ -566,6 +559,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   transition: 'color 0.15s ease',
                 }}
                 aria-label={cartCount > 0 ? `Səbət (${cartCount})` : 'Səbət'}
+                data-cart-target
               >
                 <ShoppingCart size={20} color={currentRoute === 'cart' ? '#e31e24' : theme.text} />
                 {cartCount > 0 && (
@@ -596,22 +590,19 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 type="button"
                 data-testid="header-user-btn"
                 onClick={() => {
-                  if (onOpenUserDrawer) {
-                    onOpenUserDrawer();
-                  } else {
-                    setIsUserDrawerOpen(true);
-                  }
+                  if (onOpenUserDrawer) onOpenUserDrawer();
+                  else onNavigate('account');
                 }}
                 style={{
                   background: authUser
-                    ? (themeMode === 'dark' ? 'rgba(220, 38, 38, 0.15)' : 'rgba(220, 38, 38, 0.08)')
+                    ? themeMode === 'dark'
+                      ? 'rgba(220, 38, 38, 0.15)'
+                      : 'rgba(220, 38, 38, 0.08)'
                     : 'transparent',
-                  border: authUser
-                    ? `1px solid ${themeMode === 'dark' ? 'rgba(220, 38, 38, 0.3)' : 'rgba(220, 38, 38, 0.2)'}`
-                    : 'none',
+                  border: 'none',
                   borderRadius: authUser ? '999px' : '8px',
                   padding: authUser ? '4px 12px 4px 6px' : '6px',
-                  color: isUserDrawerOpen || currentRoute === 'account' ? '#e31e24' : theme.text,
+                  color: currentRoute === 'account' ? '#e31e24' : theme.text,
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -620,8 +611,10 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   transition: 'all 0.15s ease',
                   maxWidth: '180px',
                 }}
-                aria-label={authUser ? `İstifadəçi: ${authUser.fullName}` : "İstifadəçi Kabineti və Hesab"}
-                title={authUser ? authUser.fullName : "Giriş və Qeydiyyat"}
+                aria-label={
+                  authUser ? `İstifadəçi: ${authUser.fullName}` : 'İstifadəçi Kabineti və Hesab'
+                }
+                title={authUser ? authUser.fullName : 'Giriş və Qeydiyyat'}
               >
                 <div
                   style={{
@@ -629,7 +622,11 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                     height: authUser ? '26px' : 'auto',
                     borderRadius: authUser ? '50%' : '0',
                     backgroundColor: authUser ? '#dc2626' : 'transparent',
-                    color: authUser ? '#ffffff' : (isUserDrawerOpen || currentRoute === 'account' ? '#e31e24' : theme.text),
+                    color: authUser
+                      ? '#ffffff'
+                      : currentRoute === 'account'
+                        ? '#e31e24'
+                        : theme.text,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -641,7 +638,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   {authUser ? (
                     authUser.fullName.charAt(0).toUpperCase()
                   ) : (
-                    <User size={20} color={isUserDrawerOpen || currentRoute === 'account' ? '#e31e24' : theme.text} />
+                    <User size={20} color={currentRoute === 'account' ? '#e31e24' : theme.text} />
                   )}
                 </div>
 
@@ -662,8 +659,6 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   </span>
                 )}
               </button>
-
-
 
               {/* Theme Toggle ☀️ / 🌙 */}
               <button
@@ -715,19 +710,19 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   embeddedInHeader={true}
                   searchQuery={searchQuery}
                   onSearchChange={onSearchChange}
-                  onClose={() => setIsSearchExpanded(false)}
+                  onClose={() => closeSearch()}
                   products={products}
                   categories={categories}
                   brands={brands}
                   theme={theme}
                   isDarkMode={themeMode === 'dark'}
                   onSelectCategory={(catId) => {
-                    setIsSearchExpanded(false);
-                    onNavigate('catalog', typeof catId === 'string' ? catId : (catId as any));
+                    closeSearch(() =>
+                      onNavigate('catalog', typeof catId === 'string' ? catId : (catId as any))
+                    );
                   }}
                   onSelectBrand={(brandId) => {
-                    setIsSearchExpanded(false);
-                    onNavigate('catalog', brandId);
+                    closeSearch(() => onNavigate('catalog', brandId));
                   }}
                 />
               </div>
@@ -737,7 +732,15 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
           {/* Mobile Layout (<= 768px) matching siteUI.png */}
           <div className="site-header-mobile-layout">
             {/* Row 1: Logo + 📍 Bakı + 🤍 Wishlist + 🛒 Cart + Theme Toggle */}
-            <div className="site-header-mobile-top-row" style={{ padding: '8px 0', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div
+              className="site-header-mobile-top-row"
+              style={{
+                padding: '8px 0',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
               <button
                 type="button"
                 onClick={() => onNavigate('home')}
@@ -796,18 +799,29 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   type="button"
                   onClick={() => onNavigate('favorites')}
                   style={{
+                    position: 'relative',
                     background: 'transparent',
                     border: 'none',
                     padding: '4px',
-                    color: favoritesCount > 0 ? '#ef4444' : theme.text,
+                    color:
+                      currentRoute === 'favorites' || favoritesCount > 0 ? '#ef4444' : theme.text,
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                   }}
                   aria-label="Seçilmişlər"
+                  title="Seçilmişlər"
+                  className="header-favorites-btn mobile-favorites-btn"
+                  data-favorite-target
                 >
-                  <Heart size={18} fill={favoritesCount > 0 ? '#ef4444' : 'none'} />
+                  <Heart
+                    size={18}
+                    color={
+                      currentRoute === 'favorites' || favoritesCount > 0 ? '#ef4444' : theme?.text
+                    }
+                    fill="none"
+                  />
                 </button>
 
                 {/* Mobile Cart Button 🛒 */}
@@ -826,8 +840,12 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                     justifyContent: 'center',
                   }}
                   aria-label="Səbət"
+                  data-cart-target
                 >
-                  <ShoppingCart size={18} color={currentRoute === 'cart' ? '#e31e24' : theme.text} />
+                  <ShoppingCart
+                    size={18}
+                    color={currentRoute === 'cart' ? '#e31e24' : theme.text}
+                  />
                   {cartCount > 0 && (
                     <span
                       style={{
@@ -905,8 +923,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 <Search
                   size={14}
                   style={{
-                    color:
-                      searchQuery.trim().length > 0 ? '#e31e24' : theme.textMuted || '#94a3b8',
+                    color: searchQuery.trim().length > 0 ? '#e31e24' : theme.textMuted || '#94a3b8',
                     transition: 'color 0.2s ease',
                     flexShrink: 0,
                   }}
@@ -964,6 +981,20 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                     <X size={14} />
                   </button>
                 )}
+                {isSearchExpanded && (
+                  <button
+                    type="button"
+                    className="mobile-search-dismiss"
+                    onClick={(event) => {
+                      event.stopPropagation();
+                      closeSearch();
+                    }}
+                    aria-label="Axtarışı bağla"
+                    title="Axtarışı bağla"
+                  >
+                    <X size={16} />
+                  </button>
+                )}
               </div>
             </div>
 
@@ -973,7 +1004,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 className="mobile-header-search-expand-wrap"
                 style={{
                   width: '100%',
-                  maxHeight: 'calc(100vh - 160px)',
+                  maxHeight: 'min(64dvh, calc(100dvh - 240px))',
                   overflowY: 'auto',
                   padding: '6px 0 10px',
                   animation: 'smartSearchSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -985,19 +1016,19 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   embeddedInHeader={true}
                   searchQuery={searchQuery}
                   onSearchChange={onSearchChange}
-                  onClose={() => setIsSearchExpanded(false)}
+                  onClose={() => closeSearch()}
                   products={products}
                   categories={categories}
                   brands={brands}
                   theme={theme}
                   isDarkMode={themeMode === 'dark'}
                   onSelectCategory={(catId) => {
-                    setIsSearchExpanded(false);
-                    onNavigate('catalog', typeof catId === 'string' ? catId : (catId as any));
+                    closeSearch(() =>
+                      onNavigate('catalog', typeof catId === 'string' ? catId : (catId as any))
+                    );
                   }}
                   onSelectBrand={(brandId) => {
-                    setIsSearchExpanded(false);
-                    onNavigate('catalog', brandId);
+                    closeSearch(() => onNavigate('catalog', brandId));
                   }}
                 />
               </div>
@@ -1034,15 +1065,19 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               ref={megaMenuBtnRef}
               type="button"
               onClick={() => {
+                setIsSearchExpanded(false);
                 setHoveredNavTab(null);
-                onNavigate('catalog');
+                setIsMegaMenuOpen((prev) => !prev);
               }}
               onMouseEnter={() => handleNavMouseEnter('catalog')}
               onMouseLeave={handleNavMouseLeave}
-              className="mega-menu-trigger-btn"
+              className={`mega-menu-trigger-btn ${isMegaMenuOpen || hoveredNavTab === 'catalog' ? 'is-active' : ''}`}
               style={{
                 background: 'transparent',
-                color: currentRoute === 'catalog' || hoveredNavTab === 'catalog' ? '#e31e24' : theme.text,
+                color:
+                  currentRoute === 'catalog' || hoveredNavTab === 'catalog'
+                    ? '#e31e24'
+                    : theme.text,
                 border: 'none',
                 padding: '4px 0',
                 fontSize: '13.5px',
@@ -1116,7 +1151,10 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   padding: '4px 0',
                   fontSize: '13.5px',
                   fontWeight: currentRoute === 'brands' || hoveredNavTab === 'brands' ? 700 : 500,
-                  color: currentRoute === 'brands' || hoveredNavTab === 'brands' ? '#e31e24' : theme.text,
+                  color:
+                    currentRoute === 'brands' || hoveredNavTab === 'brands'
+                      ? '#e31e24'
+                      : theme.text,
                   cursor: 'pointer',
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -1146,7 +1184,10 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   padding: '4px 0',
                   fontSize: '13.5px',
                   fontWeight: currentRoute === 'stores' || hoveredNavTab === 'stores' ? 700 : 500,
-                  color: currentRoute === 'stores' || hoveredNavTab === 'stores' ? '#e31e24' : theme.text,
+                  color:
+                    currentRoute === 'stores' || hoveredNavTab === 'stores'
+                      ? '#e31e24'
+                      : theme.text,
                   cursor: 'pointer',
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -1175,8 +1216,12 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   border: 'none',
                   padding: '4px 0',
                   fontSize: '13.5px',
-                  fontWeight: currentRoute === 'services' || hoveredNavTab === 'services' ? 700 : 500,
-                  color: currentRoute === 'services' || hoveredNavTab === 'services' ? '#e31e24' : theme.text,
+                  fontWeight:
+                    currentRoute === 'services' || hoveredNavTab === 'services' ? 700 : 500,
+                  color:
+                    currentRoute === 'services' || hoveredNavTab === 'services'
+                      ? '#e31e24'
+                      : theme.text,
                   cursor: 'pointer',
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -1186,7 +1231,8 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 }}
                 onMouseEnter={() => handleNavMouseEnter('services')}
                 onMouseLeave={(e) =>
-                  (e.currentTarget.style.color = currentRoute === 'services' ? '#e31e24' : theme.text)
+                  (e.currentTarget.style.color =
+                    currentRoute === 'services' ? '#e31e24' : theme.text)
                 }
               >
                 <ShieldCheck size={15} />
@@ -1206,7 +1252,10 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   padding: '4px 0',
                   fontSize: '13.5px',
                   fontWeight: currentRoute === 'support' || hoveredNavTab === 'support' ? 700 : 500,
-                  color: currentRoute === 'support' || hoveredNavTab === 'support' ? '#e31e24' : theme.text,
+                  color:
+                    currentRoute === 'support' || hoveredNavTab === 'support'
+                      ? '#e31e24'
+                      : theme.text,
                   cursor: 'pointer',
                   display: 'inline-flex',
                   alignItems: 'center',
@@ -1216,7 +1265,8 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 }}
                 onMouseEnter={() => handleNavMouseEnter('support')}
                 onMouseLeave={(e) =>
-                  (e.currentTarget.style.color = currentRoute === 'support' ? '#e31e24' : theme.text)
+                  (e.currentTarget.style.color =
+                    currentRoute === 'support' ? '#e31e24' : theme.text)
                 }
               >
                 <Phone size={15} />
@@ -1252,501 +1302,136 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               </button>
             </div>
           </div>
-
-          {/* Desktop MegaMenu Dropdown Panel */}
-          <MegaMenu
-            isOpen={isMegaMenuOpen}
-            onClose={() => {
-              setIsMegaMenuOpen(false);
-              setHoveredNavTab(null);
-            }}
-            categories={categories}
-            brands={brands}
-            products={products}
-            theme={theme}
-            onSelectCategory={(catId) => {
-              setIsMegaMenuOpen(false);
-              setHoveredNavTab(null);
-              onNavigate('catalog', catId);
-            }}
-            onSelectBrand={(brandId) => {
-              setIsMegaMenuOpen(false);
-              setHoveredNavTab(null);
-              onNavigate('catalog', brandId);
-            }}
-            onNavigate={(route) => {
-              setIsMegaMenuOpen(false);
-              setHoveredNavTab(null);
-              onNavigate(route);
-            }}
-            triggerRef={megaMenuBtnRef}
-            onMouseEnter={() => {
-              if (hoverNavTimeoutRef.current) clearTimeout(hoverNavTimeoutRef.current);
-            }}
-            onMouseLeave={handleNavMouseLeave}
-          />
         </div>
-      </header>
-
-      {/* Nav Links Hover Mega-Preview Panel (Floating overlay with identical frosted glass blur) */}
-      {hoveredNavTab && hoveredNavTab !== 'home' && (
-        <div
-          className="header-nav-preview-panel"
+        {/* Desktop MegaMenu Dropdown Panel */}
+        <MegaMenu
+          isOpen={isMegaMenuOpen || hoveredNavTab === 'catalog'}
+          onClose={() => {
+            setIsMegaMenuOpen(false);
+            setHoveredNavTab(null);
+          }}
+          categories={categories}
+          brands={brands}
+          products={products}
+          theme={theme}
+          onSelectCategory={(catId) => {
+            setIsMegaMenuOpen(false);
+            setHoveredNavTab(null);
+            onNavigate('catalog', catId);
+          }}
+          onSelectBrand={(brandId) => {
+            setIsMegaMenuOpen(false);
+            setHoveredNavTab(null);
+            onNavigate('catalog', brandId);
+          }}
+          onSelectProduct={(product) => {
+            setIsMegaMenuOpen(false);
+            setHoveredNavTab(null);
+            onNavigate('product', product.id);
+          }}
+          onNavigate={(route, param) => {
+            setIsMegaMenuOpen(false);
+            setHoveredNavTab(null);
+            onNavigate(route, param);
+          }}
+          triggerRef={megaMenuBtnRef}
           onMouseEnter={() => {
             if (hoverNavTimeoutRef.current) clearTimeout(hoverNavTimeoutRef.current);
           }}
           onMouseLeave={handleNavMouseLeave}
-          style={{
-            position: 'fixed',
-            top: `${headerBottom - 1}px`,
-            left: 0,
-            right: 0,
-            zIndex: DESIGN_TOKENS.zIndex.modal + 12,
-            backgroundColor: themeMode === 'dark' ? 'rgba(15, 23, 42, 0.85)' : 'rgba(255, 255, 255, 0.85)',
-            backdropFilter: 'blur(28px) saturate(190%)',
-            WebkitBackdropFilter: 'blur(28px) saturate(190%)',
-            border: 'none',
-            borderTop: 'none',
-            borderBottom: 'none',
-            boxShadow: themeMode === 'dark' ? '0 24px 48px -8px rgba(0, 0, 0, 0.7)' : '0 20px 44px -8px rgba(0, 0, 0, 0.12)',
-            padding: '20px 0 24px',
-          }}
-        >
-          <div className="catalog-container" style={{ padding: '0 clamp(24px, 4vw, 56px)' }}>
-                {hoveredNavTab === 'catalog' && (() => {
-                  const departmentGroups = [
-                    {
-                      id: 'large',
-                      name: 'Böyük Məişət Texnikası',
-                      icon: Package,
-                      filter: (c: CatalogCategory) =>
-                        ['washer', 'refrigerator', 'oven', 'dishwasher', 'freezer'].includes(c.id) ||
-                        ['paltaryuyanlar', 'soyuducular', 'sobalar', 'qabyuyanlar', 'dondurucular'].includes(c.slug || '') ||
-                        c.name.toLowerCase().includes('soyuducu') ||
-                        c.name.toLowerCase().includes('paltaryuyan') ||
-                        c.name.toLowerCase().includes('qabyuyan') ||
-                        c.name.toLowerCase().includes('dondurucu') ||
-                        (c.name.toLowerCase().includes('soba') && !c.name.toLowerCase().includes('mikrodalğ')),
-                    },
-                    {
-                      id: 'built_in',
-                      name: 'Quraşdırılan Texnika',
-                      icon: Flame,
-                      filter: (c: CatalogCategory) =>
-                        ['cooktop', 'hood', 'microwave', 'built_in_oven'].includes(c.id) ||
-                        ['bisirme-panelleri', 'aspiratorlar', 'mikrodalgali-sobalar', 'qurasdirilan-sobalar'].includes(c.slug || '') ||
-                        c.name.toLowerCase().includes('bişirmə') ||
-                        c.name.toLowerCase().includes('panel') ||
-                        c.name.toLowerCase().includes('aspirator') ||
-                        c.name.toLowerCase().includes('mikrodalğ') ||
-                        c.name.toLowerCase().includes('quraşdırılan'),
-                    },
-                    {
-                      id: 'small',
-                      name: 'Kiçik Məişət Texnikası',
-                      icon: Zap,
-                      filter: (c: CatalogCategory) =>
-                        ['airfryer', 'vacuum_cleaner', 'thermopot', 'meat_grinder', 'iron', 'kettle', 'blender'].includes(c.id) ||
-                        ['airfryer', 'tozsoranlar', 'caydanlar', 'blenderler', 'etcakan'].includes(c.slug || '') ||
-                        c.name.toLowerCase().includes('airfryer') ||
-                        c.name.toLowerCase().includes('tozsoran') ||
-                        c.name.toLowerCase().includes('çaydan') ||
-                        c.name.toLowerCase().includes('ətçəkən') ||
-                        c.name.toLowerCase().includes('blender') ||
-                        c.name.toLowerCase().includes('ütü'),
-                    },
-                    {
-                      id: 'climate',
-                      name: 'İqlim Texnikası',
-                      icon: Wind,
-                      filter: (c: CatalogCategory) =>
-                        ['air_conditioner', 'heater', 'fan', 'climate'].includes(c.id) ||
-                        ['kondisionerler', 'qizdiricilar', 'ventilyatorlar', 'iqlim'].includes(c.slug || '') ||
-                        c.name.toLowerCase().includes('kondisioner') ||
-                        c.name.toLowerCase().includes('iqlim') ||
-                        c.name.toLowerCase().includes('qızdırıcı') ||
-                        c.name.toLowerCase().includes('ventilyator'),
-                    },
-                    {
-                      id: 'all',
-                      name: 'Bütün Kateqoriyalar',
-                      icon: Sparkles,
-                      filter: () => true,
-                    },
-                  ];
+        />
 
-                  const currentGroup = departmentGroups.find((g) => g.id === activeCatalogGroup) || departmentGroups[0];
-                  const currentGroupCategories = activeCatalogGroup === 'all'
-                    ? activeCategories
-                    : activeCategories.filter(currentGroup.filter);
-                  const displayCategories = currentGroupCategories.length > 0 ? currentGroupCategories : activeCategories;
+        {/* Nav Links Hover Mega-Preview Panel (In-flow monolithic expansion for non-catalog tabs) */}
+        {hoveredNavTab && hoveredNavTab !== 'home' && hoveredNavTab !== 'catalog' && (
+          <div
+            className="header-nav-preview-panel"
+            onMouseEnter={() => {
+              if (hoverNavTimeoutRef.current) clearTimeout(hoverNavTimeoutRef.current);
+            }}
+            onMouseLeave={handleNavMouseLeave}
+            style={{
+              position: 'relative',
+              width: '100%',
+              backgroundColor: 'transparent',
+              backdropFilter: 'none',
+              WebkitBackdropFilter: 'none',
+              border: 'none',
+              borderTop:
+                themeMode === 'dark'
+                  ? '1px solid rgba(255, 255, 255, 0.08)'
+                  : '1px solid rgba(0, 0, 0, 0.06)',
+              borderBottom: 'none',
+              boxShadow: 'none',
+              padding: '20px 0 24px',
+            }}
+          >
+            <div className="catalog-container" style={{ padding: '0 clamp(24px, 4vw, 56px)' }}>
+              {hoveredNavTab === 'brands' && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '32px',
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <div style={{ maxWidth: '320px' }}>
+                    <div
+                      style={{
+                        fontSize: '15px',
+                        fontWeight: 800,
+                        color: theme.text,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                      }}
+                    >
+                      <Sparkles size={16} color="#e31e24" />
+                      <span>Rəsmi Tərəfdaş Brendlərimiz</span>
+                    </div>
+                    <p
+                      style={{
+                        fontSize: '13px',
+                        color: theme.textMuted,
+                        margin: '6px 0 0 0',
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      Aktiv kataloqda yer alan brendlərin loqolarına və dərc edilmiş modellərinə
+                      baxın.
+                    </p>
+                  </div>
 
-                  return (
-                    <div style={{ display: 'grid', gridTemplateColumns: '240px 1fr 205px', gap: '24px', alignItems: 'start' }}>
-                      {/* Left: Parent Departments Vertical List (alt-alta sözlər, uyğun icon, açılacaq hissi verən chevron) */}
-                      <div
-                        style={{
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '4px',
-                          borderRight: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.07)' : 'rgba(0,0,0,0.06)'}`,
-                          paddingRight: '16px',
-                        }}
-                      >
-                        <div
-                          style={{
-                            fontSize: '11px',
-                            fontWeight: 800,
-                            textTransform: 'uppercase',
-                            letterSpacing: '0.08em',
-                            color: theme.textMuted,
-                            padding: '0 8px 6px',
-                          }}
-                        >
-                          Bölmələr
-                        </div>
-
-                        {departmentGroups.map((grp) => {
-                          const isActive = activeCatalogGroup === grp.id;
-                          const GrpIcon = grp.icon;
-                          return (
-                            <button
-                              key={grp.id}
-                              type="button"
-                              onMouseEnter={() => setActiveCatalogGroup(grp.id as any)}
-                              onClick={() => {
-                                setHoveredNavTab(null);
-                                onNavigate('catalog');
-                              }}
-                              style={{
-                                width: '100%',
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                padding: '9px 12px',
-                                borderRadius: '8px',
-                                border: 'none',
-                                backgroundColor: isActive
-                                  ? themeMode === 'dark'
-                                    ? 'rgba(227, 30, 36, 0.16)'
-                                    : 'rgba(227, 30, 36, 0.08)'
-                                  : 'transparent',
-                                color: isActive ? '#e31e24' : theme.text,
-                                fontSize: '13px',
-                                fontWeight: isActive ? 700 : 500,
-                                cursor: 'pointer',
-                                transition: 'all 0.18s cubic-bezier(0.16, 1, 0.3, 1)',
-                                textAlign: 'left',
-                              }}
-                            >
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
-                                <GrpIcon
-                                  size={15}
-                                  style={{
-                                    color: isActive ? '#e31e24' : themeMode === 'dark' ? '#94a3b8' : '#64748b',
-                                    flexShrink: 0,
-                                    transition: 'color 0.15s ease',
-                                  }}
-                                />
-                                <span>{grp.name}</span>
-                              </div>
-                              <ChevronRight
-                                size={14}
-                                style={{
-                                  color: isActive ? '#e31e24' : themeMode === 'dark' ? '#64748b' : '#94a3b8',
-                                  transform: isActive ? 'translateX(2px)' : 'none',
-                                  transition: 'transform 0.18s ease, color 0.18s ease',
-                                  opacity: isActive ? 1 : 0.6,
-                                  flexShrink: 0,
-                                }}
-                              />
-                            </button>
-                          );
-                        })}
-                      </div>
-
-                      {/* Center: Dynamic Subcategories Panel (Üstünə gələndə uyğun açılış) */}
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', minWidth: 0 }}>
-                        <div
-                          style={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'space-between',
-                            paddingBottom: '8px',
-                            borderBottom: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.05)'}`,
-                          }}
-                        >
-                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                            <currentGroup.icon size={15} style={{ color: '#e31e24' }} />
-                            <span style={{ fontSize: '13px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.04em', color: theme.text }}>
-                              {currentGroup.name}
-                            </span>
-                            <span style={{ fontSize: '11px', color: theme.textMuted, fontWeight: 500 }}>
-                              ({displayCategories.length} kateqoriya)
-                            </span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setHoveredNavTab(null);
-                              onNavigate('catalog');
-                            }}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              color: '#e31e24',
-                              fontSize: '11.5px',
-                              fontWeight: 700,
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '4px',
-                              padding: 0,
-                            }}
-                          >
-                            <span>Bütün kataloq</span>
-                            <ArrowRight size={12} />
-                          </button>
-                        </div>
-
-                        <div
-                          style={{
-                            display: 'grid',
-                            gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))',
-                            gap: '8px 12px',
-                          }}
-                        >
-                          {displayCategories.map((c) => {
-                            const count = products.filter((p) => p.category === c.id && p.status !== 'draft').length;
-                            return (
-                              <button
-                                key={c.id}
-                                type="button"
-                                onClick={() => {
-                                  setHoveredNavTab(null);
-                                  onNavigate('catalog', c.id);
-                                }}
-                                style={{
-                                  display: 'flex',
-                                  alignItems: 'center',
-                                  justifyContent: 'space-between',
-                                  padding: '8px 10px',
-                                  borderRadius: '8px',
-                                  backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : 'rgba(248, 250, 252, 0.75)',
-                                  border: `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.05)'}`,
-                                  color: theme.text,
-                                  cursor: 'pointer',
-                                  transition: 'all 0.15s ease',
-                                  textAlign: 'left',
-                                }}
-                                onMouseEnter={(e) => {
-                                  e.currentTarget.style.backgroundColor = themeMode === 'dark' ? 'rgba(227, 30, 36, 0.12)' : 'rgba(227, 30, 36, 0.06)';
-                                  e.currentTarget.style.borderColor = 'rgba(227, 30, 36, 0.35)';
-                                  e.currentTarget.style.transform = 'translateY(-1px) translateX(2px)';
-                                }}
-                                onMouseLeave={(e) => {
-                                  e.currentTarget.style.backgroundColor = themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : 'rgba(248, 250, 252, 0.75)';
-                                  e.currentTarget.style.borderColor = themeMode === 'dark' ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.05)';
-                                  e.currentTarget.style.transform = 'none';
-                                }}
-                              >
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
-                                  <div
-                                    style={{
-                                      width: '26px',
-                                      height: '26px',
-                                      borderRadius: '6px',
-                                      display: 'flex',
-                                      alignItems: 'center',
-                                      justifyContent: 'center',
-                                      backgroundColor: themeMode === 'dark' ? 'rgba(255,255,255,0.06)' : '#ffffff',
-                                      boxShadow: '0 1px 2px rgba(0,0,0,0.06)',
-                                      flexShrink: 0,
-                                    }}
-                                  >
-                                    {getCategoryIcon(c.id, c.slug)}
-                                  </div>
-                                  <span style={{ fontSize: '12.5px', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                    {c.name}
-                                  </span>
-                                </div>
-                                {count > 0 && (
-                                  <span
-                                    style={{
-                                      fontSize: '10.5px',
-                                      color: theme.textMuted,
-                                      fontWeight: 500,
-                                      padding: '1px 5px',
-                                      borderRadius: '4px',
-                                      backgroundColor: themeMode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.04)',
-                                      flexShrink: 0,
-                                      marginLeft: '6px',
-                                    }}
-                                  >
-                                    {count}
-                                  </span>
-                                )}
-                              </button>
-                            );
-                          })}
-                        </div>
-                      </div>
-
-                      {/* Right: Compact Brand Panel (Azaldılmış en ilə brendlər) */}
-                      <div
-                        style={{
-                          borderLeft: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
-                          paddingLeft: '16px',
-                          display: 'flex',
-                          flexDirection: 'column',
-                          gap: '8px',
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                          <div style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: theme.textMuted, display: 'flex', alignItems: 'center', gap: '5px' }}>
-                            <Tag size={12} color="#e31e24" />
-                            <span>Rəsmi Brendlər</span>
-                          </div>
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setHoveredNavTab(null);
-                              onNavigate('brands');
-                            }}
-                            style={{
-                              background: 'none',
-                              border: 'none',
-                              color: '#e31e24',
-                              fontSize: '11px',
-                              fontWeight: 700,
-                              cursor: 'pointer',
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '3px',
-                              padding: 0,
-                            }}
-                          >
-                            <span>Hamısı</span>
-                            <ArrowRight size={11} />
-                          </button>
-                        </div>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '5px' }}>
-                          {brands.filter((b) => b.active).slice(0, 4).map((brand) => (
-                            <button
-                              key={brand.id}
-                              type="button"
-                              onClick={() => {
-                                setHoveredNavTab(null);
-                                onNavigate('brand', brand.id);
-                              }}
-                              style={{
-                                display: 'flex',
-                                alignItems: 'center',
-                                justifyContent: 'space-between',
-                                padding: '6px 8px',
-                                borderRadius: '7px',
-                                backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.45)' : 'rgba(248, 250, 252, 0.65)',
-                                border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
-                                cursor: 'pointer',
-                                transition: 'all 0.15s ease',
-                                textAlign: 'left',
-                              }}
-                              onMouseEnter={(e) => {
-                                e.currentTarget.style.borderColor = '#e31e24';
-                                e.currentTarget.style.transform = 'translateY(-1px)';
-                              }}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.style.borderColor = themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)';
-                                e.currentTarget.style.transform = 'none';
-                              }}
-                            >
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '7px', overflow: 'hidden' }}>
-                                {brand.logo ? (
-                                  <ShimmerImage
-                                    src={brand.logo}
-                                    alt={brand.name}
-                                    spinnerSize={10}
-                                    containerStyle={{ width: '32px', height: '16px', flexShrink: 0 }}
-                                    style={{ objectFit: 'contain' }}
-                                  />
-                                ) : (
-                                  <div style={{ width: '32px', height: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 800, fontSize: '10px', color: theme.text, flexShrink: 0 }}>
-                                    {brand.name}
-                                  </div>
-                                )}
-                                <div style={{ overflow: 'hidden' }}>
-                                  <div style={{ fontSize: '11.5px', fontWeight: 700, color: theme.text, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                    {brand.name}
-                                  </div>
-                                  <div style={{ fontSize: '9px', color: theme.textMuted }}>
-                                    {brand.originCountry || 'Orijinal'}
-                                  </div>
-                                </div>
-                              </div>
-                              <ArrowRight size={11} style={{ color: theme.textMuted, flexShrink: 0 }} />
-                            </button>
-                          ))}
-                        </div>
-
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '12px',
+                      flexWrap: 'wrap',
+                      flex: 1,
+                      justifyContent: 'center',
+                    }}
+                  >
+                    {HEADER_BRAND_LOGOS.map((featured) => {
+                      const brand = brands.find(
+                        (item) => normalizeBrandKey(item) === featured.slug
+                      );
+                      return (
                         <button
+                          key={featured.slug}
                           type="button"
                           onClick={() => {
                             setHoveredNavTab(null);
-                            onNavigate('catalog');
+                            onNavigate(brand ? 'brand' : 'brands', brand?.id);
                           }}
                           style={{
-                            marginTop: '2px',
-                            padding: '6px 10px',
-                            borderRadius: '7px',
-                            backgroundColor: '#e31e24',
-                            color: '#ffffff',
-                            border: 'none',
-                            fontSize: '11px',
-                            fontWeight: 700,
-                            cursor: 'pointer',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            gap: '5px',
-                            boxShadow: '0 2px 8px rgba(227, 30, 36, 0.25)',
-                            transition: 'opacity 0.15s ease',
-                          }}
-                        >
-                          <span>Kataloqa bax</span>
-                          <ArrowRight size={11} />
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })()}
-
-                {hoveredNavTab === 'brands' && (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '32px', flexWrap: 'wrap' }}>
-                    <div style={{ maxWidth: '320px' }}>
-                      <div style={{ fontSize: '15px', fontWeight: 800, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Sparkles size={16} color="#e31e24" />
-                        <span>Rəsmi Tərəfdaş Brendlərimiz</span>
-                      </div>
-                      <p style={{ fontSize: '13px', color: theme.textMuted, margin: '6px 0 0 0', lineHeight: 1.4 }}>
-                        İtaliya, Almaniya və dünya brendlərinin orijinal məişət texnikaları Sahara-da.
-                      </p>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '12px', flexWrap: 'wrap', flex: 1, justifyContent: 'center' }}>
-                      {brands.slice(0, 6).map((b) => (
-                        <button
-                          key={b.id}
-                          type="button"
-                          onClick={() => {
-                            setHoveredNavTab(null);
-                            onNavigate('brand', b.id);
-                          }}
-                          style={{
-                            padding: '8px 16px',
+                            padding: '10px 14px',
+                            minWidth: '112px',
+                            minHeight: '54px',
                             borderRadius: '10px',
-                            backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f8fafc',
-                            border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`,
+                            backgroundColor: '#ffffff',
+                            border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.15)' : '#e2e8f0'}`,
                             fontSize: '13px',
                             fontWeight: 700,
                             color: theme.text,
@@ -1756,226 +1441,372 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                             gap: '8px',
                           }}
                         >
-                          <span>{b.name}</span>
+                          <ShimmerImage
+                            src={brand?.logo || featured.logo}
+                            alt={featured.name}
+                            spinnerSize={10}
+                            containerStyle={{ width: '84px', height: '28px' }}
+                            style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                          />
                         </button>
-                      ))}
-                    </div>
+                      );
+                    })}
+                  </div>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setHoveredNavTab(null);
-                        onNavigate('brands');
-                      }}
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setHoveredNavTab(null);
+                      onNavigate('brands');
+                    }}
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: '10px',
+                      backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                      color: '#dc2626',
+                      border: 'none',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      boxShadow: 'none',
+                    }}
+                  >
+                    <span>Bütün brendlərə bax</span>
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
+              )}
+
+              {hoveredNavTab === 'stores' && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '32px',
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <div style={{ maxWidth: '340px' }}>
+                    <div
                       style={{
-                        padding: '10px 20px',
-                        borderRadius: '10px',
-                        backgroundColor: '#e31e24',
-                        color: '#ffffff',
-                        border: 'none',
-                        fontSize: '13px',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        display: 'inline-flex',
+                        fontSize: '15px',
+                        fontWeight: 800,
+                        color: theme.text,
+                        display: 'flex',
                         alignItems: 'center',
-                        gap: '6px',
-                        boxShadow: '0 4px 14px rgba(227, 30, 36, 0.35)',
+                        gap: '8px',
                       }}
                     >
-                      <span>Bütün brendlərə bax</span>
-                      <ArrowRight size={14} />
-                    </button>
-                  </div>
-                )}
-
-                {hoveredNavTab === 'stores' && (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '32px', flexWrap: 'wrap' }}>
-                    <div style={{ maxWidth: '340px' }}>
-                      <div style={{ fontSize: '15px', fontWeight: 800, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <MapPin size={16} color="#e31e24" />
-                        <span>Mağaza və Sərgi Salonlarımız</span>
-                      </div>
-                      <p style={{ fontSize: '13px', color: theme.textMuted, margin: '6px 0 0 0', lineHeight: 1.4 }}>
-                        {settings?.address || 'Sədərək TM Şirniyyat bazarı, 1-ci sıranın arxası Kapital Bankla üzbəüz'}
-                      </p>
+                      <MapPin size={16} color="#e31e24" />
+                      <span>Mağaza və Sərgi Salonlarımız</span>
                     </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '13px', color: theme.text }}>
-                        <Clock size={15} color="#e31e24" />
-                        <span>Hər gün: 09:00 - 19:00</span>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setHoveredNavTab(null);
-                        onNavigate('stores');
-                      }}
+                    <p
                       style={{
-                        padding: '10px 20px',
-                        borderRadius: '10px',
-                        backgroundColor: '#e31e24',
-                        color: '#ffffff',
-                        border: 'none',
                         fontSize: '13px',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        boxShadow: '0 4px 14px rgba(227, 30, 36, 0.35)',
+                        color: theme.textMuted,
+                        margin: '6px 0 0 0',
+                        lineHeight: 1.4,
                       }}
                     >
-                      <span>Bütün filiallar və xəritə</span>
-                      <ArrowRight size={14} />
-                    </button>
+                      {settings?.address ||
+                        'Sədərək TM Şirniyyat bazarı, 1-ci sıranın arxası Kapital Bankla üzbəüz'}
+                    </p>
                   </div>
-                )}
 
-                {hoveredNavTab === 'services' && (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '32px', flexWrap: 'wrap' }}>
-                    <div style={{ maxWidth: '320px' }}>
-                      <div style={{ fontSize: '15px', fontWeight: 800, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <ShieldCheck size={16} color="#e31e24" />
-                        <span>Rəsmi Zəmanət və Servis</span>
-                      </div>
-                      <p style={{ fontSize: '13px', color: theme.textMuted, margin: '6px 0 0 0', lineHeight: 1.4 }}>
-                        Peşəkar ustalar və orijinal ehtiyat hissələri ilə xidmətinizdəyik.
-                      </p>
-                    </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600, color: theme.text }}>
-                        <CheckCircle2 size={15} color="#16a34a" />
-                        <span>1-3 İl Rəsmi Zəmanət</span>
-                      </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '13px', fontWeight: 600, color: theme.text }}>
-                        <Wrench size={15} color="#0284c7" />
-                        <span>Orijinal Detallar</span>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setHoveredNavTab(null);
-                        onNavigate('services');
-                      }}
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
+                    <div
                       style={{
-                        padding: '10px 20px',
-                        borderRadius: '10px',
-                        backgroundColor: '#e31e24',
-                        color: '#ffffff',
-                        border: 'none',
-                        fontSize: '13px',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        display: 'inline-flex',
+                        display: 'flex',
                         alignItems: 'center',
-                        gap: '6px',
-                        boxShadow: '0 4px 14px rgba(227, 30, 36, 0.35)',
+                        gap: '8px',
+                        fontSize: '13px',
+                        color: theme.text,
                       }}
                     >
-                      <span>Servis haqqında ətraflı</span>
-                      <ArrowRight size={14} />
-                    </button>
+                      <Clock size={15} color="#e31e24" />
+                      <span>Hər gün: 09:00 - 19:00</span>
+                    </div>
                   </div>
-                )}
 
-                {hoveredNavTab === 'support' && (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '32px', flexWrap: 'wrap' }}>
-                    <div style={{ maxWidth: '320px' }}>
-                      <div style={{ fontSize: '15px', fontWeight: 800, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Phone size={16} color="#e31e24" />
-                        <span>Müştəri Dəstəyi</span>
-                      </div>
-                      <p style={{ fontSize: '13px', color: theme.textMuted, margin: '6px 0 0 0', lineHeight: 1.4 }}>
-                        Sualınız var? Operativ dəstək komandamız 7/24 xidmətinizdədir.
-                      </p>
-                    </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setHoveredNavTab(null);
+                      onNavigate('stores');
+                    }}
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: '10px',
+                      backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                      color: '#dc2626',
+                      border: 'none',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      boxShadow: 'none',
+                    }}
+                  >
+                    <span>Bütün filiallar və xəritə</span>
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
+              )}
 
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
-                      <span style={{ fontSize: '13.5px', fontWeight: 700, color: theme.text }}>
-                        {settings?.phoneNumber || '+994 50 261 30 41'}
-                      </span>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setHoveredNavTab(null);
-                        onNavigate('support');
-                      }}
+              {hoveredNavTab === 'services' && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '32px',
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <div style={{ maxWidth: '320px' }}>
+                    <div
                       style={{
-                        padding: '10px 20px',
-                        borderRadius: '10px',
-                        backgroundColor: '#e31e24',
-                        color: '#ffffff',
-                        border: 'none',
-                        fontSize: '13px',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        display: 'inline-flex',
+                        fontSize: '15px',
+                        fontWeight: 800,
+                        color: theme.text,
+                        display: 'flex',
                         alignItems: 'center',
-                        gap: '6px',
-                        boxShadow: '0 4px 14px rgba(227, 30, 36, 0.35)',
+                        gap: '8px',
                       }}
                     >
-                      <span>Dəstək mərkəzinə keç</span>
-                      <ArrowRight size={14} />
-                    </button>
-                  </div>
-                )}
-
-                {hoveredNavTab === 'discounts' && (
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '32px', flexWrap: 'wrap' }}>
-                    <div style={{ maxWidth: '320px' }}>
-                      <div style={{ fontSize: '15px', fontWeight: 800, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <Percent size={16} color="#e31e24" />
-                        <span>Xüsusi Endirim Təklifləri</span>
-                      </div>
-                      <p style={{ fontSize: '13px', color: theme.textMuted, margin: '6px 0 0 0', lineHeight: 1.4 }}>
-                        Məişət texnikalarına 50%-dək xüsusi mövsüm endirimləri və hədiyyələr.
-                      </p>
+                      <ShieldCheck size={16} color="#e31e24" />
+                      <span>Rəsmi Zəmanət və Servis</span>
                     </div>
-
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
-                      <span style={{ fontSize: '13px', fontWeight: 700, color: '#e31e24', backgroundColor: 'rgba(227, 30, 36, 0.1)', padding: '6px 12px', borderRadius: '8px' }}>
-                        Məhdud sayda təkliflər
-                      </span>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setHoveredNavTab(null);
-                        onNavigate('catalog', 'discounts');
-                      }}
+                    <p
                       style={{
-                        padding: '10px 20px',
-                        borderRadius: '10px',
-                        backgroundColor: '#e31e24',
-                        color: '#ffffff',
-                        border: 'none',
                         fontSize: '13px',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '6px',
-                        boxShadow: '0 4px 14px rgba(227, 30, 36, 0.35)',
+                        color: theme.textMuted,
+                        margin: '6px 0 0 0',
+                        lineHeight: 1.4,
                       }}
                     >
-                      <span>Bütün endirimlərə bax</span>
-                      <ArrowRight size={14} />
-                    </button>
+                      Zəmanət və servis şərtlərini məhsul sənədlərinə uyğun olaraq dəqiqləşdirin.
+                    </p>
                   </div>
-                )}
-              </div>
+
+                  <div
+                    style={{ display: 'flex', alignItems: 'center', gap: '24px', flexWrap: 'wrap' }}
+                  >
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        color: theme.text,
+                      }}
+                    >
+                      <CheckCircle2 size={15} color="#16a34a" />
+                      <span>Məhsula uyğun zəmanət məlumatı</span>
+                    </div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        fontSize: '13px',
+                        fontWeight: 600,
+                        color: theme.text,
+                      }}
+                    >
+                      <Wrench size={15} color="#0284c7" />
+                      <span>Orijinal Detallar</span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setHoveredNavTab(null);
+                      onNavigate('services');
+                    }}
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: '10px',
+                      backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                      color: '#dc2626',
+                      border: 'none',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      boxShadow: 'none',
+                    }}
+                  >
+                    <span>Servis haqqında ətraflı</span>
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
+              )}
+
+              {hoveredNavTab === 'support' && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '32px',
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <div style={{ maxWidth: '320px' }}>
+                    <div
+                      style={{
+                        fontSize: '15px',
+                        fontWeight: 800,
+                        color: theme.text,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                      }}
+                    >
+                      <Phone size={16} color="#e31e24" />
+                      <span>Müştəri Dəstəyi</span>
+                    </div>
+                    <p
+                      style={{
+                        fontSize: '13px',
+                        color: theme.textMuted,
+                        margin: '6px 0 0 0',
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      Məhsul seçimi, sifariş və servis mövzularında mövcud əlaqə kanallarından bizə
+                      yaza və ya zəng edə bilərsiniz.
+                    </p>
+                  </div>
+
+                  <div
+                    style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}
+                  >
+                    <span style={{ fontSize: '13.5px', fontWeight: 700, color: theme.text }}>
+                      {settings?.phoneNumber || '+994 50 261 30 41'}
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setHoveredNavTab(null);
+                      onNavigate('support');
+                    }}
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: '10px',
+                      backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                      color: '#dc2626',
+                      border: 'none',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      boxShadow: 'none',
+                    }}
+                  >
+                    <span>Dəstək mərkəzinə keç</span>
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
+              )}
+
+              {hoveredNavTab === 'discounts' && (
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    gap: '32px',
+                    flexWrap: 'wrap',
+                  }}
+                >
+                  <div style={{ maxWidth: '320px' }}>
+                    <div
+                      style={{
+                        fontSize: '15px',
+                        fontWeight: 800,
+                        color: theme.text,
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '8px',
+                      }}
+                    >
+                      <Percent size={16} color="#e31e24" />
+                      <span>Xüsusi Endirim Təklifləri</span>
+                    </div>
+                    <p
+                      style={{
+                        fontSize: '13px',
+                        color: theme.textMuted,
+                        margin: '6px 0 0 0',
+                        lineHeight: 1.4,
+                      }}
+                    >
+                      Qiyməti əvvəlki kataloq qiymətindən aşağı olan aktual modelləri bir səhifədə
+                      müqayisə edin.
+                    </p>
+                  </div>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                    <span
+                      style={{
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        color: '#e31e24',
+                        backgroundColor: 'rgba(227, 30, 36, 0.1)',
+                        padding: '6px 12px',
+                        borderRadius: '8px',
+                      }}
+                    >
+                      Kataloq məlumatlarına əsasən
+                    </span>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setHoveredNavTab(null);
+                      onNavigate('catalog', 'discounts');
+                    }}
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: '10px',
+                      backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                      color: '#dc2626',
+                      border: 'none',
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      boxShadow: 'none',
+                    }}
+                  >
+                    <span>Bütün endirimlərə bax</span>
+                    <ArrowRight size={14} />
+                  </button>
+                </div>
+              )}
             </div>
-          )}
+          </div>
+        )}
+      </header>
 
       {/* Mobile Category & Navigation Drawer (rendered on mobile when Menyu/Kateqoriyalar clicked) */}
       <MobileCategoryDrawer
@@ -1992,27 +1823,15 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
         triggerRef={mobileMenuBtnRef}
       />
 
-      {/* User Account / Profile Drawer */}
-      <UserAccountDrawer
-        isOpen={isUserDrawerOpen}
-        onClose={() => setIsUserDrawerOpen(false)}
-        theme={theme}
-        themeMode={themeMode}
-        onToggleTheme={onToggleTheme}
-        onNavigate={onNavigate}
-        cartCount={cartCount}
-        favoritesCount={favoritesCount}
-        onWhatsAppSupport={() => {
-          const phone = settings?.contactPhone?.replace(/[^0-9]/g, '') || '994501234567';
-          window.open(`https://wa.me/${phone}`, '_blank');
-        }}
-      />
-
-      {/* Search Dropdown Clickaway Backdrop */}
-      {isSearchExpanded && (
+      {/* Search & MegaMenu Dropdown Clickaway Backdrop */}
+      {(isSearchExpanded || isMegaMenuOpen || Boolean(hoveredNavTab)) && (
         <div
           className="header-search-clickaway"
-          onClick={() => setIsSearchExpanded(false)}
+          onClick={() => {
+            if (isSearchExpanded) closeSearch();
+            if (isMegaMenuOpen) setIsMegaMenuOpen(false);
+            if (hoveredNavTab) setHoveredNavTab(null);
+          }}
           style={{
             position: 'fixed',
             inset: 0,
@@ -2025,5 +1844,3 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
     </>
   );
 };
-
-

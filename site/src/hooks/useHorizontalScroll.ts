@@ -1,14 +1,16 @@
 import React, { useRef, useEffect, useCallback } from 'react';
 
-interface UseHorizontalScrollOptions {
+interface UseHorizontalScrollOptions<T extends HTMLElement = HTMLDivElement> {
   activeSelector?: string;
   activeDependency?: unknown;
+  scrollRef?: React.RefObject<T | null>;
 }
 
 export function useHorizontalScroll<T extends HTMLElement = HTMLDivElement>(
-  options?: UseHorizontalScrollOptions
+  options?: UseHorizontalScrollOptions<T>
 ) {
-  const containerRef = useRef<T>(null);
+  const internalContainerRef = useRef<T>(null);
+  const containerRef = options?.scrollRef || internalContainerRef;
   const isDraggingRef = useRef(false);
   const startXRef = useRef(0);
   const scrollLeftRef = useRef(0);

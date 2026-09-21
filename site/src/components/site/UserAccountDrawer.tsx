@@ -27,6 +27,12 @@ import {
 } from 'lucide-react';
 import { ThemeColors, ThemeMode, DESIGN_TOKENS } from '../../types/theme';
 import { AuthUser, LoginCredentials, RegisterCredentials } from '../../types/auth';
+import { SaharaDatePicker } from '../SaharaDatePicker';
+import {
+  getPasswordRequirements,
+  isStrongPassword,
+  PASSWORD_REQUIREMENT_TEXT,
+} from '../../utils/authValidation';
 
 interface UserAccountDrawerProps {
   isOpen: boolean;
@@ -42,7 +48,7 @@ interface UserAccountDrawerProps {
   onLogin: (credentials: LoginCredentials) => boolean | Promise<boolean>;
   onRegister: (credentials: RegisterCredentials) => boolean | Promise<boolean>;
   onLogout: () => void;
-  onUpdateProfile?: (updated: Partial<AuthUser>) => void;
+  onUpdateProfile?: (updated: Partial<AuthUser>) => void | boolean | Promise<boolean | void>;
 }
 
 export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
@@ -73,6 +79,7 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
   const [regFullName, setRegFullName] = useState('');
   const [regPhone, setRegPhone] = useState('');
   const [regEmail, setRegEmail] = useState('');
+  const [regBirthDate, setRegBirthDate] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [regConfirmPassword, setRegConfirmPassword] = useState('');
   const [showRegPassword, setShowRegPassword] = useState(false);
@@ -157,8 +164,13 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
       return;
     }
 
-    if (!regPassword || regPassword.length < 6) {
-      setRegError('Şifrə ən azı 6 simvoldan ibarət olmalıdır.');
+    if (!regBirthDate) {
+      setRegError('Doğum tarixinizi seçin.');
+      return;
+    }
+
+    if (!isStrongPassword(regPassword)) {
+      setRegError(PASSWORD_REQUIREMENT_TEXT);
       return;
     }
 
@@ -177,6 +189,7 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
         fullName: regFullName.trim(),
         phone: cleanPhone,
         email: regEmail.trim() || undefined,
+        birthDate: regBirthDate,
         password: regPassword,
         termsAccepted,
       });
@@ -186,6 +199,7 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
         setRegFullName('');
         setRegPhone('');
         setRegEmail('');
+        setRegBirthDate('');
         setRegPassword('');
         setRegConfirmPassword('');
       }
@@ -194,14 +208,15 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
     }
   };
 
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editName.trim()) return;
     if (onUpdateProfile) {
-      onUpdateProfile({
+      const saved = await onUpdateProfile({
         fullName: editName.trim(),
         email: editEmail.trim() || undefined,
       });
+      if (saved === false) return;
       setEditSuccess('Profil məlumatları yeniləndi.');
       setIsEditingProfile(false);
       setTimeout(() => setEditSuccess(''), 3000);
@@ -212,15 +227,17 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
     e.preventDefault();
     if (!orderTrackCode.trim()) return;
     setOrderTrackResult(
-      `Sifariş #${orderTrackCode.toUpperCase()}: Sistemdə qeydiyyatdadır. Sahara rəsmi kuryeri tərəfindən 24 saat ərzində çatdırılacaqdır.`
+      `Sifariş #${orderTrackCode.toUpperCase()} barədə təsdiqlənmiş məlumat tapılmadı. Zəhmət olmasa saytdaxili çatdan bizə yazın.`
     );
   };
 
   // Password strength calculation
   const getPasswordStrength = (pass: string) => {
     if (!pass) return { text: '', color: '#cbd5e1', width: '0%' };
-    if (pass.length < 6) return { text: 'Zəif', color: '#ef4444', width: '30%' };
-    if (pass.length < 9) return { text: 'Orta', color: '#f59e0b', width: '65%' };
+    const checks = getPasswordRequirements(pass);
+    const score = Object.values(checks).filter(Boolean).length;
+    if (score <= 2) return { text: 'Zəif', color: '#ef4444', width: '30%' };
+    if (score < 4) return { text: 'Orta', color: '#f59e0b', width: '65%' };
     return { text: 'Güclü', color: '#10b981', width: '100%' };
   };
 
@@ -313,7 +330,6 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
                     : authUser.email || 'Sahara Müştərisi'
                   : 'Xoş gəlmisiniz! Daxil olun və ya qeydiyyatdan keçin'}
               </span>
-
             </div>
           </div>
 
@@ -360,7 +376,16 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
         </div>
 
         {/* Content Body */}
-        <div style={{ padding: '20px 24px', display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>
+        <div
+          className="user-drawer-body"
+          style={{
+            padding: '20px 24px',
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '20px',
+            flex: 1,
+          }}
+        >
           {/* Quick Action Stats Bar */}
           <div
             style={{
@@ -461,11 +486,16 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
                   </span>
                 )}
               </div>
-              <span style={{ fontSize: '11px', fontWeight: 700, color: theme.text }}>Seçilmişlər</span>
-              <span style={{ fontSize: '10px', color: theme.textMuted }}>{favoritesCount} model</span>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: theme.text }}>
+                Seçilmişlər
+              </span>
+              <span style={{ fontSize: '10px', color: theme.textMuted }}>
+                {favoritesCount} model
+              </span>
             </button>
 
             <div
+              className="user-auth-panel"
               style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -475,7 +505,9 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
               }}
             >
               <Package size={20} color="#3b82f6" />
-              <span style={{ fontSize: '11px', fontWeight: 700, color: theme.text }}>Sifarişlər</span>
+              <span style={{ fontSize: '11px', fontWeight: 700, color: theme.text }}>
+                Sifarişlər
+              </span>
               <span style={{ fontSize: '10px', color: theme.textMuted }}>Rəsmi çatdırılma</span>
             </div>
           </div>
@@ -513,7 +545,12 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
                     padding: '8px 12px',
                     borderRadius: '8px',
                     border: 'none',
-                    backgroundColor: authMode === 'login' ? (themeMode === 'dark' ? '#1e293b' : '#ffffff') : 'transparent',
+                    backgroundColor:
+                      authMode === 'login'
+                        ? themeMode === 'dark'
+                          ? '#1e293b'
+                          : '#ffffff'
+                        : 'transparent',
                     color: authMode === 'login' ? '#dc2626' : theme.textMuted,
                     fontSize: '13px',
                     fontWeight: 800,
@@ -541,7 +578,12 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
                     padding: '8px 12px',
                     borderRadius: '8px',
                     border: 'none',
-                    backgroundColor: authMode === 'register' ? (themeMode === 'dark' ? '#1e293b' : '#ffffff') : 'transparent',
+                    backgroundColor:
+                      authMode === 'register'
+                        ? themeMode === 'dark'
+                          ? '#1e293b'
+                          : '#ffffff'
+                        : 'transparent',
                     color: authMode === 'register' ? '#dc2626' : theme.textMuted,
                     fontSize: '13px',
                     fontWeight: 800,
@@ -561,7 +603,10 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
 
               {/* Login Form */}
               {authMode === 'login' ? (
-                <form onSubmit={handleLoginFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <form
+                  onSubmit={handleLoginFormSubmit}
+                  style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
+                >
                   {loginError && (
                     <div
                       style={{
@@ -582,7 +627,15 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
                   )}
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: theme.text, marginBottom: '4px' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        color: theme.text,
+                        marginBottom: '4px',
+                      }}
+                    >
                       Telefon nömrəsi və ya Email *
                     </label>
                     <div
@@ -617,7 +670,15 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: theme.text, marginBottom: '4px' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        color: theme.text,
+                        marginBottom: '4px',
+                      }}
+                    >
                       Şifrə *
                     </label>
                     <div
@@ -651,7 +712,13 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
                       <button
                         type="button"
                         onClick={() => setShowLoginPassword((p) => !p)}
-                        style={{ background: 'none', border: 'none', color: theme.textMuted, cursor: 'pointer', padding: '4px' }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: theme.textMuted,
+                          cursor: 'pointer',
+                          padding: '4px',
+                        }}
                       >
                         {showLoginPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                       </button>
@@ -663,8 +730,8 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
                     style={{
                       width: '100%',
                       padding: '11px',
-                      backgroundColor: '#dc2626',
-                      color: '#ffffff',
+                      backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                      color: '#dc2626',
                       border: 'none',
                       borderRadius: '8px',
                       fontSize: '13.5px',
@@ -675,7 +742,8 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
                       justifyContent: 'center',
                       gap: '6px',
                       marginTop: '4px',
-                      boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)',
+                      boxShadow: 'none',
+                      transition: 'background-color 0.2s ease, transform 0.15s ease',
                     }}
                   >
                     <span>Daxil ol</span>
@@ -686,15 +754,25 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
                     <button
                       type="button"
                       onClick={() => setAuthMode('register')}
-                      style={{ background: 'none', border: 'none', color: theme.textMuted, fontSize: '12px', cursor: 'pointer' }}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: theme.textMuted,
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                      }}
                     >
-                      Hesabınız yoxdur? <span style={{ color: '#dc2626', fontWeight: 700 }}>Qeydiyyatdan keçin</span>
+                      Hesabınız yoxdur?{' '}
+                      <span style={{ color: '#dc2626', fontWeight: 700 }}>Qeydiyyatdan keçin</span>
                     </button>
                   </div>
                 </form>
               ) : (
                 /* Register Form */
-                <form onSubmit={handleRegisterFormSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '11px' }}>
+                <form
+                  onSubmit={handleRegisterFormSubmit}
+                  style={{ display: 'flex', flexDirection: 'column', gap: '11px' }}
+                >
                   {regError && (
                     <div
                       style={{
@@ -735,7 +813,15 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
 
                   {/* Ad və Soyad */}
                   <div>
-                    <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: theme.text, marginBottom: '3px' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '11.5px',
+                        fontWeight: 700,
+                        color: theme.text,
+                        marginBottom: '3px',
+                      }}
+                    >
                       Ad və Soyad *
                     </label>
                     <input
@@ -760,7 +846,15 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
 
                   {/* Mobil Nömrə */}
                   <div>
-                    <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: theme.text, marginBottom: '3px' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '11.5px',
+                        fontWeight: 700,
+                        color: theme.text,
+                        marginBottom: '3px',
+                      }}
+                    >
                       Mobil Nömrə *
                     </label>
                     <div
@@ -773,7 +867,14 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
                         padding: '0 10px',
                       }}
                     >
-                      <span style={{ fontSize: '12px', fontWeight: 800, color: theme.textMuted, marginRight: '4px' }}>
+                      <span
+                        style={{
+                          fontSize: '12px',
+                          fontWeight: 800,
+                          color: theme.textMuted,
+                          marginRight: '4px',
+                        }}
+                      >
                         +994
                       </span>
                       <input
@@ -798,7 +899,15 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
 
                   {/* Email */}
                   <div>
-                    <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: theme.text, marginBottom: '3px' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '11.5px',
+                        fontWeight: 700,
+                        color: theme.text,
+                        marginBottom: '3px',
+                      }}
+                    >
                       Email ünvanı (İstəyə görə)
                     </label>
                     <input
@@ -820,10 +929,42 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
                     />
                   </div>
 
+                  {/* Doğum tarixi */}
+                  <div>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '11.5px',
+                        fontWeight: 700,
+                        color: theme.text,
+                        marginBottom: '3px',
+                      }}
+                    >
+                      Doğum tarixi *
+                    </label>
+                    <SaharaDatePicker
+                      value={regBirthDate}
+                      onChange={setRegBirthDate}
+                      theme={theme}
+                      themeMode={themeMode}
+                      placeholder="Doğum tarixinizi seçin"
+                      minYear={1930}
+                      maxYear={new Date().getFullYear()}
+                    />
+                  </div>
+
                   {/* Şifrə */}
                   <div>
-                    <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: theme.text, marginBottom: '3px' }}>
-                      Şifrə (min. 6 simvol) *
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '11.5px',
+                        fontWeight: 700,
+                        color: theme.text,
+                        marginBottom: '3px',
+                      }}
+                    >
+                      Şifrə *
                     </label>
                     <div
                       style={{
@@ -855,7 +996,13 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
                       <button
                         type="button"
                         onClick={() => setShowRegPassword((p) => !p)}
-                        style={{ background: 'none', border: 'none', color: theme.textMuted, cursor: 'pointer', padding: '4px' }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: theme.textMuted,
+                          cursor: 'pointer',
+                          padding: '4px',
+                        }}
                       >
                         {showRegPassword ? <EyeOff size={15} /> : <Eye size={15} />}
                       </button>
@@ -864,20 +1011,74 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
                     {/* Strength meter */}
                     {regPassword && (
                       <div style={{ marginTop: '4px' }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '10px', color: theme.textMuted, marginBottom: '2px' }}>
+                        <div
+                          style={{
+                            display: 'flex',
+                            justifyContent: 'space-between',
+                            fontSize: '10px',
+                            color: theme.textMuted,
+                            marginBottom: '2px',
+                          }}
+                        >
                           <span>Şifrə gücü:</span>
-                          <span style={{ color: passStrength.color, fontWeight: 700 }}>{passStrength.text}</span>
+                          <span style={{ color: passStrength.color, fontWeight: 700 }}>
+                            {passStrength.text}
+                          </span>
                         </div>
-                        <div style={{ width: '100%', height: '4px', borderRadius: '2px', backgroundColor: '#e2e8f0', overflow: 'hidden' }}>
-                          <div style={{ width: passStrength.width, height: '100%', backgroundColor: passStrength.color, transition: 'width 0.3s ease' }} />
+                        <div
+                          style={{
+                            width: '100%',
+                            height: '4px',
+                            borderRadius: '2px',
+                            backgroundColor: '#e2e8f0',
+                            overflow: 'hidden',
+                          }}
+                        >
+                          <div
+                            style={{
+                              width: passStrength.width,
+                              height: '100%',
+                              backgroundColor: passStrength.color,
+                              transition: 'width 0.3s ease',
+                            }}
+                          />
                         </div>
                       </div>
                     )}
+                    <div className="password-requirements" aria-label="Şifrə tələbləri">
+                      {(
+                        [
+                          ['hasMinLength', '8+ simvol'],
+                          ['hasLetter', 'hərf'],
+                          ['hasUppercase', 'böyük hərf'],
+                          ['hasNumber', 'rəqəm'],
+                        ] as const
+                      ).map(([key, label]) => {
+                        const met = getPasswordRequirements(regPassword)[key];
+                        return (
+                          <span
+                            key={key}
+                            className={met ? 'is-met' : ''}
+                            style={{ color: met ? '#15803d' : theme.textMuted }}
+                          >
+                            <CheckCircle2 size={12} /> {label}
+                          </span>
+                        );
+                      })}
+                    </div>
                   </div>
 
                   {/* Şifrə Təkrarı */}
                   <div>
-                    <label style={{ display: 'block', fontSize: '11.5px', fontWeight: 700, color: theme.text, marginBottom: '3px' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '11.5px',
+                        fontWeight: 700,
+                        color: theme.text,
+                        marginBottom: '3px',
+                      }}
+                    >
                       Şifrənin Təkrarı *
                     </label>
                     <input
@@ -901,7 +1102,16 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
                   </div>
 
                   {/* Terms */}
-                  <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '11.5px', color: theme.textSecondary, cursor: 'pointer' }}>
+                  <label
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '11.5px',
+                      color: theme.textSecondary,
+                      cursor: 'pointer',
+                    }}
+                  >
                     <input
                       type="checkbox"
                       checked={termsAccepted}
@@ -916,8 +1126,8 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
                     style={{
                       width: '100%',
                       padding: '11px',
-                      backgroundColor: '#dc2626',
-                      color: '#ffffff',
+                      backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                      color: '#dc2626',
                       border: 'none',
                       borderRadius: '8px',
                       fontSize: '13.5px',
@@ -928,7 +1138,8 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
                       justifyContent: 'center',
                       gap: '6px',
                       marginTop: '4px',
-                      boxShadow: '0 4px 12px rgba(220, 38, 38, 0.3)',
+                      boxShadow: 'none',
+                      transition: 'background-color 0.2s ease, transform 0.15s ease',
                     }}
                   >
                     <span>Qeydiyyatı Tamamla</span>
@@ -939,9 +1150,16 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
                     <button
                       type="button"
                       onClick={() => setAuthMode('login')}
-                      style={{ background: 'none', border: 'none', color: theme.textMuted, fontSize: '12px', cursor: 'pointer' }}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: theme.textMuted,
+                        fontSize: '12px',
+                        cursor: 'pointer',
+                      }}
                     >
-                      Artıq hesabınız var? <span style={{ color: '#dc2626', fontWeight: 700 }}>Daxil olun</span>
+                      Artıq hesabınız var?{' '}
+                      <span style={{ color: '#dc2626', fontWeight: 700 }}>Daxil olun</span>
                     </button>
                   </div>
                 </form>
@@ -958,10 +1176,19 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
                   border: `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0'}`,
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'space-between',
+                    marginBottom: '12px',
+                  }}
+                >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <Sparkles size={16} color="#dc2626" />
-                    <span style={{ fontSize: '13.5px', fontWeight: 800, color: theme.text }}>Şəxsi Profil</span>
+                    <span style={{ fontSize: '13.5px', fontWeight: 800, color: theme.text }}>
+                      Şəxsi Profil
+                    </span>
                   </div>
                   <button
                     type="button"
@@ -1000,9 +1227,20 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
                 )}
 
                 {isEditingProfile ? (
-                  <form onSubmit={handleSaveProfile} style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <form
+                    onSubmit={handleSaveProfile}
+                    style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}
+                  >
                     <div>
-                      <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: theme.textMuted, marginBottom: '2px' }}>
+                      <label
+                        style={{
+                          display: 'block',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          color: theme.textMuted,
+                          marginBottom: '2px',
+                        }}
+                      >
                         Ad və Soyad
                       </label>
                       <input
@@ -1023,7 +1261,15 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
                       />
                     </div>
                     <div>
-                      <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: theme.textMuted, marginBottom: '2px' }}>
+                      <label
+                        style={{
+                          display: 'block',
+                          fontSize: '11px',
+                          fontWeight: 700,
+                          color: theme.textMuted,
+                          marginBottom: '2px',
+                        }}
+                      >
                         Email
                       </label>
                       <input
@@ -1060,15 +1306,26 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
                     </button>
                   </form>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '6px',
+                      fontSize: '13px',
+                    }}
+                  >
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                       <span style={{ color: theme.textMuted }}>Ad Soyad:</span>
-                      <span style={{ fontWeight: 700, color: theme.text }}>{authUser.fullName}</span>
+                      <span style={{ fontWeight: 700, color: theme.text }}>
+                        {authUser.fullName}
+                      </span>
                     </div>
                     {authUser.phone && (
                       <div style={{ display: 'flex', justifyContent: 'space-between' }}>
                         <span style={{ color: theme.textMuted }}>Telefon:</span>
-                        <span style={{ fontWeight: 700, color: theme.text }}>+994 {authUser.phone}</span>
+                        <span style={{ fontWeight: 700, color: theme.text }}>
+                          +994 {authUser.phone}
+                        </span>
                       </div>
                     )}
                     {authUser.email && (
@@ -1112,7 +1369,16 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
 
           {/* Quick Navigation Menu Rows */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-            <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: theme.textMuted, margin: '4px 0' }}>
+            <span
+              style={{
+                fontSize: '11px',
+                fontWeight: 800,
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                color: theme.textMuted,
+                margin: '4px 0',
+              }}
+            >
               Xidmətlər və Səhifələr
             </span>
 
@@ -1144,7 +1410,16 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 {cartCount > 0 && (
-                  <span style={{ fontSize: '11px', fontWeight: 800, color: '#dc2626', backgroundColor: 'rgba(220, 38, 38, 0.12)', padding: '2px 8px', borderRadius: '999px' }}>
+                  <span
+                    style={{
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      color: '#dc2626',
+                      backgroundColor: 'rgba(220, 38, 38, 0.12)',
+                      padding: '2px 8px',
+                      borderRadius: '999px',
+                    }}
+                  >
                     {cartCount} ədəd
                   </span>
                 )}
@@ -1180,7 +1455,16 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 {favoritesCount > 0 && (
-                  <span style={{ fontSize: '11px', fontWeight: 800, color: '#ef4444', backgroundColor: 'rgba(239, 68, 68, 0.12)', padding: '2px 8px', borderRadius: '999px' }}>
+                  <span
+                    style={{
+                      fontSize: '11px',
+                      fontWeight: 800,
+                      color: '#ef4444',
+                      backgroundColor: 'rgba(239, 68, 68, 0.12)',
+                      padding: '2px 8px',
+                      borderRadius: '999px',
+                    }}
+                  >
                     {favoritesCount} model
                   </span>
                 )}
@@ -1285,10 +1569,21 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
               border: `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.06)' : '#e2e8f0'}`,
             }}
           >
-            <span style={{ fontSize: '11px', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.06em', color: theme.textMuted }}>
+            <span
+              style={{
+                fontSize: '11px',
+                fontWeight: 800,
+                textTransform: 'uppercase',
+                letterSpacing: '0.06em',
+                color: theme.textMuted,
+              }}
+            >
               Sifarişinizi İzləyin
             </span>
-            <form onSubmit={handleTrackOrder} style={{ display: 'flex', gap: '6px', marginTop: '8px' }}>
+            <form
+              onSubmit={handleTrackOrder}
+              style={{ display: 'flex', gap: '6px', marginTop: '8px' }}
+            >
               <input
                 type="text"
                 value={orderTrackCode}
@@ -1307,6 +1602,7 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
               />
               <button
                 type="submit"
+                className="sahara-soft-red-action"
                 style={{
                   padding: '8px 12px',
                   backgroundColor: '#dc2626',
@@ -1322,7 +1618,9 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
               </button>
             </form>
             {orderTrackResult && (
-              <div style={{ marginTop: '8px', fontSize: '11.5px', color: '#16a34a', fontWeight: 600 }}>
+              <div
+                style={{ marginTop: '8px', fontSize: '11.5px', color: '#16a34a', fontWeight: 600 }}
+              >
                 {orderTrackResult}
               </div>
             )}
@@ -1367,7 +1665,11 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
             }}
           >
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {themeMode === 'dark' ? <Moon size={16} color="#eab308" /> : <Sun size={16} color="#f59e0b" />}
+              {themeMode === 'dark' ? (
+                <Moon size={16} color="#eab308" />
+              ) : (
+                <Sun size={16} color="#f59e0b" />
+              )}
               <span style={{ fontSize: '12.5px', fontWeight: 600, color: theme.text }}>
                 {themeMode === 'dark' ? 'Gecə Rejimi' : 'Gündüz Rejimi'}
               </span>
@@ -1394,4 +1696,3 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
     </>
   );
 };
-

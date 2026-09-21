@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import {
   ShoppingCart,
   Trash2,
@@ -6,13 +6,9 @@ import {
   Minus,
   ArrowRight,
   ShieldCheck,
-  Truck,
   CheckCircle2,
   Phone,
-  Tag,
-  Sparkles,
   ArrowLeft,
-  Info,
 } from 'lucide-react';
 import { Product, CatalogSettings } from '../types/product';
 import { ThemeColors } from '../types/theme';
@@ -43,7 +39,6 @@ export interface CartPageProps {
 export const CartPage: React.FC<CartPageProps> = ({
   cartItems,
   allProducts,
-  settings,
   theme,
   themeMode,
   onUpdateQuantity,
@@ -54,10 +49,6 @@ export const CartPage: React.FC<CartPageProps> = ({
   onWhatsAppCheckout,
   onCall,
 }) => {
-  const [promoCodeInput, setPromoCodeInput] = useState('');
-  const [appliedPromo, setAppliedPromo] = useState<{ code: string; percent: number } | null>(null);
-  const [promoError, setPromoError] = useState<string | null>(null);
-
   // Subtotal calculation
   const subtotal = useMemo(() => {
     return cartItems.reduce((sum, item) => {
@@ -66,30 +57,8 @@ export const CartPage: React.FC<CartPageProps> = ({
     }, 0);
   }, [cartItems]);
 
-  const discountAmount = useMemo(() => {
-    if (!appliedPromo) return 0;
-    return Math.round((subtotal * appliedPromo.percent) / 100);
-  }, [subtotal, appliedPromo]);
-
-  const total = Math.max(0, subtotal - discountAmount);
+  const total = subtotal;
   const totalItemCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
-
-  // Apply promo code
-  const handleApplyPromo = (e: React.FormEvent) => {
-    e.preventDefault();
-    const cleanCode = promoCodeInput.trim().toUpperCase();
-    if (!cleanCode) return;
-
-    if (cleanCode === 'SAHARA10' || cleanCode === 'SAHARA') {
-      setAppliedPromo({ code: cleanCode, percent: 10 });
-      setPromoError(null);
-    } else if (cleanCode === 'BAKU5' || cleanCode === 'BAKU') {
-      setAppliedPromo({ code: cleanCode, percent: 5 });
-      setPromoError(null);
-    } else {
-      setPromoError('Daxil edilən promo kod etibarsızdır.');
-    }
-  };
 
   const recommendedProducts = useMemo(() => {
     const inCartIds = new Set(cartItems.map((i) => i.product.id));
@@ -164,8 +133,8 @@ export const CartPage: React.FC<CartPageProps> = ({
                   style={{
                     fontSize: '13.5px',
                     fontWeight: 800,
-                    backgroundColor: '#e31e24',
-                    color: '#ffffff',
+                    backgroundColor: 'rgba(220, 38, 38, 0.12)',
+                    color: '#dc2626',
                     padding: '4px 12px',
                     borderRadius: '20px',
                   }}
@@ -175,7 +144,7 @@ export const CartPage: React.FC<CartPageProps> = ({
               )}
             </h1>
             <p style={{ fontSize: '13.5px', color: theme.textMuted, margin: '6px 0 0 0' }}>
-              Seçilmiş məişət texnikası modelləri, rəsmi zəmanət və operativ sifariş xülasəsi.
+              Seçdiyiniz modelləri, sayları və məhsul qiymətlərini yoxlayın.
             </p>
           </div>
 
@@ -233,7 +202,9 @@ export const CartPage: React.FC<CartPageProps> = ({
               <ShoppingCart size={40} />
             </div>
 
-            <h2 style={{ fontSize: '22px', fontWeight: 800, color: theme.text, margin: '0 0 10px' }}>
+            <h2
+              style={{ fontSize: '22px', fontWeight: 800, color: theme.text, margin: '0 0 10px' }}
+            >
               Səbətiniz hazırda boşdur
             </h2>
             <p
@@ -245,15 +216,16 @@ export const CartPage: React.FC<CartPageProps> = ({
                 lineHeight: 1.5,
               }}
             >
-              Kataloqumuza keçid edərək ARDO, Lotus və digər rəsmi brendlərimizin ən yeni modellərini seçib səbətə əlavə edə bilərsiniz.
+              Kataloqumuza keçid edərək ARDO, Lotus və digər rəsmi brendlərimizin ən yeni
+              modellərini seçib səbətə əlavə edə bilərsiniz.
             </p>
 
             <button
               type="button"
               onClick={() => onNavigate('catalog')}
               style={{
-                backgroundColor: '#e31e24',
-                color: '#ffffff',
+                backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                color: '#dc2626',
                 border: 'none',
                 borderRadius: '14px',
                 padding: '14px 32px',
@@ -263,7 +235,7 @@ export const CartPage: React.FC<CartPageProps> = ({
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
-                boxShadow: '0 6px 20px rgba(227, 30, 36, 0.35)',
+                boxShadow: 'none',
                 transition: 'transform 0.15s ease',
               }}
             >
@@ -291,43 +263,6 @@ export const CartPage: React.FC<CartPageProps> = ({
                 gap: '16px',
               }}
             >
-              {/* Free Delivery Milestone Progress Banner */}
-              <div
-                style={{
-                  padding: '14px 18px',
-                  borderRadius: '14px',
-                  backgroundColor: themeMode === 'dark' ? 'rgba(21, 128, 61, 0.15)' : '#f0fdf4',
-                  border: `1px solid ${themeMode === 'dark' ? 'rgba(34, 197, 94, 0.25)' : '#bbf7d0'}`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '12px',
-                }}
-              >
-                <div
-                  style={{
-                    width: '36px',
-                    height: '36px',
-                    borderRadius: '10px',
-                    backgroundColor: '#16a34a',
-                    color: '#ffffff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                  }}
-                >
-                  <Truck size={18} />
-                </div>
-                <div>
-                  <div style={{ fontSize: '13.5px', fontWeight: 800, color: themeMode === 'dark' ? '#4ade80' : '#15803d' }}>
-                    Təbriklər! Sifarişinizə pulsuz çatdırılma daxildir
-                  </div>
-                  <div style={{ fontSize: '12px', color: theme.textMuted }}>
-                    Bütün rəsmi Sahara sifarişləri qapınıza qədər tam təhlükəsiz və sığortalı çatdırılır.
-                  </div>
-                </div>
-              </div>
-
               {/* Items Card List */}
               {cartItems.map(({ product, quantity }) => {
                 const itemPrice = typeof product.price === 'number' ? product.price : 0;
@@ -383,7 +318,14 @@ export const CartPage: React.FC<CartPageProps> = ({
 
                     {/* Info */}
                     <div style={{ flex: 1, minWidth: '180px' }}>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          marginBottom: '4px',
+                        }}
+                      >
                         <span
                           style={{
                             fontSize: '11px',
@@ -396,7 +338,9 @@ export const CartPage: React.FC<CartPageProps> = ({
                           {product.brandName || product.brandId || 'Orijinal'}
                         </span>
                         {product.modelCode && (
-                          <span style={{ fontSize: '11.5px', fontWeight: 600, color: theme.textMuted }}>
+                          <span
+                            style={{ fontSize: '11.5px', fontWeight: 600, color: theme.textMuted }}
+                          >
                             • {product.modelCode}
                           </span>
                         )}
@@ -415,13 +359,21 @@ export const CartPage: React.FC<CartPageProps> = ({
                         {product.title}
                       </h3>
 
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '10px',
+                          flexWrap: 'wrap',
+                        }}
+                      >
                         <span
                           style={{
                             fontSize: '11px',
                             fontWeight: 700,
                             color: '#16a34a',
-                            backgroundColor: themeMode === 'dark' ? 'rgba(22, 163, 74, 0.15)' : '#dcfce7',
+                            backgroundColor:
+                              themeMode === 'dark' ? 'rgba(22, 163, 74, 0.15)' : '#dcfce7',
                             padding: '2px 8px',
                             borderRadius: '6px',
                             display: 'inline-flex',
@@ -430,7 +382,7 @@ export const CartPage: React.FC<CartPageProps> = ({
                           }}
                         >
                           <CheckCircle2 size={12} />
-                          <span>Rəsmi 2 il zəmanət</span>
+                          <span>Məhsul məlumatı kataloqdan götürülüb</span>
                         </span>
                       </div>
                     </div>
@@ -584,83 +536,61 @@ export const CartPage: React.FC<CartPageProps> = ({
                 </h3>
 
                 {/* Subtotal rows */}
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '18px' }}>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13.5px', color: theme.text }}>
-                    <span style={{ color: theme.textMuted }}>Məhsulların cəmi ({totalItemCount} ədəd)</span>
+                <div
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '10px',
+                    marginBottom: '18px',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      fontSize: '13.5px',
+                      color: theme.text,
+                    }}
+                  >
+                    <span style={{ color: theme.textMuted }}>
+                      Məhsulların cəmi ({totalItemCount} ədəd)
+                    </span>
                     <span style={{ fontWeight: 700 }}>{formatPrice(subtotal)} ₼</span>
                   </div>
 
-                  {appliedPromo && (
-                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13.5px', color: '#16a34a' }}>
-                      <span>Promo Endirimi ({appliedPromo.code} -{appliedPromo.percent}%)</span>
-                      <span style={{ fontWeight: 700 }}>-{formatPrice(discountAmount)} ₼</span>
-                    </div>
-                  )}
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13.5px', color: theme.text }}>
-                    <span style={{ color: theme.textMuted }}>Rəsmi Çatdırılma</span>
-                    <span style={{ fontWeight: 700, color: '#16a34a' }}>Pulsuz</span>
-                  </div>
-
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '13.5px', color: theme.text }}>
-                    <span style={{ color: theme.textMuted }}>Rəsmi İstehsalçı Zəmanəti</span>
-                    <span style={{ fontWeight: 700, color: '#16a34a' }}>Daxildir</span>
-                  </div>
-                </div>
-
-                <div style={{ height: '1px', backgroundColor: themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : '#e2e8f0', margin: '14px 0' }} />
-
-                {/* Promo code form */}
-                <form onSubmit={handleApplyPromo} style={{ marginBottom: '18px' }}>
-                  <div style={{ display: 'flex', gap: '8px' }}>
-                    <input
-                      type="text"
-                      placeholder="Promo kod (məs: SAHARA10)"
-                      value={promoCodeInput}
-                      onChange={(e) => {
-                        setPromoCodeInput(e.target.value);
-                        setPromoError(null);
-                      }}
-                      style={{
-                        flex: 1,
-                        padding: '10px 14px',
-                        borderRadius: '10px',
-                        backgroundColor: themeMode === 'dark' ? '#0f172a' : '#f8fafc',
-                        border: `1px solid ${promoError ? '#ef4444' : themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#cbd5e1'}`,
-                        color: theme.text,
-                        fontSize: '13px',
-                        fontWeight: 600,
-                        outline: 'none',
-                        textTransform: 'uppercase',
-                      }}
-                    />
+                  <div
+                    style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      fontSize: '13.5px',
+                      color: theme.text,
+                    }}
+                  >
+                    <span style={{ color: theme.textMuted }}>Çatdırılma və xidmət şərtləri</span>
                     <button
-                      type="submit"
+                      type="button"
+                      onClick={() => onNavigate('delivery')}
                       style={{
-                        padding: '10px 16px',
-                        borderRadius: '10px',
-                        backgroundColor: themeMode === 'dark' ? '#334155' : '#e2e8f0',
-                        color: theme.text,
-                        border: 'none',
-                        fontSize: '13px',
-                        fontWeight: 700,
+                        border: 0,
+                        padding: 0,
+                        background: 'transparent',
+                        color: '#e31e24',
+                        fontWeight: 750,
                         cursor: 'pointer',
                       }}
                     >
-                      Tətbiq et
+                      Ətraflı bax
                     </button>
                   </div>
-                  {promoError && (
-                    <div style={{ fontSize: '11.5px', color: '#ef4444', marginTop: '6px' }}>
-                      {promoError}
-                    </div>
-                  )}
-                  {appliedPromo && (
-                    <div style={{ fontSize: '11.5px', color: '#16a34a', marginTop: '6px', fontWeight: 600 }}>
-                      ✓ {appliedPromo.code} kodu ilə 10% endirim tətbiq edildi!
-                    </div>
-                  )}
-                </form>
+                </div>
+
+                <div
+                  style={{
+                    height: '1px',
+                    backgroundColor: themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : '#e2e8f0',
+                    margin: '14px 0',
+                  }}
+                />
 
                 {/* Total row */}
                 <div
@@ -671,13 +601,15 @@ export const CartPage: React.FC<CartPageProps> = ({
                     marginBottom: '20px',
                   }}
                 >
-                  <span style={{ fontSize: '15px', fontWeight: 800, color: theme.text }}>Yekun Məbləğ</span>
+                  <span style={{ fontSize: '15px', fontWeight: 800, color: theme.text }}>
+                    Yekun Məbləğ
+                  </span>
                   <div style={{ textAlign: 'right' }}>
                     <span style={{ fontSize: '24px', fontWeight: 900, color: '#e31e24' }}>
                       {formatPrice(total)} ₼
                     </span>
                     <div style={{ fontSize: '11.5px', color: theme.textMuted }}>
-                      ƏDV daxildir
+                      Məhsul qiymətlərinin cəmi
                     </div>
                   </div>
                 </div>
@@ -685,11 +617,14 @@ export const CartPage: React.FC<CartPageProps> = ({
                 {/* Main WhatsApp Direct Order CTA */}
                 <button
                   type="button"
-                  onClick={() => onWhatsAppCheckout(cartItems, total, appliedPromo?.code)}
+                  data-testid="cart-whatsapp-checkout"
+                  onClick={() => onWhatsAppCheckout(cartItems, total)}
                   style={{
-                    width: '100%',
-                    padding: '14px 20px',
-                    borderRadius: '14px',
+                    width: 'auto',
+                    minWidth: '220px',
+                    maxWidth: '100%',
+                    padding: '11px 18px',
+                    borderRadius: '12px',
                     backgroundColor: '#15803d',
                     color: '#ffffff',
                     border: 'none',
@@ -700,7 +635,7 @@ export const CartPage: React.FC<CartPageProps> = ({
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '10px',
-                    boxShadow: '0 6px 20px rgba(21, 128, 61, 0.35)',
+                    boxShadow: '0 5px 16px rgba(21, 128, 61, 0.24)',
                     marginBottom: '10px',
                     transition: 'transform 0.15s ease, background-color 0.15s ease',
                   }}
@@ -736,14 +671,25 @@ export const CartPage: React.FC<CartPageProps> = ({
                 </button>
 
                 {/* Trust Badges */}
-                <div style={{ marginTop: '20px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: theme.textMuted }}>
+                <div
+                  style={{
+                    marginTop: '20px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      fontSize: '12px',
+                      color: theme.textMuted,
+                    }}
+                  >
                     <ShieldCheck size={16} color="#16a34a" />
-                    <span>Rəsmi istehsalçı zəmanəti və orijinal sertifikat</span>
-                  </div>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', color: theme.textMuted }}>
-                    <Truck size={16} color="#0284c7" />
-                    <span>Bakı və regionlara operativ təhlükəsiz çatdırılma</span>
+                    <span>Şərtlər sifariş təsdiqlənərkən əlaqə əməkdaşı ilə dəqiqləşdirilir.</span>
                   </div>
                 </div>
               </div>
@@ -754,13 +700,20 @@ export const CartPage: React.FC<CartPageProps> = ({
         {/* Recommended Products Carousel / Grid */}
         {recommendedProducts.length > 0 && (
           <div style={{ marginTop: '64px' }}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '20px',
+              }}
+            >
               <div>
                 <h2 style={{ fontSize: '20px', fontWeight: 800, color: theme.text, margin: 0 }}>
                   Tövsiyə Olunan Modellər
                 </h2>
                 <p style={{ fontSize: '13px', color: theme.textMuted, margin: '4px 0 0' }}>
-                  Səbətinizə uyğun gələ biləcək ən çox bəyənilən modellər
+                  Kataloqda dərc edilmiş digər modellər
                 </p>
               </div>
               <button
@@ -791,7 +744,9 @@ export const CartPage: React.FC<CartPageProps> = ({
                   theme={theme}
                   onSelect={onSelectProduct}
                   onShare={() => {}}
-                  onWhatsApp={() => onWhatsAppCheckout([{ product: prod, quantity: 1 }], prod.price || 0)}
+                  onWhatsApp={() =>
+                    onWhatsAppCheckout([{ product: prod, quantity: 1 }], prod.price || 0)
+                  }
                   onCall={() => onCall()}
                   onCopyLink={() => {}}
                 />

@@ -131,7 +131,7 @@ export const BrandCategoryFilter: React.FC<BrandCategoryFilterProps> = ({
           type="button"
           role="tab"
           aria-selected={selectedCategory === 'all'}
-          className={`brand-category-pill ${selectedCategory === 'all' ? 'active' : ''}`}
+          className={`brand-category-pill ${selectedCategory === 'all' ? 'active sahara-soft-red-action' : ''}`}
           onClick={(e) => {
             if (hasMoved()) return;
             scrollItemIntoView(e);
@@ -155,7 +155,7 @@ export const BrandCategoryFilter: React.FC<BrandCategoryFilterProps> = ({
               type="button"
               role="tab"
               aria-selected={isActive}
-              className={`brand-category-pill ${isActive ? 'active' : ''}`}
+              className={`brand-category-pill ${isActive ? 'active sahara-soft-red-action' : ''}`}
               onClick={(e) => {
                 if (hasMoved()) return;
                 scrollItemIntoView(e);

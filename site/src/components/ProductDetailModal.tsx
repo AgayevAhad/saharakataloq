@@ -14,6 +14,9 @@ import {
   Image as ImageIcon,
   Volume2,
   VolumeX,
+  RotateCcw,
+  RotateCw,
+  Globe2,
 } from 'lucide-react';
 import { Brand, Product } from '../types/product';
 import { ThemeColors } from '../types/theme';
@@ -21,6 +24,8 @@ import { WhatsAppIcon } from './WhatsAppIcon';
 import { ShimmerImage } from './ShimmerImage';
 import { useHorizontalScroll } from '../hooks/useHorizontalScroll';
 import { pushOverlay, popOverlay, isTopOverlay } from '../utils/backgroundIsolation';
+import { verifiedManufacturingCountry } from '../utils/manufacturingCountry';
+import { getVisibleBadgeText } from './productCardVisuals';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -53,6 +58,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
     const [activeTab, setActiveTab] = useState<'specs' | 'tech'>('specs');
     const [isFullscreenImage, setIsFullscreenImage] = useState(false);
     const [zoomScale, setZoomScale] = useState(1);
+    const [rotation, setRotation] = useState(0);
     const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
     const [isDragging, setIsDragging] = useState(false);
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -191,6 +197,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
       setActiveMediaIndex(0);
       setIsFullscreenImage(false);
       setZoomScale(1);
+      setRotation(0);
       setPanPosition({ x: 0, y: 0 });
       setIsDragging(false);
     }, [product?.id]);
@@ -211,6 +218,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
     useEffect(() => {
       if (!isFullscreenImage) {
         setZoomScale(1);
+        setRotation(0);
         setPanPosition({ x: 0, y: 0 });
         setIsDragging(false);
       }
@@ -306,6 +314,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
         setActiveMediaIndex((prev) => (prev + 1) % mediaItems.length);
         setPanPosition({ x: 0, y: 0 });
         setZoomScale(1);
+        setRotation(0);
       },
       [mediaItems.length]
     );
@@ -353,6 +362,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
 
     const resetZoom = () => {
       setZoomScale(1);
+      setRotation(0);
       setPanPosition({ x: 0, y: 0 });
       setIsDragging(false);
     };
@@ -607,6 +617,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
 
                 <button
                   onClick={onClose}
+                  className="sahara-soft-red-action"
                   style={{
                     backgroundColor: theme.primary,
                     border: 'none',
@@ -783,7 +794,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                       </div>
                     )}
 
-                    {product.badgeText && (
+                    {getVisibleBadgeText(product) && (
                       <div
                         style={{
                           position: 'absolute',
@@ -799,7 +810,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                           zIndex: 8,
                         }}
                       >
-                        {product.badgeText}
+                        {getVisibleBadgeText(product)}
                       </div>
                     )}
 
@@ -888,15 +899,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                       borderRadius: '12px',
                     }}
                   >
-                    <span style={{ fontSize: '22px' }}>{brand?.id === 'lotus' ? '🌐' : '🇮🇹'}</span>
+                    <Globe2 size={22} aria-hidden="true" />
                     <div style={{ flex: 1 }}>
                       <div style={{ color: theme.text, fontSize: '13px', fontWeight: 700 }}>
                         {brand?.name || product.brandId.toUpperCase()}
-                        {brand?.originCountry ? ` — ${brand.originCountry} brendi` : ''}
                       </div>
                       <div style={{ color: theme.textMuted, fontSize: '11px' }}>
-                        {product.manufacturingCountry
-                          ? `İstehsal: ${product.manufacturingCountry}`
+                        {verifiedManufacturingCountry(product)
+                          ? `İstehsal: ${verifiedManufacturingCountry(product)}`
                           : 'Kataloq Modeli'}
                       </div>
                     </div>
@@ -1003,19 +1013,19 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                         alignItems: 'center',
                         justifyContent: 'center',
                         gap: '8px',
-                        backgroundColor: '#15803d',
-                        color: '#ffffff',
+                        backgroundColor: 'rgba(34, 197, 94, 0.12)',
+                        color: '#16a34a',
                         border: 'none',
                         padding: '12px',
                         borderRadius: '12px',
                         fontSize: '14px',
-                        fontWeight: 700,
+                        fontWeight: 800,
                         cursor: 'pointer',
-                        boxShadow: '0 4px 14px rgba(21, 128, 61, 0.28)',
-                        transition: 'transform 0.15s ease',
+                        boxShadow: 'none',
+                        transition: 'background-color 0.15s ease, transform 0.15s ease',
                       }}
                     >
-                      <WhatsAppIcon size={20} color="#ffffff" />
+                      <WhatsAppIcon size={18} color="#16a34a" />
                       <span>{whatsappButtonText}</span>
                     </button>
 
@@ -1023,14 +1033,23 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                       onClick={() => onCall(product)}
                       className="modal-call-button"
                       style={{
-                        backgroundColor: theme.primary,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '8px',
+                        backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                        color: '#dc2626',
+                        border: 'none',
                         padding: '12px',
                         borderRadius: '12px',
                         fontSize: '14px',
-                        fontWeight: 700,
+                        fontWeight: 800,
+                        cursor: 'pointer',
+                        boxShadow: 'none',
+                        transition: 'background-color 0.15s ease, transform 0.15s ease',
                       }}
                     >
-                      <Phone size={18} />
+                      <Phone size={17} color="#dc2626" />
                       <span>{callButtonText}</span>
                     </button>
 
@@ -1211,6 +1230,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
               </div>
               <button
                 onClick={() => setIsFullscreenImage(false)}
+                className="sahara-soft-red-action"
                 style={{
                   backgroundColor: theme.primary,
                   border: 'none',
@@ -1241,6 +1261,24 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                 gap: '8px',
               }}
             >
+              <button
+                type="button"
+                className="zoom-btn"
+                onClick={() => setRotation((value) => value - 90)}
+                title="Sola fırlat"
+                aria-label="Şəkli sola fırlat"
+              >
+                <RotateCcw size={16} />
+              </button>
+              <button
+                type="button"
+                className="zoom-btn"
+                onClick={() => setRotation((value) => value + 90)}
+                title="Sağa fırlat"
+                aria-label="Şəkli sağa fırlat"
+              >
+                <RotateCw size={16} />
+              </button>
               <button
                 type="button"
                 className="zoom-btn"
@@ -1386,7 +1424,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                     maxHeight: '80vh',
                     objectFit: activeFitMode as any,
                     objectPosition: activeObjectPosition,
-                    transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoomScale})`,
+                    transform: `translate3d(${panPosition.x}px, ${panPosition.y}px, 0) scale(${zoomScale}) rotate(${rotation}deg)`,
                     transition: isDragging
                       ? 'none'
                       : 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)',

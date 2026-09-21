@@ -277,7 +277,7 @@ export const InverterInfoModal: React.FC<InverterInfoModalProps> = ({
                 <button
                   key={art.id}
                   onClick={(e) => handleSelectTab(art.id, e)}
-                  className={`inverter-modal-tab ${isSelected ? 'is-active' : ''}`}
+                  className={`inverter-modal-tab ${isSelected ? 'is-active sahara-soft-red-action' : ''}`}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
@@ -457,6 +457,7 @@ export const InverterInfoModal: React.FC<InverterInfoModalProps> = ({
         >
           <button
             onClick={onClose}
+            className="sahara-soft-red-action"
             style={{
               backgroundColor: theme.primary,
               color: '#ffffff',

@@ -263,7 +263,7 @@ describe('Phase 4: Navigation CMS Model & Storefront Shell Tests', () => {
         category: 'refrigerator',
       });
       expect(resolveRouteFromPath('/brand/ardo')).toEqual({
-        route: 'catalog',
+        route: 'brand',
         brand: 'ardo',
       });
     });

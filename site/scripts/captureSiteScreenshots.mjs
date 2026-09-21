@@ -10,7 +10,8 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 const SITE_ROOT = resolve(__dirname, '..');
 const AUDIT_DIR = resolve(SITE_ROOT, 'docs/audits');
-const ARTIFACT_DIR = '/home/oni10/.gemini/antigravity-ide/brain/e89daea5-35f8-44c6-bba6-cc53a9325666';
+const ARTIFACT_DIR =
+  '/home/oni10/.gemini/antigravity-ide/brain/e89daea5-35f8-44c6-bba6-cc53a9325666';
 
 if (!existsSync(AUDIT_DIR)) mkdirSync(AUDIT_DIR, { recursive: true });
 

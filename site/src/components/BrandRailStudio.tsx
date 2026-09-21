@@ -50,7 +50,7 @@ export const BrandRailStudio: React.FC<BrandRailStudioProps> = ({
         enabled: true,
         title: 'Brendlər',
         animationEnabled: true,
-        speedSeconds: 30,
+        speedSeconds: 52,
         direction: 'left',
         pauseOnHover: true,
         edgeFade: true,
@@ -755,8 +755,8 @@ export const BrandRailStudio: React.FC<BrandRailStudioProps> = ({
                 </label>
                 <input
                   type="range"
-                  min={10}
-                  max={90}
+                  min={20}
+                  max={120}
                   step={2}
                   value={settings.speedSeconds}
                   onChange={(e) =>

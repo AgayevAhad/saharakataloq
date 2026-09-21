@@ -29,6 +29,7 @@ lerna-debug.log*
 data/*.sqlite-shm
 data/*.sqlite-wal
 data/media/
+data/backups/
 
 # OS / IDE
 .DS_Store
@@ -49,4 +50,3 @@ site/docs/ozum/*.mp4
 site/docs/ozum/*.mov
 site/docs/ozum/*.avi
 site/docs/ozum/*.zip
-

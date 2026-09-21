@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X, Check } from 'lucide-react';
+import { Calendar as CalendarIcon, ChevronLeft, ChevronRight, X } from 'lucide-react';
 import { ThemeColors } from '../types/theme';
 
 interface SaharaDatePickerProps {
@@ -236,7 +236,15 @@ export const SaharaDatePicker: React.FC<SaharaDatePickerProps> = ({
               <ChevronLeft size={16} />
             </button>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, justifyContent: 'center' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                flex: 1,
+                justifyContent: 'center',
+              }}
+            >
               {/* Month Selector */}
               <select
                 value={viewMonth}

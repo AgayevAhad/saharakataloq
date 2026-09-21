@@ -1,15 +1,14 @@
 import React from 'react';
 import { describe, it, expect, vi, afterEach } from 'vitest';
-import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { AccountPage } from '../pages/AccountPage';
-import { App, resolveRouteFromPath } from '../App';
+import { resolveRouteFromPath } from '../App';
 import { lightTheme, darkTheme } from '../types/theme';
 import { AuthUser } from '../types/auth';
 
 afterEach(() => {
   cleanup();
 });
-
 
 const mockUser: AuthUser = {
   id: 'usr-4488',
@@ -93,32 +92,36 @@ describe('AccountPage & User Dashboard Full-Page Suite', () => {
     });
 
     // Switch to Register Tab
-    const regTabBtn = screen.getByRole('button', { name: /Yeni Qeydiyyat/i });
+    const regTabBtn = screen.getByRole('button', { name: /^Qeydiyyat$/i });
     fireEvent.click(regTabBtn);
 
     expect(screen.getByPlaceholderText(/Məs: Əli Əliyev/i)).toBeDefined();
     expect(screen.getByPlaceholderText(/50 123 45 67/i)).toBeDefined();
-    expect(screen.getByPlaceholderText(/Ən azı 6 simvol/i)).toBeDefined();
+    expect(screen.getByPlaceholderText(/Ən azı 8 simvol/i)).toBeDefined();
+    expect(screen.getByText(/Doğum tarixi \*/i)).toBeDefined();
     expect(screen.getByPlaceholderText(/Şifrəni təkrar yazın/i)).toBeDefined();
 
     // Submit Register
     const regName = screen.getByPlaceholderText(/Məs: Əli Əliyev/i);
     const regPhone = screen.getByPlaceholderText(/50 123 45 67/i);
-    const regPass = screen.getByPlaceholderText(/Ən azı 6 simvol/i);
+    const regPass = screen.getByPlaceholderText(/Ən azı 8 simvol/i);
     const regPassConfirm = screen.getByPlaceholderText(/Şifrəni təkrar yazın/i);
     const submitRegBtn = screen.getByRole('button', { name: /Qeydiyyatı Tamamla/i });
 
     fireEvent.change(regName, { target: { value: 'Nigar Hüseynova' } });
     fireEvent.change(regPhone, { target: { value: '551122334' } });
-    fireEvent.change(regPass, { target: { value: 'secret123' } });
-    fireEvent.change(regPassConfirm, { target: { value: 'secret123' } });
+    fireEvent.click(screen.getByTestId('sahara-date-picker-trigger'));
+    fireEvent.click(screen.getByRole('button', { name: '15' }));
+    fireEvent.change(regPass, { target: { value: 'Secret123' } });
+    fireEvent.change(regPassConfirm, { target: { value: 'Secret123' } });
     fireEvent.click(submitRegBtn);
 
     expect(handleRegister).toHaveBeenCalledWith({
       fullName: 'Nigar Hüseynova',
       phone: '551122334',
       email: undefined,
-      password: 'secret123',
+      birthDate: '1995-01-15',
+      password: 'Secret123',
       termsAccepted: true,
     });
   });
@@ -148,7 +151,6 @@ describe('AccountPage & User Dashboard Full-Page Suite', () => {
     expect(screen.getByText('Təsdiqlənmiş Müştəri')).toBeDefined();
     expect(screen.getAllByText(/\+994/i).length).toBeGreaterThan(0);
     expect(screen.getAllByText('kamran@sahara.az').length).toBeGreaterThan(0);
-
 
     // Check Stat Cards
     expect(screen.getByText('3 məhsul')).toBeDefined();
@@ -211,7 +213,6 @@ describe('AccountPage & User Dashboard Full-Page Suite', () => {
     fireEvent.click(trackBtn);
     expect(screen.getByText(/Sifariş #SHR-8822/i)).toBeDefined();
 
-
     // Switch to Addresses Tab
     const addrTab = screen.getByRole('button', { name: /Tab: Çatdırılma Ünvanlarım/i });
     fireEvent.click(addrTab);
@@ -236,8 +237,6 @@ describe('AccountPage & User Dashboard Full-Page Suite', () => {
 
   it('5. Header & Navigation: Profile actions trigger navigation to account route smoothly', () => {
     const handleNavigate = vi.fn();
-    const handleOpenUserDrawer = vi.fn();
-
     render(
       <AccountPage
         authUser={null}

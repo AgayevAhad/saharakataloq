@@ -74,7 +74,7 @@ export const PHASE5_BRAND_RAIL_MANIFEST = {
         { name: 'enabled', type: 'INTEGER', notnull: 1, pk: 0, dflt_value: '1' },
         { name: 'title', type: 'TEXT', notnull: 1, pk: 0, dflt_value: "'Brendlər'" },
         { name: 'animation_enabled', type: 'INTEGER', notnull: 1, pk: 0, dflt_value: '1' },
-        { name: 'speed_seconds', type: 'INTEGER', notnull: 1, pk: 0, dflt_value: '30' },
+        { name: 'speed_seconds', type: 'INTEGER', notnull: 1, pk: 0, dflt_value: '52' },
         { name: 'direction', type: 'TEXT', notnull: 1, pk: 0, dflt_value: "'left'" },
         { name: 'pause_on_hover', type: 'INTEGER', notnull: 1, pk: 0, dflt_value: '1' },
         { name: 'edge_fade', type: 'INTEGER', notnull: 1, pk: 0, dflt_value: '1' },
@@ -152,7 +152,7 @@ export function applyPhase5BrandRailSchema(db) {
       enabled INTEGER NOT NULL DEFAULT 1,
       title TEXT NOT NULL DEFAULT 'Brendlər',
       animation_enabled INTEGER NOT NULL DEFAULT 1,
-      speed_seconds INTEGER NOT NULL DEFAULT 30,
+      speed_seconds INTEGER NOT NULL DEFAULT 52,
       direction TEXT NOT NULL DEFAULT 'left',
       pause_on_hover INTEGER NOT NULL DEFAULT 1,
       edge_fade INTEGER NOT NULL DEFAULT 1,
@@ -235,7 +235,7 @@ export function seedCanonical54Brands(db, _actor = 'migration') {
       INSERT INTO brand_rail_settings (
         id, enabled, title, animation_enabled, speed_seconds, direction, pause_on_hover, edge_fade, card_size, section_order, theme_variant, version, created_at, updated_at
       ) VALUES (
-        'brand_rail_default', 1, 'Brendlər', 1, 30, 'left', 1, 1, 'md', 1, 'neutral', 1, ?, ?
+        'brand_rail_default', 1, 'Brendlər', 1, 52, 'left', 1, 1, 'md', 1, 'neutral', 1, ?, ?
       )
     `).run(now, now);
   }

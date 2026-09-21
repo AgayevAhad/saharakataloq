@@ -4,6 +4,7 @@ import { Product } from '../types/product';
 import { ThemeColors } from '../types/theme';
 import { Button } from '../components/ui/Button';
 import { ShimmerImage } from '../components/ShimmerImage';
+import { verifiedManufacturingCountry } from '../utils/manufacturingCountry';
 
 interface ComparePageProps {
   comparisonProducts: Product[];
@@ -249,7 +250,7 @@ export const ComparePage: React.FC<ComparePageProps> = ({
                   key={p.id}
                   style={{ padding: '12px 16px', fontSize: '13px', color: theme.text }}
                 >
-                  {p.manufacturingCountry || '-'}
+                  {verifiedManufacturingCountry(p) || '-'}
                 </td>
               ))}
             </tr>

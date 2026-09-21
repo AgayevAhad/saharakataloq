@@ -5,32 +5,40 @@ import { CatalogPage } from '../pages/CatalogPage';
 import { ProductCard } from '../components/ProductCard';
 import { FeaturedProductCard } from '../components/FeaturedProductCard';
 import { Product, Brand, CatalogCategory, CatalogSettings } from '../types/product';
-import { ThemeColors } from '../types/theme';
-
-const lightTheme: ThemeColors = {
-  primary: '#dc2626',
-  primaryHover: '#b91c1c',
-  bg: '#ffffff',
-  bgSecondary: '#f8fafc',
-  cardBg: '#ffffff',
-  text: '#0f172a',
-  textSecondary: '#475569',
-  textMuted: '#94a3b8',
-  border: '#e2e8f0',
-  mode: 'light',
-};
+import { lightTheme } from '../types/theme';
 
 const mockBrands: Brand[] = [
-  { id: 'ardo', name: 'ARDO', originCountry: 'İtaliya', active: true },
-  { id: 'lotus', name: 'Lotus', originCountry: 'Almaniya', active: true },
-  { id: 'artel', name: 'Artel', originCountry: 'Özbəkistan', active: true },
+  {
+    id: 'ardo',
+    slug: 'ardo',
+    name: 'ARDO',
+    originCountry: 'İtaliya',
+    manufacturingCountries: [],
+    active: true,
+  },
+  {
+    id: 'lotus',
+    slug: 'lotus',
+    name: 'Lotus',
+    originCountry: 'Almaniya',
+    manufacturingCountries: [],
+    active: true,
+  },
+  {
+    id: 'artel',
+    slug: 'artel',
+    name: 'Artel',
+    originCountry: 'Özbəkistan',
+    manufacturingCountries: [],
+    active: true,
+  },
 ];
 
 const mockCategories: CatalogCategory[] = [
-  { id: 'paltaryuyan', name: 'Paltaryuyan', active: true, sortOrder: 1 },
-  { id: 'soyuducu', name: 'Soyuducu', active: true, sortOrder: 2 },
-  { id: 'soba', name: 'Quraşdırılan soba', active: true, sortOrder: 3 },
-  { id: 'aspirator', name: 'Aspirator', active: true, sortOrder: 4 },
+  { id: 'paltaryuyan', slug: 'paltaryuyan', name: 'Paltaryuyan', active: true, sortOrder: 1 },
+  { id: 'soyuducu', slug: 'soyuducu', name: 'Soyuducu', active: true, sortOrder: 2 },
+  { id: 'soba', slug: 'soba', name: 'Quraşdırılan soba', active: true, sortOrder: 3 },
+  { id: 'aspirator', slug: 'aspirator', name: 'Aspirator', active: true, sortOrder: 4 },
 ];
 
 const mockProducts: Product[] = [
@@ -42,11 +50,12 @@ const mockProducts: Product[] = [
     categoryName: 'Paltaryuyan',
     brandId: 'ardo',
     price: 999,
-    priceCash: 999,
     status: 'published',
+    image: '',
+    shortDesc: '',
     specs: [
-      { name: 'Mühərrik', value: 'İnverter' },
-      { name: 'Tutum', value: '8 kq' },
+      { id: 'motor', name: 'Mühərrik', value: 'İnverter' },
+      { id: 'capacity', name: 'Tutum', value: '8 kq' },
     ],
     highlights: ['İnverter Mühərrik', 'A+++ Enerji Sinfi'],
   },
@@ -58,25 +67,27 @@ const mockProducts: Product[] = [
     categoryName: 'Aspirator',
     brandId: 'lotus',
     price: 349,
-    priceCash: 349,
     status: 'published',
+    image: '',
+    shortDesc: '',
     specs: [
-      { name: 'Mühərrik', value: 'Standart' },
-      { name: 'Tutum', value: '9 L' },
+      { id: 'motor', name: 'Mühərrik', value: 'Standart' },
+      { id: 'capacity', name: 'Tutum', value: '9 L' },
     ],
     highlights: ['Dual Zone', 'Sensor Ekran'],
   },
 ];
 
 const mockSettings: CatalogSettings = {
-  headerTitle: 'Sahara Electronics',
-  headerSubtitle: 'Premium Məişət Texnikası',
+  siteTitle: 'Sahara Electronics',
+  siteSubtitle: 'Premium Məişət Texnikası',
   contactPhone: '+994 50 123 45 67',
   whatsappNumber: '994501234567',
   whatsappButtonText: 'WhatsApp',
   callButtonText: 'Zəng et',
   shareButtonText: 'Paylaş',
-  addresses: ['Sədərək TM, Sıra 5'],
+  phoneNumber: '+994 50 123 45 67',
+  addresses: [{ id: 'store-1', title: 'Mağaza', address: 'Sədərək TM, Sıra 5' }],
 };
 
 describe('Item 20: Catalog Refinements & Comparison System Tests', () => {
@@ -108,7 +119,6 @@ describe('Item 20: Catalog Refinements & Comparison System Tests', () => {
 
     // Checkboxes inside the desktop sidebar are not rendered until accordion is clicked
     // (Only mobile drawer rendered checkboxes if any, but desktop sidebar is collapsed)
-    const brandLabel = screen.queryByText('Lotus');
     // Before expanding, the brand items in sidebar are collapsed
     fireEvent.click(brandsHeader);
     expect(screen.getAllByText('Lotus').length).toBeGreaterThan(0);
@@ -284,7 +294,9 @@ describe('Item 20: Catalog Refinements & Comparison System Tests', () => {
       />
     );
 
-    const compareBtn = container.querySelector('button[aria-label="Müqayisədən çıxar"]') as HTMLElement;
+    const compareBtn = container.querySelector(
+      'button[aria-label="Müqayisədən çıxar"]'
+    ) as HTMLElement;
     expect(compareBtn).toBeDefined();
     fireEvent.click(compareBtn);
     expect(handleCompare).toHaveBeenCalledWith(mockProducts[0]);
@@ -293,11 +305,7 @@ describe('Item 20: Catalog Refinements & Comparison System Tests', () => {
   it('7. ProductCard has no rank badges, no Sahara text, and includes Details button in hover cluster', () => {
     const handleSelect = vi.fn();
     const { container } = render(
-      <ProductCard
-        product={mockProducts[0]}
-        theme={lightTheme}
-        onSelect={handleSelect}
-      />
+      <ProductCard product={mockProducts[0]} theme={lightTheme} onSelect={handleSelect} />
     );
 
     // No rank numbers or rank badge
@@ -333,4 +341,3 @@ describe('Item 20: Catalog Refinements & Comparison System Tests', () => {
     expect(staggeredItems.length).toBeGreaterThanOrEqual(4); // WhatsApp, Call, Cart, Details, Share
   });
 });
-

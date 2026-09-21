@@ -13,6 +13,7 @@ export interface Brand {
 }
 
 export interface CatalogCategory {
+  count?: number;
   id: string;
   name: string;
   slug: string;
@@ -82,6 +83,15 @@ export interface Product {
   completeness_score?: number;
   createdAt?: string;
   updatedAt?: string;
+
+  // Compatibility aliases
+  brandName?: string;
+  modelCode?: string;
+  images?: string[];
+  videoUrl?: string;
+  specifications?: Record<string, string>;
+  energyClass?: string;
+  motorType?: string;
 }
 
 export interface TechnologyAdvantage {
@@ -112,6 +122,7 @@ export interface StoreAddress {
 export interface CatalogSettings {
   whatsappNumber: string;
   phoneNumber: string;
+  contactPhone?: string;
   phoneNumbers?: string[];
   companyName?: string;
   address?: string;

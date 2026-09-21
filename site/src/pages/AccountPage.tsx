@@ -27,10 +27,21 @@ import {
   ArrowLeft,
   Info,
 } from 'lucide-react';
-import { AuthUser, LoginCredentials, RegisterCredentials, AuthUserAddress, AuthUserOrder } from '../types/auth';
+import {
+  AuthUser,
+  LoginCredentials,
+  RegisterCredentials,
+  AuthUserAddress,
+  AuthUserOrder,
+} from '../types/auth';
 import { ThemeColors } from '../types/theme';
 import { WhatsAppIcon } from '../components/WhatsAppIcon';
 import { SaharaDatePicker } from '../components/SaharaDatePicker';
+import {
+  getPasswordRequirements,
+  isStrongPassword,
+  PASSWORD_REQUIREMENT_TEXT,
+} from '../utils/authValidation';
 
 interface AccountPageProps {
   authUser: AuthUser | null;
@@ -38,14 +49,45 @@ interface AccountPageProps {
   themeMode: 'light' | 'dark';
   cartCount?: number;
   favoritesCount?: number;
-  onLogin: (credentials: LoginCredentials) => boolean | void;
-  onRegister: (credentials: RegisterCredentials) => boolean | void;
+  onLogin: (credentials: LoginCredentials) => boolean | void | Promise<boolean>;
+  onRegister: (credentials: RegisterCredentials) => boolean | void | Promise<boolean>;
   onLogout: () => void;
-  onUpdateProfile: (updated: Partial<AuthUser>) => void;
+  onUpdateProfile: (updated: Partial<AuthUser>) => void | boolean | Promise<boolean | void>;
+  onChangePassword?: (currentPassword: string, newPassword: string) => Promise<boolean>;
   onNavigate: (route: string, param?: string) => void;
   onWhatsAppSupport?: () => void;
   onCallSupport?: () => void;
 }
+
+const PasswordRequirements: React.FC<{ password: string; theme: ThemeColors }> = ({
+  password,
+  theme,
+}) => {
+  const requirements = getPasswordRequirements(password);
+  const items = [
+    ['hasMinLength', '8+ simvol'],
+    ['hasLetter', 'hərf'],
+    ['hasUppercase', 'böyük hərf'],
+    ['hasNumber', 'rəqəm'],
+  ] as const;
+
+  return (
+    <div className="password-requirements" aria-label="Şifrə tələbləri">
+      {items.map(([key, label]) => {
+        const met = requirements[key];
+        return (
+          <span
+            key={key}
+            className={met ? 'is-met' : ''}
+            style={{ color: met ? '#15803d' : theme.textMuted }}
+          >
+            <CheckCircle2 size={12} /> {label}
+          </span>
+        );
+      })}
+    </div>
+  );
+};
 
 export const AccountPage: React.FC<AccountPageProps> = ({
   authUser,
@@ -57,6 +99,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
   onRegister,
   onLogout,
   onUpdateProfile,
+  onChangePassword,
   onNavigate,
   onWhatsAppSupport,
   onCallSupport,
@@ -75,6 +118,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
   const [regFullName, setRegFullName] = useState('');
   const [regPhone, setRegPhone] = useState('');
   const [regEmail, setRegEmail] = useState('');
+  const [regBirthDate, setRegBirthDate] = useState('');
   const [regPassword, setRegPassword] = useState('');
   const [regConfirmPassword, setRegConfirmPassword] = useState('');
   const [showRegPassword, setShowRegPassword] = useState(false);
@@ -82,7 +126,9 @@ export const AccountPage: React.FC<AccountPageProps> = ({
   const [regError, setRegError] = useState('');
 
   // Authenticated profile tabs: 'profile' | 'orders' | 'addresses' | 'security' | 'support'
-  const [activeDashboardTab, setActiveDashboardTab] = useState<'profile' | 'orders' | 'addresses' | 'security' | 'support'>('profile');
+  const [activeDashboardTab, setActiveDashboardTab] = useState<
+    'profile' | 'orders' | 'addresses' | 'security' | 'support'
+  >('profile');
 
   // Profile Edit state
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -119,15 +165,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
 
   // Derived User Orders
   const userOrders = useMemo<AuthUserOrder[]>(() => {
-    if (!authUser) return [];
-    try {
-      const saved = localStorage.getItem(`sahara_user_orders_${authUser.id}`);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Array.isArray(parsed)) return parsed;
-      }
-    } catch {}
-    return authUser.orders || [];
+    return authUser?.orders || [];
   }, [authUser]);
 
   // Derived User Addresses
@@ -140,19 +178,11 @@ export const AccountPage: React.FC<AccountPageProps> = ({
         if (Array.isArray(parsed)) return parsed;
       }
     } catch {}
-    return authUser.addresses || [
-      {
-        id: 'addr-default',
-        title: 'Əsas Ünvan',
-        city: 'Bakı',
-        address: 'Nəsimi rayonu, Nizami küçəsi 14',
-        isDefault: true,
-      },
-    ];
+    return authUser.addresses || [];
   }, [authUser]);
 
   // Handle Login Submit
-  const handleLoginSubmit = (e: React.FormEvent) => {
+  const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoginError('');
     if (!loginIdentifier.trim()) {
@@ -164,7 +194,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
       return;
     }
 
-    const res = onLogin({
+    const res = await onLogin({
       identifier: loginIdentifier.trim(),
       password: loginPassword,
       rememberMe: loginRemember,
@@ -176,7 +206,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
   };
 
   // Handle Register Submit
-  const handleRegisterSubmit = (e: React.FormEvent) => {
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setRegError('');
     if (!regFullName.trim()) {
@@ -188,8 +218,12 @@ export const AccountPage: React.FC<AccountPageProps> = ({
       setRegError('Düzgün 9 rəqəmli mobil nömrə daxil edin (məs: 50 123 45 67).');
       return;
     }
-    if (!regPassword || regPassword.length < 6) {
-      setRegError('Şifrə ən azı 6 simvoldan ibarət olmalıdır.');
+    if (!regBirthDate) {
+      setRegError('Doğum tarixinizi seçin.');
+      return;
+    }
+    if (!isStrongPassword(regPassword)) {
+      setRegError(PASSWORD_REQUIREMENT_TEXT);
       return;
     }
     if (regPassword !== regConfirmPassword) {
@@ -201,10 +235,11 @@ export const AccountPage: React.FC<AccountPageProps> = ({
       return;
     }
 
-    const res = onRegister({
+    const res = await onRegister({
       fullName: regFullName.trim(),
       phone: cleanPhone,
       email: regEmail.trim() || undefined,
+      birthDate: regBirthDate,
       password: regPassword,
       termsAccepted: true,
     });
@@ -215,16 +250,17 @@ export const AccountPage: React.FC<AccountPageProps> = ({
   };
 
   // Save Profile Info
-  const handleSaveProfile = (e: React.FormEvent) => {
+  const handleSaveProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editFullName.trim()) return;
 
-    onUpdateProfile({
+    const saved = await onUpdateProfile({
       fullName: editFullName.trim(),
       email: editEmail.trim() || undefined,
       birthDate: editBirthDate.trim() || undefined,
     });
 
+    if (saved === false) return;
     setIsEditingProfile(false);
     setEditSuccessMsg('Profil məlumatlarınız uğurla yadda saxlanıldı.');
     setTimeout(() => setEditSuccessMsg(''), 3500);
@@ -263,7 +299,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
   };
 
   // Change Password Submit
-  const handleChangePassword = (e: React.FormEvent) => {
+  const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setPasswordChangeError('');
     setPasswordChangeSuccess('');
@@ -272,8 +308,8 @@ export const AccountPage: React.FC<AccountPageProps> = ({
       setPasswordChangeError('Cari şifrənizi daxil edin.');
       return;
     }
-    if (newPassword.length < 6) {
-      setPasswordChangeError('Yeni şifrə ən azı 6 simvol olmalıdır.');
+    if (!isStrongPassword(newPassword)) {
+      setPasswordChangeError(PASSWORD_REQUIREMENT_TEXT);
       return;
     }
     if (newPassword !== confirmNewPassword) {
@@ -281,6 +317,15 @@ export const AccountPage: React.FC<AccountPageProps> = ({
       return;
     }
 
+    if (!onChangePassword) {
+      setPasswordChangeError('Şifrə yeniləmə hazırda əlçatan deyil.');
+      return;
+    }
+    const changed = await onChangePassword(currPassword, newPassword);
+    if (!changed) {
+      setPasswordChangeError('Cari şifrə yanlışdır və ya şifrə yenilənmədi.');
+      return;
+    }
     setPasswordChangeSuccess('Şifrəniz uğurla yeniləndi.');
     setCurrPassword('');
     setNewPassword('');
@@ -297,11 +342,11 @@ export const AccountPage: React.FC<AccountPageProps> = ({
     const found = userOrders.find((o) => o.orderNumber.toUpperCase() === code);
     if (found) {
       setOrderTrackResult(
-        `Sifariş #${found.orderNumber}: Status: ${found.statusText}. Məbləğ: ${found.totalAmount} ₼. Sahara kuryeri tərəfindən 24 saat ərzində təhvil veriləcək.`
+        `Sifariş #${found.orderNumber}: ${found.statusText}. Məbləğ: ${found.totalAmount} ₼.`
       );
     } else {
       setOrderTrackResult(
-        `Sifariş #${code}: Sistemdə aktivdir. Sahara rəsmi kuryeri tərəfindən çatdırılma prosesindədir.`
+        `Sifariş #${code} barədə təsdiqlənmiş məlumat tapılmadı. Zəhmət olmasa saytdaxili çatdan bizə yazın.`
       );
     }
   };
@@ -365,6 +410,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
       {/* ============================================================ */}
       {!authUser ? (
         <div
+          className="account-auth-layout"
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
@@ -374,6 +420,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
         >
           {/* Left Column: Form Card with Segmented Switcher */}
           <div
+            className="account-auth-card"
             style={{
               backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.5)' : '#ffffff',
               borderRadius: '24px',
@@ -401,6 +448,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
               }}
             >
               <button
+                className="account-auth-tab"
                 type="button"
                 onClick={() => {
                   setAuthMode('login');
@@ -410,8 +458,18 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                   padding: '12px 16px',
                   borderRadius: '10px',
                   border: 'none',
-                  backgroundColor: authMode === 'login' ? (themeMode === 'dark' ? '#1e293b' : '#ffffff') : 'transparent',
-                  color: authMode === 'login' ? (themeMode === 'dark' ? '#ffffff' : '#0f172a') : theme.textSecondary,
+                  backgroundColor:
+                    authMode === 'login'
+                      ? themeMode === 'dark'
+                        ? '#1e293b'
+                        : '#ffffff'
+                      : 'transparent',
+                  color:
+                    authMode === 'login'
+                      ? themeMode === 'dark'
+                        ? '#ffffff'
+                        : '#0f172a'
+                      : theme.textSecondary,
                   fontSize: '14px',
                   fontWeight: 800,
                   cursor: 'pointer',
@@ -428,6 +486,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
               </button>
 
               <button
+                className="account-auth-tab"
                 type="button"
                 onClick={() => {
                   setAuthMode('register');
@@ -437,8 +496,18 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                   padding: '12px 16px',
                   borderRadius: '10px',
                   border: 'none',
-                  backgroundColor: authMode === 'register' ? (themeMode === 'dark' ? '#1e293b' : '#ffffff') : 'transparent',
-                  color: authMode === 'register' ? (themeMode === 'dark' ? '#ffffff' : '#0f172a') : theme.textSecondary,
+                  backgroundColor:
+                    authMode === 'register'
+                      ? themeMode === 'dark'
+                        ? '#1e293b'
+                        : '#ffffff'
+                      : 'transparent',
+                  color:
+                    authMode === 'register'
+                      ? themeMode === 'dark'
+                        ? '#ffffff'
+                        : '#0f172a'
+                      : theme.textSecondary,
                   fontSize: '14px',
                   fontWeight: 800,
                   cursor: 'pointer',
@@ -451,15 +520,25 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                 }}
               >
                 <Sparkles size={16} color={authMode === 'register' ? '#dc2626' : undefined} />
-                <span>Yeni Qeydiyyat</span>
+                <span>Qeydiyyat</span>
               </button>
             </div>
 
             {/* TAB 1: LOGIN FORM */}
             {authMode === 'login' && (
-              <form onSubmit={handleLoginSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}>
+              <form
+                onSubmit={handleLoginSubmit}
+                style={{ display: 'flex', flexDirection: 'column', gap: '18px' }}
+              >
                 <div>
-                  <h2 style={{ fontSize: '22px', fontWeight: 900, color: theme.text, margin: '0 0 6px 0' }}>
+                  <h2
+                    style={{
+                      fontSize: '22px',
+                      fontWeight: 900,
+                      color: theme.text,
+                      margin: '0 0 6px 0',
+                    }}
+                  >
                     Xoş Gəlmisiniz!
                   </h2>
                   <p style={{ fontSize: '13.5px', color: theme.textSecondary, margin: 0 }}>
@@ -484,7 +563,15 @@ export const AccountPage: React.FC<AccountPageProps> = ({
 
                 {/* Mobil Nömrə və ya Email Input */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: theme.text, marginBottom: '6px' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '13px',
+                      fontWeight: 800,
+                      color: theme.text,
+                      marginBottom: '6px',
+                    }}
+                  >
                     Mobil Nömrə və ya Email *
                   </label>
                   <div
@@ -520,13 +607,24 @@ export const AccountPage: React.FC<AccountPageProps> = ({
 
                 {/* Şifrə Input */}
                 <div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '6px' }}>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      marginBottom: '6px',
+                    }}
+                  >
                     <label style={{ fontSize: '13px', fontWeight: 800, color: theme.text }}>
                       Şifrə *
                     </label>
                     <button
                       type="button"
-                      onClick={() => alert('Şifrənizi sıfırlamaq üçün qeydiyyat nömrənizdən Sahara Dəstək xidmətinə (+994 50 123 45 67) müraciət edin.')}
+                      onClick={() =>
+                        alert(
+                          'Şifrənizi sıfırlamaq üçün qeydiyyat nömrənizdən Sahara Dəstək xidmətinə (+994 50 123 45 67) müraciət edin.'
+                        )
+                      }
                       style={{
                         background: 'none',
                         border: 'none',
@@ -585,7 +683,17 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                 </div>
 
                 {/* Remember Me */}
-                <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: theme.textSecondary, fontWeight: 600 }}>
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    cursor: 'pointer',
+                    fontSize: '13px',
+                    color: theme.textSecondary,
+                    fontWeight: 600,
+                  }}
+                >
                   <input
                     type="checkbox"
                     checked={loginRemember}
@@ -601,18 +709,18 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                   style={{
                     padding: '14px 20px',
                     borderRadius: '14px',
-                    backgroundColor: '#dc2626',
-                    color: '#ffffff',
+                    backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                    color: '#dc2626',
                     border: 'none',
                     fontSize: '14.5px',
                     fontWeight: 900,
                     cursor: 'pointer',
-                    boxShadow: '0 6px 20px rgba(220, 38, 38, 0.35)',
+                    boxShadow: 'none',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '8px',
-                    transition: 'transform 0.15s ease',
+                    transition: 'background-color 0.2s ease, transform 0.15s ease',
                   }}
                 >
                   <span>Daxil Ol</span>
@@ -623,10 +731,20 @@ export const AccountPage: React.FC<AccountPageProps> = ({
 
             {/* TAB 2: REGISTER FORM */}
             {authMode === 'register' && (
-              <form onSubmit={handleRegisterSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <form
+                onSubmit={handleRegisterSubmit}
+                style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
+              >
                 <div>
-                  <h2 style={{ fontSize: '22px', fontWeight: 900, color: theme.text, margin: '0 0 6px 0' }}>
-                    Yeni Hesab Yaradın
+                  <h2
+                    style={{
+                      fontSize: '22px',
+                      fontWeight: 900,
+                      color: theme.text,
+                      margin: '0 0 6px 0',
+                    }}
+                  >
+                    Hesab Yaradın
                   </h2>
                   <p style={{ fontSize: '13.5px', color: theme.textSecondary, margin: 0 }}>
                     Sahara Electronics ailəsinə qoşulun, eksklüziv təkliflərdən yararlanın.
@@ -650,7 +768,15 @@ export const AccountPage: React.FC<AccountPageProps> = ({
 
                 {/* Ad və Soyad */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: theme.text, marginBottom: '5px' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '13px',
+                      fontWeight: 800,
+                      color: theme.text,
+                      marginBottom: '5px',
+                    }}
+                  >
                     Ad və Soyadınız *
                   </label>
                   <div
@@ -686,7 +812,15 @@ export const AccountPage: React.FC<AccountPageProps> = ({
 
                 {/* Mobil Nömrə */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: theme.text, marginBottom: '5px' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '13px',
+                      fontWeight: 800,
+                      color: theme.text,
+                      marginBottom: '5px',
+                    }}
+                  >
                     Mobil Nömrə *
                   </label>
                   <div
@@ -699,7 +833,14 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                       padding: '0 14px',
                     }}
                   >
-                    <span style={{ fontSize: '13.5px', fontWeight: 800, color: theme.textMuted, marginRight: '6px' }}>
+                    <span
+                      style={{
+                        fontSize: '13.5px',
+                        fontWeight: 800,
+                        color: theme.textMuted,
+                        marginRight: '6px',
+                      }}
+                    >
                       +994
                     </span>
                     <input
@@ -724,7 +865,15 @@ export const AccountPage: React.FC<AccountPageProps> = ({
 
                 {/* Email (Optional) */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: theme.text, marginBottom: '5px' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '13px',
+                      fontWeight: 800,
+                      color: theme.text,
+                      marginBottom: '5px',
+                    }}
+                  >
                     Email ünvanı (İstəyə bağlı)
                   </label>
                   <div
@@ -757,9 +906,41 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                   </div>
                 </div>
 
+                {/* Doğum tarixi */}
+                <div>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '13px',
+                      fontWeight: 800,
+                      color: theme.text,
+                      marginBottom: '5px',
+                    }}
+                  >
+                    Doğum tarixi *
+                  </label>
+                  <SaharaDatePicker
+                    value={regBirthDate}
+                    onChange={setRegBirthDate}
+                    theme={theme}
+                    themeMode={themeMode}
+                    placeholder="Doğum tarixinizi seçin"
+                    minYear={1930}
+                    maxYear={new Date().getFullYear()}
+                  />
+                </div>
+
                 {/* Şifrə */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: theme.text, marginBottom: '5px' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '13px',
+                      fontWeight: 800,
+                      color: theme.text,
+                      marginBottom: '5px',
+                    }}
+                  >
                     Şifrə təyin edin *
                   </label>
                   <div
@@ -777,7 +958,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                       type={showRegPassword ? 'text' : 'password'}
                       value={regPassword}
                       onChange={(e) => setRegPassword(e.target.value)}
-                      placeholder="Ən azı 6 simvol"
+                      placeholder="Ən azı 8 simvol"
                       required
                       style={{
                         flex: 1,
@@ -804,11 +985,20 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                       {showRegPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                     </button>
                   </div>
+                  <PasswordRequirements password={regPassword} theme={theme} />
                 </div>
 
                 {/* Şifrənin Təkrarı */}
                 <div>
-                  <label style={{ display: 'block', fontSize: '13px', fontWeight: 800, color: theme.text, marginBottom: '5px' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '13px',
+                      fontWeight: 800,
+                      color: theme.text,
+                      marginBottom: '5px',
+                    }}
+                  >
                     Şifrəni təkrar daxil edin *
                   </label>
                   <div
@@ -843,12 +1033,28 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                 </div>
 
                 {/* Terms and Privacy Checkbox */}
-                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '8px', cursor: 'pointer', fontSize: '12.5px', color: theme.textSecondary, fontWeight: 600, lineHeight: 1.5 }}>
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '8px',
+                    cursor: 'pointer',
+                    fontSize: '12.5px',
+                    color: theme.textSecondary,
+                    fontWeight: 600,
+                    lineHeight: 1.5,
+                  }}
+                >
                   <input
                     type="checkbox"
                     checked={regTermsAccepted}
                     onChange={(e) => setRegTermsAccepted(e.target.checked)}
-                    style={{ accentColor: '#dc2626', width: '16px', height: '16px', marginTop: '2px' }}
+                    style={{
+                      accentColor: '#dc2626',
+                      width: '16px',
+                      height: '16px',
+                      marginTop: '2px',
+                    }}
                   />
                   <span>
                     İstifadəçi qaydalarını və şəxsi məlumatların qorunması siyasətini qəbul edirəm.
@@ -857,22 +1063,23 @@ export const AccountPage: React.FC<AccountPageProps> = ({
 
                 {/* Submit Register Button */}
                 <button
+                  className="account-auth-submit"
                   type="submit"
                   style={{
                     padding: '14px 20px',
                     borderRadius: '14px',
-                    backgroundColor: '#dc2626',
-                    color: '#ffffff',
+                    backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                    color: '#dc2626',
                     border: 'none',
                     fontSize: '14.5px',
                     fontWeight: 900,
                     cursor: 'pointer',
-                    boxShadow: '0 6px 20px rgba(220, 38, 38, 0.35)',
+                    boxShadow: 'none',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '8px',
-                    transition: 'transform 0.15s ease',
+                    transition: 'background-color 0.2s ease, transform 0.15s ease',
                   }}
                 >
                   <span>Qeydiyyatı Tamamla</span>
@@ -883,8 +1090,12 @@ export const AccountPage: React.FC<AccountPageProps> = ({
           </div>
 
           {/* Right Column: Why Join Sahara & Security Trust Panel */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          <div
+            className="account-auth-benefits"
+            style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}
+          >
             <div
+              className="account-auth-benefits-card"
               style={{
                 backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#ffffff',
                 borderRadius: '24px',
@@ -922,43 +1133,121 @@ export const AccountPage: React.FC<AccountPageProps> = ({
 
               <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: 'rgba(22, 163, 74, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <div
+                    style={{
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(22, 163, 74, 0.15)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
                     <Truck size={15} color="#16a34a" />
                   </div>
                   <div>
-                    <h4 style={{ margin: '0 0 2px 0', fontSize: '14px', fontWeight: 800, color: theme.text }}>
+                    <h4
+                      style={{
+                        margin: '0 0 2px 0',
+                        fontSize: '14px',
+                        fontWeight: 800,
+                        color: theme.text,
+                      }}
+                    >
                       Tək Kliklə Sürətli Sifariş
                     </h4>
-                    <p style={{ margin: 0, fontSize: '12.5px', color: theme.textSecondary, lineHeight: 1.5 }}>
-                      Çatdırılma ünvanınızı bir dəfə yadda saxlayın, növbəti sifarişlərinizi tək kliklə rəsmiləşdirin.
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: '12.5px',
+                        color: theme.textSecondary,
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      Çatdırılma ünvanınızı bir dəfə yadda saxlayın, növbəti sifarişlərinizi tək
+                      kliklə rəsmiləşdirin.
                     </p>
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: 'rgba(2, 132, 199, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <div
+                    style={{
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(2, 132, 199, 0.15)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
                     <Package size={15} color="#0284c7" />
                   </div>
                   <div>
-                    <h4 style={{ margin: '0 0 2px 0', fontSize: '14px', fontWeight: 800, color: theme.text }}>
+                    <h4
+                      style={{
+                        margin: '0 0 2px 0',
+                        fontSize: '14px',
+                        fontWeight: 800,
+                        color: theme.text,
+                      }}
+                    >
                       Sifarişlərin Canlı İzlənməsi
                     </h4>
-                    <p style={{ margin: 0, fontSize: '12.5px', color: theme.textSecondary, lineHeight: 1.5 }}>
-                      Sifarişinizin statusunu (anbarda yığılma, kuryerə verilmə) real vaxtda izləyin.
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: '12.5px',
+                        color: theme.textSecondary,
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      Sifarişinizin statusunu (anbarda yığılma, kuryerə verilmə) real vaxtda
+                      izləyin.
                     </p>
                   </div>
                 </div>
 
                 <div style={{ display: 'flex', gap: '12px', alignItems: 'flex-start' }}>
-                  <div style={{ width: '28px', height: '28px', borderRadius: '50%', backgroundColor: 'rgba(234, 179, 8, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <div
+                    style={{
+                      width: '28px',
+                      height: '28px',
+                      borderRadius: '50%',
+                      backgroundColor: 'rgba(234, 179, 8, 0.15)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
                     <CheckCircle2 size={15} color="#ca8a04" />
                   </div>
                   <div>
-                    <h4 style={{ margin: '0 0 2px 0', fontSize: '14px', fontWeight: 800, color: theme.text }}>
+                    <h4
+                      style={{
+                        margin: '0 0 2px 0',
+                        fontSize: '14px',
+                        fontWeight: 800,
+                        color: theme.text,
+                      }}
+                    >
                       Təsdiqlənmiş Müştəri Rəyləri
                     </h4>
-                    <p style={{ margin: 0, fontSize: '12.5px', color: theme.textSecondary, lineHeight: 1.5 }}>
-                      Yalnız qeydiyyatdan keçmiş istifadəçilər məhsullara rəy və reytinq bildirə bilirlər.
+                    <p
+                      style={{
+                        margin: 0,
+                        fontSize: '12.5px',
+                        color: theme.textSecondary,
+                        lineHeight: 1.5,
+                      }}
+                    >
+                      Yalnız qeydiyyatdan keçmiş istifadəçilər məhsullara rəy və reytinq bildirə
+                      bilirlər.
                     </p>
                   </div>
                 </div>
@@ -978,7 +1267,8 @@ export const AccountPage: React.FC<AccountPageProps> = ({
               >
                 <ShieldCheck size={26} color="#16a34a" />
                 <div style={{ fontSize: '12px', color: theme.textSecondary, lineHeight: 1.4 }}>
-                  <strong style={{ color: theme.text }}>256-Bit SSL Qorunması:</strong> Şəxsi məlumatlarınız və telefon nömrəniz tam təhlükəsiz şifrələnir.
+                  <strong style={{ color: theme.text }}>Məxfilik qeydi:</strong> Bu interfeysdə
+                  yaradılan profil məlumatları cari brauzerin lokal yaddaşında saxlanılır.
                 </div>
               </div>
             </div>
@@ -1025,8 +1315,17 @@ export const AccountPage: React.FC<AccountPageProps> = ({
               </div>
 
               <div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                  <h1 style={{ margin: 0, fontSize: 'clamp(20px, 2.5vw, 26px)', fontWeight: 900, color: theme.text }}>
+                <div
+                  style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}
+                >
+                  <h1
+                    style={{
+                      margin: 0,
+                      fontSize: 'clamp(20px, 2.5vw, 26px)',
+                      fontWeight: 900,
+                      color: theme.text,
+                    }}
+                  >
                     {authUser.fullName}
                   </h1>
                   <span
@@ -1047,7 +1346,17 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                   </span>
                 </div>
 
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '6px', flexWrap: 'wrap', fontSize: '13.5px', color: theme.textSecondary }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '16px',
+                    marginTop: '6px',
+                    flexWrap: 'wrap',
+                    fontSize: '13.5px',
+                    color: theme.textSecondary,
+                  }}
+                >
                   {authUser.phone && (
                     <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px' }}>
                       <Phone size={14} color={theme.textMuted} />
@@ -1060,9 +1369,19 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                       <span>{authUser.email}</span>
                     </span>
                   )}
-                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: '5px', color: theme.textMuted, fontSize: '12.5px' }}>
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '5px',
+                      color: theme.textMuted,
+                      fontSize: '12.5px',
+                    }}
+                  >
                     <Calendar size={13} />
-                    <span>Qeydiyyat: {new Date(authUser.registeredAt).toLocaleDateString('az-AZ')}</span>
+                    <span>
+                      Qeydiyyat: {new Date(authUser.registeredAt).toLocaleDateString('az-AZ')}
+                    </span>
                   </span>
                 </div>
               </div>
@@ -1116,14 +1435,34 @@ export const AccountPage: React.FC<AccountPageProps> = ({
               }}
             >
               <div>
-                <div style={{ fontSize: '12px', fontWeight: 700, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <div
+                  style={{
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    color: theme.textMuted,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                  }}
+                >
                   Səbətimdə
                 </div>
-                <div style={{ fontSize: '24px', fontWeight: 900, color: theme.text, marginTop: '2px' }}>
+                <div
+                  style={{ fontSize: '24px', fontWeight: 900, color: theme.text, marginTop: '2px' }}
+                >
                   {cartCount} məhsul
                 </div>
               </div>
-              <div style={{ width: '44px', height: '44px', borderRadius: '12px', backgroundColor: 'rgba(220, 38, 38, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '12px',
+                  backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
                 <ShoppingCart size={22} color="#dc2626" />
               </div>
             </div>
@@ -1144,14 +1483,34 @@ export const AccountPage: React.FC<AccountPageProps> = ({
               }}
             >
               <div>
-                <div style={{ fontSize: '12px', fontWeight: 700, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <div
+                  style={{
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    color: theme.textMuted,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                  }}
+                >
                   Seçilmişlərim
                 </div>
-                <div style={{ fontSize: '24px', fontWeight: 900, color: theme.text, marginTop: '2px' }}>
+                <div
+                  style={{ fontSize: '24px', fontWeight: 900, color: theme.text, marginTop: '2px' }}
+                >
                   {favoritesCount} məhsul
                 </div>
               </div>
-              <div style={{ width: '44px', height: '44px', borderRadius: '12px', backgroundColor: 'rgba(220, 38, 38, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '12px',
+                  backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
                 <Heart size={22} color="#dc2626" />
               </div>
             </div>
@@ -1172,14 +1531,34 @@ export const AccountPage: React.FC<AccountPageProps> = ({
               }}
             >
               <div>
-                <div style={{ fontSize: '12px', fontWeight: 700, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <div
+                  style={{
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    color: theme.textMuted,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                  }}
+                >
                   Sifarişlərim
                 </div>
-                <div style={{ fontSize: '24px', fontWeight: 900, color: theme.text, marginTop: '2px' }}>
+                <div
+                  style={{ fontSize: '24px', fontWeight: 900, color: theme.text, marginTop: '2px' }}
+                >
                   {userOrders.length} ədəd
                 </div>
               </div>
-              <div style={{ width: '44px', height: '44px', borderRadius: '12px', backgroundColor: 'rgba(2, 132, 199, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '12px',
+                  backgroundColor: 'rgba(2, 132, 199, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
                 <Package size={22} color="#0284c7" />
               </div>
             </div>
@@ -1200,14 +1579,34 @@ export const AccountPage: React.FC<AccountPageProps> = ({
               }}
             >
               <div>
-                <div style={{ fontSize: '12px', fontWeight: 700, color: theme.textMuted, textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                <div
+                  style={{
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    color: theme.textMuted,
+                    textTransform: 'uppercase',
+                    letterSpacing: '0.04em',
+                  }}
+                >
                   Çatdırılma Ünvanı
                 </div>
-                <div style={{ fontSize: '24px', fontWeight: 900, color: theme.text, marginTop: '2px' }}>
+                <div
+                  style={{ fontSize: '24px', fontWeight: 900, color: theme.text, marginTop: '2px' }}
+                >
                   {userAddresses.length} qeyd
                 </div>
               </div>
-              <div style={{ width: '44px', height: '44px', borderRadius: '12px', backgroundColor: 'rgba(139, 92, 246, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+              <div
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '12px',
+                  backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
                 <MapPin size={22} color="#8b5cf6" />
               </div>
             </div>
@@ -1246,7 +1645,16 @@ export const AccountPage: React.FC<AccountPageProps> = ({
               <User size={17} />
               <span>Profil Məlumatları</span>
               {activeDashboardTab === 'profile' && (
-                <span style={{ position: 'absolute', bottom: '-2px', left: 0, right: 0, height: '2px', backgroundColor: '#dc2626' }} />
+                <span
+                  style={{
+                    position: 'absolute',
+                    bottom: '-2px',
+                    left: 0,
+                    right: 0,
+                    height: '2px',
+                    backgroundColor: '#dc2626',
+                  }}
+                />
               )}
             </button>
 
@@ -1272,7 +1680,16 @@ export const AccountPage: React.FC<AccountPageProps> = ({
               <Package size={17} />
               <span>Sifarişlərim & İzləmə</span>
               {activeDashboardTab === 'orders' && (
-                <span style={{ position: 'absolute', bottom: '-2px', left: 0, right: 0, height: '2px', backgroundColor: '#dc2626' }} />
+                <span
+                  style={{
+                    position: 'absolute',
+                    bottom: '-2px',
+                    left: 0,
+                    right: 0,
+                    height: '2px',
+                    backgroundColor: '#dc2626',
+                  }}
+                />
               )}
             </button>
 
@@ -1298,7 +1715,16 @@ export const AccountPage: React.FC<AccountPageProps> = ({
               <MapPin size={17} />
               <span>Çatdırılma Ünvanlarım</span>
               {activeDashboardTab === 'addresses' && (
-                <span style={{ position: 'absolute', bottom: '-2px', left: 0, right: 0, height: '2px', backgroundColor: '#dc2626' }} />
+                <span
+                  style={{
+                    position: 'absolute',
+                    bottom: '-2px',
+                    left: 0,
+                    right: 0,
+                    height: '2px',
+                    backgroundColor: '#dc2626',
+                  }}
+                />
               )}
             </button>
 
@@ -1324,7 +1750,16 @@ export const AccountPage: React.FC<AccountPageProps> = ({
               <Lock size={17} />
               <span>Təhlükəsizlik & Şifrə</span>
               {activeDashboardTab === 'security' && (
-                <span style={{ position: 'absolute', bottom: '-2px', left: 0, right: 0, height: '2px', backgroundColor: '#dc2626' }} />
+                <span
+                  style={{
+                    position: 'absolute',
+                    bottom: '-2px',
+                    left: 0,
+                    right: 0,
+                    height: '2px',
+                    backgroundColor: '#dc2626',
+                  }}
+                />
               )}
             </button>
 
@@ -1350,7 +1785,16 @@ export const AccountPage: React.FC<AccountPageProps> = ({
               <HelpCircle size={17} />
               <span>Dəstək & Əlaqə</span>
               {activeDashboardTab === 'support' && (
-                <span style={{ position: 'absolute', bottom: '-2px', left: 0, right: 0, height: '2px', backgroundColor: '#dc2626' }} />
+                <span
+                  style={{
+                    position: 'absolute',
+                    bottom: '-2px',
+                    left: 0,
+                    right: 0,
+                    height: '2px',
+                    backgroundColor: '#dc2626',
+                  }}
+                />
               )}
             </button>
           </div>
@@ -1366,7 +1810,16 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                 boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
               }}
             >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  marginBottom: '20px',
+                  flexWrap: 'wrap',
+                  gap: '12px',
+                }}
+              >
                 <div>
                   <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: theme.text }}>
                     Şəxsi Məlumatlar
@@ -1421,9 +1874,24 @@ export const AccountPage: React.FC<AccountPageProps> = ({
               )}
 
               {isEditingProfile ? (
-                <form onSubmit={handleSaveProfile} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '20px' }}>
+                <form
+                  onSubmit={handleSaveProfile}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                    gap: '20px',
+                  }}
+                >
                   <div>
-                    <label style={{ display: 'block', fontSize: '12.5px', fontWeight: 800, color: theme.text, marginBottom: '6px' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '12.5px',
+                        fontWeight: 800,
+                        color: theme.text,
+                        marginBottom: '6px',
+                      }}
+                    >
                       Ad və Soyad *
                     </label>
                     <input
@@ -1445,7 +1913,15 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '12.5px', fontWeight: 800, color: theme.text, marginBottom: '6px' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '12.5px',
+                        fontWeight: 800,
+                        color: theme.text,
+                        marginBottom: '6px',
+                      }}
+                    >
                       Email Ünvanı
                     </label>
                     <input
@@ -1468,7 +1944,15 @@ export const AccountPage: React.FC<AccountPageProps> = ({
 
                   {/* Luxury Sahara Custom Calendar Date Picker */}
                   <div>
-                    <label style={{ display: 'block', fontSize: '12.5px', fontWeight: 800, color: theme.text, marginBottom: '6px' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '12.5px',
+                        fontWeight: 800,
+                        color: theme.text,
+                        marginBottom: '6px',
+                      }}
+                    >
                       Doğum Tarixi
                     </label>
                     <SaharaDatePicker
@@ -1480,9 +1964,17 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                     />
                   </div>
 
-                  <div style={{ gridColumn: '1 / -1', display: 'flex', gap: '12px', marginTop: '10px' }}>
+                  <div
+                    style={{
+                      gridColumn: '1 / -1',
+                      display: 'flex',
+                      gap: '12px',
+                      marginTop: '10px',
+                    }}
+                  >
                     <button
                       type="submit"
+                      className="sahara-soft-red-action"
                       style={{
                         padding: '11px 24px',
                         borderRadius: '12px',
@@ -1519,25 +2011,103 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                   </div>
                 </form>
               ) : (
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px' }}>
-                  <div style={{ padding: '14px 18px', borderRadius: '12px', backgroundColor: themeMode === 'dark' ? '#0f172a' : '#f8fafc', border: `1px solid ${theme.border}` }}>
-                    <div style={{ fontSize: '11.5px', fontWeight: 700, color: theme.textMuted }}>Ad və Soyad</div>
-                    <div style={{ fontSize: '15px', fontWeight: 800, color: theme.text, marginTop: '3px' }}>{authUser.fullName}</div>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                    gap: '16px',
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: '14px 18px',
+                      borderRadius: '12px',
+                      backgroundColor: themeMode === 'dark' ? '#0f172a' : '#f8fafc',
+                      border: `1px solid ${theme.border}`,
+                    }}
+                  >
+                    <div style={{ fontSize: '11.5px', fontWeight: 700, color: theme.textMuted }}>
+                      Ad və Soyad
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '15px',
+                        fontWeight: 800,
+                        color: theme.text,
+                        marginTop: '3px',
+                      }}
+                    >
+                      {authUser.fullName}
+                    </div>
                   </div>
 
-                  <div style={{ padding: '14px 18px', borderRadius: '12px', backgroundColor: themeMode === 'dark' ? '#0f172a' : '#f8fafc', border: `1px solid ${theme.border}` }}>
-                    <div style={{ fontSize: '11.5px', fontWeight: 700, color: theme.textMuted }}>Mobil Nömrə</div>
-                    <div style={{ fontSize: '15px', fontWeight: 800, color: theme.text, marginTop: '3px' }}>+994 {authUser.phone}</div>
+                  <div
+                    style={{
+                      padding: '14px 18px',
+                      borderRadius: '12px',
+                      backgroundColor: themeMode === 'dark' ? '#0f172a' : '#f8fafc',
+                      border: `1px solid ${theme.border}`,
+                    }}
+                  >
+                    <div style={{ fontSize: '11.5px', fontWeight: 700, color: theme.textMuted }}>
+                      Mobil Nömrə
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '15px',
+                        fontWeight: 800,
+                        color: theme.text,
+                        marginTop: '3px',
+                      }}
+                    >
+                      +994 {authUser.phone}
+                    </div>
                   </div>
 
-                  <div style={{ padding: '14px 18px', borderRadius: '12px', backgroundColor: themeMode === 'dark' ? '#0f172a' : '#f8fafc', border: `1px solid ${theme.border}` }}>
-                    <div style={{ fontSize: '11.5px', fontWeight: 700, color: theme.textMuted }}>Email Ünvanı</div>
-                    <div style={{ fontSize: '15px', fontWeight: 800, color: theme.text, marginTop: '3px' }}>{authUser.email || 'Qeyd edilməyib'}</div>
+                  <div
+                    style={{
+                      padding: '14px 18px',
+                      borderRadius: '12px',
+                      backgroundColor: themeMode === 'dark' ? '#0f172a' : '#f8fafc',
+                      border: `1px solid ${theme.border}`,
+                    }}
+                  >
+                    <div style={{ fontSize: '11.5px', fontWeight: 700, color: theme.textMuted }}>
+                      Email Ünvanı
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '15px',
+                        fontWeight: 800,
+                        color: theme.text,
+                        marginTop: '3px',
+                      }}
+                    >
+                      {authUser.email || 'Qeyd edilməyib'}
+                    </div>
                   </div>
 
-                  <div style={{ padding: '14px 18px', borderRadius: '12px', backgroundColor: themeMode === 'dark' ? '#0f172a' : '#f8fafc', border: `1px solid ${theme.border}` }}>
-                    <div style={{ fontSize: '11.5px', fontWeight: 700, color: theme.textMuted }}>Doğum Tarixi</div>
-                    <div style={{ fontSize: '15px', fontWeight: 800, color: theme.text, marginTop: '3px' }}>{authUser.birthDate || 'Qeyd edilməyib'}</div>
+                  <div
+                    style={{
+                      padding: '14px 18px',
+                      borderRadius: '12px',
+                      backgroundColor: themeMode === 'dark' ? '#0f172a' : '#f8fafc',
+                      border: `1px solid ${theme.border}`,
+                    }}
+                  >
+                    <div style={{ fontSize: '11.5px', fontWeight: 700, color: theme.textMuted }}>
+                      Doğum Tarixi
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '15px',
+                        fontWeight: 800,
+                        color: theme.text,
+                        marginTop: '3px',
+                      }}
+                    >
+                      {authUser.birthDate || 'Qeyd edilməyib'}
+                    </div>
                   </div>
                 </div>
               )}
@@ -1553,18 +2123,34 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                   style={{
                     padding: '16px 20px',
                     borderRadius: '16px',
-                    backgroundColor: themeMode === 'dark' ? 'rgba(220, 38, 38, 0.12)' : 'rgba(220, 38, 38, 0.08)',
+                    backgroundColor:
+                      themeMode === 'dark' ? 'rgba(220, 38, 38, 0.12)' : 'rgba(220, 38, 38, 0.08)',
                     border: `1px solid ${themeMode === 'dark' ? 'rgba(220, 38, 38, 0.3)' : '#fecaca'}`,
                     display: 'flex',
                     alignItems: 'center',
                     gap: '14px',
                   }}
                 >
-                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: '#dc2626', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <div
+                    style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '10px',
+                      backgroundColor: '#dc2626',
+                      color: '#ffffff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
                     <Package size={18} />
                   </div>
                   <div style={{ fontSize: '13px', color: theme.text, lineHeight: 1.5 }}>
-                    <strong style={{ color: '#dc2626' }}>Aktiv Sifarişləriniz mövcuddur:</strong> Bütün cari və tamamlanmış sifarişləriniz aşağıdakı siyahıda əks olunub. Əgər əlavə və ya fərqli sifariş qəbziniz varsa, kodu aşağıdakı xanaya daxil edərək onu da dərhal axtara bilərsiniz.
+                    <strong style={{ color: '#dc2626' }}>Aktiv Sifarişləriniz mövcuddur:</strong>{' '}
+                    Bütün cari və tamamlanmış sifarişləriniz aşağıdakı siyahıda əks olunub. Əgər
+                    əlavə və ya fərqli sifariş qəbziniz varsa, kodu aşağıdakı xanaya daxil edərək
+                    onu da dərhal axtara bilərsiniz.
                   </div>
                 </div>
               ) : (
@@ -1572,18 +2158,34 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                   style={{
                     padding: '16px 20px',
                     borderRadius: '16px',
-                    backgroundColor: themeMode === 'dark' ? 'rgba(2, 132, 199, 0.12)' : 'rgba(2, 132, 199, 0.08)',
+                    backgroundColor:
+                      themeMode === 'dark' ? 'rgba(2, 132, 199, 0.12)' : 'rgba(2, 132, 199, 0.08)',
                     border: `1px solid ${themeMode === 'dark' ? 'rgba(2, 132, 199, 0.3)' : '#bae6fd'}`,
                     display: 'flex',
                     alignItems: 'center',
                     gap: '14px',
                   }}
                 >
-                  <div style={{ width: '36px', height: '36px', borderRadius: '10px', backgroundColor: '#0284c7', color: '#ffffff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                  <div
+                    style={{
+                      width: '36px',
+                      height: '36px',
+                      borderRadius: '10px',
+                      backgroundColor: '#0284c7',
+                      color: '#ffffff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      flexShrink: 0,
+                    }}
+                  >
                     <Info size={18} />
                   </div>
                   <div style={{ fontSize: '13px', color: theme.text, lineHeight: 1.5 }}>
-                    <strong style={{ color: '#0284c7' }}>Sifariş Məlumatı:</strong> Hazırda qeydiyyatınızda aktiv sifariş tapılmadı. Əgər mağazada, telefonla və ya qapıda sifariş etmisinizsə, sizə təqdim olunan sifariş kodunu daxil edərək statusu izləyə bilərsiniz.
+                    <strong style={{ color: '#0284c7' }}>Sifariş Məlumatı:</strong> Hazırda
+                    qeydiyyatınızda aktiv sifariş tapılmadı. Əgər mağazada, telefonla və ya qapıda
+                    sifariş etmisinizsə, sizə təqdim olunan sifariş kodunu daxil edərək statusu
+                    izləyə bilərsiniz.
                   </div>
                 </div>
               )}
@@ -1598,17 +2200,28 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                   boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
                 }}
               >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    marginBottom: '8px',
+                  }}
+                >
                   <PackageSearch size={20} color="#dc2626" />
                   <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: theme.text }}>
                     Sifariş Kodu ilə Axtarış və Canlı İzləmə
                   </h3>
                 </div>
                 <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: theme.textSecondary }}>
-                  Kuryer və ya menecer tərəfindən sizə verilən qəbz kodunu (məsələn: <strong>SHR-8822</strong>) daxil edin.
+                  Kuryer və ya menecer tərəfindən sizə verilən qəbz kodunu (məsələn:{' '}
+                  <strong>SHR-8822</strong>) daxil edin.
                 </p>
 
-                <form onSubmit={handleTrackOrder} style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                <form
+                  onSubmit={handleTrackOrder}
+                  style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}
+                >
                   <input
                     type="text"
                     value={orderQuery}
@@ -1630,12 +2243,13 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                     style={{
                       padding: '12px 24px',
                       borderRadius: '12px',
-                      backgroundColor: '#dc2626',
-                      color: '#ffffff',
+                      backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                      color: '#dc2626',
                       border: 'none',
                       fontSize: '14px',
                       fontWeight: 800,
                       cursor: 'pointer',
+                      transition: 'background-color 0.2s ease',
                     }}
                   >
                     İzlə
@@ -1733,7 +2347,15 @@ export const AccountPage: React.FC<AccountPageProps> = ({
           {/* TAB 3 CONTENT: ADDRESSES */}
           {activeDashboardTab === 'addresses' && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '12px',
+                }}
+              >
                 <div>
                   <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 800, color: theme.text }}>
                     Çatdırılma Ünvanlarım
@@ -1746,6 +2368,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                 <button
                   type="button"
                   onClick={() => setShowAddAddress((p) => !p)}
+                  className="sahara-soft-red-action"
                   style={{
                     display: 'inline-flex',
                     alignItems: 'center',
@@ -1783,9 +2406,23 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                     Yeni Çatdırılma Ünvanı
                   </h4>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                      gap: '12px',
+                    }}
+                  >
                     <div>
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: theme.text, marginBottom: '4px' }}>
+                      <label
+                        style={{
+                          display: 'block',
+                          fontSize: '12px',
+                          fontWeight: 700,
+                          color: theme.text,
+                          marginBottom: '4px',
+                        }}
+                      >
                         Ünvan növü (Adı)
                       </label>
                       <input
@@ -1808,7 +2445,15 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                     </div>
 
                     <div>
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: theme.text, marginBottom: '4px' }}>
+                      <label
+                        style={{
+                          display: 'block',
+                          fontSize: '12px',
+                          fontWeight: 700,
+                          color: theme.text,
+                          marginBottom: '4px',
+                        }}
+                      >
                         Şəhər / Rayon
                       </label>
                       <input
@@ -1832,7 +2477,15 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: theme.text, marginBottom: '4px' }}>
+                    <label
+                      style={{
+                        display: 'block',
+                        fontSize: '12px',
+                        fontWeight: 700,
+                        color: theme.text,
+                        marginBottom: '4px',
+                      }}
+                    >
                       Dəqiq Ünvan (Küçə, bina, mənzil) *
                     </label>
                     <textarea
@@ -1860,12 +2513,13 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                       style={{
                         padding: '10px 20px',
                         borderRadius: '10px',
-                        backgroundColor: '#dc2626',
-                        color: '#ffffff',
+                        backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                        color: '#dc2626',
                         border: 'none',
                         fontSize: '13px',
                         fontWeight: 800,
                         cursor: 'pointer',
+                        transition: 'background-color 0.2s ease',
                       }}
                     >
                       Əlavə et
@@ -1891,7 +2545,13 @@ export const AccountPage: React.FC<AccountPageProps> = ({
               )}
 
               {/* Address Cards Grid */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+                  gap: '16px',
+                }}
+              >
                 {userAddresses.map((a) => (
                   <div
                     key={a.id}
@@ -1907,7 +2567,13 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                     }}
                   >
                     <div>
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                        }}
+                      >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                           <MapPin size={16} color="#dc2626" />
                           <span style={{ fontSize: '15px', fontWeight: 800, color: theme.text }}>
@@ -1915,12 +2581,28 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                           </span>
                         </div>
                         {a.isDefault && (
-                          <span style={{ fontSize: '11px', fontWeight: 800, color: '#dc2626', backgroundColor: 'rgba(220,38,38,0.12)', padding: '2px 8px', borderRadius: '6px' }}>
+                          <span
+                            style={{
+                              fontSize: '11px',
+                              fontWeight: 800,
+                              color: '#dc2626',
+                              backgroundColor: 'rgba(220,38,38,0.12)',
+                              padding: '2px 8px',
+                              borderRadius: '6px',
+                            }}
+                          >
                             Əsas Ünvan
                           </span>
                         )}
                       </div>
-                      <p style={{ margin: '8px 0 0 0', fontSize: '13.5px', color: theme.textSecondary, lineHeight: 1.5 }}>
+                      <p
+                        style={{
+                          margin: '8px 0 0 0',
+                          fontSize: '13.5px',
+                          color: theme.textSecondary,
+                          lineHeight: 1.5,
+                        }}
+                      >
                         {a.address}
                       </p>
                     </div>
@@ -1963,7 +2645,14 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                 maxWidth: '560px',
               }}
             >
-              <h3 style={{ margin: '0 0 8px 0', fontSize: '18px', fontWeight: 800, color: theme.text }}>
+              <h3
+                style={{
+                  margin: '0 0 8px 0',
+                  fontSize: '18px',
+                  fontWeight: 800,
+                  color: theme.text,
+                }}
+              >
                 Şifrənin Dəyişdirilməsi
               </h3>
               <p style={{ margin: '0 0 20px 0', fontSize: '13px', color: theme.textSecondary }}>
@@ -1971,20 +2660,51 @@ export const AccountPage: React.FC<AccountPageProps> = ({
               </p>
 
               {passwordChangeSuccess && (
-                <div style={{ padding: '12px 16px', borderRadius: '12px', backgroundColor: 'rgba(220, 38, 38, 0.12)', color: '#dc2626', fontSize: '13.5px', fontWeight: 700, marginBottom: '16px' }}>
+                <div
+                  style={{
+                    padding: '12px 16px',
+                    borderRadius: '12px',
+                    backgroundColor: 'rgba(220, 38, 38, 0.12)',
+                    color: '#dc2626',
+                    fontSize: '13.5px',
+                    fontWeight: 700,
+                    marginBottom: '16px',
+                  }}
+                >
                   {passwordChangeSuccess}
                 </div>
               )}
 
               {passwordChangeError && (
-                <div style={{ padding: '12px 16px', borderRadius: '12px', backgroundColor: 'rgba(220, 38, 38, 0.12)', color: '#dc2626', fontSize: '13.5px', fontWeight: 700, marginBottom: '16px' }}>
+                <div
+                  style={{
+                    padding: '12px 16px',
+                    borderRadius: '12px',
+                    backgroundColor: 'rgba(220, 38, 38, 0.12)',
+                    color: '#dc2626',
+                    fontSize: '13.5px',
+                    fontWeight: 700,
+                    marginBottom: '16px',
+                  }}
+                >
                   {passwordChangeError}
                 </div>
               )}
 
-              <form onSubmit={handleChangePassword} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <form
+                onSubmit={handleChangePassword}
+                style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}
+              >
                 <div>
-                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: 800, color: theme.text, marginBottom: '6px' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '12.5px',
+                      fontWeight: 800,
+                      color: theme.text,
+                      marginBottom: '6px',
+                    }}
+                  >
                     Cari Şifrə *
                   </label>
                   <input
@@ -2006,8 +2726,16 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: 800, color: theme.text, marginBottom: '6px' }}>
-                    Yeni Şifrə (Ən azı 6 simvol) *
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '12.5px',
+                      fontWeight: 800,
+                      color: theme.text,
+                      marginBottom: '6px',
+                    }}
+                  >
+                    Yeni Şifrə *
                   </label>
                   <input
                     type="password"
@@ -2025,10 +2753,19 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                       boxSizing: 'border-box',
                     }}
                   />
+                  <PasswordRequirements password={newPassword} theme={theme} />
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '12.5px', fontWeight: 800, color: theme.text, marginBottom: '6px' }}>
+                  <label
+                    style={{
+                      display: 'block',
+                      fontSize: '12.5px',
+                      fontWeight: 800,
+                      color: theme.text,
+                      marginBottom: '6px',
+                    }}
+                  >
                     Yeni Şifrənin Təkrarı *
                   </label>
                   <input
@@ -2054,13 +2791,14 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                   style={{
                     padding: '12px 20px',
                     borderRadius: '12px',
-                    backgroundColor: '#dc2626',
-                    color: '#ffffff',
+                    backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                    color: '#dc2626',
                     border: 'none',
                     fontSize: '14px',
                     fontWeight: 800,
                     cursor: 'pointer',
                     marginTop: '8px',
+                    transition: 'background-color 0.2s ease',
                   }}
                 >
                   Şifrəni Yenilə
@@ -2090,14 +2828,32 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                   gap: '14px',
                 }}
               >
-                <div style={{ width: '44px', height: '44px', borderRadius: '12px', backgroundColor: 'rgba(37, 211, 102, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <div
+                  style={{
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '12px',
+                    backgroundColor: 'rgba(37, 211, 102, 0.15)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
                   <WhatsAppIcon size={22} color="#25D366" />
                 </div>
                 <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: theme.text }}>
                   WhatsApp ilə Canlı Dəstək
                 </h4>
-                <p style={{ margin: 0, fontSize: '13px', color: theme.textSecondary, lineHeight: 1.5 }}>
-                  Məhsul seçimi, sifarişinizin vəziyyəti və ya çatdırılma detalları ilə bağlı menecerimizlə dərhal əlaqə saxlayın.
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: '13px',
+                    color: theme.textSecondary,
+                    lineHeight: 1.5,
+                  }}
+                >
+                  Məhsul seçimi, sifarişinizin vəziyyəti və ya çatdırılma detalları ilə bağlı
+                  menecerimizlə dərhal əlaqə saxlayın.
                 </p>
                 <button
                   type="button"
@@ -2105,8 +2861,8 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                   style={{
                     padding: '11px 16px',
                     borderRadius: '10px',
-                    backgroundColor: '#25D366',
-                    color: '#ffffff',
+                    backgroundColor: 'rgba(34, 197, 94, 0.12)',
+                    color: '#16a34a',
                     border: 'none',
                     fontSize: '13.5px',
                     fontWeight: 800,
@@ -2115,9 +2871,10 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '8px',
+                    transition: 'background-color 0.2s ease',
                   }}
                 >
-                  <WhatsAppIcon size={16} color="#ffffff" />
+                  <WhatsAppIcon size={16} color="#16a34a" />
                   <span>WhatsApp-da Yaz</span>
                 </button>
               </div>
@@ -2134,13 +2891,30 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                   gap: '14px',
                 }}
               >
-                <div style={{ width: '44px', height: '44px', borderRadius: '12px', backgroundColor: 'rgba(2, 132, 199, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                  <Phone size={22} color="#0284c7" />
+                <div
+                  style={{
+                    width: '44px',
+                    height: '44px',
+                    borderRadius: '12px',
+                    backgroundColor: 'rgba(220, 38, 38, 0.12)',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                  }}
+                >
+                  <Phone size={22} color="#dc2626" />
                 </div>
                 <h4 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: theme.text }}>
                   Zəng Xidməti
                 </h4>
-                <p style={{ margin: 0, fontSize: '13px', color: theme.textSecondary, lineHeight: 1.5 }}>
+                <p
+                  style={{
+                    margin: 0,
+                    fontSize: '13px',
+                    color: theme.textSecondary,
+                    lineHeight: 1.5,
+                  }}
+                >
                   Hər gün 09:00 - 20:00 arası qaynar xəttimiz sizin xidmətinizdədir.
                 </p>
                 <button
@@ -2149,8 +2923,8 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                   style={{
                     padding: '11px 16px',
                     borderRadius: '10px',
-                    backgroundColor: '#0284c7',
-                    color: '#ffffff',
+                    backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                    color: '#dc2626',
                     border: 'none',
                     fontSize: '13.5px',
                     fontWeight: 800,
@@ -2159,9 +2933,10 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                     alignItems: 'center',
                     justifyContent: 'center',
                     gap: '8px',
+                    transition: 'background-color 0.2s ease',
                   }}
                 >
-                  <Phone size={16} color="#ffffff" />
+                  <Phone size={16} color="#dc2626" />
                   <span>Zəng et</span>
                 </button>
               </div>

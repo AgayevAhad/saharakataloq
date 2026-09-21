@@ -1,7 +1,7 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
-import { lightTheme, darkTheme } from '../types/theme';
+import { lightTheme } from '../types/theme';
 import { AboutPage } from '../pages/AboutPage';
 import { CareersPage } from '../pages/CareersPage';
 import { TermsPage } from '../pages/TermsPage';
@@ -46,13 +46,11 @@ describe('Company and Legal Policy Pages', () => {
       );
 
       expect(screen.getByText(/SAHARA ELECTRONICS HAQQINDA/i)).toBeTruthy();
-      expect(screen.getByText(/Müasir Məişət Texnikası və İtaliya Keyfiyyəti/i)).toBeTruthy();
-      expect(screen.getByText(/15\+ İl/i)).toBeTruthy();
-      expect(screen.getByText(/İllik Təcrübə/i)).toBeTruthy();
-      expect(screen.getByText(/50,000\+/i)).toBeTruthy();
-      expect(screen.getByText(/Məmnun Müştəri/i)).toBeTruthy();
-      expect(screen.getByText(/100%/i)).toBeTruthy();
-      expect(screen.getAllByText(/Rəsmi Zəmanət/i).length).toBeGreaterThan(0);
+      expect(screen.getByText(/Məişət Texnikası Kataloqu və Məhsul Seçimi/i)).toBeTruthy();
+      expect(screen.getByText(/Məhsul kataloqu/i)).toBeTruthy();
+      expect(screen.getByText(/Əlaqə kanalları/i)).toBeTruthy();
+      expect(screen.queryByText(/50,000\+/i)).toBeNull();
+      expect(screen.queryByText(/15\+ İl/i)).toBeNull();
       expect(screen.getByText(/Missiyamız/i)).toBeTruthy();
       expect(screen.getByText(/Vizyonumuz/i)).toBeTruthy();
     });
@@ -88,7 +86,7 @@ describe('Company and Legal Policy Pages', () => {
   });
 
   describe('CareersPage', () => {
-    it('renders company culture pillars and job listings', () => {
+    it('renders an honest empty state instead of unverified job listings', () => {
       const handleNavigate = vi.fn();
       const handleWhatsApp = vi.fn();
 
@@ -102,15 +100,12 @@ describe('Company and Legal Policy Pages', () => {
         />
       );
 
-      expect(screen.getByText(/SAHARA ELECTRONICS KOMANDASINA QOŞULUN/i)).toBeTruthy();
-      expect(screen.getByText(/Gələcəyinizi Peşəkar Komanda ilə Birlikdə Qurun/i)).toBeTruthy();
-      expect(screen.getByText(/Niyə Sahara Electronics Komandası\?/i)).toBeTruthy();
-      expect(screen.getByText(/Məişət Texnikası üzrə Satış Məsləhətçisi/i)).toBeTruthy();
-      expect(screen.getByText(/Texniki Servis və Quraşdırma Mütəxəssisi/i)).toBeTruthy();
-      expect(screen.getByText(/Rəqəmsal Marketinq və Kontent Meneceri/i)).toBeTruthy();
+      expect(screen.getByText(/Hazırda elan edilmiş vakansiya yoxdur/i)).toBeTruthy();
+      expect(screen.getByText(/Elanları necə izləmək olar/i)).toBeTruthy();
+      expect(screen.queryByText(/Satış Məsləhətçisi/i)).toBeNull();
     });
 
-    it('submits job application form successfully', () => {
+    it('offers only configured official contact channels', () => {
       const handleNavigate = vi.fn();
       const handleWhatsApp = vi.fn();
 
@@ -124,18 +119,13 @@ describe('Company and Legal Policy Pages', () => {
         />
       );
 
-      expect(screen.getByText(/Karyera Müraciət Formu/i)).toBeTruthy();
-
-      const nameInput = screen.getByPlaceholderText(/Məs: Rəşad Məmmədov/i);
-      const phoneInput = screen.getByPlaceholderText(/\+994 50 123 45 67/i);
-
-      fireEvent.change(nameInput, { target: { value: 'Əli Məmmədov' } });
-      fireEvent.change(phoneInput, { target: { value: '+994501112233' } });
-
-      const submitBtn = screen.getByRole('button', { name: /Müraciəti Göndər/i });
-      fireEvent.click(submitBtn);
-
-      expect(screen.getByText(/Müraciətiniz qəbul edildi!/i)).toBeTruthy();
+      expect(screen.getByRole('link', { name: /E-poçtla əlaqə/i }).getAttribute('href')).toContain(
+        'info@sahara.az'
+      );
+      const contactButton = screen.getByRole('button', { name: /Ümumi əlaqə/i });
+      fireEvent.click(contactButton);
+      expect(handleWhatsApp).toHaveBeenCalled();
+      expect(screen.queryByText(/Müraciətiniz qəbul edildi/i)).toBeNull();
     });
   });
 
@@ -143,17 +133,13 @@ describe('Company and Legal Policy Pages', () => {
     it('renders terms and conditions sections', () => {
       const handleNavigate = vi.fn();
 
-      render(
-        <TermsPage
-          theme={lightTheme}
-          themeMode="light"
-          onNavigate={handleNavigate}
-        />
-      );
+      render(<TermsPage theme={lightTheme} themeMode="light" onNavigate={handleNavigate} />);
 
       expect(screen.getByText(/İstifadəçi Şərtləri və Qaydaları/i)).toBeTruthy();
       expect(screen.getByText(/1. Ümumi Müddəalar/i)).toBeTruthy();
-      expect(screen.getByText(/2. Sifarişlərin Rəsmiləşdirilməsi və Qiymət Siyasəti/i)).toBeTruthy();
+      expect(
+        screen.getByText(/2. Sifarişlərin Rəsmiləşdirilməsi və Qiymət Siyasəti/i)
+      ).toBeTruthy();
       expect(screen.getByText(/3. Çatdırılma və Quraşdırma Şərtləri/i)).toBeTruthy();
       expect(screen.getByText(/4. Rəsmi Zəmanət və Servis Xidməti/i)).toBeTruthy();
       expect(screen.getByText(/5. Məhsulun Qaytarılması və Dəyişdirilməsi/i)).toBeTruthy();
@@ -162,13 +148,7 @@ describe('Company and Legal Policy Pages', () => {
     it('navigates back to home when back button clicked', () => {
       const handleNavigate = vi.fn();
 
-      render(
-        <TermsPage
-          theme={lightTheme}
-          themeMode="light"
-          onNavigate={handleNavigate}
-        />
-      );
+      render(<TermsPage theme={lightTheme} themeMode="light" onNavigate={handleNavigate} />);
 
       const homeBtns = screen.getAllByRole('button', { name: /Ana Səhifəyə qayıt/i });
       fireEvent.click(homeBtns[0]);
@@ -180,17 +160,12 @@ describe('Company and Legal Policy Pages', () => {
     it('renders privacy policy sections and security commitments', () => {
       const handleNavigate = vi.fn();
 
-      render(
-        <PrivacyPage
-          theme={lightTheme}
-          themeMode="light"
-          onNavigate={handleNavigate}
-        />
-      );
+      render(<PrivacyPage theme={lightTheme} themeMode="light" onNavigate={handleNavigate} />);
 
       expect(screen.getByText(/Məxfilik və Məlumat Təhlükəsizliyi Siyasəti/i)).toBeTruthy();
       expect(screen.getByText(/1. Toplanan Fərdi Məlumatlar/i)).toBeTruthy();
-      expect(screen.getByText(/2. Məlumatların Qorunması və SSL Şifrələnməsi/i)).toBeTruthy();
+      expect(screen.getByText(/2. Məlumatların Saxlanması/i)).toBeTruthy();
+      expect(screen.queryByText(/256-bit/i)).toBeNull();
       expect(screen.getByText(/3. Üçüncü Tərəflərlə Məlumat Paylaşımı/i)).toBeTruthy();
       expect(screen.getByText(/4. Çərəzlər \(Cookies\) Siyasəti/i)).toBeTruthy();
     });
@@ -210,8 +185,10 @@ describe('Company and Legal Policy Pages', () => {
       expect(resolveRouteFromPath('/mexfilik')).toEqual({ route: 'privacy' });
       expect(resolveRouteFromPath('/stores')).toEqual({ route: 'stores' });
       expect(resolveRouteFromPath('/magazalar')).toEqual({ route: 'stores' });
-      expect(resolveRouteFromPath('/catdirilma')).toEqual({ route: 'services' });
-      expect(resolveRouteFromPath('/zemanet')).toEqual({ route: 'services' });
+      expect(resolveRouteFromPath('/catdirilma')).toEqual({ route: 'delivery' });
+      expect(resolveRouteFromPath('/zemanet')).toEqual({ route: 'warranty' });
+      expect(resolveRouteFromPath('/qaytarma')).toEqual({ route: 'returns' });
+      expect(resolveRouteFromPath('/faq')).toEqual({ route: 'faq' });
       expect(resolveRouteFromPath('/elaqe')).toEqual({ route: 'support' });
     });
   });

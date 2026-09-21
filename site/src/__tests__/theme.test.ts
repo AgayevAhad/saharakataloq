@@ -41,7 +41,13 @@ describe('Sahara Electronic - Tema və Rəng Sistemi Testləri', () => {
     expect(lightTheme.mode).toBe('light');
 
     // Dark rejimdə fon tünd, mətn açıq olmalıdır
-    expect(darkTheme.bg).toMatch(/^#0[0-9a-fA-F]{5}/);
+    // The lighter charcoal requested for dark mode need not start with #0.
+    const channel = (value: string, offset: number) =>
+      Number.parseInt(value.slice(offset, offset + 2), 16);
+    const brightness = (value: string) =>
+      channel(value, 1) * 0.2126 + channel(value, 3) * 0.7152 + channel(value, 5) * 0.0722;
+    expect(brightness(darkTheme.bg)).toBeLessThan(brightness(darkTheme.text));
+    expect(brightness(darkTheme.bg)).toBeLessThan(brightness(lightTheme.bg));
     expect(darkTheme.text).toMatch(/^#[fF][0-9a-fA-F]{5}/);
 
     // Light rejimdə fon açıq, mətn tünd olmalıdır

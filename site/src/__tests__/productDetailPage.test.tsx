@@ -3,30 +3,33 @@ import React from 'react';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { ProductDetailPage } from '../pages/ProductDetailPage';
 import { Product, Brand, CatalogCategory, CatalogSettings } from '../types/product';
-import { ThemeColors } from '../types/theme';
+import { lightTheme } from '../types/theme';
 import { AuthUser } from '../types/auth';
 
-const lightTheme: ThemeColors = {
-  primary: '#dc2626',
-  primaryHover: '#b91c1c',
-  bg: '#ffffff',
-  bgSecondary: '#f8fafc',
-  cardBg: '#ffffff',
-  text: '#0f172a',
-  textSecondary: '#475569',
-  textMuted: '#94a3b8',
-  border: '#e2e8f0',
-  mode: 'light',
-};
-
 const mockBrands: Brand[] = [
-  { id: 'ardo', name: 'ARDO', originCountry: 'İtaliya', active: true, logo: '/media/ardo-logo.png' },
-  { id: 'lotus', name: 'Lotus', originCountry: 'Almaniya', active: true, logo: '/media/lotus-logo.png' },
+  {
+    id: 'ardo',
+    slug: 'ardo',
+    name: 'ARDO',
+    originCountry: 'İtaliya',
+    manufacturingCountries: [],
+    active: true,
+    logo: '/media/ardo-logo.png',
+  },
+  {
+    id: 'lotus',
+    slug: 'lotus',
+    name: 'Lotus',
+    originCountry: 'Almaniya',
+    manufacturingCountries: [],
+    active: true,
+    logo: '/media/lotus-logo.png',
+  },
 ];
 
 const mockCategories: CatalogCategory[] = [
-  { id: 'paltaryuyan', name: 'Paltaryuyan', active: true, sortOrder: 1 },
-  { id: 'soyuducu', name: 'Soyuducu', active: true, sortOrder: 2 },
+  { id: 'paltaryuyan', slug: 'paltaryuyan', name: 'Paltaryuyan', active: true, sortOrder: 1 },
+  { id: 'soyuducu', slug: 'soyuducu', name: 'Soyuducu', active: true, sortOrder: 2 },
 ];
 
 const mockProduct: Product = {
@@ -35,11 +38,12 @@ const mockProduct: Product = {
   title: 'ARDO 8kq Paltaryuyan İnverter',
   category: 'paltaryuyan',
   categoryName: 'Paltaryuyan',
+  image: '/media/washer-front.jpg',
   brandId: 'ardo',
   price: 999,
-  priceCash: 999,
   oldPrice: 1199,
   status: 'published',
+  stockStatus: 'in_stock',
   badgeText: 'İnverter Motor',
   shortDesc: '8 kq tutumlu, səssiz inverter mühərrikli paltaryuyan.',
   description: 'İtaliya istehsalı, yüksək enerji səmərəliliyinə malik premium paltaryuyan maşın.',
@@ -48,9 +52,9 @@ const mockProduct: Product = {
     { id: 'm-2', url: '/media/washer-side.jpg', type: 'image', alt: 'Side view' },
   ],
   specs: [
-    { name: 'Mühərrik', value: 'İnverter', group: 'Mühərrik və Güc' },
-    { name: 'Tutum', value: '8 kq', group: 'Mühərrik və Güc' },
-    { name: 'Sıxma sürəti', value: '1200 dövr/dəq', group: 'Funksiyalar' },
+    { id: 'motor', name: 'Mühərrik', value: 'İnverter', group: 'Əsas' },
+    { id: 'capacity', name: 'Tutum', value: '8 kq', group: 'Əsas' },
+    { id: 'spin', name: 'Sıxma sürəti', value: '1200 dövr/dəq', group: 'Funksiyalar' },
   ],
   highlights: ['İnverter Mühərrik', 'A+++ Enerji Sinfi', 'EcoSilence Səssiz Texnologiya'],
 };
@@ -63,11 +67,13 @@ const mockAllProducts: Product[] = [
     title: 'ARDO 9kq Paltaryuyan İnverter',
     category: 'paltaryuyan',
     categoryName: 'Paltaryuyan',
+    image: '',
     brandId: 'ardo',
     price: 1199,
-    priceCash: 1199,
+    shortDesc: '',
     status: 'published',
-    specs: [{ name: 'Tutum', value: '9 kq' }],
+    specs: [{ id: 'capacity', name: 'Tutum', value: '9 kq' }],
+    highlights: [],
   },
   {
     id: 'lotus-fridge-1',
@@ -75,23 +81,26 @@ const mockAllProducts: Product[] = [
     title: 'Lotus No-Frost Soyuducu',
     category: 'soyuducu',
     categoryName: 'Soyuducu',
+    image: '',
     brandId: 'lotus',
     price: 1499,
-    priceCash: 1499,
+    shortDesc: '',
     status: 'published',
-    specs: [{ name: 'Həcm', value: '500 L' }],
+    specs: [{ id: 'volume', name: 'Həcm', value: '500 L' }],
+    highlights: [],
   },
 ];
 
 const mockSettings: CatalogSettings = {
-  headerTitle: 'Sahara Electronics',
-  headerSubtitle: 'Premium Məişət Texnikası',
+  siteTitle: 'Sahara Electronics',
+  siteSubtitle: 'Premium Məişət Texnikası',
   contactPhone: '+994 50 123 45 67',
   whatsappNumber: '994501234567',
   whatsappButtonText: 'WhatsApp ilə Sifariş et',
   callButtonText: 'Zəng et',
   shareButtonText: 'Paylaş',
-  addresses: ['Sədərək TM, Sıra 5, Mağaza 40'],
+  phoneNumber: '+994 50 123 45 67',
+  addresses: [{ id: 'store-1', title: 'Mağaza', address: 'Sədərək TM, Sıra 5, Mağaza 40' }],
 };
 
 const mockAuthUser: AuthUser = {
@@ -203,14 +212,18 @@ describe('ProductDetailPage Tests (Strict Real-Data & Authenticated Reviews)', (
 
     // Default tab: Description
     expect(screen.getByText(/Məhsul Haqqında Ətraflı Məlumat/i)).toBeDefined();
-    expect(screen.getByText(/İtaliya istehsalı, yüksək enerji səmərəliliyinə malik premium/i)).toBeDefined();
+    expect(
+      screen.getByText(/İtaliya istehsalı, yüksək enerji səmərəliliyinə malik premium/i)
+    ).toBeDefined();
 
     // Click "Bütün Texniki Xüsusiyyətlərə Bax"
-    const viewAllSpecsBtn = screen.getByRole('button', { name: /Bütün Texniki Xüsusiyyətlərə Bax/i });
+    const viewAllSpecsBtn = screen.getByRole('button', {
+      name: /Bütün Texniki Xüsusiyyətlərə Bax/i,
+    });
     fireEvent.click(viewAllSpecsBtn);
 
     // Now Specs tab is active
-    expect(screen.getByText('Mühərrik və Güc')).toBeDefined();
+    expect(screen.getByText('Əsas')).toBeDefined();
     expect(screen.getByText('1200 dövr/dəq')).toBeDefined();
   });
 
@@ -272,7 +285,7 @@ describe('ProductDetailPage Tests (Strict Real-Data & Authenticated Reviews)', (
 
     // Authenticated author is displayed
     expect(screen.getByText('Aygün Qasımova')).toBeDefined();
-    expect(screen.getByText('✓ Təsdiqlənmiş İstifadəçi')).toBeDefined();
+    expect(screen.getByText('Hesaba daxil olub')).toBeDefined();
 
     const commentInput = screen.getByPlaceholderText(/Məhsul haqqında təcrübənizi/i);
     const submitBtn = screen.getByRole('button', { name: /Rəyi Göndər/i });
@@ -307,6 +320,12 @@ describe('ProductDetailPage Tests (Strict Real-Data & Authenticated Reviews)', (
     expect(screen.getByTitle('Böyüt (Kliklə yaxınlaşdır)')).toBeDefined();
     expect(screen.getByTitle('Uzaqlaşdır')).toBeDefined();
     expect(screen.getByTitle('Bağla')).toBeDefined();
+
+    const image = screen.getByTestId('product-lightbox-image');
+    fireEvent.click(screen.getByLabelText('Şəkli sağa fırlat'));
+    expect(image.style.transform).toContain('rotate(90deg)');
+    fireEvent.click(screen.getByLabelText('Şəkli sola fırlat'));
+    expect(image.style.transform).toContain('rotate(0deg)');
 
     const closeBtn = screen.getByTitle('Bağla');
     fireEvent.click(closeBtn);

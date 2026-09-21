@@ -33,7 +33,7 @@ export default defineConfig({
     navigationTimeout: 15000,
   },
   webServer: {
-    command: 'node scripts/playwright-test-server.mjs',
+    command: `${process.execPath} scripts/playwright-test-server.mjs`,
     url: 'http://127.0.0.1:5188',
     reuseExistingServer: false,
     timeout: 60000,

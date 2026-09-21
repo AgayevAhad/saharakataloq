@@ -78,6 +78,7 @@ import { BrandRegistryStudio } from './BrandRegistryStudio';
 import { CategoryTreeManager } from './CategoryTreeManager';
 import { NavigationManager } from './NavigationManager';
 import { BrandRailStudio } from './BrandRailStudio';
+import { AdminSupportInbox } from './AdminSupportInbox';
 import { calculateCompletenessScore } from '../utils/completenessScorer';
 import {
   downloadFile,
@@ -112,6 +113,7 @@ type Tab =
   | 'appearance'
   | 'articles'
   | 'contact'
+  | 'support_chat'
   | 'snapshots'
   | 'logs'
   | 'security';
@@ -127,6 +129,7 @@ export const isProductModified = (current: Product, orig?: Product): boolean => 
   if (current.shortDesc !== orig.shortDesc) return true;
   if (current.status !== orig.status) return true;
   if (current.badgeText !== orig.badgeText) return true;
+  if (current.isNew !== orig.isNew) return true;
   if (current.category !== orig.category || current.brandId !== orig.brandId) return true;
   if (JSON.stringify(current.media || []) !== JSON.stringify(orig.media || [])) return true;
   if (JSON.stringify(current.specs || []) !== JSON.stringify(orig.specs || [])) return true;
@@ -1107,6 +1110,7 @@ export const CatalogAdmin: React.FC<Props> = ({
     ['appearance', 'Görünüş & Mətnlər', <Palette size={17} />],
     ['articles', 'Texnologiyalar (i)', <Zap size={17} />],
     ['contact', 'Əlaqə & Sosial', <Phone size={17} />],
+    ['support_chat', 'Müştəri çatı', <MessageCircle size={17} />],
     ['snapshots', 'Bərpa & Nüsxələr', <RotateCcw size={17} />],
     ['logs', 'Loglama (Audit)', <FileText size={17} />],
     ['security', 'Təhlükəsizlik', <Lock size={17} />],
@@ -3065,6 +3069,9 @@ export const CatalogAdmin: React.FC<Props> = ({
         )}
 
         {/* TAB NAVIGATION: CMS MENUS */}
+        {tab === 'support_chat' && (
+          <AdminSupportInbox theme={theme} csrfToken={initial.csrfToken} />
+        )}
         {tab === 'navigation' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
             <NavigationManager theme={theme} csrfToken={initial.csrfToken} showToast={showToast} />
@@ -5979,7 +5986,9 @@ export const ProductEditor = ({
               <span>Kampaniya Nişanı (Badge)</span>
               <input
                 value={product.badgeText || ''}
-                onChange={(e) => change('badgeText', e.target.value)}
+                onChange={(e) =>
+                  setProduct((current) => ({ ...current, badgeText: e.target.value, isNew: false }))
+                }
                 placeholder="Məs: Yeni Model, Endirim, Top Model, Kreditlə..."
               />
             </label>

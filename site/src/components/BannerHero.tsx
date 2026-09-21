@@ -1,15 +1,17 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   ArrowRight,
   ChevronLeft,
   ChevronRight,
   Flame,
+  Loader2,
   ShieldCheck,
   Wind,
   Zap,
 } from 'lucide-react';
 import { TechnologyArticle } from '../types/product';
 import { ThemeColors } from '../types/theme';
+import { ShimmerImage } from './ShimmerImage';
 
 interface BannerHeroProps {
   theme: ThemeColors;
@@ -21,27 +23,11 @@ interface BannerHeroProps {
   onNavigateContact?: () => void;
 }
 
-const getArticleIcon = (iconName?: string, color?: string, size = 18) => {
-  switch (iconName?.toLowerCase()) {
-    case 'flame':
-    case 'fire':
-      return <Flame size={size} color={color || '#ef4444'} />;
-    case 'wind':
-      return <Wind size={size} color={color || '#0284c7'} />;
-    case 'shieldcheck':
-    case 'shield':
-      return <ShieldCheck size={size} color={color || '#16a34a'} />;
-    case 'zap':
-    default:
-      return <Zap size={size} color={color || '#ef4444'} />;
-  }
-};
-
 interface HeroSlide {
   type: 'video' | 'image';
   src: string;
   poster?: string;
-  duration: number; // in seconds
+  duration: number;
   titlePart1: string;
   titlePart2: string;
   titleAccent: string;
@@ -79,6 +65,46 @@ const HERO_SLIDES: HeroSlide[] = [
   },
 ];
 
+const COMPANION_SLIDES = [
+  {
+    src: '/media/hero/kitchen-counter.webm',
+    label: 'Müasir mətbəx və ağıllı texnika',
+    duration: 7,
+    sourceUrl:
+      'https://www.pexels.com/video/modern-kitchen-counter-with-appliances-and-faucet-34822125/',
+  },
+  {
+    src: '/media/hero/black-kitchen.webm',
+    label: 'Qara rəngli premium mətbəx interyeri',
+    duration: 7,
+    sourceUrl:
+      'https://www.pexels.com/video/modern-black-kitchen-interior-with-appliances-34231474/',
+  },
+  {
+    src: '/media/hero/wood-kitchen.webm',
+    label: 'Taxta detallı işıqlı mətbəx interyeri',
+    duration: 7,
+    sourceUrl:
+      'https://www.pexels.com/video/modern-kitchen-with-wooden-cabinets-and-appliances-36991695/',
+  },
+];
+
+const getArticleIcon = (iconName?: string, color?: string, size = 18) => {
+  switch (iconName?.toLowerCase()) {
+    case 'flame':
+    case 'fire':
+      return <Flame size={size} color={color || '#ef4444'} />;
+    case 'wind':
+      return <Wind size={size} color={color || '#0284c7'} />;
+    case 'shieldcheck':
+    case 'shield':
+      return <ShieldCheck size={size} color={color || '#16a34a'} />;
+    case 'zap':
+    default:
+      return <Zap size={size} color={color || '#ef4444'} />;
+  }
+};
+
 export const BannerHero: React.FC<BannerHeroProps> = ({
   theme,
   articles = [],
@@ -88,510 +114,431 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
   onNavigateCatalog,
   onNavigateContact: _onNavigateContact,
 }) => {
-  const activeArticles = articles.filter((a) => a.active !== false);
+  const activeArticles = articles.filter((article) => article.active !== false);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [companionIndex, setCompanionIndex] = useState(0);
   const [slideProgress, setSlideProgress] = useState(0);
+  const [companionProgress, setCompanionProgress] = useState(0);
   const [animating, setAnimating] = useState(false);
-  const isMountedRef = useRef(true);
-  const animTimeoutRef = useRef<any>(null);
-  const progressIntervalRef = useRef<any>(null);
+  const [mainVideoReady, setMainVideoReady] = useState(false);
+  const [readyCompanions, setReadyCompanions] = useState<Set<number>>(() => new Set());
   const videoRef = useRef<HTMLVideoElement>(null);
+  const companionVideoRefs = useRef<Array<HTMLVideoElement | null>>([]);
+  const animationTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const companionTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const currentSlide = HERO_SLIDES[currentIndex];
+  const currentArticle = activeArticles[currentIndex % activeArticles.length] || activeArticles[0];
 
-  const currentSlide = HERO_SLIDES[currentIndex % HERO_SLIDES.length];
+  const goToSlide = (targetIndex: number) => {
+    const normalized = (targetIndex + HERO_SLIDES.length) % HERO_SLIDES.length;
+    if (animationTimerRef.current) clearTimeout(animationTimerRef.current);
+    setAnimating(true);
+    setSlideProgress(0);
+    setCurrentIndex(normalized);
+    animationTimerRef.current = setTimeout(() => setAnimating(false), 520);
+  };
+
+  const goToCompanionSlide = (targetIndex: number) => {
+    if (companionTimerRef.current) clearTimeout(companionTimerRef.current);
+    const normalized = (targetIndex + COMPANION_SLIDES.length) % COMPANION_SLIDES.length;
+    setCompanionProgress(0);
+    setCompanionIndex(normalized);
+  };
 
   useEffect(() => {
-    isMountedRef.current = true;
     return () => {
-      isMountedRef.current = false;
-      if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current);
-      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+      if (animationTimerRef.current) clearTimeout(animationTimerRef.current);
+      if (companionTimerRef.current) clearTimeout(companionTimerRef.current);
     };
   }, []);
 
-  // Handle slide progression and smooth red progress bar fill
+  // The smaller visual follows the large stage exactly one second later.
   useEffect(() => {
-    if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
-    setSlideProgress(0);
+    if (companionTimerRef.current) clearTimeout(companionTimerRef.current);
+    companionTimerRef.current = setTimeout(() => {
+      setCompanionIndex(currentIndex % COMPANION_SLIDES.length);
+      setCompanionProgress(0);
+    }, 1000);
+    return () => {
+      if (companionTimerRef.current) clearTimeout(companionTimerRef.current);
+    };
+  }, [currentIndex]);
 
+  useEffect(() => {
+    companionVideoRefs.current.forEach((video, index) => {
+      if (!video) return;
+      if (index === companionIndex) video.play().catch(() => undefined);
+      else video.pause();
+    });
+  }, [companionIndex]);
+
+  // Companion progress fill timer (YouTube story style)
+  useEffect(() => {
+    let disposed = false;
     const stepMs = 50;
+    setCompanionProgress(0);
+    const companionSlide = COMPANION_SLIDES[companionIndex];
+    const duration = companionSlide?.duration || 7;
+    const activeVideo = companionVideoRefs.current[companionIndex];
 
-    if (currentSlide.type === 'video') {
-      if (videoRef.current) {
-        try {
-          videoRef.current.currentTime = 0;
-          videoRef.current.play().catch(() => {});
-        } catch {
-          // ignore
-        }
-      }
-
-      progressIntervalRef.current = setInterval(() => {
-        if (!isMountedRef.current) return;
-        if (videoRef.current) {
-          const cur = videoRef.current.currentTime || 0;
-          const dur = currentSlide.duration || 20;
-          const progress = Math.min(100, Math.max(0, (cur / dur) * 100));
-          setSlideProgress(progress);
-
-          if (cur >= dur || videoRef.current.ended) {
-            videoRef.current.currentTime = 0;
-            goToSlide((currentIndex + 1) % HERO_SLIDES.length);
-          }
-        }
-      }, stepMs);
-    } else {
-      const totalSteps = (currentSlide.duration * 1000) / stepMs;
-      const progressIncrement = 100 / totalSteps;
-
-      progressIntervalRef.current = setInterval(() => {
-        if (!isMountedRef.current) return;
-        setSlideProgress((prev) => {
-          if (prev >= 99.5) {
-            goToSlide((currentIndex + 1) % HERO_SLIDES.length);
-            return 0;
-          }
-          return Math.min(100, prev + progressIncrement);
-        });
-      }, stepMs);
+    if (activeVideo) {
+      activeVideo.currentTime = 0;
+      activeVideo.play().catch(() => undefined);
     }
 
+    const startedAt = Date.now();
+    const interval = window.setInterval(() => {
+      if (disposed) return;
+      const video = companionVideoRefs.current[companionIndex];
+      let progress = 0;
+      if (video && video.duration && !isNaN(video.duration) && video.duration > 0) {
+        progress = Math.min(100, (video.currentTime / Math.min(video.duration, duration)) * 100);
+        if (video.currentTime >= Math.min(video.duration, duration) || video.ended) {
+          goToCompanionSlide(companionIndex + 1);
+          return;
+        }
+      } else {
+        const elapsed = (Date.now() - startedAt) / 1000;
+        progress = Math.min(100, (elapsed / duration) * 100);
+        if (progress >= 100) {
+          goToCompanionSlide(companionIndex + 1);
+          return;
+        }
+      }
+      setCompanionProgress(progress);
+    }, stepMs);
+
     return () => {
-      if (progressIntervalRef.current) clearInterval(progressIntervalRef.current);
+      disposed = true;
+      window.clearInterval(interval);
     };
-  }, [currentIndex, currentSlide.type, currentSlide.duration]);
+  }, [companionIndex]);
 
-  const goToSlide = (targetIdx: number) => {
-    if (animTimeoutRef.current) clearTimeout(animTimeoutRef.current);
-    setAnimating(true);
+  useEffect(() => {
+    let disposed = false;
+    const stepMs = 50;
     setSlideProgress(0);
-    animTimeoutRef.current = setTimeout(() => {
-      if (!isMountedRef.current) return;
-      setCurrentIndex(targetIdx);
-      setAnimating(false);
-    }, 150);
-  };
 
-  const prevSlide = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    goToSlide((currentIndex - 1 + HERO_SLIDES.length) % HERO_SLIDES.length);
-  };
+    if (currentSlide.type === 'video') {
+      const video = videoRef.current;
+      if (video) {
+        video.currentTime = 0;
+        video.play().catch(() => undefined);
+      }
+      const interval = window.setInterval(() => {
+        if (disposed) return;
+        const activeVideo = videoRef.current;
+        const elapsed = activeVideo?.currentTime || 0;
+        setSlideProgress(Math.min(100, (elapsed / currentSlide.duration) * 100));
+        if (elapsed >= currentSlide.duration || activeVideo?.ended) goToSlide(currentIndex + 1);
+      }, stepMs);
+      return () => {
+        disposed = true;
+        window.clearInterval(interval);
+      };
+    }
 
-  const nextSlide = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    goToSlide((currentIndex + 1) % HERO_SLIDES.length);
-  };
+    const startedAt = Date.now();
+    const interval = window.setInterval(() => {
+      if (disposed) return;
+      const progress = ((Date.now() - startedAt) / (currentSlide.duration * 1000)) * 100;
+      if (progress >= 100) goToSlide(currentIndex + 1);
+      else setSlideProgress(progress);
+    }, stepMs);
+    return () => {
+      disposed = true;
+      window.clearInterval(interval);
+    };
+  }, [currentIndex, currentSlide.duration, currentSlide.type]);
 
-  const currentArticle = activeArticles[currentIndex % activeArticles.length] || activeArticles[0];
+  const markCompanionReady = (index: number) => {
+    setReadyCompanions((previous) => {
+      if (previous.has(index)) return previous;
+      const next = new Set(previous);
+      next.add(index);
+      return next;
+    });
+  };
 
   return (
-    <div
-      className="banner-hero-wrapper"
+    <section
+      className="banner-hero-wrapper catalog-container"
+      aria-label="Sahara Electronics təqdimatı"
       style={{
         width: '100%',
-        maxWidth: '100%',
-        padding: '0 0 12px 0',
+        maxWidth: '1560px',
+        paddingTop: '8px',
+        paddingBottom: '8px',
+        paddingLeft: 'clamp(16px, 2vw, 28px)',
+        paddingRight: 'clamp(16px, 2vw, 28px)',
+        margin: '0 auto',
         boxSizing: 'border-box',
-        overflow: 'hidden',
       }}
     >
-      <div
-        className="banner-hero-card"
-        style={{
-          width: '100%',
-          maxWidth: '100%',
-          borderRadius: '24px',
-          overflow: 'hidden',
-          position: 'relative',
-          minHeight: '540px',
-          display: 'flex',
-          flexDirection: 'column',
-          justifyContent: 'space-between',
-          border: 'none',
-          boxShadow: theme.mode === 'dark' ? '0 24px 60px rgba(0, 0, 0, 0.45)' : '0 16px 45px rgba(0, 0, 0, 0.10)',
-          backgroundColor: '#0a0e17',
-          padding: 0,
-          margin: '0 auto',
-        }}
-      >
-        {/* Visual Media Layer: Clear, bright, natural video for slide 0, high-res images for slides 1 & 2 */}
-        {currentSlide.type === 'video' ? (
-          <video
-            ref={videoRef}
-            key="hero-video-slide"
-            src={currentSlide.src}
-            poster={currentSlide.poster}
-            autoPlay
-            muted
-            loop={false}
-            playsInline
-            onTimeUpdate={() => {
-              if (videoRef.current) {
-                const cur = videoRef.current.currentTime;
-                const dur = currentSlide.duration || 20;
-                setSlideProgress(Math.min(100, Math.max(0, (cur / dur) * 100)));
-                if (cur >= dur || videoRef.current.ended) {
-                  videoRef.current.currentTime = 0;
-                  goToSlide((currentIndex + 1) % HERO_SLIDES.length);
-                }
-              }
-            }}
-            style={{
-              position: 'absolute',
-              inset: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              objectPosition: 'center 40%',
-              zIndex: 0,
-            }}
-          />
-        ) : (
-          <img
-            key={`hero-img-slide-${currentIndex}`}
-            src={currentSlide.src}
-            alt={currentSlide.titlePart1}
-            style={{
-              position: 'absolute',
-              inset: 0,
-              width: '100%',
-              height: '100%',
-              objectFit: 'cover',
-              objectPosition: 'center center',
-              zIndex: 0,
-              transition: 'opacity 0.4s ease, transform 0.8s ease',
-            }}
-          />
-        )}
-
-        {/* Cinematic Scrim Gradient (Left side only for text legibility, zero edge glare on borders) */}
+      <div className="banner-hero-stage">
         <div
+          className={`banner-hero-card ${currentSlide.type === 'video' ? 'is-video' : ''}`}
           style={{
-            position: 'absolute',
-            inset: 0,
-            zIndex: 1,
-            pointerEvents: 'none',
-            background:
-              'linear-gradient(90deg, rgba(7, 10, 15, 0.85) 0%, rgba(7, 10, 15, 0.55) 36%, rgba(7, 10, 15, 0.10) 60%, transparent 80%)',
-          }}
-        />
-
-        {/* Top-Right Calligraphy Script Badge: "Daha çox imkan, sənə yaxın!" */}
-        <div
-          className="banner-hero-script-tag"
-          style={{
-            position: 'absolute',
-            top: '24px',
-            right: 'clamp(24px, 4vw, 56px)',
-            textAlign: 'right',
-            fontFamily: "'Playfair Display', 'Georgia', cursive, serif",
-            fontStyle: 'italic',
-            textShadow: '0 2px 12px rgba(0, 0, 0, 0.8)',
-            pointerEvents: 'none',
-            lineHeight: 1.25,
-            zIndex: 3,
-          }}
-        >
-          <div style={{ fontSize: 'clamp(15px, 1.8vw, 20px)', fontWeight: 600, color: '#ffffff' }}>
-            Daha çox imkan,
-          </div>
-          <div style={{ fontSize: 'clamp(18px, 2.2vw, 24px)', fontWeight: 800, color: '#e31e24' }}>
-            sənə yaxın!
-          </div>
-        </div>
-
-        {/* Hero Content Overlay (Left Half) */}
-        <div
-          style={{
+            width: '100%',
+            maxWidth: '100%',
+            borderRadius: '24px',
+            overflow: 'hidden',
             position: 'relative',
-            zIndex: 2,
-            maxWidth: '620px',
-            padding: 'clamp(36px, 5vw, 64px) clamp(24px, 4vw, 56px) 16px',
+            aspectRatio: '16 / 9',
+            minHeight: '540px',
+            height: 'auto',
             display: 'flex',
             flexDirection: 'column',
-            justifyContent: 'center',
-            flex: 1,
+            justifyContent: 'space-between',
+            border: 'none',
+            boxShadow:
+              theme?.mode === 'dark'
+                ? '0 18px 46px rgba(0, 0, 0, 0.38)'
+                : '0 16px 38px rgba(15, 23, 42, 0.12)',
+            backgroundColor: '#0a0e17',
+            padding: 0,
+            margin: '0 auto',
           }}
         >
-          <h1
-            className="banner-hero-title"
-            style={{
-              color: '#ffffff',
-              textShadow: '0 2px 14px rgba(0, 0, 0, 0.65)',
-              fontFamily: 'Outfit, -apple-system, sans-serif',
-              fontWeight: 900,
-              lineHeight: 1.15,
-              fontSize: 'clamp(2rem, 4vw, 3.4rem)',
-              letterSpacing: '-0.02em',
-              margin: '0 0 16px 0',
-              transition: 'opacity 0.2s ease, transform 0.2s ease',
-              opacity: animating ? 0.3 : 1,
-              transform: animating ? 'translateY(4px)' : 'none',
-            }}
-          >
-            <span>{currentSlide.titlePart1}</span>
-            <br />
-            <span>{currentSlide.titlePart2}</span>
-            <br />
-            <span style={{ color: '#e31e24' }}>{currentSlide.titleAccent}</span>
-          </h1>
-
-          <p
-            className="banner-hero-subtitle"
-            style={{
-              color: 'rgba(255, 255, 255, 0.85)',
-              textShadow: '0 1px 8px rgba(0, 0, 0, 0.6)',
-              fontSize: 'clamp(0.95rem, 1.2vw, 1.1rem)',
-              lineHeight: 1.5,
-              margin: '0 0 24px 0',
-              maxWidth: '460px',
-              fontWeight: 500,
-              transition: 'opacity 0.2s ease',
-              opacity: animating ? 0.3 : 1,
-            }}
-          >
-            {currentSlide.subtitle}
-          </p>
-
-
-          <div className="banner-hero-actions-row" style={{ display: 'flex', gap: '14px', alignItems: 'center' }}>
-            <button
-              type="button"
-              onClick={() => (onNavigateCatalog ? onNavigateCatalog() : null)}
-              className="hero-primary-btn"
-              style={{
-                backgroundColor: '#e31e24',
-                color: '#ffffff',
-                border: 'none',
-                borderRadius: '12px',
-                padding: '12px 26px',
-                fontSize: '14px',
-                fontWeight: 800,
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                boxShadow: '0 4px 16px rgba(227, 30, 36, 0.4)',
-                transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-              }}
+          <div className="banner-hero-media-viewport" aria-hidden="true">
+            <div
+              className="banner-hero-media-track"
+              data-active-index={currentIndex}
+              style={{ transform: `translate3d(-${currentIndex * 100}%, 0, 0)` }}
             >
-              <span>Məhsullara bax</span>
-              <ArrowRight size={16} />
-            </button>
+              {HERO_SLIDES.map((slide) => (
+                <div className="banner-hero-media-slide" key={slide.src}>
+                  {slide.type === 'video' ? (
+                    <>
+                      {!mainVideoReady && (
+                        <div className="hero-media-loading skeleton-box">
+                          <Loader2 className="img-spin" size={25} />
+                        </div>
+                      )}
+                      <video
+                        ref={videoRef}
+                        className="hero-main-video"
+                        src={slide.src}
+                        poster={slide.poster}
+                        autoPlay
+                        muted
+                        loop={false}
+                        playsInline
+                        preload="metadata"
+                        onCanPlay={() => setMainVideoReady(true)}
+                        onTimeUpdate={(e) => {
+                          const target = e.currentTarget;
+                          if (target.currentTime >= 20) {
+                            target.currentTime = 0;
+                          }
+                        }}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'contain',
+                          objectPosition: 'center center',
+                          opacity: mainVideoReady ? 1 : 0,
+                        }}
+                      />
+                    </>
+                  ) : (
+                    <ShimmerImage
+                      src={slide.src}
+                      alt=""
+                      loading="eager"
+                      objectFit="cover"
+                      objectPosition="center center"
+                      containerStyle={{ width: '100%', height: '100%' }}
+                    />
+                  )}
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Dynamic Interactive Auto-Rotating Technology Carousel Bar */}
-          {currentArticle && (
-            <div
-              className={`tech-spotlight-card ${animating ? 'is-animating' : ''}`}
-              onClick={() => onOpenArticle(currentArticle)}
-              role="button"
-              tabIndex={0}
-              aria-label={`Texnologiya: ${currentArticle.title}`}
-              style={{
-                backgroundColor: 'rgba(15, 23, 42, 0.72)',
-                backdropFilter: 'blur(16px)',
-                WebkitBackdropFilter: 'blur(16px)',
-                border: '1px solid rgba(255, 255, 255, 0.12)',
-                borderRadius: '14px',
-                padding: '10px 16px',
-                marginTop: '20px',
-                maxWidth: '480px',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: '12px',
-                boxShadow: '0 8px 24px rgba(0, 0, 0, 0.35)',
-              }}
-            >
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flex: 1, minWidth: 0 }}>
-                <div
-                  style={{
-                    width: '34px',
-                    height: '34px',
-                    borderRadius: '8px',
-                    backgroundColor: 'rgba(227, 30, 36, 0.15)',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
-                  }}
-                >
-                  {getArticleIcon(currentArticle.icon, '#e31e24', 18)}
-                </div>
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <h3
-                      className="tech-spotlight-title"
-                      style={{
-                        fontSize: '13px',
-                        fontWeight: 800,
-                        color: '#ffffff',
-                        margin: 0,
-                        overflow: 'hidden',
-                        textOverflow: 'ellipsis',
-                        whiteSpace: 'nowrap',
-                      }}
-                    >
-                      {currentArticle.title}
-                    </h3>
-                    {currentArticle.badge && (
-                      <span
-                        style={{
-                          backgroundColor: '#e31e24',
-                          color: '#ffffff',
-                          fontSize: '10px',
-                          fontWeight: 700,
-                          padding: '1px 6px',
-                          borderRadius: '4px',
-                          flexShrink: 0,
-                        }}
-                      >
-                        {currentArticle.badge}
-                      </span>
-                    )}
-                  </div>
-                  <p
-                    style={{
-                      fontSize: '11.5px',
-                      color: 'rgba(255, 255, 255, 0.72)',
-                      margin: '2px 0 0 0',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
-                    }}
-                  >
-                    {currentArticle.subtitle}
-                  </p>
-                </div>
-              </div>
+          <div className="banner-hero-scrim" aria-hidden="true" />
+          <div className="banner-hero-script-tag" aria-hidden="true">
+            <span>Daha çox imkan,</span>
+            <strong>sənə yaxın!</strong>
+          </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
-                <span
-                  className="tech-spotlight-cta-text"
-                  style={{
-                    fontSize: '12px',
-                    fontWeight: 700,
-                    color: '#e31e24',
-                    whiteSpace: 'nowrap',
-                  }}
-                >
-                  Ətraflı Bax
-                </span>
-
-                {activeArticles.length > 1 && (
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <button
-                      type="button"
-                      className="tech-spotlight-nav-btn"
-                      onClick={prevSlide}
-                      title="Əvvəlki texnologiya"
-                      aria-label="Əvvəlki texnologiya"
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        border: '1px solid rgba(255, 255, 255, 0.12)',
-                        borderRadius: '6px',
-                        padding: '4px',
-                        color: '#ffffff',
-                        cursor: 'pointer',
-                        display: 'flex',
-                      }}
-                    >
-                      <ChevronLeft size={14} />
-                    </button>
-                    <button
-                      type="button"
-                      className="tech-spotlight-nav-btn"
-                      onClick={nextSlide}
-                      title="Növbəti texnologiya"
-                      aria-label="Növbəti texnologiya"
-                      style={{
-                        background: 'rgba(255, 255, 255, 0.1)',
-                        border: '1px solid rgba(255, 255, 255, 0.12)',
-                        borderRadius: '6px',
-                        padding: '4px',
-                        color: '#ffffff',
-                        cursor: 'pointer',
-                        display: 'flex',
-                      }}
-                    >
-                      <ChevronRight size={14} />
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Pagination / Real-Time Progress Bar indicator (01 — 02 — 03) */}
-        <div
-          className="banner-hero-pagination-row"
-          style={{
-            position: 'relative',
-            zIndex: 2,
-            padding: '0 clamp(24px, 4vw, 56px) 28px',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '16px',
-            fontSize: '13px',
-            fontWeight: 700,
-            color: 'rgba(255, 255, 255, 0.6)',
-          }}
-        >
-          {HERO_SLIDES.map((slide, idx) => {
-            const isActive = (currentIndex % HERO_SLIDES.length) === idx;
-            const isPassed = (currentIndex % HERO_SLIDES.length) > idx;
-            const formattedNum = String(idx + 1).padStart(2, '0');
-            const fillWidth = isActive ? `${slideProgress}%` : isPassed ? '100%' : '0%';
-
-            return (
-              <button
-                key={idx}
-                type="button"
-                className={`hero-pagination-btn ${isActive ? 'active' : ''}`}
-                onClick={() => goToSlide(idx)}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  padding: '6px 4px',
-                  color: isActive ? '#ffffff' : 'rgba(255, 255, 255, 0.55)',
-                  fontWeight: isActive ? 800 : 600,
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                }}
-                aria-label={`Slayd ${idx + 1}: ${slide.titlePart1}`}
-              >
-                <span>{formattedNum}</span>
-                <div
-                  style={{
-                    width: '38px',
-                    height: '3px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.22)',
-                    borderRadius: '3px',
-                    overflow: 'hidden',
-                    position: 'relative',
-                  }}
-                >
-                  <div
-                    className="hero-progress-fill"
-                    style={{
-                      width: fillWidth,
-                      height: '100%',
-                      backgroundColor: '#e31e24',
-                      borderRadius: '3px',
-                      transition: isActive ? 'width 0.08s linear' : 'none',
-                    }}
-                  />
-                </div>
+          <div className={`banner-hero-content ${animating ? 'is-animating' : ''}`}>
+            <h1 className="banner-hero-title">
+              <span>{currentSlide.titlePart1}</span>
+              <br />
+              <span>{currentSlide.titlePart2}</span>
+              <br />
+              <span className="banner-hero-title-accent">{currentSlide.titleAccent}</span>
+            </h1>
+            <p className="banner-hero-subtitle">{currentSlide.subtitle}</p>
+            <div className="banner-hero-actions-row">
+              <button type="button" onClick={onNavigateCatalog} className="hero-primary-btn">
+                <span>Məhsullara bax</span>
+                <ArrowRight size={16} />
               </button>
-            );
-          })}
+            </div>
+
+            {currentArticle && (
+              <div
+                className={`tech-spotlight-card ${animating ? 'is-animating' : ''}`}
+                onClick={() => onOpenArticle(currentArticle)}
+                onKeyDown={(event) => {
+                  if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    onOpenArticle(currentArticle);
+                  }
+                }}
+                role="button"
+                tabIndex={0}
+                aria-label={`Texnologiya: ${currentArticle.title}`}
+              >
+                <div className="tech-spotlight-main">
+                  <div className="tech-spotlight-icon-box">
+                    {getArticleIcon(currentArticle.icon, '#e31e24', 18)}
+                  </div>
+                  <div className="tech-spotlight-content">
+                    <div className="tech-spotlight-title-row">
+                      <h3 className="tech-spotlight-title">{currentArticle.title}</h3>
+                      {currentArticle.badge && (
+                        <span className="tech-spotlight-badge">{currentArticle.badge}</span>
+                      )}
+                    </div>
+                    <p className="tech-spotlight-desc">{currentArticle.subtitle}</p>
+                  </div>
+                </div>
+                <div className="tech-spotlight-actions">
+                  <span className="tech-spotlight-cta-text">Ətraflı Bax</span>
+                  {activeArticles.length > 1 && (
+                    <div className="tech-spotlight-nav-group">
+                      <button
+                        type="button"
+                        className="tech-spotlight-nav-btn"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          goToSlide(currentIndex - 1);
+                        }}
+                        title="Əvvəlki texnologiya"
+                        aria-label="Əvvəlki texnologiya"
+                      >
+                        <ChevronLeft size={14} />
+                      </button>
+                      <button
+                        type="button"
+                        className="tech-spotlight-nav-btn"
+                        onClick={(event) => {
+                          event.stopPropagation();
+                          goToSlide(currentIndex + 1);
+                        }}
+                        title="Növbəti texnologiya"
+                        aria-label="Növbəti texnologiya"
+                      >
+                        <ChevronRight size={14} />
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div className="banner-hero-pagination-row">
+            {HERO_SLIDES.map((slide, index) => {
+              const active = index === currentIndex;
+              const passed = index < currentIndex;
+              return (
+                <button
+                  key={slide.src}
+                  type="button"
+                  className={`hero-pagination-btn ${active ? 'active' : ''}`}
+                  onClick={() => goToSlide(index)}
+                  aria-label={`Slayd ${index + 1}: ${slide.titlePart1}`}
+                >
+                  <span>{String(index + 1).padStart(2, '0')}</span>
+                  <span className="hero-progress-track" aria-hidden="true">
+                    <span
+                      className="hero-progress-fill"
+                      style={{ width: active ? `${slideProgress}%` : passed ? '100%' : '0%' }}
+                    />
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
+
+        <aside className="banner-hero-companion" aria-label="İnteryer ilhamı">
+          <div
+            className="banner-hero-companion-track"
+            data-active-index={companionIndex}
+            data-delay-ms="1000"
+            style={{ transform: `translate3d(-${companionIndex * 100}%, 0, 0)` }}
+          >
+            {COMPANION_SLIDES.map((slide, index) => {
+              const ready = readyCompanions.has(index);
+              return (
+                <div
+                  className="banner-hero-companion-slide"
+                  key={slide.src}
+                  aria-hidden={index !== companionIndex}
+                >
+                  {!ready && (
+                    <div className="hero-media-loading skeleton-box">
+                      <Loader2 className="img-spin" size={24} />
+                    </div>
+                  )}
+                  <video
+                    ref={(node) => {
+                      companionVideoRefs.current[index] = node;
+                    }}
+                    src={slide.src}
+                    muted
+                    loop
+                    playsInline
+                    preload={index === 0 ? 'auto' : 'metadata'}
+                    autoPlay={index === companionIndex}
+                    onCanPlay={() => markCompanionReady(index)}
+                    aria-label={slide.label}
+                    style={{ opacity: ready ? 1 : 0 }}
+                  />
+                  <div className="banner-hero-companion-shade" aria-hidden="true" />
+                  <div className="banner-hero-companion-copy">
+                    <span>Yaşam məkanına uyğun seçim</span>
+                    <strong>{slide.label}</strong>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+          <div
+            className="banner-hero-companion-dots banner-hero-companion-progress-row"
+            aria-label="Köməkçi karusel slaydları"
+          >
+            {COMPANION_SLIDES.map((slide, index) => {
+              const active = index === companionIndex;
+              const passed = index < companionIndex;
+              return (
+                <button
+                  key={slide.sourceUrl}
+                  type="button"
+                  className={`companion-progress-btn ${active ? 'active' : ''}`}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    goToCompanionSlide(index);
+                  }}
+                  aria-label={`Köməkçi slayd ${index + 1}: ${slide.label}`}
+                >
+                  <span className="companion-progress-track" aria-hidden="true">
+                    <span
+                      className="companion-progress-fill"
+                      style={{ width: active ? `${companionProgress}%` : passed ? '100%' : '0%' }}
+                    />
+                  </span>
+                </button>
+              );
+            })}
+          </div>
+        </aside>
       </div>
-    </div>
+    </section>
   );
 };
-

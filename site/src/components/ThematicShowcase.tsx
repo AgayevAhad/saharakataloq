@@ -148,8 +148,8 @@ export const ThematicShowcase: React.FC<ThematicShowcaseProps> = ({
               <button
                 type="button"
                 style={{
-                  backgroundColor: '#e31e24',
-                  color: '#ffffff',
+                  backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                  color: '#dc2626',
                   border: 'none',
                   borderRadius: '10px',
                   padding: '8px 16px',
@@ -159,7 +159,7 @@ export const ThematicShowcase: React.FC<ThematicShowcaseProps> = ({
                   alignItems: 'center',
                   gap: '6px',
                   cursor: 'pointer',
-                  boxShadow: '0 3px 10px rgba(227, 30, 36, 0.3)',
+                  boxShadow: 'none',
                 }}
               >
                 <span>{item.buttonText || 'Məhsullara bax'}</span>

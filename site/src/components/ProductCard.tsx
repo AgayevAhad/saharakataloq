@@ -1,12 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Share2,
-  Flame,
-  Layers,
-  Wind,
-  Snowflake,
-  Box,
-  Refrigerator,
   Image as ImageIcon,
   PlayCircle,
   Phone,
@@ -16,10 +10,17 @@ import {
   ShoppingCart,
   Scale,
 } from 'lucide-react';
-import { Product } from '../types/product';
+import { Brand, Product } from '../types/product';
 import { ThemeColors } from '../types/theme';
 import { WhatsAppIcon } from './WhatsAppIcon';
 import { ShimmerImage } from './ShimmerImage';
+import { ProductBrandBadge } from './ProductBrandBadge';
+import { getProductBadgeColor, getVisibleBadgeText } from './productCardVisuals';
+import { CategoryGlyph } from './CategoryGlyph';
+import { animateProductToCart, animateProductToFavorites } from '../utils/cartFlight';
+import { verifiedManufacturingCountry } from '../utils/manufacturingCountry';
+import { manufacturingCountryFlag } from '../utils/countryFlag';
+import { useCenteredMobileCard } from '../hooks/useCenteredMobileCard';
 
 interface ProductCardProps {
   product: Product;
@@ -35,6 +36,7 @@ interface ProductCardProps {
   onToggleCompare?: (product: Product) => void;
   isComparing?: boolean;
   brandName?: string;
+  brand?: Brand;
   brandOrigin?: string;
   rank?: number;
   whatsappButtonText?: string;
@@ -54,7 +56,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   isFavorite = false,
   onToggleCompare,
   isComparing = false,
-  brandName: _brandName,
+  brandName,
+  brand,
   brandOrigin: _brandOrigin,
   rank: _rank,
   whatsappButtonText = 'WhatsApp',
@@ -62,11 +65,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   shareButtonText = 'Paylaş',
 }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const [isMobileFocused, setIsMobileFocused] = useState(false);
-  const [isMobileActionVisible, setIsMobileActionVisible] = useState(false);
-  const [hasManuallySwiped, setHasManuallySwiped] = useState(false);
   const [currentImageIdx, setCurrentImageIdx] = useState(0);
+  const [isVideoPlaying, setIsVideoPlaying] = useState(false);
+  const [isMediaVisible, setIsMediaVisible] = useState(false);
   const cardRef = useRef<HTMLDivElement>(null);
+  const isMobileFocused = useCenteredMobileCard(cardRef);
   const videoRef = useRef<HTMLVideoElement>(null);
 
   // Touch Swipe tracking
@@ -90,75 +93,33 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
   const coverImage = imageList[0] || product.image || '';
 
-  // Mobile center focus using native IntersectionObserver (0 main-thread layout thrashing)
-  useEffect(() => {
-    if (typeof window === 'undefined' || !('IntersectionObserver' in window)) return;
-    const isTouch =
-      'ontouchstart' in window || navigator.maxTouchPoints > 0 || window.innerWidth <= 768;
-    if (!isTouch || !cardRef.current) return;
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            setIsMobileFocused(true);
-          } else {
-            setIsMobileFocused(false);
-            setHasManuallySwiped(false);
-            setCurrentImageIdx(0);
-          }
-        });
-      },
-      {
-        rootMargin: '-30% 0px -30% 0px',
-        threshold: 0.1,
-      }
-    );
-
-    const currentCard = cardRef.current;
-    observer.observe(currentCard);
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
-
-  useEffect(() => {
-    if (isMobileFocused) {
-      setIsMobileActionVisible(true);
-      const timer = setTimeout(() => {
-        setIsMobileActionVisible(false);
-      }, 2600);
-      return () => clearTimeout(timer);
-    } else {
-      setIsMobileActionVisible(false);
-    }
-  }, [isMobileFocused]);
-
   const isActive = isHovered || isMobileFocused;
-  const isActionClusterVisible = isHovered || (isMobileFocused && isMobileActionVisible);
+  const isActionClusterVisible = isActive;
 
-  // Video Autoplay / Pause: Only decode/play on active hover/focus to prevent CPU/decoder saturation
+  // Visible video covers keep moving without hover. Offscreen cards stop decoding.
   useEffect(() => {
-    if (!videoItem || !videoRef.current) return;
-    if (isActive) {
-      videoRef.current.play().catch(() => {});
-    } else {
-      videoRef.current.pause();
-      videoRef.current.currentTime = 0;
-    }
-  }, [isActive, videoItem]);
-
-  // Slideshow Cycling on Desktop Hover or Single Focused Mobile Card
-  useEffect(() => {
-    if (!isActive || videoItem || imageList.length <= 1 || hasManuallySwiped) {
-      if (!hasManuallySwiped && !isActive) setCurrentImageIdx(0);
+    if (!videoItem || !cardRef.current) return;
+    if (typeof IntersectionObserver === 'undefined') {
+      setIsMediaVisible(true);
       return;
     }
-    const interval = setInterval(() => {
-      setCurrentImageIdx((prev) => (prev + 1) % imageList.length);
-    }, 1600);
-    return () => clearInterval(interval);
-  }, [isActive, videoItem, imageList.length, hasManuallySwiped]);
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsMediaVisible(Boolean(entry?.isIntersecting)),
+      { rootMargin: '150px 0px', threshold: 0.01 }
+    );
+    observer.observe(cardRef.current);
+    return () => observer.disconnect();
+  }, [videoItem]);
+
+  useEffect(() => {
+    if (!videoItem || !videoRef.current) return;
+    if (isMediaVisible) {
+      videoRef.current.play().catch(() => setIsVideoPlaying(false));
+    } else {
+      videoRef.current.pause();
+      setIsVideoPlaying(false);
+    }
+  }, [isMediaVisible, videoItem]);
 
   // Direct synchronous keydown listener to prevent Space scrolling at native browser layer
   useEffect(() => {
@@ -216,7 +177,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
     if (isSwipingHoriz && Math.abs(dx) >= 30 && imageList.length > 1) {
       e.stopPropagation();
-      setHasManuallySwiped(true);
       if (dx < 0) {
         // Swiped Left -> Next Image
         setCurrentImageIdx((prev) => (prev + 1) % imageList.length);
@@ -229,55 +189,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
     setTouchStartX(null);
     setTouchStartY(null);
     setIsSwipingHoriz(false);
-  };
-
-  const getCategoryIcon = () => {
-    switch (product.category) {
-      case 'cooktop':
-        return <Flame size={13} color={theme.primary} />;
-      case 'oven':
-        return <Layers size={13} color="#0284c7" />;
-      case 'hood':
-        return <Wind size={13} color="#a855f7" />;
-      case 'air_conditioner':
-        return <Snowflake size={13} color="#0ea5e9" />;
-      case 'microwave':
-        return <Box size={13} color="#f59e0b" />;
-      case 'refrigerator':
-        return <Refrigerator size={13} color="#14b8a6" />;
-      case 'airfryer':
-        return <Flame size={13} color="#ea580c" />;
-      case 'washer':
-        return <Layers size={13} color="#3b82f6" />;
-      case 'thermopot':
-        return <Box size={13} color="#d97706" />;
-      case 'vacuum_cleaner':
-        return <Wind size={13} color="#6366f1" />;
-      case 'tv':
-        return <Box size={13} color="#8b5cf6" />;
-      case 'meat_grinder':
-        return <Box size={13} color="#dc2626" />;
-      case 'iron':
-        return <Wind size={13} color="#0284c7" />;
-      default:
-        return <Box size={13} color={theme.primary} />;
-    }
-  };
-
-  const getBadgeBgColor = () => {
-    switch (product.badgeColor) {
-      case 'amber':
-        return '#f97316';
-      case 'green':
-        return '#16a34a';
-      case 'blue':
-        return '#2563eb';
-      case 'purple':
-        return '#7c3aed';
-      case 'red':
-      default:
-        return '#dc2626';
-    }
   };
 
   const rawPrice = product.price ?? (product as any).priceCash;
@@ -296,7 +207,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => {
         setIsHovered(false);
-        setHasManuallySwiped(false);
       }}
       onKeyDownCapture={(e) => {
         if (e.key === ' ' || e.code === 'Space' || e.key === 'Spacebar') {
@@ -363,15 +273,30 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         flexDirection: 'column',
         position: 'relative',
         cursor: 'pointer',
-        boxShadow: isActive
-          ? '0 12px 32px rgba(0, 0, 0, 0.12)'
-          : '0 4px 20px rgba(0, 0, 0, 0.05)',
+        boxShadow: isActive ? '0 12px 32px rgba(0, 0, 0, 0.12)' : '0 4px 20px rgba(0, 0, 0, 0.05)',
         transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease',
-        overflow: 'hidden',
+        overflow: 'visible',
       }}
     >
+      <ProductBrandBadge brand={brand} brandName={brandName} />
+      <div className="product-card-category-top" aria-label={`Kateqoriya: ${product.categoryName}`}>
+        <CategoryGlyph id={product.category} compact plain />
+        <span>{product.categoryName}</span>
+      </div>
+      {manufacturingCountryFlag(verifiedManufacturingCountry(product)) && (
+        <span
+          className="product-card-country-flag"
+          data-country={verifiedManufacturingCountry(product)}
+          title={`İstehsal ölkəsi: ${verifiedManufacturingCountry(product)}`}
+          aria-label={`İstehsal ölkəsi: ${verifiedManufacturingCountry(product)}`}
+        >
+          {manufacturingCountryFlag(verifiedManufacturingCountry(product))}
+        </span>
+      )}
+
       {/* Top Right: Favorite & Compare Action Buttons */}
       <div
+        className="product-card-top-actions"
         style={{
           position: 'absolute',
           top: '10px',
@@ -390,7 +315,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         {onToggleCompare && (
           <button
             type="button"
-            className="card-action-btn-compare"
+            className={`card-action-btn-compare ${isComparing ? 'sahara-soft-blue-action' : ''}`}
             onClick={(e) => {
               e.stopPropagation();
               onToggleCompare(product);
@@ -413,20 +338,21 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               color: isComparing ? '#ffffff' : '#64748b',
               boxShadow: '0 3px 10px rgba(0, 0, 0, 0.15)',
               cursor: 'pointer',
-              backdropFilter: 'blur(6px)',
+              backdropFilter: 'none',
               transition: 'all 0.15s ease',
             }}
           >
-            <Scale size={15} color={isComparing ? '#ffffff' : '#64748b'} />
+            <Scale size={15} color={isComparing ? 'currentColor' : '#64748b'} />
           </button>
         )}
 
         {/* Quick Favorite Heart Button */}
         <button
           type="button"
-          className="card-action-btn-heart"
+          className={`card-action-btn-heart ${isFavorite ? 'sahara-soft-red-action' : ''}`}
           onClick={(e) => {
             e.stopPropagation();
+            if (!isFavorite) animateProductToFavorites(e.currentTarget, coverImage);
             onToggleFavorite?.(product);
           }}
           title={isFavorite ? 'Seçilmişlərdən çıxart' : 'Seçilmişlərə əlavə et'}
@@ -447,14 +373,14 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             color: isFavorite ? '#ffffff' : '#dc2626',
             boxShadow: '0 3px 10px rgba(0, 0, 0, 0.15)',
             cursor: 'pointer',
-            backdropFilter: 'blur(6px)',
+            backdropFilter: 'none',
             transition: 'all 0.15s ease',
           }}
         >
           <Heart
             size={16}
-            color={isFavorite ? '#ffffff' : '#dc2626'}
-            fill={isFavorite ? '#ffffff' : 'none'}
+            color={isFavorite ? 'currentColor' : '#dc2626'}
+            fill={isFavorite ? 'currentColor' : 'none'}
             strokeWidth={2.2}
           />
         </button>
@@ -464,7 +390,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
       <div
         style={{
           position: 'absolute',
-          top: '10px',
+          top: '44px',
           left: '10px',
           right: '88px',
           display: 'flex',
@@ -475,48 +401,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           zIndex: 5,
         }}
       >
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            backgroundColor:
-              theme.mode === 'dark' ? 'rgba(15, 23, 42, 0.9)' : 'rgba(255, 255, 255, 0.95)',
-            border: `1px solid ${theme.border}`,
-            padding: '3px 7px',
-            borderRadius: '6px',
-            fontSize: '11px',
-            fontWeight: 600,
-            color: theme.textSecondary,
-            backdropFilter: 'blur(4px)',
-          }}
-        >
-          {getCategoryIcon()}
-          <span>{product.categoryName}</span>
-        </div>
-
         <div style={{ display: 'flex', gap: '4px', alignItems: 'center' }}>
-          {product.manufacturingCountry && (
+          {getVisibleBadgeText(product) && (
             <span
               style={{
-                backgroundColor:
-                  theme.mode === 'dark' ? 'rgba(30, 41, 59, 0.9)' : 'rgba(241, 245, 249, 0.95)',
-                color: theme.textSecondary,
-                fontSize: '10px',
-                fontWeight: 700,
-                padding: '3px 6px',
-                borderRadius: '6px',
-                border: `1px solid ${theme.border}`,
-                letterSpacing: '0.2px',
-              }}
-            >
-              {product.manufacturingCountry}
-            </span>
-          )}
-          {product.badgeText && (
-            <span
-              style={{
-                backgroundColor: getBadgeBgColor(),
+                backgroundColor: getProductBadgeColor(product.badgeColor),
                 color: '#ffffff',
                 fontSize: '10px',
                 fontWeight: 800,
@@ -527,7 +416,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 boxShadow: '0 2px 6px rgba(0,0,0,0.2)',
               }}
             >
-              {product.badgeText}
+              {getVisibleBadgeText(product)}
             </span>
           )}
         </div>
@@ -545,15 +434,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           pointerEvents: isActionClusterVisible ? 'auto' : 'none',
           display: 'flex',
           alignItems: 'center',
-          gap: '6px',
-          padding: '4px 8px',
-          borderRadius: '24px',
-          backgroundColor:
-            theme.mode === 'dark' ? 'rgba(15, 23, 42, 0.92)' : 'rgba(255, 255, 255, 0.94)',
-          backdropFilter: 'blur(12px)',
-          WebkitBackdropFilter: 'blur(12px)',
-          border: `1px solid ${theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(226, 232, 240, 0.9)'}`,
-          boxShadow: '0 8px 24px rgba(0, 0, 0, 0.14)',
+          gap: '8px',
+          padding: 0,
+          border: 'none',
+          backgroundColor: 'transparent',
+          boxShadow: 'none',
           zIndex: 8,
           transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
         }}
@@ -570,21 +455,35 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             width: '32px',
             height: '32px',
             borderRadius: '50%',
-            backgroundColor: '#25D366',
-            color: '#ffffff',
+            backgroundColor: 'rgba(34, 197, 94, 0.12)',
+            color: '#16a34a',
             border: 'none',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 2px 6px rgba(37, 211, 102, 0.3)',
-            transition: 'transform 0.15s ease',
+            boxShadow: 'none',
+            transition: 'transform 0.15s ease, background-color 0.15s ease',
           }}
           title={whatsappButtonText}
           aria-label={whatsappButtonText}
         >
-          <WhatsAppIcon size={16} color="#ffffff" />
-          <span style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }}>{whatsappButtonText}</span>
+          <WhatsAppIcon size={16} color="#16a34a" />
+          <span
+            style={{
+              position: 'absolute',
+              width: '1px',
+              height: '1px',
+              padding: 0,
+              margin: '-1px',
+              overflow: 'hidden',
+              clip: 'rect(0, 0, 0, 0)',
+              whiteSpace: 'nowrap',
+              border: 0,
+            }}
+          >
+            {whatsappButtonText}
+          </span>
         </button>
 
         {/* Call Button */}
@@ -599,21 +498,35 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             width: '32px',
             height: '32px',
             borderRadius: '50%',
-            backgroundColor: '#0284c7',
-            color: '#ffffff',
+            backgroundColor: 'rgba(220, 38, 38, 0.10)',
+            color: '#dc2626',
             border: 'none',
             cursor: 'pointer',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 2px 6px rgba(2, 132, 199, 0.3)',
-            transition: 'transform 0.15s ease',
+            boxShadow: 'none',
+            transition: 'transform 0.15s ease, background-color 0.15s ease',
           }}
           title={callButtonText}
           aria-label={callButtonText}
         >
-          <Phone size={14} color="#ffffff" />
-          <span style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }}>{callButtonText}</span>
+          <Phone size={14} color="#dc2626" />
+          <span
+            style={{
+              position: 'absolute',
+              width: '1px',
+              height: '1px',
+              padding: 0,
+              margin: '-1px',
+              overflow: 'hidden',
+              clip: 'rect(0, 0, 0, 0)',
+              whiteSpace: 'nowrap',
+              border: 0,
+            }}
+          >
+            {callButtonText}
+          </span>
         </button>
 
         {/* Cart Button */}
@@ -623,27 +536,42 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             className="card-action-btn-cart card-action-btn-item"
             onClick={(e) => {
               e.stopPropagation();
+              animateProductToCart(e.currentTarget, coverImage);
               onAddToCart(product);
             }}
             style={{
               width: '32px',
               height: '32px',
               borderRadius: '50%',
-              backgroundColor: '#dc2626',
-              color: '#ffffff',
+              backgroundColor: 'rgba(220, 38, 38, 0.10)',
+              color: '#dc2626',
               border: 'none',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              boxShadow: '0 2px 6px rgba(220, 38, 38, 0.35)',
-              transition: 'transform 0.15s ease',
+              boxShadow: 'none',
+              transition: 'transform 0.15s ease, background-color 0.15s ease',
             }}
             title="Səbətə əlavə et"
             aria-label="Səbətə əlavə et"
           >
-            <ShoppingCart size={15} color="#ffffff" />
-            <span style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }}>Səbətə əlavə et</span>
+            <ShoppingCart size={15} color="#dc2626" />
+            <span
+              style={{
+                position: 'absolute',
+                width: '1px',
+                height: '1px',
+                padding: 0,
+                margin: '-1px',
+                overflow: 'hidden',
+                clip: 'rect(0, 0, 0, 0)',
+                whiteSpace: 'nowrap',
+                border: 0,
+              }}
+            >
+              Səbətə əlavə et
+            </span>
           </button>
         )}
 
@@ -693,18 +621,32 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               width: '30px',
               height: '30px',
               borderRadius: '50%',
-              backgroundColor: theme.mode === 'dark' ? '#1e293b' : '#f1f5f9',
-              color: theme.textSecondary,
-              border: `1px solid ${theme.border}`,
+              backgroundColor: 'rgba(59, 130, 246, 0.12)',
+              color: '#2563eb',
+              border: 'none',
               cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              transition: 'transform 0.15s ease',
+              transition: 'transform 0.15s ease, background-color 0.15s ease',
             }}
           >
-            <Share2 size={13} color={theme.textSecondary} />
-            <span style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }}>{shareButtonText}</span>
+            <Share2 size={13} color="#2563eb" />
+            <span
+              style={{
+                position: 'absolute',
+                width: '1px',
+                height: '1px',
+                padding: 0,
+                margin: '-1px',
+                overflow: 'hidden',
+                clip: 'rect(0, 0, 0, 0)',
+                whiteSpace: 'nowrap',
+                border: 0,
+              }}
+            >
+              {shareButtonText}
+            </span>
           </button>
         )}
       </div>
@@ -754,7 +696,11 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               muted
               loop
               playsInline
-              preload="none"
+              autoPlay={isMediaVisible}
+              preload={isMediaVisible ? 'metadata' : 'none'}
+              onPlaying={() => setIsVideoPlaying(true)}
+              onPause={() => setIsVideoPlaying(false)}
+              onError={() => setIsVideoPlaying(false)}
               style={{
                 position: 'absolute',
                 inset: 0,
@@ -762,7 +708,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 height: '100%',
                 objectFit: 'contain',
                 padding: '4px',
-                opacity: isActive ? 1 : 0,
+                opacity: isVideoPlaying ? 1 : 0,
                 transition: 'opacity 0.25s ease',
                 zIndex: 2,
                 pointerEvents: 'none',
@@ -790,7 +736,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                   objectPosition={cardObjectPosition}
                   spinnerSize={24}
                   style={{
-                    opacity: isActive && videoItem ? 0 : undefined,
+                    opacity: isVideoPlaying ? 0 : undefined,
                     width: '100%',
                     height: '100%',
                   }}
@@ -798,7 +744,16 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               );
             })()
           ) : (
-            <div className="media-placeholder" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#94a3b8' }}>
+            <div
+              className="media-placeholder"
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#94a3b8',
+              }}
+            >
               <ImageIcon size={34} />
               <span style={{ fontSize: '12px', marginTop: '4px' }}>Şəkil hazırlanır</span>
             </div>
@@ -813,7 +768,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               className="card-media-nav-btn prev"
               onClick={(e) => {
                 e.stopPropagation();
-                setHasManuallySwiped(true);
                 setCurrentImageIdx((prev) => (prev - 1 + imageList.length) % imageList.length);
               }}
               title="Əvvəlki şəkil"
@@ -825,7 +779,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               className="card-media-nav-btn next"
               onClick={(e) => {
                 e.stopPropagation();
-                setHasManuallySwiped(true);
                 setCurrentImageIdx((prev) => (prev + 1) % imageList.length);
               }}
               title="Növbəti şəkil"
@@ -855,7 +808,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
                 key={idx}
                 onClick={(e) => {
                   e.stopPropagation();
-                  setHasManuallySwiped(true);
                   setCurrentImageIdx(idx);
                 }}
                 style={{
@@ -891,7 +843,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               fontSize: '11px',
               fontWeight: 800,
               zIndex: 4,
-              backdropFilter: 'blur(4px)',
+              backdropFilter: 'none',
             }}
           >
             <PlayCircle size={12} color="#ffffff" />
@@ -902,6 +854,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
 
       {/* Product Content Details - Clean, Single Row Title + Price */}
       <div
+        className="product-card-details"
         style={{
           marginTop: 'auto',
           paddingTop: '2px',
@@ -911,7 +864,19 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           width: '100%',
         }}
       >
-        <span style={{ position: 'absolute', width: '1px', height: '1px', padding: 0, margin: '-1px', overflow: 'hidden', clip: 'rect(0, 0, 0, 0)', whiteSpace: 'nowrap', border: 0 }}>
+        <span
+          style={{
+            position: 'absolute',
+            width: '1px',
+            height: '1px',
+            padding: 0,
+            margin: '-1px',
+            overflow: 'hidden',
+            clip: 'rect(0, 0, 0, 0)',
+            whiteSpace: 'nowrap',
+            border: 0,
+          }}
+        >
           {product.code}
         </span>
         <div

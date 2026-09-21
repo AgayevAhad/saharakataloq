@@ -3,17 +3,11 @@ import {
   ArrowLeft,
   Award,
   ShieldCheck,
-  Truck,
-  Headphones,
   Users,
   Sparkles,
   Building2,
   CheckCircle2,
-  Star,
-  Layers,
-  MapPin,
   Phone,
-  Mail,
   Zap,
 } from 'lucide-react';
 import { ThemeColors } from '../types/theme';
@@ -29,12 +23,10 @@ interface AboutPageProps {
 }
 
 export const AboutPage: React.FC<AboutPageProps> = ({
-  settings,
   theme,
   themeMode,
   onNavigate,
   onWhatsApp,
-  onCall,
 }) => {
   const isDark = themeMode === 'dark';
 
@@ -139,7 +131,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
               fontFamily: 'Outfit, sans-serif',
             }}
           >
-            Müasir Məişət Texnikası və İtaliya Keyfiyyəti
+            Məişət Texnikası Kataloqu və Məhsul Seçimi
           </h1>
 
           <p
@@ -150,9 +142,9 @@ export const AboutPage: React.FC<AboutPageProps> = ({
               margin: '0 0 28px 0',
             }}
           >
-            Sahara Electronics — illərin təcrübəsi və rəsmi distribütorluq zəmanəti ilə dünya
-            şöhrətli məişət texnikası brendlərini (ARDO, Lotus, Artel və digərləri) Azərbaycan
-            istehlakçılarına ən yüksək xidmət səviyyəsində təqdim edən etibarlı tərəfdaşınızdır.
+            Sahara Electronics aktiv kataloqdakı ARDO, Lotus, Artel və digər brendlərin məhsul
+            məlumatlarını bir yerdə təqdim edir. Mövcud qiymət, zəmanət və satış şərtləri hər məhsul
+            və sifariş üzrə ayrıca dəqiqləşdirilir.
           </p>
 
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
@@ -162,13 +154,13 @@ export const AboutPage: React.FC<AboutPageProps> = ({
               style={{
                 padding: '12px 24px',
                 borderRadius: '12px',
-                backgroundColor: '#e31e24',
-                color: '#ffffff',
+                backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                color: '#dc2626',
                 border: 'none',
                 fontSize: '14px',
                 fontWeight: 800,
                 cursor: 'pointer',
-                boxShadow: '0 4px 14px rgba(227, 30, 36, 0.4)',
+                boxShadow: 'none',
               }}
             >
               Kataloqa Bax
@@ -196,6 +188,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
 
       {/* Key Stats Row */}
       <div
+        className="about-stats-grid"
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
@@ -204,13 +197,34 @@ export const AboutPage: React.FC<AboutPageProps> = ({
         }}
       >
         {[
-          { label: 'İllik Təcrübə', val: '15+ İl', desc: 'Etibarlı xidmət tarixi', icon: <Award size={24} color="#e31e24" /> },
-          { label: 'Məmnun Müştəri', val: '50,000+', desc: 'Azərbaycan üzrə', icon: <Users size={24} color="#0284c7" /> },
-          { label: 'Rəsmi Zəmanət', val: '100%', desc: 'Rəsmi servis dəstəyi', icon: <ShieldCheck size={24} color="#16a34a" /> },
-          { label: 'Orijinal Modellər', val: '500+ Model', desc: 'Daimi yenilənən çeşid', icon: <Zap size={24} color="#f59e0b" /> },
+          {
+            label: 'Məhsul kataloqu',
+            val: 'Aktual',
+            desc: 'Dərc edilmiş modellər',
+            icon: <Award size={24} color="#e31e24" />,
+          },
+          {
+            label: 'Əlaqə kanalları',
+            val: 'Birbaşa',
+            desc: 'Telefon və WhatsApp',
+            icon: <Users size={24} color="#0284c7" />,
+          },
+          {
+            label: 'Zəmanət məlumatı',
+            val: 'Məhsula görə',
+            desc: 'Sənəd və şərtlərə əsasən',
+            icon: <ShieldCheck size={24} color="#16a34a" />,
+          },
+          {
+            label: 'Model seçimi',
+            val: 'Filtrlənən',
+            desc: 'Brend və kateqoriya üzrə',
+            icon: <Zap size={24} color="#f59e0b" />,
+          },
         ].map((stat, idx) => (
           <div
             key={idx}
+            className="scroll-reveal-item"
             style={{
               padding: '24px',
               borderRadius: '18px',
@@ -236,10 +250,19 @@ export const AboutPage: React.FC<AboutPageProps> = ({
               {stat.icon}
             </div>
             <div>
-              <div style={{ fontSize: '28px', fontWeight: 900, color: theme.text, fontFamily: 'Outfit, sans-serif' }}>
+              <div
+                style={{
+                  fontSize: '28px',
+                  fontWeight: 900,
+                  color: theme.text,
+                  fontFamily: 'Outfit, sans-serif',
+                }}
+              >
                 {stat.val}
               </div>
-              <div style={{ fontSize: '14px', fontWeight: 800, color: theme.text, marginTop: '2px' }}>
+              <div
+                style={{ fontSize: '14px', fontWeight: 800, color: theme.text, marginTop: '2px' }}
+              >
                 {stat.label}
               </div>
               <div style={{ fontSize: '12px', color: theme.textMuted, marginTop: '2px' }}>
@@ -252,6 +275,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
 
       {/* Mission & Values Grid */}
       <div
+        className="about-values-grid"
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 360px), 1fr))',
@@ -260,6 +284,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
         }}
       >
         <div
+          className="scroll-reveal-item"
           style={{
             padding: '32px',
             borderRadius: '20px',
@@ -287,12 +312,13 @@ export const AboutPage: React.FC<AboutPageProps> = ({
             Missiyamız
           </h2>
           <p style={{ fontSize: '14px', lineHeight: 1.7, color: theme.textSecondary, margin: 0 }}>
-            Evlərinizdə rahatlıq, zövq və enerjiyə qənaəti təmin etmək üçün qabaqcıl Avropa texnologiyalarını
-            ən əlçatan şərtlərlə və peşəkar servis xidməti ilə sizə çatdırmaqdır.
+            Evlərinizdə rahatlıq, zövq və enerjiyə qənaəti təmin etmək üçün qabaqcıl Avropa
+            texnologiyalarını ən əlçatan şərtlərlə və peşəkar servis xidməti ilə sizə çatdırmaqdır.
           </p>
         </div>
 
         <div
+          className="scroll-reveal-item"
           style={{
             padding: '32px',
             borderRadius: '20px',
@@ -320,14 +346,16 @@ export const AboutPage: React.FC<AboutPageProps> = ({
             Vizyonumuz
           </h2>
           <p style={{ fontSize: '14px', lineHeight: 1.7, color: theme.textSecondary, margin: 0 }}>
-            Azərbaycanın məişət elektronikası bazarında ən etibarlı, innovativ və müştəri yönümlü brend olaraq,
-            hər bir ailənin ilk seçimi olmaq və texnologiya standartlarını daim yüksəltməkdir.
+            Azərbaycanın məişət elektronikası bazarında ən etibarlı, innovativ və müştəri yönümlü
+            brend olaraq, hər bir ailənin ilk seçimi olmaq və texnologiya standartlarını daim
+            yüksəltməkdir.
           </p>
         </div>
       </div>
 
       {/* Why Choose Sahara List */}
       <div
+        className="scroll-reveal-item"
         style={{
           padding: '36px clamp(20px, 4vw, 40px)',
           borderRadius: '24px',
@@ -376,10 +404,24 @@ export const AboutPage: React.FC<AboutPageProps> = ({
             <div key={idx} style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
               <CheckCircle2 size={20} color="#16a34a" style={{ flexShrink: 0, marginTop: '2px' }} />
               <div>
-                <h3 style={{ fontSize: '15px', fontWeight: 800, color: theme.text, margin: '0 0 4px 0' }}>
+                <h3
+                  style={{
+                    fontSize: '15px',
+                    fontWeight: 800,
+                    color: theme.text,
+                    margin: '0 0 4px 0',
+                  }}
+                >
                   {item.title}
                 </h3>
-                <p style={{ fontSize: '13px', lineHeight: 1.6, color: theme.textSecondary, margin: 0 }}>
+                <p
+                  style={{
+                    fontSize: '13px',
+                    lineHeight: 1.6,
+                    color: theme.textSecondary,
+                    margin: 0,
+                  }}
+                >
                   {item.desc}
                 </p>
               </div>
@@ -390,6 +432,7 @@ export const AboutPage: React.FC<AboutPageProps> = ({
 
       {/* Direct Contact CTA Banner */}
       <div
+        className="scroll-reveal-item"
         style={{
           borderRadius: '20px',
           padding: '32px clamp(20px, 4vw, 40px)',

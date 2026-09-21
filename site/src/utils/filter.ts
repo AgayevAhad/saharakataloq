@@ -1,4 +1,5 @@
 import { Product } from '../types/product';
+import { verifiedManufacturingCountry } from './manufacturingCountry';
 
 export function filterCatalogProducts(
   products: Product[],
@@ -25,7 +26,7 @@ export function filterCatalogProducts(
       product.title || '',
       product.shortDesc || '',
       product.badgeText || '',
-      product.manufacturingCountry || '',
+      verifiedManufacturingCountry(product),
       product.categoryName || '',
       highlightsStr,
       specsStr,

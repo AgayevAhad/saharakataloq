@@ -10,6 +10,7 @@ import {
   Truck,
   ShieldCheck,
   RotateCcw,
+  RotateCw,
   CreditCard,
   ZoomIn,
   ZoomOut,
@@ -41,6 +42,8 @@ import { ShimmerImage } from '../components/ShimmerImage';
 import { WhatsAppIcon } from '../components/WhatsAppIcon';
 import { ProductCard } from '../components/ProductCard';
 import { useHorizontalScroll } from '../hooks/useHorizontalScroll';
+import { animateProductToCart, animateProductToFavorites } from '../utils/cartFlight';
+import { getVisibleBadgeText } from '../components/productCardVisuals';
 
 export interface ProductReview {
   id: string;
@@ -100,10 +103,13 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 }) => {
   const [activeMediaIndex, setActiveMediaIndex] = useState(0);
   // Default tab: 'description' (Təsvir & İcmal first)
-  const [activeTab, setActiveTab] = useState<'description' | 'specs' | 'reviews' | 'tech' | 'delivery'>('description');
+  const [activeTab, setActiveTab] = useState<
+    'description' | 'specs' | 'reviews' | 'tech' | 'delivery'
+  >('description');
   const [isVideoMuted, setIsVideoMuted] = useState(true);
   const [isFullscreenGallery, setIsFullscreenGallery] = useState(false);
   const [zoomScale, setZoomScale] = useState(1);
+  const [rotation, setRotation] = useState(0);
   const [panPosition, setPanPosition] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
@@ -132,6 +138,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const fullscreenVideoRef = useRef<HTMLVideoElement>(null);
   const thumbnailScrollRef = useRef<HTMLDivElement>(null);
   const tabsContainerRef = useRef<HTMLDivElement>(null);
+  const pinchStartRef = useRef<{ distance: number; scale: number } | null>(null);
 
   const { dragProps: _thumbDragProps } = useHorizontalScroll({
     scrollRef: thumbnailScrollRef,
@@ -144,6 +151,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     setIsVideoMuted(true);
     setIsFullscreenGallery(false);
     setZoomScale(1);
+    setRotation(0);
     setPanPosition({ x: 0, y: 0 });
     setReviewSuccessMessage('');
     try {
@@ -325,8 +333,12 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
       author: currentUser.fullName,
       rating: newRating,
       comment: newComment.trim(),
-      date: new Date().toLocaleDateString('az-AZ', { day: 'numeric', month: 'long', year: 'numeric' }),
-      isVerified: true,
+      date: new Date().toLocaleDateString('az-AZ', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }),
+      isVerified: false,
     };
 
     const updated = [newRev, ...reviews];
@@ -377,6 +389,14 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
   const handleTouchStart = useCallback(
     (e: React.TouchEvent) => {
+      if (e.touches.length === 2) {
+        const distance = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        pinchStartRef.current = { distance, scale: zoomScale };
+        return;
+      }
       if (zoomScale <= 1 || e.touches.length !== 1) return;
       const touch = e.touches[0];
       setIsDragging(true);
@@ -387,6 +407,20 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
   const handleTouchMove = useCallback(
     (e: React.TouchEvent) => {
+      if (e.touches.length === 2 && pinchStartRef.current) {
+        e.preventDefault();
+        const distance = Math.hypot(
+          e.touches[0].clientX - e.touches[1].clientX,
+          e.touches[0].clientY - e.touches[1].clientY
+        );
+        const next = Math.min(
+          4,
+          Math.max(1, pinchStartRef.current.scale * (distance / pinchStartRef.current.distance))
+        );
+        setZoomScale(Number(next.toFixed(2)));
+        if (next === 1) setPanPosition({ x: 0, y: 0 });
+        return;
+      }
       if (!isDragging || zoomScale <= 1 || e.touches.length !== 1) return;
       const touch = e.touches[0];
       setPanPosition({
@@ -398,6 +432,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   );
 
   const handleTouchEnd = useCallback(() => {
+    pinchStartRef.current = null;
     setIsDragging(false);
   }, []);
 
@@ -428,7 +463,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     e.stopPropagation();
     const delta = e.deltaY < 0 ? 0.25 : -0.25;
     setZoomScale((prev) => {
-      const next = Math.min(3.5, Math.max(1, prev + delta));
+      const next = Math.min(4, Math.max(1, prev + delta));
       if (next === 1) setPanPosition({ x: 0, y: 0 });
       return next;
     });
@@ -548,6 +583,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
       >
         {/* Left Column: Enlarged Mega Media Stage & Carousel */}
         <div
+          className="product-detail-media-column"
           style={{
             display: 'flex',
             flexDirection: 'column',
@@ -616,15 +652,10 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                       {brand.name}
                     </span>
                   )}
-                  {brand.originCountry && (
-                    <span style={{ fontSize: '11.5px', fontWeight: 600, color: '#64748b' }}>
-                      · {brand.originCountry}
-                    </span>
-                  )}
                 </div>
               )}
 
-              {product.badgeText && (
+              {getVisibleBadgeText(product) && (
                 <div
                   style={{
                     backgroundColor: '#dc2626',
@@ -642,7 +673,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   }}
                 >
                   <Flame size={12} />
-                  <span>{product.badgeText}</span>
+                  <span>{getVisibleBadgeText(product)}</span>
                 </div>
               )}
             </div>
@@ -946,7 +977,9 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   >
                     <Star size={13} fill="#eab308" color="#eab308" />
                     <span>{averageRating}</span>
-                    <span style={{ color: theme.textMuted, fontWeight: 600 }}>({reviews.length} rəy)</span>
+                    <span style={{ color: theme.textMuted, fontWeight: 600 }}>
+                      ({reviews.length} rəy)
+                    </span>
                   </button>
                 ) : (
                   <button
@@ -973,23 +1006,39 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 )}
               </div>
 
-              {/* Stock Status */}
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                  color: '#16a34a',
-                  backgroundColor: 'rgba(22, 163, 74, 0.1)',
-                  padding: '4px 10px',
-                  borderRadius: '8px',
-                }}
-              >
-                <CheckCircle2 size={13} />
-                <span>Anbarda mövcuddur</span>
-              </span>
+              {/* Stock status is shown only when it exists in catalog data. */}
+              {product.stockStatus && (
+                <span
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '5px',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    color:
+                      product.stockStatus === 'in_stock'
+                        ? '#16a34a'
+                        : product.stockStatus === 'out_of_stock'
+                          ? '#dc2626'
+                          : '#d97706',
+                    backgroundColor:
+                      product.stockStatus === 'in_stock'
+                        ? 'rgba(22, 163, 74, 0.1)'
+                        : 'rgba(220, 38, 38, 0.08)',
+                    padding: '4px 10px',
+                    borderRadius: '8px',
+                  }}
+                >
+                  <CheckCircle2 size={13} />
+                  <span>
+                    {product.stockStatus === 'in_stock'
+                      ? 'Anbarda mövcuddur'
+                      : product.stockStatus === 'out_of_stock'
+                        ? 'Hazırda anbarda yoxdur'
+                        : 'Öncədən sifariş'}
+                  </span>
+                </span>
+              )}
             </div>
 
             <h1
@@ -1020,9 +1069,19 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
           </div>
 
           {/* Clean Borderless Price Section */}
-          <div style={{ padding: '2px 0 6px', display: 'flex', alignItems: 'baseline', gap: '12px', flexWrap: 'wrap' }}>
+          <div
+            style={{
+              padding: '2px 0 6px',
+              display: 'flex',
+              alignItems: 'baseline',
+              gap: '12px',
+              flexWrap: 'wrap',
+            }}
+          >
             {currentPrice ? (
-              <div style={{ display: 'flex', alignItems: 'baseline', gap: '12px', flexWrap: 'wrap' }}>
+              <div
+                style={{ display: 'flex', alignItems: 'baseline', gap: '12px', flexWrap: 'wrap' }}
+              >
                 <span
                   style={{
                     fontSize: '34px',
@@ -1072,10 +1131,24 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
           {/* Key Highlights Checklist */}
           {product.highlights && product.highlights.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <div style={{ fontSize: '12px', fontWeight: 800, color: theme.text, textTransform: 'uppercase', letterSpacing: '0.4px' }}>
+              <div
+                style={{
+                  fontSize: '12px',
+                  fontWeight: 800,
+                  color: theme.text,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.4px',
+                }}
+              >
                 Əsas Üstünlüklər
               </div>
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '8px' }}>
+              <div
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+                  gap: '8px',
+                }}
+              >
                 {product.highlights.map((h, i) => (
                   <div
                     key={i}
@@ -1102,7 +1175,10 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
           {/* Action Buttons: WhatsApp & Call Side-by-Side, Səbət Below, Compare & Favorite Bottom */}
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {/* Row 1: WhatsApp & Zəng et Side by Side */}
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}>
+            <div
+              className="product-detail-contact-actions"
+              style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '12px' }}
+            >
               {/* WhatsApp Direct Button */}
               <button
                 type="button"
@@ -1110,8 +1186,8 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 style={{
                   padding: '14px 18px',
                   borderRadius: '14px',
-                  backgroundColor: '#25D366',
-                  color: '#ffffff',
+                  backgroundColor: 'rgba(34, 197, 94, 0.12)',
+                  color: '#16a34a',
                   border: 'none',
                   fontSize: '14px',
                   fontWeight: 800,
@@ -1120,11 +1196,11 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px',
-                  boxShadow: '0 6px 20px rgba(37, 211, 102, 0.35)',
-                  transition: 'transform 0.15s ease',
+                  boxShadow: 'none',
+                  transition: 'background-color 0.15s ease, transform 0.15s ease',
                 }}
               >
-                <WhatsAppIcon size={18} color="#ffffff" />
+                <WhatsAppIcon size={18} color="#16a34a" />
                 <span>WhatsApp ilə Sifariş et</span>
               </button>
 
@@ -1135,8 +1211,8 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 style={{
                   padding: '14px 18px',
                   borderRadius: '14px',
-                  backgroundColor: '#0284c7',
-                  color: '#ffffff',
+                  backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                  color: '#dc2626',
                   border: 'none',
                   fontSize: '14px',
                   fontWeight: 800,
@@ -1145,11 +1221,11 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px',
-                  boxShadow: '0 6px 20px rgba(2, 132, 199, 0.35)',
-                  transition: 'transform 0.15s ease',
+                  boxShadow: 'none',
+                  transition: 'background-color 0.15s ease, transform 0.15s ease',
                 }}
               >
-                <Phone size={17} color="#ffffff" />
+                <Phone size={17} color="#dc2626" />
                 <span>Zəng et</span>
               </button>
             </div>
@@ -1158,13 +1234,16 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             {onAddToCart && (
               <button
                 type="button"
-                onClick={() => onAddToCart(product)}
+                onClick={(event) => {
+                  animateProductToCart(event.currentTarget, product.image);
+                  onAddToCart(product);
+                }}
                 style={{
                   width: '100%',
                   padding: '14px 20px',
                   borderRadius: '14px',
-                  backgroundColor: '#dc2626',
-                  color: '#ffffff',
+                  backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                  color: '#dc2626',
                   border: 'none',
                   fontSize: '14px',
                   fontWeight: 800,
@@ -1173,11 +1252,11 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   alignItems: 'center',
                   justifyContent: 'center',
                   gap: '8px',
-                  boxShadow: '0 6px 20px rgba(220, 38, 38, 0.35)',
-                  transition: 'transform 0.15s ease',
+                  boxShadow: 'none',
+                  transition: 'background-color 0.15s ease, transform 0.15s ease',
                 }}
               >
-                <ShoppingCart size={18} color="#ffffff" />
+                <ShoppingCart size={18} color="#dc2626" />
                 <span>Səbətə əlavə et</span>
               </button>
             )}
@@ -1187,11 +1266,18 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               {onToggleFavorite && (
                 <button
                   type="button"
-                  onClick={() => onToggleFavorite(product)}
+                  onClick={(event) => {
+                    if (!isFavorite) animateProductToFavorites(event.currentTarget, product.image);
+                    onToggleFavorite(product);
+                  }}
                   style={{
                     padding: '10px 14px',
                     borderRadius: '12px',
-                    backgroundColor: isFavorite ? '#dc2626' : themeMode === 'dark' ? '#1e293b' : '#f1f5f9',
+                    backgroundColor: isFavorite
+                      ? '#dc2626'
+                      : themeMode === 'dark'
+                        ? '#1e293b'
+                        : '#f1f5f9',
                     color: isFavorite ? '#ffffff' : theme.text,
                     border: 'none',
                     fontSize: '13px',
@@ -1203,7 +1289,11 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     gap: '6px',
                   }}
                 >
-                  <Heart size={15} fill={isFavorite ? '#ffffff' : 'none'} color={isFavorite ? '#ffffff' : '#dc2626'} />
+                  <Heart
+                    size={15}
+                    fill={isFavorite ? '#ffffff' : 'none'}
+                    color={isFavorite ? '#ffffff' : '#dc2626'}
+                  />
                   <span>{isFavorite ? 'Seçilmişlərdədir' : 'Seçilmişlərə at'}</span>
                 </button>
               )}
@@ -1215,7 +1305,11 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   style={{
                     padding: '10px 14px',
                     borderRadius: '12px',
-                    backgroundColor: isComparing ? '#2563eb' : themeMode === 'dark' ? '#1e293b' : '#f1f5f9',
+                    backgroundColor: isComparing
+                      ? '#2563eb'
+                      : themeMode === 'dark'
+                        ? '#1e293b'
+                        : '#f1f5f9',
                     color: isComparing ? '#ffffff' : theme.text,
                     border: 'none',
                     fontSize: '13px',
@@ -1257,10 +1351,10 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               <Truck size={20} color="#e31e24" />
               <div>
                 <div style={{ fontSize: '12.5px', fontWeight: 800, color: theme.text }}>
-                  Sürətli Çatdırılma
+                  Çatdırılma
                 </div>
                 <div style={{ fontSize: '11px', color: theme.textMuted }}>
-                  Bakı və Abşeron ərazisi
+                  Şərtlər sifariş zamanı dəqiqləşir
                 </div>
               </div>
             </div>
@@ -1279,10 +1373,10 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               <ShieldCheck size={20} color="#16a34a" />
               <div>
                 <div style={{ fontSize: '12.5px', fontWeight: 800, color: theme.text }}>
-                  Rəsmi Zəmanət
+                  Zəmanət məlumatı
                 </div>
                 <div style={{ fontSize: '11px', color: theme.textMuted }}>
-                  3 İl Rəsmi Servis
+                  Məhsul sənədinə əsasən
                 </div>
               </div>
             </div>
@@ -1301,10 +1395,10 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               <RotateCcw size={20} color="#0284c7" />
               <div>
                 <div style={{ fontSize: '12.5px', fontWeight: 800, color: theme.text }}>
-                  14 Gün Zəmanət
+                  Qaytarma şərtləri
                 </div>
                 <div style={{ fontSize: '11px', color: theme.textMuted }}>
-                  Rahat Dəyişdirmə
+                  Qaytarma səhifəsində göstərilir
                 </div>
               </div>
             </div>
@@ -1322,11 +1416,9 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             >
               <CreditCard size={20} color="#8b5cf6" />
               <div>
-                <div style={{ fontSize: '12.5px', fontWeight: 800, color: theme.text }}>
-                  Ödəniş
-                </div>
+                <div style={{ fontSize: '12.5px', fontWeight: 800, color: theme.text }}>Ödəniş</div>
                 <div style={{ fontSize: '11px', color: theme.textMuted }}>
-                  Nağd və ya Kartla
+                  Əlaqə zamanı dəqiqləşir
                 </div>
               </div>
             </div>
@@ -1556,7 +1648,14 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   gap: '8px',
                 }}
               >
-                <span style={{ width: '4px', height: '18px', backgroundColor: '#dc2626', borderRadius: '4px' }} />
+                <span
+                  style={{
+                    width: '4px',
+                    height: '18px',
+                    backgroundColor: '#dc2626',
+                    borderRadius: '4px',
+                  }}
+                />
                 <span>Məhsul Haqqında Ətraflı Məlumat</span>
               </h3>
 
@@ -1595,10 +1694,23 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             {/* Key Advantages Summary */}
             {product.highlights && product.highlights.length > 0 && (
               <div>
-                <h4 style={{ fontSize: '15px', fontWeight: 800, color: theme.text, margin: '0 0 12px 0' }}>
+                <h4
+                  style={{
+                    fontSize: '15px',
+                    fontWeight: 800,
+                    color: theme.text,
+                    margin: '0 0 12px 0',
+                  }}
+                >
                   Fərqləndirici Xüsusiyyətlər
                 </h4>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                    gap: '12px',
+                  }}
+                >
                   {product.highlights.map((item, idx) => (
                     <div
                       key={idx}
@@ -1652,14 +1764,14 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   gap: '8px',
                   padding: '10px 20px',
                   borderRadius: '12px',
-                  backgroundColor: '#dc2626',
-                  color: '#ffffff',
+                  backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                  color: '#dc2626',
                   border: 'none',
                   fontSize: '13.5px',
                   fontWeight: 800,
                   cursor: 'pointer',
-                  boxShadow: '0 4px 14px rgba(220, 38, 38, 0.25)',
-                  transition: 'transform 0.15s ease',
+                  boxShadow: 'none',
+                  transition: 'background-color 0.2s ease, transform 0.15s ease',
                 }}
               >
                 <span>Bütün Texniki Xüsusiyyətlərə Bax</span>
@@ -1695,11 +1807,26 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                         gap: '8px',
                       }}
                     >
-                      <span style={{ width: '4px', height: '16px', backgroundColor: '#dc2626', borderRadius: '4px' }} />
+                      <span
+                        style={{
+                          width: '4px',
+                          height: '16px',
+                          backgroundColor: '#dc2626',
+                          borderRadius: '4px',
+                        }}
+                      />
                       <span>{groupTitle}</span>
                     </h3>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', border: `1px solid ${theme.border}`, borderRadius: '12px', overflow: 'hidden' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        border: `1px solid ${theme.border}`,
+                        borderRadius: '12px',
+                        overflow: 'hidden',
+                      }}
+                    >
                       {specs.map((item, index) => (
                         <div
                           key={index}
@@ -1708,14 +1835,33 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                             alignItems: 'center',
                             justifyContent: 'space-between',
                             padding: '12px 16px',
-                            backgroundColor: index % 2 === 0 ? (themeMode === 'dark' ? 'rgba(15, 23, 42, 0.5)' : '#f8fafc') : 'transparent',
-                            borderBottom: index === specs.length - 1 ? 'none' : `1px solid ${theme.border}`,
+                            backgroundColor:
+                              index % 2 === 0
+                                ? themeMode === 'dark'
+                                  ? 'rgba(15, 23, 42, 0.5)'
+                                  : '#f8fafc'
+                                : 'transparent',
+                            borderBottom:
+                              index === specs.length - 1 ? 'none' : `1px solid ${theme.border}`,
                           }}
                         >
-                          <span style={{ fontSize: '13.5px', color: theme.textSecondary, fontWeight: 500 }}>
+                          <span
+                            style={{
+                              fontSize: '13.5px',
+                              color: theme.textSecondary,
+                              fontWeight: 500,
+                            }}
+                          >
                             {item.name}
                           </span>
-                          <span style={{ fontSize: '13.5px', color: theme.text, fontWeight: 700, textAlign: 'right' }}>
+                          <span
+                            style={{
+                              fontSize: '13.5px',
+                              color: theme.text,
+                              fontWeight: 700,
+                              textAlign: 'right',
+                            }}
+                          >
                             {item.value}
                           </span>
                         </div>
@@ -1725,7 +1871,14 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 ))}
               </div>
             ) : (
-              <div style={{ color: theme.textMuted, fontSize: '14px', textAlign: 'center', padding: '24px' }}>
+              <div
+                style={{
+                  color: theme.textMuted,
+                  fontSize: '14px',
+                  textAlign: 'center',
+                  padding: '24px',
+                }}
+              >
                 Bu model üçün əlavə texniki parametr göstəricisi qeyd edilməyib.
               </div>
             )}
@@ -1769,10 +1922,24 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 {reviews.length > 0 ? (
                   <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                     <div style={{ textAlign: 'center' }}>
-                      <div style={{ fontSize: '44px', fontWeight: 900, color: theme.text, lineHeight: 1 }}>
+                      <div
+                        style={{
+                          fontSize: '44px',
+                          fontWeight: 900,
+                          color: theme.text,
+                          lineHeight: 1,
+                        }}
+                      >
                         {averageRating}
                       </div>
-                      <div style={{ display: 'flex', justifyContent: 'center', gap: '2px', margin: '6px 0 4px' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          justifyContent: 'center',
+                          gap: '2px',
+                          margin: '6px 0 4px',
+                        }}
+                      >
                         {[1, 2, 3, 4, 5].map((s) => (
                           <Star
                             key={s}
@@ -1791,10 +1958,21 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
                       {[5, 4, 3, 2, 1].map((starNum) => {
                         const count = (ratingCounts as any)[starNum] || 0;
-                        const pct = reviews.length > 0 ? Math.round((count / reviews.length) * 100) : 0;
+                        const pct =
+                          reviews.length > 0 ? Math.round((count / reviews.length) * 100) : 0;
                         return (
-                          <div key={starNum} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px' }}>
-                            <span style={{ width: '28px', color: theme.textSecondary, fontWeight: 700 }}>
+                          <div
+                            key={starNum}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '8px',
+                              fontSize: '12px',
+                            }}
+                          >
+                            <span
+                              style={{ width: '28px', color: theme.textSecondary, fontWeight: 700 }}
+                            >
                               {starNum} ★
                             </span>
                             <div
@@ -1816,7 +1994,14 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                                 }}
                               />
                             </div>
-                            <span style={{ width: '24px', textAlign: 'right', color: theme.textMuted, fontSize: '11px' }}>
+                            <span
+                              style={{
+                                width: '24px',
+                                textAlign: 'right',
+                                color: theme.textMuted,
+                                fontSize: '11px',
+                              }}
+                            >
                               {count}
                             </span>
                           </div>
@@ -1825,7 +2010,14 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     </div>
                   </div>
                 ) : (
-                  <div style={{ textAlign: 'center', padding: '16px 0', color: theme.textMuted, fontSize: '13.5px' }}>
+                  <div
+                    style={{
+                      textAlign: 'center',
+                      padding: '16px 0',
+                      color: theme.textMuted,
+                      fontSize: '13.5px',
+                    }}
+                  >
                     Bu məhsul üçün hələlik rəy bildirilməyib.
                   </div>
                 )}
@@ -1860,7 +2052,14 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
                 }}
               >
-                <h3 style={{ fontSize: '16px', fontWeight: 800, color: theme.text, margin: '0 0 14px 0' }}>
+                <h3
+                  style={{
+                    fontSize: '16px',
+                    fontWeight: 800,
+                    color: theme.text,
+                    margin: '0 0 14px 0',
+                  }}
+                >
                   Məhsula Rəy və Ulduz Bildirin
                 </h3>
 
@@ -1895,17 +2094,34 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     </div>
 
                     <div>
-                      <h4 style={{ margin: '0 0 4px 0', fontSize: '14.5px', fontWeight: 800, color: theme.text }}>
+                      <h4
+                        style={{
+                          margin: '0 0 4px 0',
+                          fontSize: '14.5px',
+                          fontWeight: 800,
+                          color: theme.text,
+                        }}
+                      >
                         Yalnız Qeydiyyatdan Keçmiş İstifadəçilər Üçün
                       </h4>
-                      <p style={{ margin: 0, fontSize: '12.5px', color: theme.textSecondary, lineHeight: 1.5, maxWidth: '280px' }}>
-                        Məhsula rəy və ulduz bildirmək üçün zəhmət olmasa şəxsi hesabınıza daxil olun və ya qeydiyyatdan keçin.
+                      <p
+                        style={{
+                          margin: 0,
+                          fontSize: '12.5px',
+                          color: theme.textSecondary,
+                          lineHeight: 1.5,
+                          maxWidth: '280px',
+                        }}
+                      >
+                        Məhsula rəy və ulduz bildirmək üçün zəhmət olmasa şəxsi hesabınıza daxil
+                        olun və ya qeydiyyatdan keçin.
                       </p>
                     </div>
 
                     <button
                       type="button"
                       onClick={onOpenAuth}
+                      className="sahara-soft-red-action"
                       style={{
                         display: 'inline-flex',
                         alignItems: 'center',
@@ -1927,7 +2143,10 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   </div>
                 ) : (
                   /* Authenticated Review Submission Form */
-                  <form onSubmit={handleReviewSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  <form
+                    onSubmit={handleReviewSubmit}
+                    style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
+                  >
                     {reviewSuccessMessage && (
                       <div
                         style={{
@@ -1965,18 +2184,27 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                         </span>
                       </div>
                       <span style={{ fontSize: '11px', fontWeight: 700, color: '#16a34a' }}>
-                        ✓ Təsdiqlənmiş İstifadəçi
+                        Hesaba daxil olub
                       </span>
                     </div>
 
                     {/* Interactive Star Rating Selector */}
                     <div>
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: theme.text, marginBottom: '6px' }}>
+                      <label
+                        style={{
+                          display: 'block',
+                          fontSize: '12px',
+                          fontWeight: 700,
+                          color: theme.text,
+                          marginBottom: '6px',
+                        }}
+                      >
                         Qiymətiniz (Ulduz seçin) *
                       </label>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         {[1, 2, 3, 4, 5].map((starVal) => {
-                          const isFilled = starVal <= (hoverRating !== null ? hoverRating : newRating);
+                          const isFilled =
+                            starVal <= (hoverRating !== null ? hoverRating : newRating);
                           return (
                             <button
                               key={starVal}
@@ -2004,7 +2232,14 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                             </button>
                           );
                         })}
-                        <span style={{ fontSize: '13px', fontWeight: 700, color: '#ca8a04', marginLeft: '6px' }}>
+                        <span
+                          style={{
+                            fontSize: '13px',
+                            fontWeight: 700,
+                            color: '#ca8a04',
+                            marginLeft: '6px',
+                          }}
+                        >
                           {newRating === 5
                             ? 'Əla (5/5)'
                             : newRating === 4
@@ -2043,6 +2278,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
                     <button
                       type="submit"
+                      className="sahara-soft-red-action"
                       style={{
                         display: 'inline-flex',
                         alignItems: 'center',
@@ -2087,7 +2323,15 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                       gap: '8px',
                     }}
                   >
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '8px' }}>
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        flexWrap: 'wrap',
+                        gap: '8px',
+                      }}
+                    >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                         <span style={{ fontSize: '14.5px', fontWeight: 800, color: theme.text }}>
                           {r.author}
@@ -2107,7 +2351,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                             }}
                           >
                             <UserCheck size={12} />
-                            <span>Təsdiqlənmiş İstifadəçi</span>
+                            <span>Qeydiyyatlı istifadəçi</span>
                           </span>
                         )}
                       </div>
@@ -2123,13 +2367,18 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                             />
                           ))}
                         </div>
-                        <span style={{ fontSize: '12px', color: theme.textMuted }}>
-                          {r.date}
-                        </span>
+                        <span style={{ fontSize: '12px', color: theme.textMuted }}>{r.date}</span>
                       </div>
                     </div>
 
-                    <p style={{ fontSize: '14px', color: theme.textSecondary, lineHeight: 1.6, margin: 0 }}>
+                    <p
+                      style={{
+                        fontSize: '14px',
+                        color: theme.textSecondary,
+                        lineHeight: 1.6,
+                        margin: 0,
+                      }}
+                    >
                       {r.comment}
                     </p>
                   </div>
@@ -2146,7 +2395,8 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     fontSize: '13.5px',
                   }}
                 >
-                  Hələlik rəy yazılmayıb. Qeydiyyatdan keçmiş istifadəçilər məhsul haqqında ilk rəyi bildirə bilərlər.
+                  Hələlik rəy yazılmayıb. Qeydiyyatdan keçmiş istifadəçilər məhsul haqqında ilk rəyi
+                  bildirə bilərlər.
                 </div>
               )}
             </div>
@@ -2170,14 +2420,41 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 border: `1px solid ${theme.border}`,
               }}
             >
-              <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(220, 38, 38, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+              <div
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '12px',
+                  backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '16px',
+                }}
+              >
                 <Sparkles size={20} color="#dc2626" />
               </div>
-              <h4 style={{ fontSize: '16px', fontWeight: 800, color: theme.text, margin: '0 0 8px 0' }}>
+              <h4
+                style={{
+                  fontSize: '16px',
+                  fontWeight: 800,
+                  color: theme.text,
+                  margin: '0 0 8px 0',
+                }}
+              >
                 Rəsmi İtaliya & Avropa Texnologiyası
               </h4>
-              <p style={{ fontSize: '13.5px', color: theme.textSecondary, lineHeight: 1.6, margin: 0 }}>
-                {brand?.name} məişət texnikası beynəlxalq keyfiyyət və təhlükəsizlik standartlarına tam uyğundur. Yüksək dərəcəli materiallardan və mühəndislik həllərindən istifadə edilmişdir.
+              <p
+                style={{
+                  fontSize: '13.5px',
+                  color: theme.textSecondary,
+                  lineHeight: 1.6,
+                  margin: 0,
+                }}
+              >
+                {brand?.name} məişət texnikası beynəlxalq keyfiyyət və təhlükəsizlik standartlarına
+                tam uyğundur. Yüksək dərəcəli materiallardan və mühəndislik həllərindən istifadə
+                edilmişdir.
               </p>
             </div>
 
@@ -2189,14 +2466,40 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 border: `1px solid ${theme.border}`,
               }}
             >
-              <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(22, 163, 74, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+              <div
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '12px',
+                  backgroundColor: 'rgba(22, 163, 74, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '16px',
+                }}
+              >
                 <CheckCircle2 size={20} color="#16a34a" />
               </div>
-              <h4 style={{ fontSize: '16px', fontWeight: 800, color: theme.text, margin: '0 0 8px 0' }}>
+              <h4
+                style={{
+                  fontSize: '16px',
+                  fontWeight: 800,
+                  color: theme.text,
+                  margin: '0 0 8px 0',
+                }}
+              >
                 Enerji Səmərəliliyi və Səssiz İşləmə
               </h4>
-              <p style={{ fontSize: '13.5px', color: theme.textSecondary, lineHeight: 1.6, margin: 0 }}>
-                Aparat ekoloji təhlükəsizlik qaydalarına uyğun minimum enerji və resurs sərfiyyatı ilə maksimal məhsuldarlıq təmin edir.
+              <p
+                style={{
+                  fontSize: '13.5px',
+                  color: theme.textSecondary,
+                  lineHeight: 1.6,
+                  margin: 0,
+                }}
+              >
+                Aparat ekoloji təhlükəsizlik qaydalarına uyğun minimum enerji və resurs sərfiyyatı
+                ilə maksimal məhsuldarlıq təmin edir.
               </p>
             </div>
 
@@ -2208,14 +2511,40 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 border: `1px solid ${theme.border}`,
               }}
             >
-              <div style={{ width: '40px', height: '40px', borderRadius: '12px', backgroundColor: 'rgba(2, 132, 199, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '16px' }}>
+              <div
+                style={{
+                  width: '40px',
+                  height: '40px',
+                  borderRadius: '12px',
+                  backgroundColor: 'rgba(2, 132, 199, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '16px',
+                }}
+              >
                 <ShieldCheck size={20} color="#0284c7" />
               </div>
-              <h4 style={{ fontSize: '16px', fontWeight: 800, color: theme.text, margin: '0 0 8px 0' }}>
+              <h4
+                style={{
+                  fontSize: '16px',
+                  fontWeight: 800,
+                  color: theme.text,
+                  margin: '0 0 8px 0',
+                }}
+              >
                 Uzunömürlü İstifadə və Servis
               </h4>
-              <p style={{ fontSize: '13.5px', color: theme.textSecondary, lineHeight: 1.6, margin: 0 }}>
-                Sahara Electronics tərəfindən rəsmi ehtiyat hissələri və sertifikatlı ustalar vasitəsilə daimi texniki dəstək zəmanəti verilir.
+              <p
+                style={{
+                  fontSize: '13.5px',
+                  color: theme.textSecondary,
+                  lineHeight: 1.6,
+                  margin: 0,
+                }}
+              >
+                Sahara Electronics tərəfindən rəsmi ehtiyat hissələri və sertifikatlı ustalar
+                vasitəsilə daimi texniki dəstək zəmanəti verilir.
               </p>
             </div>
           </div>
@@ -2235,42 +2564,121 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             }}
           >
             <div style={{ display: 'flex', gap: '16px', alignItems: 'start' }}>
-              <div style={{ width: '44px', height: '44px', borderRadius: '12px', backgroundColor: 'rgba(220, 38, 38, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '12px',
+                  backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
                 <Truck size={22} color="#dc2626" />
               </div>
               <div>
-                <h4 style={{ fontSize: '16px', fontWeight: 800, color: theme.text, margin: '0 0 4px 0' }}>
+                <h4
+                  style={{
+                    fontSize: '16px',
+                    fontWeight: 800,
+                    color: theme.text,
+                    margin: '0 0 4px 0',
+                  }}
+                >
                   Çatdırılma Şərtləri
                 </h4>
-                <p style={{ fontSize: '14px', color: theme.textSecondary, lineHeight: 1.6, margin: 0 }}>
-                  Sifarişləriniz Bakı və Abşeron yarımadası ərazisinə gün ərzində sürətli və təhlükəsiz şəkildə çatdırılır. Bölgələrə çatdırılma poçt və ya xüsusi kuryer xidməti ilə həyata keçirilir.
+                <p
+                  style={{
+                    fontSize: '14px',
+                    color: theme.textSecondary,
+                    lineHeight: 1.6,
+                    margin: 0,
+                  }}
+                >
+                  Sifarişləriniz Bakı və Abşeron yarımadası ərazisinə gün ərzində sürətli və
+                  təhlükəsiz şəkildə çatdırılır. Bölgələrə çatdırılma poçt və ya xüsusi kuryer
+                  xidməti ilə həyata keçirilir.
                 </p>
               </div>
             </div>
 
             <div style={{ display: 'flex', gap: '16px', alignItems: 'start' }}>
-              <div style={{ width: '44px', height: '44px', borderRadius: '12px', backgroundColor: 'rgba(22, 163, 74, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '12px',
+                  backgroundColor: 'rgba(22, 163, 74, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
                 <ShieldCheck size={22} color="#16a34a" />
               </div>
               <div>
-                <h4 style={{ fontSize: '16px', fontWeight: 800, color: theme.text, margin: '0 0 4px 0' }}>
+                <h4
+                  style={{
+                    fontSize: '16px',
+                    fontWeight: 800,
+                    color: theme.text,
+                    margin: '0 0 4px 0',
+                  }}
+                >
                   Rəsmi Zəmanət və Quraşdırma
                 </h4>
-                <p style={{ fontSize: '14px', color: theme.textSecondary, lineHeight: 1.6, margin: 0 }}>
-                  Bütün məhsullara rəsmi distribütor tərəfindən 36 ay (3 il) müddətinə tam zəmanət verilir. İstehsal qüsuru aşkar edildikdə məhsul 14 gün ərzində dərhal yenisi ilə əvəzlənir.
+                <p
+                  style={{
+                    fontSize: '14px',
+                    color: theme.textSecondary,
+                    lineHeight: 1.6,
+                    margin: 0,
+                  }}
+                >
+                  Bütün məhsullara rəsmi distribütor tərəfindən 36 ay (3 il) müddətinə tam zəmanət
+                  verilir. İstehsal qüsuru aşkar edildikdə məhsul 14 gün ərzində dərhal yenisi ilə
+                  əvəzlənir.
                 </p>
               </div>
             </div>
 
             <div style={{ display: 'flex', gap: '16px', alignItems: 'start' }}>
-              <div style={{ width: '44px', height: '44px', borderRadius: '12px', backgroundColor: 'rgba(2, 132, 199, 0.1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+              <div
+                style={{
+                  width: '44px',
+                  height: '44px',
+                  borderRadius: '12px',
+                  backgroundColor: 'rgba(2, 132, 199, 0.1)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  flexShrink: 0,
+                }}
+              >
                 <MapPin size={22} color="#0284c7" />
               </div>
               <div>
-                <h4 style={{ fontSize: '16px', fontWeight: 800, color: theme.text, margin: '0 0 4px 0' }}>
+                <h4
+                  style={{
+                    fontSize: '16px',
+                    fontWeight: 800,
+                    color: theme.text,
+                    margin: '0 0 4px 0',
+                  }}
+                >
                   Mağaza və Showroom Ünvanlarımız
                 </h4>
-                <p style={{ fontSize: '14px', color: theme.textSecondary, lineHeight: 1.6, margin: 0 }}>
+                <p
+                  style={{
+                    fontSize: '14px',
+                    color: theme.textSecondary,
+                    lineHeight: 1.6,
+                    margin: 0,
+                  }}
+                >
                   {settings.addresses && settings.addresses.length > 0
                     ? settings.addresses.join(' • ')
                     : 'Sədərək Ticarət Mərkəzi, Şirniyyat bazarı ilə üzbəüz, 5-ci sıra, Mağaza 40'}
@@ -2349,7 +2757,6 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   product={p}
                   theme={theme}
                   brandName={brandObj?.name}
-                  brandOrigin={brandObj?.originCountry ? `${brandObj.originCountry} brendi` : ''}
                   whatsappButtonText={settings?.whatsappButtonText}
                   callButtonText={settings?.callButtonText}
                   shareButtonText={settings?.shareButtonText}
@@ -2404,11 +2811,44 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div style={{ fontSize: '15px', fontWeight: 800, maxWidth: '55%', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {product.title} {mediaList.length > 1 && `(${activeMediaIndex + 1} / ${mediaList.length})`}
+            <div
+              style={{
+                fontSize: '15px',
+                fontWeight: 800,
+                maxWidth: '55%',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                whiteSpace: 'nowrap',
+              }}
+            >
+              {product.title}{' '}
+              {mediaList.length > 1 && `(${activeMediaIndex + 1} / ${mediaList.length})`}
             </div>
 
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div
+              className="product-lightbox-controls"
+              style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+            >
+              <button
+                type="button"
+                data-testid="rotate-left"
+                onClick={() => setRotation((value) => value - 90)}
+                className="product-lightbox-icon-btn"
+                title="Sola fırlat"
+                aria-label="Şəkli sola fırlat"
+              >
+                <RotateCcw size={17} />
+              </button>
+              <button
+                type="button"
+                data-testid="rotate-right"
+                onClick={() => setRotation((value) => value + 90)}
+                className="product-lightbox-icon-btn"
+                title="Sağa fırlat"
+                aria-label="Şəkli sağa fırlat"
+              >
+                <RotateCw size={17} />
+              </button>
               {/* Zoom Out Button */}
               <button
                 type="button"
@@ -2442,6 +2882,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 onClick={() => {
                   setZoomScale(1);
                   setPanPosition({ x: 0, y: 0 });
+                  setRotation(0);
                 }}
                 style={{
                   padding: '6px 10px',
@@ -2487,6 +2928,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               <button
                 type="button"
                 onClick={() => setIsFullscreenGallery(false)}
+                className="sahara-soft-red-action"
                 style={{
                   width: '38px',
                   height: '38px',
@@ -2539,15 +2981,17 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 onClick={(e) => e.stopPropagation()}
               />
             ) : (
-              <img
+              <ShimmerImage
                 src={activeMedia?.url}
                 alt={activeMedia?.alt || product.title}
                 draggable={false}
+                data-testid="product-lightbox-image"
+                containerStyle={{ maxHeight: '82vh', maxWidth: '88vw', overflow: 'visible' }}
                 style={{
                   maxHeight: '82vh',
                   maxWidth: '88vw',
                   objectFit: 'contain',
-                  transform: `translate(${panPosition.x}px, ${panPosition.y}px) scale(${zoomScale})`,
+                  transform: `translate3d(${panPosition.x}px, ${panPosition.y}px, 0) scale(${zoomScale}) rotate(${rotation}deg)`,
                   transition: isDragging ? 'none' : 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
                   userSelect: 'none',
                 }}
@@ -2582,6 +3026,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     setActiveMediaIndex(idx);
                     setZoomScale(1);
                     setPanPosition({ x: 0, y: 0 });
+                    setRotation(0);
                   }}
                   style={{
                     width: '56px',
@@ -2592,7 +3037,8 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     overflow: 'hidden',
                     cursor: 'pointer',
                     padding: 0,
-                    boxShadow: idx === activeMediaIndex ? '0 2px 8px rgba(220, 38, 38, 0.25)' : 'none',
+                    boxShadow:
+                      idx === activeMediaIndex ? '0 2px 8px rgba(220, 38, 38, 0.25)' : 'none',
                   }}
                 >
                   <img

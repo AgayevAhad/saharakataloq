@@ -1,5 +1,6 @@
 # Dependencies & Build Output
 node_modules/
+__pycache__/
 dist/
 dist-ssr/
 build/
@@ -23,6 +24,7 @@ data/*.sqlite
 *.bak
 *.sqlite.bak
 data/backups/
+data/quarantine-media/
 data/uploads/
 uploads/
 

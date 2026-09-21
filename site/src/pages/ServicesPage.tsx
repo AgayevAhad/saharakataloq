@@ -1,5 +1,6 @@
 import React from 'react';
-import { ShieldCheck, Truck, Wrench, Phone, MessageCircle, CheckCircle2 } from 'lucide-react';
+import { ShieldCheck, Truck, Wrench, Phone, CheckCircle2 } from 'lucide-react';
+import { WhatsAppIcon } from '../components/WhatsAppIcon';
 import { CatalogSettings } from '../types/product';
 import { ThemeColors } from '../types/theme';
 import { Button } from '../components/ui/Button';
@@ -30,6 +31,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({
       </div>
 
       <div
+        className="service-card-grid"
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
@@ -39,6 +41,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({
       >
         {/* Service 1: Zəmanət Dəstəyi */}
         <div
+          className="scroll-reveal-item"
           style={{
             backgroundColor: theme.bgCard,
             border: `1px solid ${theme.border}`,
@@ -100,6 +103,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({
 
         {/* Service 2: Çatdırılma Məlumatı */}
         <div
+          className="scroll-reveal-item"
           style={{
             backgroundColor: theme.bgCard,
             border: `1px solid ${theme.border}`,
@@ -161,6 +165,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({
 
         {/* Service 3: Quraşdırma və Texniki Dəstək */}
         <div
+          className="scroll-reveal-item"
           style={{
             backgroundColor: theme.bgCard,
             border: `1px solid ${theme.border}`,
@@ -224,6 +229,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({
 
       {/* CTA Box */}
       <div
+        className="scroll-reveal-item"
         style={{
           backgroundColor: theme.mode === 'dark' ? '#111827' : '#f8fafc',
           border: `1px solid ${theme.border}`,
@@ -254,7 +260,7 @@ export const ServicesPage: React.FC<ServicesPageProps> = ({
             variant="primary"
             size="md"
             onClick={onWhatsApp}
-            leftIcon={<MessageCircle size={16} />}
+            leftIcon={<WhatsAppIcon size={16} color="currentColor" />}
           >
             WhatsApp ilə Müraciət
           </Button>

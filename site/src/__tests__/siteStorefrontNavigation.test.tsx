@@ -16,7 +16,6 @@ import { ServicesPage } from '../pages/ServicesPage';
 import { StoresPage } from '../pages/StoresPage';
 import { ComparePage } from '../pages/ComparePage';
 import { SupportPage } from '../pages/SupportPage';
-import { featureFlags } from '../utils/featureFlags';
 
 const mockProducts: Product[] = [
   {
@@ -119,20 +118,22 @@ describe('Sahara Electronics Site Storefront Navigation & Components', () => {
       expect(screen.getAllByText(/Böyük Məişət Texnikası/i).length).toBeGreaterThan(0);
       expect(screen.getAllByText(/Aspiratorlar/i).length).toBeGreaterThan(0);
       expect(screen.getAllByText(/Brendlər/i).length).toBeGreaterThan(0);
-      expect(screen.getByText(/ARDO/i)).toBeDefined();
+      expect(screen.getByAltText(/ARDO/i)).toBeDefined();
     });
   });
 
   describe('MobileBottomNav', () => {
-    it('renders 4 primary navigation tabs and triggers callbacks', () => {
+    it('renders 5 primary navigation tabs and triggers callbacks', () => {
       const handleNavigate = vi.fn();
       const handleOpenUserDrawer = vi.fn();
+      const handleOpenMenu = vi.fn();
 
       render(
         <MobileBottomNav
           currentRoute="home"
           onNavigate={handleNavigate}
           onOpenUserDrawer={handleOpenUserDrawer}
+          onOpenMenu={handleOpenMenu}
           theme={lightTheme}
         />
       );
@@ -141,15 +142,18 @@ describe('Sahara Electronics Site Storefront Navigation & Components', () => {
       expect(screen.getByText('Kataloq')).toBeDefined();
       expect(screen.getByText('Səbət')).toBeDefined();
       expect(screen.getByText('Profil')).toBeDefined();
+      expect(screen.getByText('Menyu')).toBeDefined();
 
       fireEvent.click(screen.getByText('Kataloq'));
       expect(handleNavigate).toHaveBeenCalledWith('catalog');
 
       fireEvent.click(screen.getByText('Profil'));
       expect(handleOpenUserDrawer).toHaveBeenCalled();
+
+      fireEvent.click(screen.getByText('Menyu'));
+      expect(handleOpenMenu).toHaveBeenCalled();
     });
   });
-
 
   describe('SaharaMatchModal', () => {
     it('allows completing step questions to find matching products', () => {
@@ -301,6 +305,10 @@ describe('Sahara Electronics Site Storefront Navigation & Components', () => {
           cartCount={3}
           favoritesCount={5}
           onWhatsAppSupport={handleWhatsApp}
+          authUser={null}
+          onLogin={vi.fn().mockResolvedValue(false)}
+          onRegister={vi.fn().mockResolvedValue(false)}
+          onLogout={vi.fn()}
         />
       );
 

@@ -1,14 +1,5 @@
 import React from 'react';
-import {
-  ArrowLeft,
-  Lock,
-  Shield,
-  Eye,
-  Database,
-  UserCheck,
-  FileKey,
-  CheckCircle2,
-} from 'lucide-react';
+import { ArrowLeft, Lock, Shield, Database, UserCheck, FileKey } from 'lucide-react';
 import { ThemeColors } from '../types/theme';
 
 interface PrivacyPageProps {
@@ -17,11 +8,7 @@ interface PrivacyPageProps {
   onNavigate: (route: string, param?: string) => void;
 }
 
-export const PrivacyPage: React.FC<PrivacyPageProps> = ({
-  theme,
-  themeMode,
-  onNavigate,
-}) => {
+export const PrivacyPage: React.FC<PrivacyPageProps> = ({ theme, themeMode, onNavigate }) => {
   const isDark = themeMode === 'dark';
 
   return (
@@ -69,7 +56,9 @@ export const PrivacyPage: React.FC<PrivacyPageProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ fontSize: '13px', color: theme.textMuted }}>Kömək</span>
           <span style={{ fontSize: '13px', color: theme.textMuted }}>/</span>
-          <span style={{ fontSize: '13px', fontWeight: 800, color: '#e31e24' }}>Məxfilik Siyasəti</span>
+          <span style={{ fontSize: '13px', fontWeight: 800, color: '#e31e24' }}>
+            Məxfilik Siyasəti
+          </span>
         </div>
       </div>
 
@@ -113,7 +102,8 @@ export const PrivacyPage: React.FC<PrivacyPageProps> = ({
           Məxfilik və Məlumat Təhlükəsizliyi Siyasəti
         </h1>
         <p style={{ margin: 0, fontSize: '13.5px', color: '#cbd5e1' }}>
-          Sahara Electronics müştərilərinin şəxsi məlumatlarının təhlükəsizliyinə və məxfiliyinə ən yüksək səviyyədə təminat verir.
+          Bu səhifə hesab, saytdaxili çat və kataloq seçimləri üçün məlumatların necə saxlandığını
+          izah edir.
         </p>
       </div>
 
@@ -125,22 +115,51 @@ export const PrivacyPage: React.FC<PrivacyPageProps> = ({
             icon: <Database size={20} color="#0284c7" />,
             content: (
               <>
-                <p style={{ margin: '0 0 10px 0', lineHeight: 1.7, fontSize: '14px', color: theme.textSecondary }}>
-                  Biz yalnız sifarişlərin icrası, çatdırılma ünvanının təyin olunması və müştəri xidmətinin təmin edilməsi üçün zəruri olan məlumatları (Ad, Soyad, Əlaqə nömrəsi, Çatdırılma ünvanı, Doğum tarixi və E-poçt) toplayırıq.
+                <p
+                  style={{
+                    margin: '0 0 10px 0',
+                    lineHeight: 1.7,
+                    fontSize: '14px',
+                    color: theme.textSecondary,
+                  }}
+                >
+                  Qeydiyyat üçün ad, telefon, doğum tarixi və şifrə tələb olunur; e-poçt isteğe
+                  bağlıdır. Dəstək çatına yazdığınız mesajlar, göndərdiyiniz şəkil və səs faylları
+                  da xidməti təqdim etmək üçün saxlanılır. Səbətdə və profildə daxil etdiyiniz ünvan
+                  məlumatları hazırda yalnız istifadə etdiyiniz brauzerdə saxlanır.
                 </p>
               </>
             ),
           },
           {
-            title: '2. Məlumatların Qorunması və SSL Şifrələnməsi',
+            title: '2. Məlumatların Saxlanması',
             icon: <Shield size={20} color="#16a34a" />,
             content: (
               <>
-                <p style={{ margin: '0 0 10px 0', lineHeight: 1.7, fontSize: '14px', color: theme.textSecondary }}>
-                  Platformamızda ötürülən bütün məlumatlar beynəlxalq 256-bit SSL (Secure Socket Layer) şifrələmə protokolları vasitəsilə qorunur.
+                <p
+                  style={{
+                    margin: '0 0 10px 0',
+                    lineHeight: 1.7,
+                    fontSize: '14px',
+                    color: theme.textSecondary,
+                  }}
+                >
+                  Qeydiyyat məlumatları, şifrənin kriptoqrafik xülasəsi və çat yazışmaları saytın
+                  server bazasında saxlanır. Səbət, seçilmişlər, müqayisə və mövzu seçimi brauzerin
+                  lokal yaddaşında saxlanıla bilər. Giriş üçün HttpOnly sessiya çərəzindən istifadə
+                  olunur; şifrə brauzerin lokal yaddaşına yazılmır.
                 </p>
-                <p style={{ margin: 0, lineHeight: 1.7, fontSize: '14px', color: theme.textSecondary }}>
-                  İstifadəçilərin şifrələri verilənlər bazasında xüsusi kriptoqrafik heşləmə alqoritmləri ilə saxlanılır və hətta sistem administratorları tərəfindən oxuna bilməz.
+                <p
+                  style={{
+                    margin: 0,
+                    lineHeight: 1.7,
+                    fontSize: '14px',
+                    color: theme.textSecondary,
+                  }}
+                >
+                  Məxfi məlumat göndərməzdən əvvəl ünvan sətrində təhlükəsiz HTTPS bağlantısının
+                  olduğunu yoxlayın. Saytın texniki təhlükəsizlik xüsusiyyətləri barədə
+                  təsdiqlənməmiş rəqəmsal zəmanət verilmir.
                 </p>
               </>
             ),
@@ -150,11 +169,26 @@ export const PrivacyPage: React.FC<PrivacyPageProps> = ({
             icon: <UserCheck size={20} color="#e31e24" />,
             content: (
               <>
-                <p style={{ margin: '0 0 10px 0', lineHeight: 1.7, fontSize: '14px', color: theme.textSecondary }}>
-                  Sahara Electronics istifadəçilərin fərdi məlumatlarını heç bir halda üçüncü şəxslərə və ya reklam agentliklərinə satmır, icarəyə vermir və ötürmür.
+                <p
+                  style={{
+                    margin: '0 0 10px 0',
+                    lineHeight: 1.7,
+                    fontSize: '14px',
+                    color: theme.textSecondary,
+                  }}
+                >
+                  Sifariş WhatsApp və ya telefonla davam etdirildikdə məlumat emalı həmin xidmətin
+                  və satış kanalının şərtlərinə uyğun aparılır.
                 </p>
-                <p style={{ margin: 0, lineHeight: 1.7, fontSize: '14px', color: theme.textSecondary }}>
-                  Yalnız sifarişin çatdırılması üçün zəruri olan ünvan və əlaqə məlumatları kuryer xidmətinə təqdim olunur.
+                <p
+                  style={{
+                    margin: 0,
+                    lineHeight: 1.7,
+                    fontSize: '14px',
+                    color: theme.textSecondary,
+                  }}
+                >
+                  Məlumat paylaşmazdan əvvəl seçdiyiniz kanalın məxfilik qaydaları ilə tanış olun.
                 </p>
               </>
             ),
@@ -164,8 +198,17 @@ export const PrivacyPage: React.FC<PrivacyPageProps> = ({
             icon: <FileKey size={20} color="#f59e0b" />,
             content: (
               <>
-                <p style={{ margin: '0 0 10px 0', lineHeight: 1.7, fontSize: '14px', color: theme.textSecondary }}>
-                  Veb-saytımız səbət məhsulları, müqayisə siyahısı, seçilmişlər və mövzu rejimini (Açıq / Qaranlıq) yadda saxlamaq üçün lokal brauzer yaddaşı və çərəzlərdən istifadə edir.
+                <p
+                  style={{
+                    margin: '0 0 10px 0',
+                    lineHeight: 1.7,
+                    fontSize: '14px',
+                    color: theme.textSecondary,
+                  }}
+                >
+                  Səbət, müqayisə siyahısı, seçilmişlər və mövzu rejimi (Açıq / Qaranlıq) üçün lokal
+                  brauzer yaddaşından; qeydiyyatlı hesab sessiyası üçün çərəzdən istifadə olunur.
+                  Saytdaxili çat hazırda Telegram-a qoşulmur.
                 </p>
               </>
             ),
@@ -173,6 +216,7 @@ export const PrivacyPage: React.FC<PrivacyPageProps> = ({
         ].map((section, idx) => (
           <div
             key={idx}
+            className="scroll-reveal-item"
             style={{
               padding: '28px',
               borderRadius: '16px',
@@ -181,7 +225,9 @@ export const PrivacyPage: React.FC<PrivacyPageProps> = ({
               boxShadow: '0 4px 16px rgba(0, 0, 0, 0.03)',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
+            <div
+              style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}
+            >
               <div
                 style={{
                   width: '38px',

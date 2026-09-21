@@ -40,6 +40,7 @@ export interface RegisterCredentials {
   fullName: string;
   phone: string;
   email?: string;
+  birthDate?: string;
   password?: string;
   termsAccepted: boolean;
 }

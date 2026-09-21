@@ -15,6 +15,7 @@ describe('Full Real-Data Regression Manifest Suite (VACUUM INTO /tmp Clones)', (
   let tempDir: string;
   let tempPublicDb: string;
   let tempDraftDb: string;
+  let baseline: { products: number; published: number; specs: number; media: number };
 
   beforeEach(() => {
     tempDir = mkdtempSync(join(tmpdir(), 'sahara-regression-clone-'));
@@ -25,6 +26,19 @@ describe('Full Real-Data Regression Manifest Suite (VACUUM INTO /tmp Clones)', (
     const livePubDb = new DatabaseSync(LIVE_SITE_DB, { readOnly: true });
     try {
       livePubDb.exec(`VACUUM INTO '${tempPublicDb}';`);
+      baseline = {
+        products: (livePubDb.prepare('SELECT COUNT(*) AS n FROM products').get() as { n: number })
+          .n,
+        published: (
+          livePubDb
+            .prepare("SELECT COUNT(*) AS n FROM products WHERE status = 'published'")
+            .get() as { n: number }
+        ).n,
+        specs: (livePubDb.prepare('SELECT COUNT(*) AS n FROM product_specs').get() as { n: number })
+          .n,
+        media: (livePubDb.prepare('SELECT COUNT(*) AS n FROM product_media').get() as { n: number })
+          .n,
+      };
     } finally {
       livePubDb.close();
     }
@@ -43,7 +57,7 @@ describe('Full Real-Data Regression Manifest Suite (VACUUM INTO /tmp Clones)', (
     }
   });
 
-  it('1. Baseline clone contains exact expected counts before migration', () => {
+  it('1. Baseline clone matches the current source and has no orphan specs', () => {
     const pubDb = new DatabaseSync(tempPublicDb, { readOnly: true });
     try {
       const prodCount = (pubDb.prepare('SELECT COUNT(*) as cnt FROM products').get() as any).cnt;
@@ -57,10 +71,45 @@ describe('Full Real-Data Regression Manifest Suite (VACUUM INTO /tmp Clones)', (
       const mediaCount = (pubDb.prepare('SELECT COUNT(*) as cnt FROM product_media').get() as any)
         .cnt;
 
-      expect(prodCount).toBe(350);
-      expect(pubCount).toBe(25);
-      expect(specCount).toBe(4532);
-      expect(mediaCount).toBe(174);
+      expect(prodCount).toBe(baseline.products);
+      expect(pubCount).toBe(baseline.published);
+      expect(specCount).toBe(baseline.specs);
+      expect(mediaCount).toBe(baseline.media);
+      expect(prodCount).toBeGreaterThan(0);
+      expect(pubCount).toBeGreaterThan(0);
+      expect(pubDb.prepare('PRAGMA foreign_key_check').all()).toEqual([]);
+
+      const duplicateTitles = (
+        pubDb
+          .prepare(
+            `SELECT COUNT(*) AS cnt FROM (
+              SELECT brand_id, lower(trim(title)), COUNT(*) AS row_count
+              FROM products
+              GROUP BY brand_id, lower(trim(title))
+              HAVING row_count > 1
+            )`
+          )
+          .get() as any
+      ).cnt;
+      const invalidProducts = (
+        pubDb
+          .prepare(
+            "SELECT COUNT(*) AS cnt FROM products WHERE lower(title) = '503 service unavailable'"
+          )
+          .get() as any
+      ).cnt;
+      const repairedPrice = (
+        pubDb.prepare("SELECT price FROM products WHERE code = '00312324'").get() as any
+      ).price;
+      const exactRawMedia = (
+        pubDb
+          .prepare("SELECT COUNT(*) AS cnt FROM product_media WHERE url LIKE '%_raw_%'")
+          .get() as any
+      ).cnt;
+      expect(duplicateTitles).toBe(0);
+      expect(invalidProducts).toBe(0);
+      expect(repairedPrice).toBe(29.99);
+      expect(exactRawMedia).toBeGreaterThan(0);
     } finally {
       pubDb.close();
     }
@@ -85,8 +134,8 @@ describe('Full Real-Data Regression Manifest Suite (VACUUM INTO /tmp Clones)', (
           .prepare("SELECT COUNT(*) as cnt FROM products WHERE publication_status = 'published'")
           .get() as any
       ).cnt;
-      expect(prodCount).toBe(350);
-      expect(publishedCount).toBe(25);
+      expect(prodCount).toBe(baseline.products);
+      expect(publishedCount).toBe(baseline.published);
 
       // Specs preservation in both product_specs and product_spec_values
       const legacySpecs = (pubDb.prepare('SELECT COUNT(*) as cnt FROM product_specs').get() as any)
@@ -94,8 +143,8 @@ describe('Full Real-Data Regression Manifest Suite (VACUUM INTO /tmp Clones)', (
       const v2SpecValues = (
         pubDb.prepare('SELECT COUNT(*) as cnt FROM product_spec_values').get() as any
       ).cnt;
-      expect(legacySpecs).toBe(4532);
-      expect(v2SpecValues).toBe(4532);
+      expect(legacySpecs).toBe(baseline.specs);
+      expect(v2SpecValues).toBe(baseline.specs);
 
       // Media variants preservation
       const legacyMedia = (pubDb.prepare('SELECT COUNT(*) as cnt FROM product_media').get() as any)
@@ -103,19 +152,19 @@ describe('Full Real-Data Regression Manifest Suite (VACUUM INTO /tmp Clones)', (
       const v2MediaVariants = (
         pubDb.prepare('SELECT COUNT(*) as cnt FROM product_media_variants').get() as any
       ).cnt;
-      expect(legacyMedia).toBe(174);
-      expect(v2MediaVariants).toBe(174);
+      expect(legacyMedia).toBe(baseline.media);
+      expect(v2MediaVariants).toBe(baseline.media);
 
-      // Variants generated (350 default primary variants)
+      // One default primary variant for every current product.
       const variantCount = (
         pubDb.prepare('SELECT COUNT(*) as cnt FROM product_variants').get() as any
       ).cnt;
-      expect(variantCount).toBe(350);
+      expect(variantCount).toBe(baseline.products);
 
       // Initial revisions created
       const revCount = (pubDb.prepare('SELECT COUNT(*) as cnt FROM product_revisions').get() as any)
         .cnt;
-      expect(revCount).toBe(350);
+      expect(revCount).toBe(baseline.products);
 
       // Migration record in schema_migrations table
       const mig = pubDb.prepare('SELECT * FROM schema_migrations WHERE version = 8').get() as any;

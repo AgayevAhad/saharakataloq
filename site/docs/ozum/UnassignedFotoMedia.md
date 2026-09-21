@@ -1,0 +1,148 @@
+# Foto media uyğunluğu — 2026-09-20
+
+Bu faylları dəqiq model adında tapmadığım üçün heç bir modelə bağlamadım. Xam fayllar şəxsi `Foto/` mənbəyində saxlanılır, sayta və ya məhsula avtomatik qoşulmur. `IRT53...` üçün əvvəllər hazırlanmış 6 WebP də məhsuldan ayrılıb `site/data/quarantine-media/samsung/` şəxsi qovluğuna köçürüldü. Aşağıdakı qovluq adları `Foto/`-ya nisbidir.
+
+## `Foto/output/` — model sahəsi qeyri-dəqiq və ya mənbə keçidi ilə ziddiyyətli olan 18 Samsung şəkli
+
+- `output/media/Samsung/Paltaryuyan + qurudan maşın/Paltaryuyan və qurudan maşın SAMSUNG Bespoke AI Combo WD18DB8995BZLD (18+11 kq)/18+11 kq.jpg`
+- `output/media/Samsung/Paltaryuyan + qurudan maşın/Paltaryuyan və qurudan maşın SAMSUNG Bespoke AI Combo WD18DB8995BZLD (18+11 kq)/18+11 kq_02.jpg`
+- `output/media/Samsung/Paltaryuyan + qurudan maşın/Paltaryuyan və qurudan maşın SAMSUNG Bespoke AI Combo WD18DB8995BZLD (18+11 kq)/18+11 kq_03.jpg`
+- `output/media/Samsung/Paltaryuyan + qurudan maşın/Paltaryuyan və qurudan maşın SAMSUNG Bespoke AI Combo WD18DB8995BZLD (18+11 kq)/18+11 kq_04.jpg`
+- `output/media/Samsung/Paltaryuyan + qurudan maşın/Paltaryuyan və qurudan maşın SAMSUNG Bespoke AI Combo WD18DB8995BZLD (18+11 kq)/18+11 kq_05.jpg`
+- `output/media/Samsung/Paltaryuyan + qurudan maşın/Paltaryuyan və qurudan maşın SAMSUNG Bespoke AI Combo WD18DB8995BZLD (18+11 kq)/18+11 kq_06.jpg`
+- `output/media/Samsung/Soyuducu/Soyuducu Samsung RB31FERNDSA_WT All-around Cooling/Cooling.webp`
+- `output/media/Samsung/Soyuducu/Soyuducu Samsung RB31FERNDSA_WT All-around Cooling/Cooling_02.webp`
+- `output/media/Samsung/Soyuducu/Soyuducu Samsung RB31FERNDSA_WT All-around Cooling/Cooling_03.webp`
+- `output/media/Samsung/Soyuducu/Soyuducu Samsung RB31FERNDSA_WT All-around Cooling/Cooling_04.webp`
+- `output/media/Samsung/Soyuducu/Soyuducu Samsung RB31FERNDSA_WT All-around Cooling/Cooling_05.webp`
+- `output/media/Samsung/Soyuducu/Soyuducu Samsung RB31FERNDSA_WT All-around Cooling/Cooling_06.webp`
+- `output/media/Samsung/Soyuducu/Soyuducu Samsung Twin Cooling IRT53DG7A10B1WT/IRT53DG7A10B1WT.webp`
+- `output/media/Samsung/Soyuducu/Soyuducu Samsung Twin Cooling IRT53DG7A10B1WT/IRT53DG7A10B1WT_02.webp`
+- `output/media/Samsung/Soyuducu/Soyuducu Samsung Twin Cooling IRT53DG7A10B1WT/IRT53DG7A10B1WT_03.webp`
+- `output/media/Samsung/Soyuducu/Soyuducu Samsung Twin Cooling IRT53DG7A10B1WT/IRT53DG7A10B1WT_04.webp`
+- `output/media/Samsung/Soyuducu/Soyuducu Samsung Twin Cooling IRT53DG7A10B1WT/IRT53DG7A10B1WT_05.webp`
+- `output/media/Samsung/Soyuducu/Soyuducu Samsung Twin Cooling IRT53DG7A10B1WT/IRT53DG7A10B1WT_06.webp`
+
+## `Foto/` — dəqiq 1:1 model uyğunluğu olmayan 119 ilkin şəkil
+
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.22.jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.23.jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.24 (1).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.24.jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.25 (1).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.25 (2).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.25 (3).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.25 (4).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.25 (5).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.25.jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.26 (1).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.26 (2).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.26 (3).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.26 (4).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.26 (5).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.26.jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.27 (1).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.27 (2).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.27 (3).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.27 (4).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.27 (5).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.27 (6).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.27.jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.28 (1).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.28 (2).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.28 (3).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.28 (4).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.28 (5).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.28.jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.29 (1).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.29 (2).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.29 (3).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.29 (4).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.29 (5).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.29 (6).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.29.jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.30 (1).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.30 (2).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.30 (3).jpeg`
+- `Ardo/WhatsApp Image 2026-08-25 at 20.32.30.jpeg`
+- `Lotus kondisoner/LOTUS KONDISONER .jpg`
+- `Lotus kondisoner/LOTUS KONDISONER.jpg`
+- `Lotus kondisoner/R410A (2).jpg`
+- `Lotus kondisoner/R410A (3).jpg`
+- `Lotus kondisoner/R410A (4).jpg`
+- `ardo havaçəkən/406A4932.jpg`
+- `ardo havaçəkən/AR 20 SS.jpg`
+- `ardo havaçəkən/AR 25 LB.jpg`
+- `ardo havaçəkən/AR611 BLACK.jpg`
+- `ardo havaçəkən/AR6113BLACK.jpg`
+- `ardo havaçəkən/I 620X.jpg`
+- `ardo havaçəkən/MOD602WHITE850.jpg`
+- `ardo kondisoner/12000BTU (2).jpg`
+- `ardo kondisoner/12000BTU.jpg`
+- `ardo kondisoner/18000BTU (3).jpg`
+- `ardo kondisoner/9000BTU (2).jpg`
+- `ardo kondisoner/9000BTU.jpg`
+- `ardo kondisoner/ARDO KONDISONER (2).jpg`
+- `ardo kondisoner/ARDO KONDISONER.jpg`
+- `ardo piltə/406A4952.jpg`
+- `ardo piltə/406A4955.jpg`
+- `ardo piltə/406A4956.jpg`
+- `ardo piltə/501 C (2).jpg`
+- `ardo piltə/501 C.jpg`
+- `ardo piltə/502C (2).jpg`
+- `ardo piltə/502C (3).jpg`
+- `ardo piltə/502C.jpg`
+- `ardo piltə/AR741OINOX.jpg`
+- `artel kondisoner/ARTEL (2).jpg`
+- `artel kondisoner/ARTEL (3).jpg`
+- `artel kondisoner/ARTEL.jpg`
+- `artel kondisoner/R410A (2).jpg`
+- `artel kondisoner/R410A (3).jpg`
+- `artel kondisoner/işlənmə/R410A (2).JPG`
+- `artel kondisoner/işlənmə/islenme --25.JPG`
+- `artel kondisoner/işlənmə/islenme --4.JPG`
+- `artel kondisoner/işlənmə/islenme --5.JPG`
+- `artel kondisoner/işlənmə/islenme --6.JPG`
+- `artel kondisoner/r410a.jpg`
+- `lotus airfryer/Airfryer Lotus 5.5 Black -1.JPG`
+- `lotus airfryer/Airfryer Lotus 5.5 Black White-1.JPG`
+- `lotus airfryer/Airfryer Lotus 5.5 Black White.JPG`
+- `lotus airfryer/Airfryer Lotus 5.5 Black.JPG`
+- `lotus airfryer/Airfryer Lotus 5.5 Gray Black-1.JPG`
+- `lotus airfryer/Airfryer Lotus 5.5 Gray Black.JPG`
+- `lotus piltə/LT-3160 İNOX-4G.JPG`
+- `lotus piltə/LT-3160-BLACK (2).JPG`
+- `lotus piltə/LT-3160-BLACK (3).JPG`
+- `lotus piltə/LT-3160-BLACK.JPG`
+- `lotus piltə/LT-4316FV-VİTROGLASS.JPG`
+- `lotus piltə/LT-6016-BLACK.JPG`
+- `lotus piltə/LT-6040 İNOX-2.JPG`
+- `lotus piltə/LT-6040-İNOX.JPG`
+- `lotus piltə/LT-6041 İNOX.JPG`
+- `lotus piltə/LT-6454İNOX.JPG`
+- `lotus piltə/LT-6550 CBLACK-2.JPG`
+- `lotus piltə/LT-941-İNOX (2).JPG`
+- `lotus piltə/LT4316FV-VİTROGLASS (2).JPG`
+- `lotus piltə/LT4316FV-VİTROGLASS.JPG`
+- `lotus sobalar/LT 4545 BL BP (2).jpg`
+- `lotus sobalar/LT 4545 BL BP.jpg`
+- `lotus sobalar/LT 46 EO.jpg`
+- `lotus sobalar/LT 46EO.jpg`
+- `lotus sobalar/LT 645V (2).jpg`
+- `lotus sobalar/LT 645V.jpg`
+- `lotus sobalar/LT 647E LED.jpg`
+- `lotus sobalar/LT46DG MATT.jpg`
+- `lotus sobalar/LT46EOBK.jpg`
+- `lotus sobalar/LTS 8001S-102.jpg`
+- `lotus termopot/LT-50-EB-1313 gray 2.JPG`
+- `lotus termopot/Termopot Lotus LT-50-EB-1111 Black.JPG`
+- `lotus ətçəkən/406A9658.JPG`
+- `lotus ətçəkən/LT 02003 ümumi.JPG`
+- `lotus ətçəkən/LT 02003.JPG`
+- `ütü lotus/406A8986.JPG`
+- `ütü lotus/406A8988.JPG`
+- `ütü lotus/406A8995.JPG`
+- `ütü lotus/406A8999.JPG`
+- `ütü lotus/406A9003.JPG`
+
+Uyğunluq təsdiqlənərsə, konkret fayl üçün dəqiq marka, kateqoriya və model kodunu bildirin. Ümumi qovluq adı, tutum, rəng və oxşar kod əsasında fərziyyə edilməyəcək.

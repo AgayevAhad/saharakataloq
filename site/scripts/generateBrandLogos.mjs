@@ -228,6 +228,18 @@ const BRAND_SVGS = {
   es: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 140 48">
     <text x="50%" y="62%" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="28" letter-spacing="3" fill="#475569">ES</text>
   </svg>`,
+
+  gefest: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 48">
+    <text x="50%" y="62%" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="26" letter-spacing="3" fill="#B91C1C">GEFEST</text>
+  </svg>`,
+
+  gorenje: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 170 48">
+    <text x="50%" y="62%" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif" font-weight="800" font-size="26" letter-spacing="2" fill="#0284C7">gorenje</text>
+  </svg>`,
+
+  hansa: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 48">
+    <text x="50%" y="62%" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="27" letter-spacing="3" fill="#E11D48">Hansa</text>
+  </svg>`,
 };
 
 // Target directory strictly in site/
@@ -251,13 +263,23 @@ for (const dbPath of dbs) {
     const db = new DatabaseSync(dbPath);
     for (const brandId of Object.keys(BRAND_SVGS)) {
       const logoUrl = `/media/brands/${brandId}-logo.svg`;
-      db.prepare("UPDATE brands SET logo = ? WHERE id = ? OR slug = ?").run(logoUrl, brandId, brandId);
+      db.prepare('UPDATE brands SET logo = ? WHERE id = ? OR slug = ?').run(
+        logoUrl,
+        brandId,
+        brandId
+      );
     }
     // Ensure ardo, lotus, artel have their original logos preserved
-    db.prepare("UPDATE brands SET logo = '/media/brands/ardo-logo.png' WHERE id = 'ardo' OR slug = 'ardo'").run();
-    db.prepare("UPDATE brands SET logo = '/media/brands/lotus-logo.png' WHERE id = 'lotus' OR slug = 'lotus'").run();
-    db.prepare("UPDATE brands SET logo = '/media/brands/artel-logo.svg' WHERE id = 'artel' OR slug = 'artel'").run();
-    
+    db.prepare(
+      "UPDATE brands SET logo = '/media/brands/ardo-logo.png' WHERE id = 'ardo' OR slug = 'ardo'"
+    ).run();
+    db.prepare(
+      "UPDATE brands SET logo = '/media/brands/lotus-logo.png' WHERE id = 'lotus' OR slug = 'lotus'"
+    ).run();
+    db.prepare(
+      "UPDATE brands SET logo = '/media/brands/artel-logo.svg' WHERE id = 'artel' OR slug = 'artel'"
+    ).run();
+
     db.close();
     console.log(`Updated logos in ${dbPath}`);
   } catch (err) {

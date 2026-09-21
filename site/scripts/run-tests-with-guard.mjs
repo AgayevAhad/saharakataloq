@@ -115,7 +115,9 @@ async function main() {
     const siteVitest = join(SITE_DIR, 'node_modules', 'vitest', 'vitest.mjs');
     const rootVitest = join(REPO_ROOT, 'node_modules', 'vitest', 'vitest.mjs');
     const vitestBin = existsSync(siteVitest) ? siteVitest : rootVitest;
-    await runCommand(process.execPath, [vitestBin, 'run'], SITE_DIR);
+    // HTTP integration tests start local servers; keep worker pressure bounded
+    // so unrelated browser/unit suites cannot exhaust the same CI host.
+    await runCommand(process.execPath, [vitestBin, 'run', '--maxWorkers=2'], SITE_DIR);
 
     // 3. Node test runner for all tests/*.test.mjs integration tests
     const testsDir = join(SITE_DIR, 'tests');

@@ -1,15 +1,5 @@
 import React from 'react';
-import {
-  ArrowLeft,
-  FileText,
-  ShieldCheck,
-  CreditCard,
-  Truck,
-  RotateCcw,
-  AlertCircle,
-  CheckCircle2,
-  Lock,
-} from 'lucide-react';
+import { ArrowLeft, FileText, ShieldCheck, CreditCard, Truck, RotateCcw } from 'lucide-react';
 import { ThemeColors } from '../types/theme';
 
 interface TermsPageProps {
@@ -18,11 +8,7 @@ interface TermsPageProps {
   onNavigate: (route: string, param?: string) => void;
 }
 
-export const TermsPage: React.FC<TermsPageProps> = ({
-  theme,
-  themeMode,
-  onNavigate,
-}) => {
+export const TermsPage: React.FC<TermsPageProps> = ({ theme, themeMode, onNavigate }) => {
   const isDark = themeMode === 'dark';
 
   return (
@@ -70,7 +56,9 @@ export const TermsPage: React.FC<TermsPageProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
           <span style={{ fontSize: '13px', color: theme.textMuted }}>Kömək</span>
           <span style={{ fontSize: '13px', color: theme.textMuted }}>/</span>
-          <span style={{ fontSize: '13px', fontWeight: 800, color: '#e31e24' }}>İstifadə Şərtləri</span>
+          <span style={{ fontSize: '13px', fontWeight: 800, color: '#e31e24' }}>
+            İstifadə Şərtləri
+          </span>
         </div>
       </div>
 
@@ -114,7 +102,8 @@ export const TermsPage: React.FC<TermsPageProps> = ({
           İstifadəçi Şərtləri və Qaydaları
         </h1>
         <p style={{ margin: 0, fontSize: '13.5px', color: '#cbd5e1' }}>
-          Son yenilənmə tarixi: 18 Sentyabr 2026. Sahara Electronics portalından istifadə edərək bu şərtlərlə razılaşmış olursunuz.
+          Son yenilənmə tarixi: 18 Sentyabr 2026. Sahara Electronics portalından istifadə edərək bu
+          şərtlərlə razılaşmış olursunuz.
         </p>
       </div>
 
@@ -126,11 +115,27 @@ export const TermsPage: React.FC<TermsPageProps> = ({
             icon: <FileText size={20} color="#e31e24" />,
             content: (
               <>
-                <p style={{ margin: '0 0 10px 0', lineHeight: 1.7, fontSize: '14px', color: theme.textSecondary }}>
-                  Bu Qaydalar "Sahara Electronics" (bundan sonra "Şirkət" və ya "Satıcı") onlayn kataloq və satış platformasının istifadə şərtlərini tənzimləyir.
+                <p
+                  style={{
+                    margin: '0 0 10px 0',
+                    lineHeight: 1.7,
+                    fontSize: '14px',
+                    color: theme.textSecondary,
+                  }}
+                >
+                  Bu Qaydalar "Sahara Electronics" (bundan sonra "Şirkət" və ya "Satıcı") onlayn
+                  kataloq və satış platformasının istifadə şərtlərini tənzimləyir.
                 </p>
-                <p style={{ margin: 0, lineHeight: 1.7, fontSize: '14px', color: theme.textSecondary }}>
-                  Kataloqdakı bütün məlumatlar, məhsul təsvirləri, qiymətlər və texniki parametrlər rəsmi istehsalçı bazası əsasında təqdim edilir.
+                <p
+                  style={{
+                    margin: 0,
+                    lineHeight: 1.7,
+                    fontSize: '14px',
+                    color: theme.textSecondary,
+                  }}
+                >
+                  Kataloqdakı bütün məlumatlar, məhsul təsvirləri, qiymətlər və texniki parametrlər
+                  rəsmi istehsalçı bazası əsasında təqdim edilir.
                 </p>
               </>
             ),
@@ -140,11 +145,28 @@ export const TermsPage: React.FC<TermsPageProps> = ({
             icon: <CreditCard size={20} color="#0284c7" />,
             content: (
               <>
-                <p style={{ margin: '0 0 10px 0', lineHeight: 1.7, fontSize: '14px', color: theme.textSecondary }}>
-                  İstifadəçi veb-saytın səbət bölməsi, birbaşa zəng və ya WhatsApp vasitəsilə sifariş göndərə bilər.
+                <p
+                  style={{
+                    margin: '0 0 10px 0',
+                    lineHeight: 1.7,
+                    fontSize: '14px',
+                    color: theme.textSecondary,
+                  }}
+                >
+                  İstifadəçi veb-saytın səbət bölməsi, birbaşa zəng və ya WhatsApp vasitəsilə
+                  sifariş göndərə bilər.
                 </p>
-                <p style={{ margin: 0, lineHeight: 1.7, fontSize: '14px', color: theme.textSecondary }}>
-                  Məhsulların qiyməti Azərbaycan Manatı (AZN) ilə göstərilir. Endirim kampaniyaları və xüsusi qiymətlər elan edilmiş müddət ərzində və anbarda olan say bitənədək qüvvədədir.
+                <p
+                  style={{
+                    margin: 0,
+                    lineHeight: 1.7,
+                    fontSize: '14px',
+                    color: theme.textSecondary,
+                  }}
+                >
+                  Məhsulların qiyməti Azərbaycan Manatı (AZN) ilə göstərilir. Endirim kampaniyaları
+                  və xüsusi qiymətlər elan edilmiş müddət ərzində və anbarda olan say bitənədək
+                  qüvvədədir.
                 </p>
               </>
             ),
@@ -154,11 +176,27 @@ export const TermsPage: React.FC<TermsPageProps> = ({
             icon: <Truck size={20} color="#16a34a" />,
             content: (
               <>
-                <p style={{ margin: '0 0 10px 0', lineHeight: 1.7, fontSize: '14px', color: theme.textSecondary }}>
-                  Bakı və Abşeron ərazisinə çatdırılma sifariş təsdiq edildikdən sonra razılaşdırılmış vaxt aralığında (adətən 24-48 saat ərzində) həyata keçirilir.
+                <p
+                  style={{
+                    margin: '0 0 10px 0',
+                    lineHeight: 1.7,
+                    fontSize: '14px',
+                    color: theme.textSecondary,
+                  }}
+                >
+                  Bakı və Abşeron ərazisinə çatdırılma sifariş təsdiq edildikdən sonra
+                  razılaşdırılmış vaxt aralığında (adətən 24-48 saat ərzində) həyata keçirilir.
                 </p>
-                <p style={{ margin: 0, lineHeight: 1.7, fontSize: '14px', color: theme.textSecondary }}>
-                  Qaz və elektrik plitələrinin, quraşdırılan sobaların və aspiratorların montajı rəsmi servis tərəfindən həyata keçirildikdə zəmanət tam qüvvəyə minir.
+                <p
+                  style={{
+                    margin: 0,
+                    lineHeight: 1.7,
+                    fontSize: '14px',
+                    color: theme.textSecondary,
+                  }}
+                >
+                  Qaz və elektrik plitələrinin, quraşdırılan sobaların və aspiratorların montajı
+                  rəsmi servis tərəfindən həyata keçirildikdə zəmanət tam qüvvəyə minir.
                 </p>
               </>
             ),
@@ -168,11 +206,28 @@ export const TermsPage: React.FC<TermsPageProps> = ({
             icon: <ShieldCheck size={20} color="#f59e0b" />,
             content: (
               <>
-                <p style={{ margin: '0 0 10px 0', lineHeight: 1.7, fontSize: '14px', color: theme.textSecondary }}>
-                  Sahara Electronics tərəfindən satılan bütün məhsullar istehsalçı zavodun rəsmi zəmanət talonu ilə təmin olunur.
+                <p
+                  style={{
+                    margin: '0 0 10px 0',
+                    lineHeight: 1.7,
+                    fontSize: '14px',
+                    color: theme.textSecondary,
+                  }}
+                >
+                  Sahara Electronics tərəfindən satılan bütün məhsullar istehsalçı zavodun rəsmi
+                  zəmanət talonu ilə təmin olunur.
                 </p>
-                <p style={{ margin: 0, lineHeight: 1.7, fontSize: '14px', color: theme.textSecondary }}>
-                  Zəmanət müddəti ərzində istehsalat qüsuru aşkarlanarsa, rəsmi servis mərkəzi tərəfindən ödənişsiz diaqnostika, təmir və ya hissələrin əvəzlənməsi həyata keçirilir.
+                <p
+                  style={{
+                    margin: 0,
+                    lineHeight: 1.7,
+                    fontSize: '14px',
+                    color: theme.textSecondary,
+                  }}
+                >
+                  Zəmanət müddəti ərzində istehsalat qüsuru aşkarlanarsa, rəsmi servis mərkəzi
+                  tərəfindən ödənişsiz diaqnostika, təmir və ya hissələrin əvəzlənməsi həyata
+                  keçirilir.
                 </p>
               </>
             ),
@@ -182,8 +237,17 @@ export const TermsPage: React.FC<TermsPageProps> = ({
             icon: <RotateCcw size={20} color="#8b5cf6" />,
             content: (
               <>
-                <p style={{ margin: '0 0 10px 0', lineHeight: 1.7, fontSize: '14px', color: theme.textSecondary }}>
-                  "İstehlakçıların hüquqlarının müdafiəsi haqqında" Azərbaycan Respublikasının Qanununa əsasən, müştəri istifadə olunmamış, qablaşdırması və əmtəə görünüşü pozulmamış məhsulu 14 gün ərzində dəyişdirə və ya qaytara bilər.
+                <p
+                  style={{
+                    margin: '0 0 10px 0',
+                    lineHeight: 1.7,
+                    fontSize: '14px',
+                    color: theme.textSecondary,
+                  }}
+                >
+                  "İstehlakçıların hüquqlarının müdafiəsi haqqında" Azərbaycan Respublikasının
+                  Qanununa əsasən, müştəri istifadə olunmamış, qablaşdırması və əmtəə görünüşü
+                  pozulmamış məhsulu 14 gün ərzində dəyişdirə və ya qaytara bilər.
                 </p>
               </>
             ),
@@ -191,6 +255,7 @@ export const TermsPage: React.FC<TermsPageProps> = ({
         ].map((section, idx) => (
           <div
             key={idx}
+            className="scroll-reveal-item"
             style={{
               padding: '28px',
               borderRadius: '16px',
@@ -199,7 +264,9 @@ export const TermsPage: React.FC<TermsPageProps> = ({
               boxShadow: '0 4px 16px rgba(0, 0, 0, 0.03)',
             }}
           >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}>
+            <div
+              style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '14px' }}
+            >
               <div
                 style={{
                   width: '38px',

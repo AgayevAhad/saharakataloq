@@ -53,6 +53,7 @@ import {
   seedCanonical54Brands,
 } from './backend/phase5BrandRailMigration.mjs';
 import { BrandRailService, generateBrandRailEtag } from './backend/brandRailService.mjs';
+import { CustomerSupportStore } from './backend/customerSupportStore.mjs';
 import {
   BrandCandidateCreateSchema,
   BrandCandidateBatchSchema,
@@ -116,6 +117,8 @@ let adminPassword = process.env.ADMIN_PASSWORD || generatedPassword;
 const sessions = new Map();
 const loginAttempts = new Map();
 const eventLimits = new Map();
+const customerLoginAttempts = new Map();
+const customerStore = new CustomerSupportStore(DATA_DIR);
 
 const categorySeed = [
   ['hood', 'Aspiratorlar', 'Wind'],
@@ -243,6 +246,22 @@ const requireAdmin = (req, res, csrf = false) => {
   return session;
 };
 
+const requireCustomer = (req, res, csrf = false) => {
+  const session = customerStore.session(parseCookies(req).sahara_customer);
+  if (!session) {
+    send(res, 401, { error: 'Qeydiyyatlı hesabınıza daxil olun' });
+    return null;
+  }
+  if (csrf && req.headers['x-csrf-token'] !== session.csrfToken) {
+    send(res, 403, { error: 'Təhlükəsizlik tokeni etibarsızdır' });
+    return null;
+  }
+  return session;
+};
+
+const customerCookie = (token, maxAge, req) =>
+  `sahara_customer=${token}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${maxAge}${req.socket.encrypted || req.headers['x-forwarded-proto'] === 'https' ? '; Secure' : ''}`;
+
 const readBody = async (req) => {
   const chunks = [];
   let size = 0;
@@ -253,6 +272,38 @@ const readBody = async (req) => {
   }
   if (!chunks.length) return {};
   return JSON.parse(Buffer.concat(chunks).toString('utf8'));
+};
+
+const readChatAttachment = async (req) => {
+  const mimeType = String(req.headers['content-type'] || '')
+    .split(';')[0]
+    .toLowerCase();
+  const allowed = {
+    'image/jpeg': ['image', (b) => b.length > 3 && b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff],
+    'image/png': [
+      'image',
+      (b) => b.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])),
+    ],
+    'image/webp': [
+      'image',
+      (b) => b.subarray(0, 4).toString() === 'RIFF' && b.subarray(8, 12).toString() === 'WEBP',
+    ],
+    'audio/webm': ['audio', (b) => b.subarray(0, 4).equals(Buffer.from([0x1a, 0x45, 0xdf, 0xa3]))],
+    'audio/ogg': ['audio', (b) => b.subarray(0, 4).toString() === 'OggS'],
+    'audio/mp4': ['audio', (b) => b.subarray(4, 8).toString() === 'ftyp'],
+  };
+  const entry = allowed[mimeType];
+  if (!entry) return { error: 'Yalnız şəkil və səs faylları qəbul edilir' };
+  const chunks = [];
+  let bytes = 0;
+  for await (const chunk of req) {
+    bytes += chunk.length;
+    if (bytes > 6 * 1024 * 1024) return { error: 'Fayl 6 MB limitini aşır' };
+    chunks.push(chunk);
+  }
+  const payload = Buffer.concat(chunks);
+  if (!payload.length || !entry[1](payload)) return { error: 'Faylın formatı düzgün deyil' };
+  return { mime: mimeType, kind: entry[0], payload };
 };
 
 const readBinaryBody = async (req) => {
@@ -592,6 +643,26 @@ const readCatalog = () =>
   catalogDatabase
     ? catalogDatabase.getCatalog()
     : { brands: [], categories: [], products: [], settings: {} };
+const readPublicCatalog = async () => {
+  const catalog = await readCatalog();
+  const brands = catalog.brands.filter(
+    (brand) =>
+      brand.active &&
+      (!brand.verificationStatus ||
+        ['published', 'legacy_unreviewed', 'unverified'].includes(brand.verificationStatus))
+  );
+  const visibleBrandIds = new Set(
+    brands.filter((brand) => !brand.comingSoon).map((brand) => brand.id)
+  );
+  return {
+    ...catalog,
+    brands,
+    categories: catalog.categories.filter((category) => category.active && !category.isArchived),
+    products: catalog.products.filter(
+      (product) => product.status === 'published' && visibleBrandIds.has(product.brandId)
+    ),
+  };
+};
 const recordEvent = (event) =>
   catalogDatabase ? catalogDatabase.recordEvent(event) : Promise.resolve();
 
@@ -732,9 +803,7 @@ const serveFile = async (res, pathname) => {
       if (existsSync(ssrBundlePath)) {
         try {
           const { render } = await import(pathToFileURL(ssrBundlePath).href);
-          const publicCatalog = catalogDatabase?.getCatalog
-            ? catalogDatabase.getCatalog({ includeAll: false })
-            : await readCatalog();
+          const publicCatalog = await readPublicCatalog();
 
           let navItems = DEFAULT_NAVIGATION_SEED.filter(
             (i) => i.enabled && i.status === 'published'
@@ -989,28 +1058,9 @@ const server = http.createServer(async (req, res) => {
       });
     }
     if (path === '/api/catalog' && req.method === 'GET') {
-      const catalog = await readCatalog();
-      const activeBrands = catalog.brands.filter(
-        (item) =>
-          item.active &&
-          (!item.verificationStatus ||
-            item.verificationStatus === 'published' ||
-            item.verificationStatus === 'legacy_unreviewed')
-      );
-      const comingSoonBrandIds = new Set(activeBrands.filter((b) => b.comingSoon).map((b) => b.id));
-      return send(
-        res,
-        200,
-        {
-          ...catalog,
-          brands: activeBrands,
-          categories: catalog.categories.filter((item) => item.active && !item.isArchived),
-          products: catalog.products.filter(
-            (item) => item.status !== 'draft' && !comingSoonBrandIds.has(item.brandId)
-          ),
-        },
-        { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300' }
-      );
+      return send(res, 200, await readPublicCatalog(), {
+        'Cache-Control': 'public, max-age=60, stale-while-revalidate=300',
+      });
     }
     if (path === '/api/brands' && req.method === 'GET') {
       if (catalogDatabase?.db) {
@@ -1033,7 +1083,8 @@ const server = http.createServer(async (req, res) => {
               b.active &&
               (!b.verificationStatus ||
                 b.verificationStatus === 'published' ||
-                b.verificationStatus === 'legacy_unreviewed')
+                b.verificationStatus === 'legacy_unreviewed' ||
+                b.verificationStatus === 'unverified')
           ),
         },
         { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300' }
@@ -1115,6 +1166,182 @@ const server = http.createServer(async (req, res) => {
         await recordEvent({ type: body.type, productId: safeText(body.productId, 80) });
       }
       return send(res, 202, { ok: true });
+    }
+    if (path === '/api/customer/register' && req.method === 'POST') {
+      const ip = remoteIp(req);
+      const attempts = customerLoginAttempts.get(`register:${ip}`) || {
+        count: 0,
+        resetAt: Date.now() + 3600_000,
+      };
+      if (attempts.resetAt < Date.now()) {
+        attempts.count = 0;
+        attempts.resetAt = Date.now() + 3600_000;
+      }
+      if (attempts.count >= 8) return send(res, 429, { error: 'Qeydiyyat limiti aşılıb' });
+      attempts.count += 1;
+      customerLoginAttempts.set(`register:${ip}`, attempts);
+      const result = await customerStore.register(await readBody(req));
+      if (result.error) return send(res, result.status, { error: result.error });
+      const session = customerStore.createSession(result.user.id, true);
+      return send(
+        res,
+        201,
+        { user: result.user, csrfToken: session.csrfToken },
+        {
+          'Set-Cookie': customerCookie(session.token, session.maxAge, req),
+        }
+      );
+    }
+    if (path === '/api/customer/login' && req.method === 'POST') {
+      const ip = remoteIp(req);
+      const attempts = customerLoginAttempts.get(`login:${ip}`) || {
+        count: 0,
+        resetAt: Date.now() + 900_000,
+      };
+      if (attempts.resetAt < Date.now()) {
+        attempts.count = 0;
+        attempts.resetAt = Date.now() + 900_000;
+      }
+      if (attempts.count >= 10)
+        return send(res, 429, { error: 'Çoxsaylı giriş cəhdi. 15 dəqiqə gözləyin.' });
+      const body = await readBody(req);
+      const user = await customerStore.login(body.identifier, body.password);
+      if (!user) {
+        attempts.count += 1;
+        customerLoginAttempts.set(`login:${ip}`, attempts);
+        return send(res, 401, { error: 'Telefon/e-poçt və ya şifrə yanlışdır' });
+      }
+      customerLoginAttempts.delete(`login:${ip}`);
+      const session = customerStore.createSession(user.id, Boolean(body.rememberMe));
+      return send(
+        res,
+        200,
+        { user, csrfToken: session.csrfToken },
+        {
+          'Set-Cookie': customerCookie(session.token, session.maxAge, req),
+        }
+      );
+    }
+    if (path === '/api/customer/session' && req.method === 'GET') {
+      const session = customerStore.session(parseCookies(req).sahara_customer);
+      return send(res, 200, session || { user: null, csrfToken: null });
+    }
+    if (path === '/api/customer/logout' && req.method === 'POST') {
+      const session = requireCustomer(req, res, true);
+      if (!session) return;
+      customerStore.logout(parseCookies(req).sahara_customer);
+      return send(
+        res,
+        200,
+        { ok: true },
+        {
+          'Set-Cookie': customerCookie('', 0, req),
+        }
+      );
+    }
+    if (path === '/api/customer/profile' && req.method === 'PATCH') {
+      const session = requireCustomer(req, res, true);
+      if (!session) return;
+      const result = customerStore.updateProfile(session.user.id, await readBody(req));
+      return result.error
+        ? send(res, result.status, { error: result.error })
+        : send(res, 200, result);
+    }
+    if (path === '/api/customer/password' && req.method === 'POST') {
+      const session = requireCustomer(req, res, true);
+      if (!session) return;
+      const body = await readBody(req);
+      const result = await customerStore.changePassword(
+        session.user.id,
+        body.currentPassword,
+        body.newPassword,
+        parseCookies(req).sahara_customer
+      );
+      return result.error
+        ? send(res, result.status, { error: result.error })
+        : send(res, 200, { ok: true });
+    }
+    if (path === '/api/chat/messages' && req.method === 'GET') {
+      const session = requireCustomer(req, res);
+      if (!session) return;
+      customerStore.markRead(session.user.id, 'admin');
+      return send(res, 200, { messages: customerStore.messages(session.user.id) });
+    }
+    if (path === '/api/chat/messages' && req.method === 'POST') {
+      const session = requireCustomer(req, res, true);
+      if (!session) return;
+      const result = customerStore.addMessage(
+        session.user.id,
+        'customer',
+        (await readBody(req)).body
+      );
+      return result.error
+        ? send(res, result.status, { error: result.error })
+        : send(res, 201, result);
+    }
+    if (path === '/api/chat/attachment' && req.method === 'POST') {
+      const session = requireCustomer(req, res, true);
+      if (!session) return;
+      const media = await readChatAttachment(req);
+      if (media.error) return send(res, 400, { error: media.error });
+      const result = customerStore.addMessage(session.user.id, 'customer', '', media);
+      return result.error
+        ? send(res, result.status, { error: result.error })
+        : send(res, 201, result);
+    }
+    if (path.startsWith('/api/chat/attachments/') && req.method === 'GET') {
+      const id = path.slice('/api/chat/attachments/'.length);
+      if (!/^attachment-[a-f0-9]{24}$/.test(id)) return send(res, 404, { error: 'Fayl tapılmadı' });
+      const customerSession = customerStore.session(parseCookies(req).sahara_customer);
+      const adminSession = isLocalNetwork(req) ? sessionFor(req) : null;
+      if (!customerSession && !adminSession) return send(res, 401, { error: 'Giriş tələb olunur' });
+      const media = customerStore.attachment(id, adminSession ? null : customerSession.user.id);
+      if (!media) return send(res, 404, { error: 'Fayl tapılmadı' });
+      res.writeHead(200, {
+        ...securityHeaders,
+        'Content-Type': media.mime,
+        'Content-Length': media.payload.length,
+        'Cache-Control': 'private, no-store',
+        'Content-Disposition': 'inline',
+      });
+      return res.end(media.payload);
+    }
+    if (path === '/api/admin/chat/inbox' && req.method === 'GET') {
+      if (!requireAdmin(req, res)) return;
+      return send(res, 200, { conversations: customerStore.inbox() });
+    }
+    const adminChatMatch = path.match(/^\/api\/admin\/chat\/([^/]+)\/messages$/);
+    if (adminChatMatch && req.method === 'GET') {
+      if (!requireAdmin(req, res)) return;
+      if (!customerStore.hasUser(adminChatMatch[1]))
+        return send(res, 404, { error: 'İstifadəçi tapılmadı' });
+      customerStore.markRead(adminChatMatch[1], 'customer');
+      return send(res, 200, { messages: customerStore.messages(adminChatMatch[1]) });
+    }
+    if (adminChatMatch && req.method === 'POST') {
+      if (!requireAdmin(req, res, true)) return;
+      if (!customerStore.hasUser(adminChatMatch[1]))
+        return send(res, 404, { error: 'İstifadəçi tapılmadı' });
+      const result = customerStore.addMessage(
+        adminChatMatch[1],
+        'admin',
+        (await readBody(req)).body
+      );
+      return result.error
+        ? send(res, result.status, { error: result.error })
+        : send(res, 201, result);
+    }
+    const adminChatAttachmentMatch = path.match(/^\/api\/admin\/chat\/([^/]+)\/attachment$/);
+    if (adminChatAttachmentMatch && req.method === 'POST') {
+      if (!requireAdmin(req, res, true)) return;
+      if (!customerStore.hasUser(adminChatAttachmentMatch[1]))
+        return send(res, 404, { error: 'İstifadəçi tapılmadı' });
+      const media = await readChatAttachment(req);
+      if (media.error) return send(res, 400, { error: media.error });
+      const result = customerStore.addMessage(adminChatAttachmentMatch[1], 'admin', '', media);
+      return result.error
+        ? send(res, result.status, { error: result.error })
+        : send(res, 201, result);
     }
     if (path === '/api/admin/login' && req.method === 'POST') {
       if (!isLocalNetwork(req)) return send(res, 404, { error: 'Tapılmadı' });
@@ -2143,7 +2370,10 @@ const server = http.createServer(async (req, res) => {
         const body = await parseJsonBody(req);
         const versionOrId = body.version || body.revisionId;
         if (!versionOrId) {
-          return send(res, 400, { error: 'INVALID_REQUEST', message: 'Reviziya və ya versiya nömrəsi tələb olunur.' });
+          return send(res, 400, {
+            error: 'INVALID_REQUEST',
+            message: 'Reviziya və ya versiya nömrəsi tələb olunur.',
+          });
         }
         const brandRailService = new BrandRailService(draftDb, publicDb);
         const result = brandRailService.rollback(versionOrId, session.username || 'admin');

@@ -2,6 +2,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { VisualCategoryCards } from '../components/VisualCategoryCards';
+import { VisualCategoryCardsSkeleton } from '../components/Skeletons';
 import { ThematicShowcase } from '../components/ThematicShowcase';
 import { TrustHighlights } from '../components/TrustHighlights';
 import { CatalogCategory, Product } from '../types/product';
@@ -72,6 +73,13 @@ const mockProducts: Product[] = [
 ];
 
 describe('VisualCategoryCards', () => {
+  it('keeps five bento skeleton shells with the same media and metadata anatomy', () => {
+    const { container } = render(<VisualCategoryCardsSkeleton theme={lightTheme} />);
+    expect(container.querySelectorAll('.visual-category-reveal')).toHaveLength(5);
+    expect(container.querySelectorAll('.visual-category-img-box')).toHaveLength(5);
+    expect(container.querySelectorAll('.visual-category-meta')).toHaveLength(5);
+  });
+
   it('strictly hides categories that have 0 published models (AC-2)', () => {
     const onSelect = vi.fn();
     render(
@@ -86,6 +94,13 @@ describe('VisualCategoryCards', () => {
     // Quraşdırılan Sobalar (1 model) and Bişirmə Panelləri (1 model) must be visible
     expect(screen.getAllByText('Quraşdırılan Sobalar').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Bişirmə Panelləri').length).toBeGreaterThan(0);
+    expect(screen.queryByText(/Ən çox seçim olan/i)).toBeNull(); // Subtitle removed
+    expect(screen.getByText('Böyük Məişət Texnikası')).toBeDefined();
+    // Two published categories fit on one slide; do not fabricate duplicate slides.
+    expect(screen.queryByText(/Quraşdırılan Texnika/i)).toBeNull();
+    expect(screen.queryByText(/Kiçik Məişət Texnikası/i)).toBeNull();
+    expect(screen.queryByText(/İqlim Texnikası/i)).toBeNull();
+    expect(screen.getByText(/Sürüşdürərək digər kateqoriyalara baxın/i)).toBeDefined();
 
     // Boş Kateqoriya 0 Model must be hidden
     expect(screen.queryByText('Boş Kateqoriya 0 Model')).toBeNull();
@@ -106,6 +121,51 @@ describe('VisualCategoryCards', () => {
     expect(ovenButton).not.toBeNull();
     fireEvent.click(ovenButton);
     expect(onSelect).toHaveBeenCalledWith('cat-ovens');
+  });
+
+  it('keeps the admin-selected cover and falls back to media of the same product on load error', () => {
+    const products: Product[] = [
+      {
+        ...mockProducts[0],
+        image: '/uploads/admin-selected-cover.jpg',
+        gallery: ['/media/products/ardo-201gc.jpg'],
+      },
+    ];
+    const { container } = render(
+      <VisualCategoryCards
+        categories={[mockCategories[0]]}
+        products={products}
+        theme={lightTheme}
+        onSelectCategory={vi.fn()}
+      />
+    );
+
+    const cover = container.querySelector('.visual-category-img-inner img') as HTMLImageElement;
+    expect(cover.getAttribute('src')).toBe('/uploads/admin-selected-cover.jpg');
+    fireEvent.error(cover);
+    expect(cover.getAttribute('src')).toBe('/media/products/ardo-201gc.jpg');
+  });
+
+  it('builds a category collage from distinct product covers, preserving the admin-selected first image', () => {
+    const products: Product[] = Array.from({ length: 4 }, (_, index) => ({
+      ...mockProducts[0],
+      id: `oven-${index}`,
+      image: index === 0 ? '/uploads/admin-oven-cover.jpg' : `/media/products/oven-${index}.jpg`,
+    }));
+    const { container } = render(
+      <VisualCategoryCards
+        categories={[mockCategories[0]]}
+        products={products}
+        theme={lightTheme}
+        onSelectCategory={vi.fn()}
+      />
+    );
+    const sources = Array.from(container.querySelectorAll('.category-cover-collage img')).map(
+      (image) => image.getAttribute('src')
+    );
+    expect(sources).toHaveLength(4);
+    expect(sources[0]).toBe('/uploads/admin-oven-cover.jpg');
+    expect(new Set(sources).size).toBe(4);
   });
 
   it('returns null if all categories have 0 models', () => {

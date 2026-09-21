@@ -15,14 +15,8 @@ import {
   Layers,
   Zap,
   Check,
-  ArrowUpDown,
   LayoutGrid,
   Scale,
-  Snowflake,
-  RotateCw,
-  Wind,
-  Thermometer,
-  Package,
   ArrowDownNarrowWide,
   ArrowUpNarrowWide,
   ArrowRight,
@@ -34,23 +28,21 @@ import {
 } from 'lucide-react';
 import { Brand, CatalogCategory, CatalogSettings, Product } from '../types/product';
 import { ThemeColors } from '../types/theme';
-import { ProductCard } from '../components/ProductCard';
 import { ShimmerImage } from '../components/ShimmerImage';
 import { WhatsAppIcon } from '../components/WhatsAppIcon';
 import { useHorizontalScroll } from '../hooks/useHorizontalScroll';
+import { CatalogProductGrid } from '../features/catalog/CatalogProductGrid';
+import { CatalogLocalSearch } from '../features/catalog/CatalogLocalSearch';
+import { CatalogCompareSidebar } from '../features/catalog/CatalogCompareSidebar';
+import { Breadcrumbs } from '../components/Breadcrumbs';
+import { CategoryGlyph } from '../components/CategoryGlyph';
+import { verifiedManufacturingCountry } from '../utils/manufacturingCountry';
+import { CatalogSortOption } from '../features/catalog/catalogSelection';
+import { useCatalogFilters } from '../features/catalog/useCatalogFilters';
+import { useCatalogPagination } from '../features/catalog/useCatalogPagination';
 
 const getCategoryIcon = (id: string, slug?: string) => {
-  const key = `${id} ${slug || ''}`.toLowerCase();
-  if (key.includes('refrigerator') || key.includes('soyuducu')) return <Snowflake size={14} style={{ color: '#0ea5e9', flexShrink: 0 }} />;
-  if (key.includes('washer') || key.includes('paltaryuyan') || key.includes('qabyuyan')) return <RotateCw size={14} style={{ color: '#e31e24', flexShrink: 0 }} />;
-  if (key.includes('oven') || key.includes('soba')) return <Flame size={14} style={{ color: '#f97316', flexShrink: 0 }} />;
-  if (key.includes('cooktop') || key.includes('bisirme') || key.includes('panel')) return <Grid size={14} style={{ color: '#e31e24', flexShrink: 0 }} />;
-  if (key.includes('hood') || key.includes('aspirator')) return <Wind size={14} style={{ color: '#64748b', flexShrink: 0 }} />;
-  if (key.includes('microwave') || key.includes('mikrodalga')) return <Zap size={14} style={{ color: '#eab308', flexShrink: 0 }} />;
-  if (key.includes('conditioner') || key.includes('iqlim') || key.includes('kondisioner')) return <Thermometer size={14} style={{ color: '#3b82f6', flexShrink: 0 }} />;
-  if (key.includes('vacuum') || key.includes('tozsoran')) return <Wind size={14} style={{ color: '#06b6d4', flexShrink: 0 }} />;
-  if (key.includes('airfryer')) return <Flame size={14} style={{ color: '#f43f5e', flexShrink: 0 }} />;
-  return <Package size={14} style={{ color: '#e31e24', flexShrink: 0 }} />;
+  return <CategoryGlyph id={id} slug={slug} compact plain />;
 };
 
 export interface CatalogPageProps {
@@ -78,9 +70,6 @@ export interface CatalogPageProps {
   onClearCompare?: () => void;
 }
 
-type SortOption = 'recommended' | 'price-asc' | 'price-desc' | 'newest' | 'discount';
-type ViewMode = 'grid' | 'list';
-
 export const CatalogPage: React.FC<CatalogPageProps> = ({
   products,
   categories,
@@ -91,13 +80,12 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
   initialCategory,
   initialBrand,
   searchQuery = '',
-  onSearchChange,
   onSelectProduct,
   onWhatsApp,
   onCall,
   onShare,
   onCopyLink,
-  onNavigate,
+  onNavigate: _onNavigate,
   onAddToCart,
   onToggleFavorite,
   favoriteIds = [],
@@ -105,29 +93,50 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
   onToggleCompare,
   onClearCompare,
 }) => {
-  // Published/active items only
-  const activeProducts = useMemo(() => products.filter((p) => p.status !== 'draft'), [products]);
-  const activeCategories = useMemo(
-    () => [...categories].filter((c) => c.active).sort((a, b) => (a.sortOrder ?? 0) - (b.sortOrder ?? 0)),
-    [categories]
-  );
-  const activeBrands = useMemo(() => brands.filter((b) => b.active), [brands]);
-
-  // Filter States
-  const [selectedCategory, setSelectedCategory] = useState<string>(initialCategory || 'all');
-  const [selectedBrands, setSelectedBrands] = useState<string[]>(
-    initialBrand && initialBrand !== 'all' ? [initialBrand] : []
-  );
-  const [onlyDiscounted, setOnlyDiscounted] = useState<boolean>(false);
-  const [onlyWithVideo, setOnlyWithVideo] = useState<boolean>(false);
-  const [selectedEnergyClass, setSelectedEnergyClass] = useState<string>('all');
-  const [selectedMotorType, setSelectedMotorType] = useState<string>('all');
-  const [selectedColor, setSelectedColor] = useState<string>('all');
-  const [sortBy, setSortBy] = useState<SortOption>('recommended');
+  const {
+    activeProducts,
+    activeCategories,
+    activeBrands,
+    selectedCategory,
+    setSelectedCategory,
+    selectedBrands,
+    onlyDiscounted,
+    setOnlyDiscounted,
+    onlyWithVideo,
+    setOnlyWithVideo,
+    selectedEnergyClass,
+    setSelectedEnergyClass,
+    selectedMotorType,
+    setSelectedMotorType,
+    selectedColor,
+    setSelectedColor,
+    sortBy,
+    setSortBy,
+    catalogSearchQuery,
+    setCatalogSearchQuery,
+    minAvailablePrice,
+    maxAvailablePrice,
+    selectedMinPrice,
+    selectedMaxPrice,
+    setMinPrice,
+    setMaxPrice,
+    sortedProducts,
+    resetFilters,
+    toggleBrand,
+    hasActiveFilters,
+    activeFiltersCount,
+  } = useCatalogFilters({
+    products,
+    categories,
+    brands,
+    initialCategory,
+    initialBrand,
+    initialSearch: searchQuery,
+  });
   const [isSortDropdownOpen, setIsSortDropdownOpen] = useState<boolean>(false);
   const sortRef = useRef<HTMLDivElement>(null);
-  const [viewMode, setViewMode] = useState<ViewMode>('grid');
   const [isMobileDrawerOpen, setIsMobileDrawerOpen] = useState<boolean>(false);
+  const catalogWrapperRef = useRef<HTMLDivElement>(null);
 
   // In-Catalog Comparison Modal States
   const [isCompareModalOpen, setIsCompareModalOpen] = useState<boolean>(false);
@@ -150,17 +159,6 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Price range calculation
-  const allPrices = useMemo(
-    () => activeProducts.map((p) => p.price).filter((price): price is number => typeof price === 'number' && price > 0),
-    [activeProducts]
-  );
-  const minAvailablePrice = allPrices.length ? Math.min(...allPrices) : 0;
-  const maxAvailablePrice = allPrices.length ? Math.max(...allPrices) : 5000;
-
-  const [minPrice, setMinPrice] = useState<number>(minAvailablePrice);
-  const [maxPrice, setMaxPrice] = useState<number>(maxAvailablePrice);
-
   // Collapsible sidebar sections - Official brands collapsed by default per Item 20
   const [openSections, setOpenSections] = useState({
     categories: true,
@@ -174,17 +172,6 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
 
-  // Sync initial props if changed from parent
-  useEffect(() => {
-    if (initialCategory) setSelectedCategory(initialCategory);
-  }, [initialCategory]);
-
-  useEffect(() => {
-    if (initialBrand && initialBrand !== 'all') {
-      setSelectedBrands([initialBrand]);
-    }
-  }, [initialBrand]);
-
   // Horizontal Quick Pill Scrolling
   const {
     containerRef: pillsContainerRef,
@@ -196,171 +183,52 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
     activeDependency: selectedCategory,
   });
 
-  // Filter products logic
-  const filteredProducts = useMemo(() => {
-    return activeProducts.filter((p) => {
-      // Search query
-      if (searchQuery.trim()) {
-        const q = searchQuery.toLowerCase().trim();
-        const matchesTitle = p.title?.toLowerCase().includes(q);
-        const matchesModel = p.modelCode?.toLowerCase().includes(q);
-        const matchesCategory = p.category?.toLowerCase().includes(q);
-        const matchesBrand = p.brandId?.toLowerCase().includes(q);
-        if (!matchesTitle && !matchesModel && !matchesCategory && !matchesBrand) return false;
-      }
-
-      // Category
-      if (selectedCategory && selectedCategory !== 'all') {
-        if (p.category !== selectedCategory) return false;
-      }
-
-      // Brands (multi-select)
-      if (selectedBrands.length > 0) {
-        if (!selectedBrands.includes(p.brandId)) return false;
-      }
-
-      // Price filter
-      if (typeof p.price === 'number') {
-        if (p.price < minPrice || p.price > maxPrice) return false;
-      }
-
-      // Only Discounted
-      if (onlyDiscounted && (!p.oldPrice || p.oldPrice <= (p.price || 0))) {
-        return false;
-      }
-
-      // Only With Video
-      if (onlyWithVideo) {
-        const hasVid = !!p.videoUrl || (p.images && p.images.some((img) => img.endsWith('.mp4')));
-        if (!hasVid) return false;
-      }
-
-      // Energy Class Spec
-      if (selectedEnergyClass !== 'all') {
-        const energySpec = p.specifications?.['Enerji sinfi'] || p.specifications?.['Enerji Sinfi'] || '';
-        if (!energySpec.toLowerCase().includes(selectedEnergyClass.toLowerCase())) return false;
-      }
-
-      // Motor Type Spec
-      if (selectedMotorType !== 'all') {
-        const motorSpec = p.specifications?.['Mühərrik'] || p.specifications?.['Kompressor'] || p.title || '';
-        if (!motorSpec.toLowerCase().includes(selectedMotorType.toLowerCase())) return false;
-      }
-
-      // Color Spec
-      if (selectedColor !== 'all') {
-        const colorSpec = p.specifications?.['Rəng'] || p.specifications?.['Material'] || p.title || '';
-        if (!colorSpec.toLowerCase().includes(selectedColor.toLowerCase())) return false;
-      }
-
-      return true;
+  const { viewMode, setViewMode, viewportColumns, visibleProductCount, showMore } =
+    useCatalogPagination({
+      resetKey: [
+        selectedCategory,
+        selectedBrands.join(','),
+        Number(onlyDiscounted),
+        Number(onlyWithVideo),
+        selectedEnergyClass,
+        selectedMotorType,
+        selectedColor,
+        sortBy,
+        catalogSearchQuery,
+      ].join('|'),
     });
-  }, [
-    activeProducts,
-    searchQuery,
-    selectedCategory,
-    selectedBrands,
-    minPrice,
-    maxPrice,
-    onlyDiscounted,
-    onlyWithVideo,
-    selectedEnergyClass,
-    selectedMotorType,
-    selectedColor,
-  ]);
-
-  // Sort products logic
-  const sortedProducts = useMemo(() => {
-    const list = [...filteredProducts];
-    switch (sortBy) {
-      case 'price-asc':
-        return list.sort((a, b) => (a.price || 0) - (b.price || 0));
-      case 'price-desc':
-        return list.sort((a, b) => (b.price || 0) - (a.price || 0));
-      case 'newest':
-        return list.reverse();
-      case 'discount':
-        return list.sort((a, b) => {
-          const discA = a.oldPrice && a.price ? a.oldPrice - a.price : 0;
-          const discB = b.oldPrice && b.price ? b.oldPrice - b.price : 0;
-          return discB - discA;
-        });
-      case 'recommended':
-      default:
-        return list;
-    }
-  }, [filteredProducts, sortBy]);
-
-  // Reset all filters
-  const resetFilters = () => {
-    setSelectedCategory('all');
-    setSelectedBrands([]);
-    setMinPrice(minAvailablePrice);
-    setMaxPrice(maxAvailablePrice);
-    setOnlyDiscounted(false);
-    setOnlyWithVideo(false);
-    setSelectedEnergyClass('all');
-    setSelectedMotorType('all');
-    setSelectedColor('all');
-    if (onSearchChange) onSearchChange('');
-  };
-
-  const hasActiveFilters =
-    selectedCategory !== 'all' ||
-    selectedBrands.length > 0 ||
-    minPrice > minAvailablePrice ||
-    maxPrice < maxAvailablePrice ||
-    onlyDiscounted ||
-    onlyWithVideo ||
-    selectedEnergyClass !== 'all' ||
-    selectedMotorType !== 'all' ||
-    selectedColor !== 'all' ||
-    Boolean(searchQuery.trim());
-
-  // Active filter count for mobile badge
-  const activeFiltersCount = useMemo(() => {
-    let count = 0;
-    if (selectedCategory !== 'all') count++;
-    if (selectedBrands.length > 0) count += selectedBrands.length;
-    if (minPrice > minAvailablePrice || maxPrice < maxAvailablePrice) count++;
-    if (onlyDiscounted) count++;
-    if (onlyWithVideo) count++;
-    if (selectedEnergyClass !== 'all') count++;
-    if (selectedMotorType !== 'all') count++;
-    if (selectedColor !== 'all') count++;
-    return count;
-  }, [
-    selectedCategory,
-    selectedBrands,
-    minPrice,
-    maxPrice,
-    minAvailablePrice,
-    maxAvailablePrice,
-    onlyDiscounted,
-    onlyWithVideo,
-    selectedEnergyClass,
-    selectedMotorType,
-    selectedColor,
-  ]);
-
-  const toggleBrand = (brandId: string) => {
-    setSelectedBrands((prev) =>
-      prev.includes(brandId) ? prev.filter((id) => id !== brandId) : [...prev, brandId]
-    );
-  };
 
   return (
-    <div className="catalog-page-wrapper" style={{ minHeight: '100vh', padding: '16px 0 64px', width: '100%', boxSizing: 'border-box' }}>
-      <div className="catalog-container" style={{ maxWidth: '1360px', margin: '0 auto', padding: '0 clamp(16px, 2.5vw, 36px)', width: '100%', boxSizing: 'border-box' }}>
+    <div
+      ref={catalogWrapperRef}
+      className="catalog-page-wrapper"
+      style={{ minHeight: '100vh', padding: '12px 0 48px', width: '100%', boxSizing: 'border-box' }}
+    >
+      <div
+        className="catalog-container"
+        style={{
+          maxWidth: '1760px',
+          margin: '0 auto',
+          padding: '0 clamp(16px, 1.5vw, 24px)',
+          width: '100%',
+          boxSizing: 'border-box',
+        }}
+      >
+        <div className="catalog-sticky-toolbar">
+          <div className="catalog-inline-breadcrumbs">
+            <Breadcrumbs items={[{ label: 'Kataloq', current: true }]} />
+          </div>
+        </div>
         {/* Page Header Bar */}
         <div
+          className="catalog-page-header"
           style={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
             flexWrap: 'wrap',
-            gap: '16px',
-            marginBottom: '20px',
+            gap: '12px',
+            marginBottom: '16px',
           }}
         >
           <div>
@@ -374,6 +242,9 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 gap: '12px',
+                outline: 'none',
+                border: 'none',
+                boxShadow: 'none',
               }}
             >
               <span>Məhsul Kataloqu</span>
@@ -391,458 +262,47 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                 {sortedProducts.length} model
               </span>
             </h1>
-            <p style={{ fontSize: '13.5px', color: theme.textMuted, margin: '6px 0 0 0' }}>
-              Bütün rəsmi dünya brendlərinin orijinal məişət texnikası modelləri və zəmanətli çeşidləri.
+            <p style={{ fontSize: '13.5px', color: theme.textMuted, margin: '4px 0 0 0' }}>
+              Aktiv kataloqda dərc edilmiş brendləri və məhsul məlumatlarını müqayisə edin.
             </p>
           </div>
 
           {/* Search inside catalog */}
-          <div
-            style={{
-              position: 'relative',
-              width: '100%',
-              maxWidth: '360px',
-            }}
-          >
-            <Search
-              size={16}
-              style={{
-                position: 'absolute',
-                left: '14px',
-                top: '50%',
-                transform: 'translateY(-50%)',
-                color: theme.textMuted,
-              }}
-            />
-            <input
-              type="text"
-              placeholder="Model və ya xüsusiyyət axtar..."
-              value={searchQuery}
-              onChange={(e) => onSearchChange && onSearchChange(e.target.value)}
-              style={{
-                width: '100%',
-                boxSizing: 'border-box',
-                padding: '10px 14px 10px 38px',
-                borderRadius: '12px',
-                border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.12)' : '#e2e8f0'}`,
-                backgroundColor: themeMode === 'dark' ? 'rgba(15, 23, 42, 0.75)' : '#ffffff',
-                color: theme.text,
-                fontSize: '13.5px',
-                outline: 'none',
-                transition: 'border-color 0.15s ease',
-              }}
-              onFocus={(e) => (e.target.style.borderColor = '#e31e24')}
-              onBlur={(e) =>
-                (e.target.style.borderColor = themeMode === 'dark' ? 'rgba(255,255,255,0.12)' : '#e2e8f0')
-              }
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                onClick={() => onSearchChange && onSearchChange('')}
-                style={{
-                  position: 'absolute',
-                  right: '12px',
-                  top: '50%',
-                  transform: 'translateY(-50%)',
-                  background: 'none',
-                  border: 'none',
-                  color: theme.textMuted,
-                  cursor: 'pointer',
-                  padding: '2px',
-                }}
-              >
-                <X size={15} />
-              </button>
-            )}
-          </div>
-        </div>
-
-        {/* Horizontal Quick Category Pills with Auto-Centering */}
-        <div
-          ref={pillsContainerRef}
-          {...dragProps}
-          className="catalog-quick-pills-row no-scrollbar"
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            overflowX: 'auto',
-            paddingBottom: '14px',
-            marginBottom: '16px',
-            cursor: 'grab',
-          }}
-        >
-          <button
-            type="button"
-            className={`catalog-quick-pill ${selectedCategory === 'all' ? 'active' : ''}`}
-            onClick={(e) => {
-              if (hasMoved()) return;
-              scrollItemIntoView(e);
-              setSelectedCategory('all');
-            }}
-            style={{
-              flexShrink: 0,
-              padding: '8px 16px',
-              borderRadius: '20px',
-              backgroundColor: selectedCategory === 'all' ? '#e31e24' : themeMode === 'dark' ? '#1e293b' : '#ffffff',
-              color: selectedCategory === 'all' ? '#ffffff' : theme.text,
-              border: `1px solid ${selectedCategory === 'all' ? '#e31e24' : themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`,
-              fontSize: '13px',
-              fontWeight: 700,
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              transition: 'all 0.15s ease',
-              boxShadow: selectedCategory === 'all' ? '0 4px 12px rgba(227, 30, 36, 0.3)' : 'none',
-            }}
-          >
-            <LayoutGrid size={14} />
-            <span>Bütün Məhsullar</span>
-            <span style={{ fontSize: '11px', opacity: 0.85 }}>({activeProducts.length})</span>
-          </button>
-
-          {activeCategories.map((c) => {
-            const count = activeProducts.filter((p) => p.category === c.id).length;
-            const isSelected = selectedCategory === c.id;
-            return (
-              <button
-                key={c.id}
-                type="button"
-                className={`catalog-quick-pill ${isSelected ? 'active' : ''}`}
-                onClick={(e) => {
-                  if (hasMoved()) return;
-                  scrollItemIntoView(e);
-                  setSelectedCategory(c.id);
-                }}
-                style={{
-                  flexShrink: 0,
-                  padding: '8px 16px',
-                  borderRadius: '20px',
-                  backgroundColor: isSelected ? '#e31e24' : themeMode === 'dark' ? '#1e293b' : '#ffffff',
-                  color: isSelected ? '#ffffff' : theme.text,
-                  border: `1px solid ${isSelected ? '#e31e24' : themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`,
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  transition: 'all 0.15s ease',
-                  boxShadow: isSelected ? '0 4px 12px rgba(227, 30, 36, 0.3)' : 'none',
-                }}
-              >
-                {getCategoryIcon(c.id, c.slug)}
-                <span>{c.name}</span>
-                {count > 0 && <span style={{ fontSize: '11px', opacity: 0.85 }}>({count})</span>}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Top Control Bar: Active Filter Chips, Sort Dropdown & View Mode Switcher */}
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-            flexWrap: 'wrap',
-            gap: '12px',
-            padding: '12px 16px',
-            borderRadius: '14px',
-            backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.5)' : '#ffffff',
-            border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
-            marginBottom: '20px',
-          }}
-        >
-          {/* Mobile Filter Drawer Trigger & Active Filter Tags */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', flex: 1 }}>
-            <button
-              type="button"
-              onClick={() => setIsMobileDrawerOpen(true)}
-              className="catalog-mobile-filter-btn"
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '8px',
-                padding: '8px 14px',
-                borderRadius: '10px',
-                backgroundColor: '#e31e24',
-                color: '#ffffff',
-                border: 'none',
-                fontSize: '13px',
-                fontWeight: 700,
-                cursor: 'pointer',
-              }}
-            >
-              <Filter size={15} />
-              <span>Filtrlər</span>
-              {activeFiltersCount > 0 && (
-                <span
-                  style={{
-                    backgroundColor: '#ffffff',
-                    color: '#e31e24',
-                    borderRadius: '50%',
-                    width: '18px',
-                    height: '18px',
-                    fontSize: '11px',
-                    fontWeight: 800,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  {activeFiltersCount}
-                </span>
-              )}
-            </button>
-
-            {hasActiveFilters && (
-              <button
-                type="button"
-                onClick={resetFilters}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '6px 12px',
-                  borderRadius: '8px',
-                  backgroundColor: 'transparent',
-                  color: '#e31e24',
-                  border: '1px dashed #e31e24',
-                  fontSize: '12.5px',
-                  fontWeight: 600,
-                  cursor: 'pointer',
-                }}
-              >
-                <RotateCcw size={13} />
-                <span>Sıfırla</span>
-              </button>
-            )}
-
-            {/* Selected Brand Badges */}
-            {selectedBrands.map((bId) => {
-              const brand = activeBrands.find((b) => b.id === bId);
-              return (
-                <span
-                  key={bId}
-                  style={{
-                    display: 'inline-flex',
-                    alignItems: 'center',
-                    gap: '6px',
-                    padding: '4px 10px',
-                    borderRadius: '8px',
-                    backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f1f5f9',
-                    border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`,
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    color: theme.text,
-                  }}
-                >
-                  <span>{brand?.name || bId}</span>
-                  <X size={13} style={{ cursor: 'pointer' }} onClick={() => toggleBrand(bId)} />
-                </span>
-              );
-            })}
-
-            {onlyDiscounted && (
-              <span
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  padding: '4px 10px',
-                  borderRadius: '8px',
-                  backgroundColor: 'rgba(227, 30, 36, 0.1)',
-                  color: '#e31e24',
-                  fontSize: '12px',
-                  fontWeight: 700,
-                }}
-              >
-                <span>Endirimli</span>
-                <X size={13} style={{ cursor: 'pointer' }} onClick={() => setOnlyDiscounted(false)} />
-              </span>
-            )}
-          </div>
-
-          {/* Sort Selector & View Mode Switcher */}
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            {/* Custom Interactive Sort Dropdown */}
-            <div ref={sortRef} style={{ position: 'relative' }}>
-              <button
-                type="button"
-                onClick={() => setIsSortDropdownOpen((prev) => !prev)}
-                className="catalog-sort-custom-btn"
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  padding: '8px 14px',
-                  borderRadius: '12px',
-                  backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f8fafc',
-                  border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.12)' : '#cbd5e1'}`,
-                  color: theme.text,
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  boxShadow: '0 2px 6px rgba(0, 0, 0, 0.04)',
-                  transition: 'all 0.15s ease',
-                }}
-                aria-haspopup="listbox"
-                aria-expanded={isSortDropdownOpen}
-              >
-                <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  {sortBy === 'recommended' && <Sparkles size={14} color="#e31e24" />}
-                  {sortBy === 'price-asc' && <ArrowDownNarrowWide size={14} color="#10b981" />}
-                  {sortBy === 'price-desc' && <ArrowUpNarrowWide size={14} color="#3b82f6" />}
-                  {sortBy === 'newest' && <Flame size={14} color="#f97316" />}
-                  {sortBy === 'discount' && <Tag size={14} color="#ec4899" />}
-                  <span>
-                    {sortBy === 'recommended' && 'Tövsiyə olunan'}
-                    {sortBy === 'price-asc' && 'Qiymət: Ucuzdan bahaya'}
-                    {sortBy === 'price-desc' && 'Qiymət: Bahadan ucuza'}
-                    {sortBy === 'newest' && 'Yeni modellər'}
-                    {sortBy === 'discount' && 'Ən böyük endirim'}
-                  </span>
-                </div>
-                <ChevronDown
-                  size={14}
-                  style={{
-                    transform: isSortDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                    transition: 'transform 0.2s ease',
-                    color: theme.textMuted,
-                  }}
-                />
-              </button>
-
-              {/* Popover Menu */}
-              {isSortDropdownOpen && (
-                <div
-                  className="catalog-sort-popover"
-                  style={{
-                    position: 'absolute',
-                    top: 'calc(100% + 6px)',
-                    right: 0,
-                    minWidth: '220px',
-                    backgroundColor: themeMode === 'dark' ? '#0f172a' : '#ffffff',
-                    border: `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : '#e2e8f0'}`,
-                    borderRadius: '14px',
-                    boxShadow: '0 12px 32px rgba(0, 0, 0, 0.18)',
-                    padding: '6px',
-                    zIndex: 50,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '2px',
-                    backdropFilter: 'blur(12px)',
-                  }}
-                >
-                  {[
-                    { value: 'recommended' as SortOption, label: 'Tövsiyə olunan', icon: <Sparkles size={14} color="#e31e24" /> },
-                    { value: 'price-asc' as SortOption, label: 'Qiymət: Ucuzdan bahaya', icon: <ArrowDownNarrowWide size={14} color="#10b981" /> },
-                    { value: 'price-desc' as SortOption, label: 'Qiymət: Bahadan ucuza', icon: <ArrowUpNarrowWide size={14} color="#3b82f6" /> },
-                    { value: 'newest' as SortOption, label: 'Yeni modellər', icon: <Flame size={14} color="#f97316" /> },
-                    { value: 'discount' as SortOption, label: 'Ən böyük endirim', icon: <Tag size={14} color="#ec4899" /> },
-                  ].map((opt) => {
-                    const isSelected = sortBy === opt.value;
-                    return (
-                      <button
-                        key={opt.value}
-                        type="button"
-                        onClick={() => {
-                          setSortBy(opt.value);
-                          setIsSortDropdownOpen(false);
-                        }}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'space-between',
-                          padding: '9px 12px',
-                          borderRadius: '8px',
-                          backgroundColor: isSelected
-                            ? (themeMode === 'dark' ? 'rgba(227, 30, 36, 0.15)' : 'rgba(227, 30, 36, 0.08)')
-                            : 'transparent',
-                          color: isSelected ? '#e31e24' : theme.text,
-                          border: 'none',
-                          fontSize: '13px',
-                          fontWeight: isSelected ? 700 : 500,
-                          cursor: 'pointer',
-                          textAlign: 'left',
-                          transition: 'background-color 0.15s ease',
-                        }}
-                      >
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          {opt.icon}
-                          <span>{opt.label}</span>
-                        </div>
-                        {isSelected && <Check size={14} color="#e31e24" strokeWidth={2.5} />}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-
-            {/* View Mode Toggle */}
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f1f5f9',
-                borderRadius: '8px',
-                padding: '2px',
-                border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => setViewMode('grid')}
-                title="Şəbəkə görünüşü"
-                style={{
-                  padding: '6px',
-                  borderRadius: '6px',
-                  backgroundColor: viewMode === 'grid' ? (themeMode === 'dark' ? '#334155' : '#ffffff') : 'transparent',
-                  color: viewMode === 'grid' ? '#e31e24' : theme.textMuted,
-                  border: 'none',
-                  cursor: 'pointer',
-                  display: 'flex',
-                }}
-              >
-                <Grid size={15} />
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('list')}
-                title="Siyahı görünüşü"
-                style={{
-                  padding: '6px',
-                  borderRadius: '6px',
-                  backgroundColor: viewMode === 'list' ? (themeMode === 'dark' ? '#334155' : '#ffffff') : 'transparent',
-                  color: viewMode === 'list' ? '#e31e24' : theme.textMuted,
-                  border: 'none',
-                  cursor: 'pointer',
-                  display: 'flex',
-                }}
-              >
-                <List size={15} />
-              </button>
-            </div>
-          </div>
+          <CatalogLocalSearch
+            value={catalogSearchQuery}
+            onChange={setCatalogSearchQuery}
+            products={activeProducts}
+            categories={activeCategories}
+            brands={activeBrands}
+            theme={theme}
+          />
         </div>
 
         {/* 2-Column Catalog Body: Left Sidebar Filters (Desktop) + Right Products Grid */}
-        <div style={{ display: 'flex', gap: '24px', alignItems: 'start', width: '100%' }}>
+        <div
+          className="catalog-body-layout"
+          style={{ display: 'flex', gap: '20px', alignItems: 'start', width: '100%' }}
+        >
           {/* Desktop Left Sidebar Filters (Hidden on small screens via CSS) */}
           <aside
             className="catalog-desktop-sidebar"
             style={{
-              width: '250px',
+              width: '240px',
               flexShrink: 0,
               display: 'flex',
               flexDirection: 'column',
               gap: '16px',
             }}
           >
+            {onToggleCompare && (
+              <CatalogCompareSidebar
+                products={comparedProducts}
+                theme={theme}
+                onRemove={onToggleCompare}
+                onClear={onClearCompare}
+                onOpen={() => setIsCompareModalOpen(true)}
+              />
+            )}
             {/* Filter Group: Kateqoriyalar */}
             <div
               style={{
@@ -862,15 +322,35 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                   userSelect: 'none',
                 }}
               >
-                <span style={{ fontSize: '14px', fontWeight: 800, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: 800,
+                    color: theme.text,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
                   <Layers size={16} color="#e31e24" />
                   Kateqoriyalar
                 </span>
-                {openSections.categories ? <ChevronUp size={16} color={theme.textMuted} /> : <ChevronDown size={16} color={theme.textMuted} />}
+                {openSections.categories ? (
+                  <ChevronUp size={16} color={theme.textMuted} />
+                ) : (
+                  <ChevronDown size={16} color={theme.textMuted} />
+                )}
               </div>
 
               {openSections.categories && (
-                <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                <div
+                  style={{
+                    marginTop: '12px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px',
+                  }}
+                >
                   <button
                     type="button"
                     onClick={() => setSelectedCategory('all')}
@@ -880,7 +360,12 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                       justifyContent: 'space-between',
                       padding: '7px 10px',
                       borderRadius: '8px',
-                      backgroundColor: selectedCategory === 'all' ? (themeMode === 'dark' ? '#334155' : '#f1f5f9') : 'transparent',
+                      backgroundColor:
+                        selectedCategory === 'all'
+                          ? themeMode === 'dark'
+                            ? '#334155'
+                            : '#f1f5f9'
+                          : 'transparent',
                       color: selectedCategory === 'all' ? '#e31e24' : theme.text,
                       border: 'none',
                       fontSize: '13px',
@@ -893,7 +378,9 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                       <LayoutGrid size={14} style={{ color: '#e31e24' }} />
                       <span>Bütün Kateqoriyalar</span>
                     </span>
-                    <span style={{ fontSize: '11px', color: theme.textMuted }}>{activeProducts.length}</span>
+                    <span style={{ fontSize: '11px', color: theme.textMuted }}>
+                      {activeProducts.length}
+                    </span>
                   </button>
 
                   {activeCategories.map((cat) => {
@@ -910,7 +397,11 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                           justifyContent: 'space-between',
                           padding: '7px 10px',
                           borderRadius: '8px',
-                          backgroundColor: isSelected ? (themeMode === 'dark' ? '#334155' : '#f1f5f9') : 'transparent',
+                          backgroundColor: isSelected
+                            ? themeMode === 'dark'
+                              ? '#334155'
+                              : '#f1f5f9'
+                            : 'transparent',
                           color: isSelected ? '#e31e24' : theme.text,
                           border: 'none',
                           fontSize: '13px',
@@ -920,7 +411,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                         }}
                       >
                         <span style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                          {getCategoryIcon(cat.id, cat.slug)}
+                          <CategoryGlyph id={cat.id} slug={cat.slug} compact />
                           <span>{cat.name}</span>
                         </span>
                         <span style={{ fontSize: '11px', color: theme.textMuted }}>{count}</span>
@@ -950,15 +441,35 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                   userSelect: 'none',
                 }}
               >
-                <span style={{ fontSize: '14px', fontWeight: 800, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: 800,
+                    color: theme.text,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
                   <Tag size={16} color="#e31e24" />
                   Rəsmi Brendlər
                 </span>
-                {openSections.brands ? <ChevronUp size={16} color={theme.textMuted} /> : <ChevronDown size={16} color={theme.textMuted} />}
+                {openSections.brands ? (
+                  <ChevronUp size={16} color={theme.textMuted} />
+                ) : (
+                  <ChevronDown size={16} color={theme.textMuted} />
+                )}
               </div>
 
               {openSections.brands && (
-                <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div
+                  style={{
+                    marginTop: '12px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}
+                >
                   {activeBrands.map((brand) => {
                     const count = activeProducts.filter((p) => p.brandId === brand.id).length;
                     const isChecked = selectedBrands.includes(brand.id);
@@ -983,7 +494,11 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                           padding: '6px 8px',
                           borderRadius: '8px',
                           cursor: 'pointer',
-                          backgroundColor: isChecked ? (themeMode === 'dark' ? 'rgba(227, 30, 36, 0.1)' : 'rgba(227, 30, 36, 0.05)') : 'transparent',
+                          backgroundColor: isChecked
+                            ? themeMode === 'dark'
+                              ? 'rgba(227, 30, 36, 0.1)'
+                              : 'rgba(227, 30, 36, 0.05)'
+                            : 'transparent',
                         }}
                       >
                         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -1011,15 +526,25 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                               style={{ objectFit: 'contain' }}
                             />
                           ) : (
-                            <span style={{ fontSize: '11px', fontWeight: 800, color: theme.text }}>{brand.name}</span>
+                            <span style={{ fontSize: '11px', fontWeight: 800, color: theme.text }}>
+                              {brand.name}
+                            </span>
                           )}
 
-                          <span style={{ fontSize: '13px', fontWeight: isChecked ? 700 : 500, color: theme.text }}>
+                          <span
+                            style={{
+                              fontSize: '13px',
+                              fontWeight: isChecked ? 700 : 500,
+                              color: theme.text,
+                            }}
+                          >
                             {brand.name}
                           </span>
                         </div>
 
-                        <span style={{ fontSize: '11.5px', color: theme.textMuted }}>({count})</span>
+                        <span style={{ fontSize: '11.5px', color: theme.textMuted }}>
+                          ({count})
+                        </span>
                       </div>
                     );
                   })}
@@ -1046,23 +571,52 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                   userSelect: 'none',
                 }}
               >
-                <span style={{ fontSize: '14px', fontWeight: 800, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: 800,
+                    color: theme.text,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
                   <SlidersHorizontal size={16} color="#e31e24" />
                   Qiymət Aralığı (₼)
                 </span>
-                {openSections.price ? <ChevronUp size={16} color={theme.textMuted} /> : <ChevronDown size={16} color={theme.textMuted} />}
+                {openSections.price ? (
+                  <ChevronUp size={16} color={theme.textMuted} />
+                ) : (
+                  <ChevronDown size={16} color={theme.textMuted} />
+                )}
               </div>
 
               {openSections.price && (
-                <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                <div
+                  style={{
+                    marginTop: '14px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '12px',
+                  }}
+                >
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                     <div style={{ flex: 1 }}>
-                      <label style={{ fontSize: '11px', color: theme.textMuted, display: 'block', marginBottom: '4px' }}>Min</label>
+                      <label
+                        style={{
+                          fontSize: '11px',
+                          color: theme.textMuted,
+                          display: 'block',
+                          marginBottom: '4px',
+                        }}
+                      >
+                        Min
+                      </label>
                       <input
                         type="number"
-                        value={minPrice}
+                        value={selectedMinPrice}
                         min={minAvailablePrice}
-                        max={maxPrice}
+                        max={selectedMaxPrice}
                         onChange={(e) => setMinPrice(Number(e.target.value))}
                         style={{
                           width: '100%',
@@ -1079,11 +633,20 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                     </div>
                     <span style={{ color: theme.textMuted, paddingTop: '18px' }}>—</span>
                     <div style={{ flex: 1 }}>
-                      <label style={{ fontSize: '11px', color: theme.textMuted, display: 'block', marginBottom: '4px' }}>Maks</label>
+                      <label
+                        style={{
+                          fontSize: '11px',
+                          color: theme.textMuted,
+                          display: 'block',
+                          marginBottom: '4px',
+                        }}
+                      >
+                        Maks
+                      </label>
                       <input
                         type="number"
-                        value={maxPrice}
-                        min={minPrice}
+                        value={selectedMaxPrice}
+                        min={selectedMinPrice}
                         max={maxAvailablePrice}
                         onChange={(e) => setMaxPrice(Number(e.target.value))}
                         style={{
@@ -1154,15 +717,35 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                   userSelect: 'none',
                 }}
               >
-                <span style={{ fontSize: '14px', fontWeight: 800, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: 800,
+                    color: theme.text,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
                   <Sparkles size={16} color="#e31e24" />
                   Xüsusi Təkliflər
                 </span>
-                {openSections.special ? <ChevronUp size={16} color={theme.textMuted} /> : <ChevronDown size={16} color={theme.textMuted} />}
+                {openSections.special ? (
+                  <ChevronUp size={16} color={theme.textMuted} />
+                ) : (
+                  <ChevronDown size={16} color={theme.textMuted} />
+                )}
               </div>
 
               {openSections.special && (
-                <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                <div
+                  style={{
+                    marginTop: '12px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '8px',
+                  }}
+                >
                   <label
                     style={{
                       display: 'flex',
@@ -1225,18 +808,46 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                   userSelect: 'none',
                 }}
               >
-                <span style={{ fontSize: '14px', fontWeight: 800, color: theme.text, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span
+                  style={{
+                    fontSize: '14px',
+                    fontWeight: 800,
+                    color: theme.text,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                  }}
+                >
                   <Zap size={16} color="#e31e24" />
                   Texniki Parametrlər
                 </span>
-                {openSections.specifications ? <ChevronUp size={16} color={theme.textMuted} /> : <ChevronDown size={16} color={theme.textMuted} />}
+                {openSections.specifications ? (
+                  <ChevronUp size={16} color={theme.textMuted} />
+                ) : (
+                  <ChevronDown size={16} color={theme.textMuted} />
+                )}
               </div>
 
               {openSections.specifications && (
-                <div style={{ marginTop: '14px', display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                <div
+                  style={{
+                    marginTop: '14px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '14px',
+                  }}
+                >
                   {/* Energy Class */}
                   <div>
-                    <label style={{ fontSize: '11.5px', fontWeight: 700, color: theme.textMuted, display: 'block', marginBottom: '6px' }}>
+                    <label
+                      style={{
+                        fontSize: '11.5px',
+                        fontWeight: 700,
+                        color: theme.textMuted,
+                        display: 'block',
+                        marginBottom: '6px',
+                      }}
+                    >
                       Enerji Sinfi
                     </label>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
@@ -1248,7 +859,12 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                           style={{
                             padding: '4px 10px',
                             borderRadius: '6px',
-                            backgroundColor: selectedEnergyClass === ec ? '#e31e24' : themeMode === 'dark' ? '#1e293b' : '#f1f5f9',
+                            backgroundColor:
+                              selectedEnergyClass === ec
+                                ? '#e31e24'
+                                : themeMode === 'dark'
+                                  ? '#1e293b'
+                                  : '#f1f5f9',
                             color: selectedEnergyClass === ec ? '#ffffff' : theme.text,
                             border: `1px solid ${selectedEnergyClass === ec ? '#e31e24' : themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
                             fontSize: '11.5px',
@@ -1264,7 +880,15 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
 
                   {/* Motor type */}
                   <div>
-                    <label style={{ fontSize: '11.5px', fontWeight: 700, color: theme.textMuted, display: 'block', marginBottom: '6px' }}>
+                    <label
+                      style={{
+                        fontSize: '11.5px',
+                        fontWeight: 700,
+                        color: theme.textMuted,
+                        display: 'block',
+                        marginBottom: '6px',
+                      }}
+                    >
                       Mühərrik / Kompressor
                     </label>
                     <div style={{ display: 'flex', gap: '6px' }}>
@@ -1277,7 +901,12 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                             flex: 1,
                             padding: '5px 8px',
                             borderRadius: '6px',
-                            backgroundColor: selectedMotorType === m ? '#e31e24' : themeMode === 'dark' ? '#1e293b' : '#f1f5f9',
+                            backgroundColor:
+                              selectedMotorType === m
+                                ? '#e31e24'
+                                : themeMode === 'dark'
+                                  ? '#1e293b'
+                                  : '#f1f5f9',
                             color: selectedMotorType === m ? '#ffffff' : theme.text,
                             border: `1px solid ${selectedMotorType === m ? '#e31e24' : themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
                             fontSize: '11.5px',
@@ -1293,7 +922,15 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
 
                   {/* Color/Material */}
                   <div>
-                    <label style={{ fontSize: '11.5px', fontWeight: 700, color: theme.textMuted, display: 'block', marginBottom: '6px' }}>
+                    <label
+                      style={{
+                        fontSize: '11.5px',
+                        fontWeight: 700,
+                        color: theme.textMuted,
+                        display: 'block',
+                        marginBottom: '6px',
+                      }}
+                    >
                       Rəng / Material
                     </label>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
@@ -1305,7 +942,12 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                           style={{
                             padding: '4px 10px',
                             borderRadius: '6px',
-                            backgroundColor: selectedColor === c ? '#e31e24' : themeMode === 'dark' ? '#1e293b' : '#f1f5f9',
+                            backgroundColor:
+                              selectedColor === c
+                                ? '#e31e24'
+                                : themeMode === 'dark'
+                                  ? '#1e293b'
+                                  : '#f1f5f9',
                             color: selectedColor === c ? '#ffffff' : theme.text,
                             border: `1px solid ${selectedColor === c ? '#e31e24' : themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
                             fontSize: '11.5px',
@@ -1325,6 +967,439 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
 
           {/* Right Area: Products Grid / List */}
           <main style={{ flex: 1, minWidth: 0 }}>
+            {/* Horizontal Quick Category Pills with Auto-Centering */}
+            <div
+              ref={pillsContainerRef}
+              {...dragProps}
+              className="catalog-quick-pills-row no-scrollbar"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                overflowX: 'auto',
+                paddingBottom: '8px',
+                marginBottom: '12px',
+                cursor: 'grab',
+              }}
+            >
+              <button
+                type="button"
+                className={`catalog-quick-pill ${selectedCategory === 'all' ? 'active' : ''}`}
+                onClick={(e) => {
+                  if (hasMoved()) return;
+                  scrollItemIntoView(e);
+                  setSelectedCategory('all');
+                }}
+                style={{
+                  flexShrink: 0,
+                  padding: '8px 16px',
+                  borderRadius: '20px',
+                  backgroundColor:
+                    selectedCategory === 'all'
+                      ? '#e31e24'
+                      : themeMode === 'dark'
+                        ? '#1e293b'
+                        : '#ffffff',
+                  color: selectedCategory === 'all' ? '#ffffff' : theme.text,
+                  border: `1px solid ${selectedCategory === 'all' ? '#e31e24' : themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`,
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  transition: 'all 0.15s ease',
+                  boxShadow:
+                    selectedCategory === 'all' ? '0 4px 12px rgba(227, 30, 36, 0.3)' : 'none',
+                }}
+              >
+                <LayoutGrid size={14} />
+                <span>Bütün Məhsullar</span>
+                <span style={{ fontSize: '11px', opacity: 0.85 }}>({activeProducts.length})</span>
+              </button>
+
+              {activeCategories.map((c) => {
+                const count = activeProducts.filter((p) => p.category === c.id).length;
+                const isSelected = selectedCategory === c.id;
+                return (
+                  <button
+                    key={c.id}
+                    type="button"
+                    className={`catalog-quick-pill ${isSelected ? 'active' : ''}`}
+                    onClick={(e) => {
+                      if (hasMoved()) return;
+                      scrollItemIntoView(e);
+                      setSelectedCategory(c.id);
+                    }}
+                    style={{
+                      flexShrink: 0,
+                      padding: '8px 16px',
+                      borderRadius: '20px',
+                      backgroundColor: isSelected
+                        ? '#e31e24'
+                        : themeMode === 'dark'
+                          ? '#1e293b'
+                          : '#ffffff',
+                      color: isSelected ? '#ffffff' : theme.text,
+                      border: `1px solid ${isSelected ? '#e31e24' : themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`,
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      transition: 'all 0.15s ease',
+                      boxShadow: isSelected ? '0 4px 12px rgba(227, 30, 36, 0.3)' : 'none',
+                    }}
+                  >
+                    {getCategoryIcon(c.id, c.slug)}
+                    <span>{c.name}</span>
+                    {count > 0 && (
+                      <span style={{ fontSize: '11px', opacity: 0.85 }}>({count})</span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {/* Top Control Bar: Active Filter Chips, Sort Dropdown & View Mode Switcher */}
+            <div
+              className="catalog-top-controls"
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                flexWrap: 'wrap',
+                gap: '12px',
+                padding: '10px 16px',
+                borderRadius: '14px',
+                backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.5)' : '#ffffff',
+                border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
+                marginBottom: '14px',
+              }}
+            >
+              {/* Mobile Filter Drawer Trigger & Active Filter Tags */}
+              <div
+                className="catalog-filter-actions"
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  flexWrap: 'wrap',
+                  flex: 1,
+                }}
+              >
+                <button
+                  type="button"
+                  onClick={() => setIsMobileDrawerOpen(true)}
+                  className="catalog-mobile-filter-btn"
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    padding: '8px 14px',
+                    borderRadius: '10px',
+                    backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                    color: '#dc2626',
+                    border: 'none',
+                    fontSize: '13px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <Filter size={15} />
+                  <span>Filtrlər</span>
+                  {activeFiltersCount > 0 && (
+                    <span
+                      style={{
+                        backgroundColor: '#ffffff',
+                        color: '#e31e24',
+                        borderRadius: '50%',
+                        width: '18px',
+                        height: '18px',
+                        fontSize: '11px',
+                        fontWeight: 800,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {activeFiltersCount}
+                    </span>
+                  )}
+                </button>
+
+                {hasActiveFilters && (
+                  <button
+                    type="button"
+                    onClick={resetFilters}
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '6px 12px',
+                      borderRadius: '8px',
+                      backgroundColor: 'transparent',
+                      color: '#e31e24',
+                      border: '1px dashed #e31e24',
+                      fontSize: '12.5px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    <RotateCcw size={13} />
+                    <span>Sıfırla</span>
+                  </button>
+                )}
+
+                {/* Selected Brand Badges */}
+                {selectedBrands.map((bId) => {
+                  const brand = activeBrands.find((b) => b.id === bId);
+                  return (
+                    <span
+                      key={bId}
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        padding: '4px 10px',
+                        borderRadius: '8px',
+                        backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f1f5f9',
+                        border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`,
+                        fontSize: '12px',
+                        fontWeight: 600,
+                        color: theme.text,
+                      }}
+                    >
+                      <span>{brand?.name || bId}</span>
+                      <X size={13} style={{ cursor: 'pointer' }} onClick={() => toggleBrand(bId)} />
+                    </span>
+                  );
+                })}
+
+                {onlyDiscounted && (
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      padding: '4px 10px',
+                      borderRadius: '8px',
+                      backgroundColor: 'rgba(227, 30, 36, 0.1)',
+                      color: '#e31e24',
+                      fontSize: '12px',
+                      fontWeight: 700,
+                    }}
+                  >
+                    <span>Endirimli</span>
+                    <X
+                      size={13}
+                      style={{ cursor: 'pointer' }}
+                      onClick={() => setOnlyDiscounted(false)}
+                    />
+                  </span>
+                )}
+              </div>
+
+              {/* Sort Selector & View Mode Switcher */}
+              <div
+                className="catalog-sort-controls"
+                style={{ display: 'flex', alignItems: 'center', gap: '12px' }}
+              >
+                {/* Custom Interactive Sort Dropdown */}
+                <div ref={sortRef} style={{ position: 'relative' }}>
+                  <button
+                    type="button"
+                    onClick={() => setIsSortDropdownOpen((prev) => !prev)}
+                    className="catalog-sort-custom-btn"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '8px 14px',
+                      borderRadius: '12px',
+                      backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f8fafc',
+                      border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.12)' : '#cbd5e1'}`,
+                      color: theme.text,
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      cursor: 'pointer',
+                      boxShadow: '0 2px 6px rgba(0, 0, 0, 0.04)',
+                      transition: 'all 0.15s ease',
+                    }}
+                    aria-haspopup="listbox"
+                    aria-expanded={isSortDropdownOpen}
+                  >
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      {sortBy === 'recommended' && <Sparkles size={14} color="#e31e24" />}
+                      {sortBy === 'price-asc' && <ArrowDownNarrowWide size={14} color="#10b981" />}
+                      {sortBy === 'price-desc' && <ArrowUpNarrowWide size={14} color="#3b82f6" />}
+                      {sortBy === 'newest' && <Flame size={14} color="#f97316" />}
+                      {sortBy === 'discount' && <Tag size={14} color="#ec4899" />}
+                      <span>
+                        {sortBy === 'recommended' && 'Tövsiyə olunan'}
+                        {sortBy === 'price-asc' && 'Qiymət: Ucuzdan bahaya'}
+                        {sortBy === 'price-desc' && 'Qiymət: Bahadan ucuza'}
+                        {sortBy === 'newest' && 'Yeni modellər'}
+                        {sortBy === 'discount' && 'Ən böyük endirim'}
+                      </span>
+                    </div>
+                    <ChevronDown
+                      size={14}
+                      style={{
+                        transform: isSortDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                        transition: 'transform 0.2s ease',
+                        color: theme.textMuted,
+                      }}
+                    />
+                  </button>
+
+                  {/* Popover Menu */}
+                  {isSortDropdownOpen && (
+                    <div
+                      className="catalog-sort-popover"
+                      style={{
+                        position: 'absolute',
+                        top: 'calc(100% + 6px)',
+                        right: 0,
+                        minWidth: '220px',
+                        backgroundColor: themeMode === 'dark' ? '#0f172a' : '#ffffff',
+                        border: `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : '#e2e8f0'}`,
+                        borderRadius: '14px',
+                        boxShadow: '0 12px 32px rgba(0, 0, 0, 0.18)',
+                        padding: '6px',
+                        zIndex: 50,
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '2px',
+                        backdropFilter: 'blur(12px)',
+                      }}
+                    >
+                      {[
+                        {
+                          value: 'recommended' as CatalogSortOption,
+                          label: 'Tövsiyə olunan',
+                          icon: <Sparkles size={14} color="#e31e24" />,
+                        },
+                        {
+                          value: 'price-asc' as CatalogSortOption,
+                          label: 'Qiymət: Ucuzdan bahaya',
+                          icon: <ArrowDownNarrowWide size={14} color="#10b981" />,
+                        },
+                        {
+                          value: 'price-desc' as CatalogSortOption,
+                          label: 'Qiymət: Bahadan ucuza',
+                          icon: <ArrowUpNarrowWide size={14} color="#3b82f6" />,
+                        },
+                        {
+                          value: 'newest' as CatalogSortOption,
+                          label: 'Yeni modellər',
+                          icon: <Flame size={14} color="#f97316" />,
+                        },
+                        {
+                          value: 'discount' as CatalogSortOption,
+                          label: 'Ən böyük endirim',
+                          icon: <Tag size={14} color="#ec4899" />,
+                        },
+                      ].map((opt) => {
+                        const isSelected = sortBy === opt.value;
+                        return (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => {
+                              setSortBy(opt.value);
+                              setIsSortDropdownOpen(false);
+                            }}
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'space-between',
+                              padding: '9px 12px',
+                              borderRadius: '8px',
+                              backgroundColor: isSelected
+                                ? themeMode === 'dark'
+                                  ? 'rgba(227, 30, 36, 0.15)'
+                                  : 'rgba(227, 30, 36, 0.08)'
+                                : 'transparent',
+                              color: isSelected ? '#e31e24' : theme.text,
+                              border: 'none',
+                              fontSize: '13px',
+                              fontWeight: isSelected ? 700 : 500,
+                              cursor: 'pointer',
+                              textAlign: 'left',
+                              transition: 'background-color 0.15s ease',
+                            }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              {opt.icon}
+                              <span>{opt.label}</span>
+                            </div>
+                            {isSelected && <Check size={14} color="#e31e24" strokeWidth={2.5} />}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+
+                {/* View Mode Toggle */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f1f5f9',
+                    borderRadius: '8px',
+                    padding: '2px',
+                    border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('grid')}
+                    title="Şəbəkə görünüşü"
+                    style={{
+                      padding: '6px',
+                      borderRadius: '6px',
+                      backgroundColor:
+                        viewMode === 'grid'
+                          ? themeMode === 'dark'
+                            ? '#334155'
+                            : '#ffffff'
+                          : 'transparent',
+                      color: viewMode === 'grid' ? '#e31e24' : theme.textMuted,
+                      border: 'none',
+                      cursor: 'pointer',
+                      display: 'flex',
+                    }}
+                  >
+                    <Grid size={15} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('list')}
+                    title="Siyahı görünüşü"
+                    style={{
+                      padding: '6px',
+                      borderRadius: '6px',
+                      backgroundColor:
+                        viewMode === 'list'
+                          ? themeMode === 'dark'
+                            ? '#334155'
+                            : '#ffffff'
+                          : 'transparent',
+                      color: viewMode === 'list' ? '#e31e24' : theme.textMuted,
+                      border: 'none',
+                      cursor: 'pointer',
+                      display: 'flex',
+                    }}
+                  >
+                    <List size={15} />
+                  </button>
+                </div>
+              </div>
+            </div>
+
             {!sortedProducts.length ? (
               <div
                 style={{
@@ -1350,11 +1425,26 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                 >
                   <Search size={28} />
                 </div>
-                <h3 style={{ fontSize: '18px', fontWeight: 800, color: theme.text, margin: '0 0 8px 0' }}>
+                <h3
+                  style={{
+                    fontSize: '18px',
+                    fontWeight: 800,
+                    color: theme.text,
+                    margin: '0 0 8px 0',
+                  }}
+                >
                   Axtarışınıza uyğun məhsul tapılmadı
                 </h3>
-                <p style={{ fontSize: '13.5px', color: theme.textMuted, maxWidth: '420px', margin: '0 auto 20px' }}>
-                  Seçilmiş kateqoriya, brend və ya qiymət aralığı üzrə heç bir model aşkar edilmədi. Zəhmət olmasa filtrləri dəyişin.
+                <p
+                  style={{
+                    fontSize: '13.5px',
+                    color: theme.textMuted,
+                    maxWidth: '420px',
+                    margin: '0 auto 20px',
+                  }}
+                >
+                  Seçilmiş kateqoriya, brend və ya qiymət aralığı üzrə heç bir model aşkar edilmədi.
+                  Zəhmət olmasa filtrləri dəyişin.
                 </p>
                 <button
                   type="button"
@@ -1362,60 +1452,55 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                   style={{
                     padding: '10px 24px',
                     borderRadius: '12px',
-                    backgroundColor: '#e31e24',
-                    color: '#ffffff',
+                    backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                    color: '#dc2626',
                     border: 'none',
                     fontSize: '13.5px',
                     fontWeight: 700,
                     cursor: 'pointer',
-                    boxShadow: '0 4px 14px rgba(227, 30, 36, 0.35)',
+                    boxShadow: 'none',
                   }}
                 >
                   Bütün filtrləri sıfırla
                 </button>
               </div>
             ) : (
-              <div
-                className={`catalog-products-container ${viewMode === 'list' ? 'is-list-view' : 'is-grid-view'}`}
-                style={{
-                  display: 'grid',
-                  gridTemplateColumns:
-                    viewMode === 'list' ? '1fr' : 'repeat(3, minmax(0, 1fr))',
-                  gap: '20px',
-                  width: '100%',
-                }}
-              >
-                {sortedProducts.map((product) => {
-                  const brand = activeBrands.find((b) => b.id === product.brandId);
-                  return (
-                    <ProductCard
-                      key={product.id}
-                      product={product}
-                      theme={theme}
-                      brandName={brand?.name}
-                      brandOrigin={brand?.originCountry ? `${brand.originCountry} brendi` : ''}
-                      whatsappButtonText={settings?.whatsappButtonText}
-                      callButtonText={settings?.callButtonText}
-                      shareButtonText={settings?.shareButtonText}
-                      onSelect={onSelectProduct}
-                      onShare={onShare}
-                      onWhatsApp={onWhatsApp}
-                      onCall={onCall}
-                      onCopyLink={onCopyLink}
-                      onAddToCart={onAddToCart}
-                      onToggleFavorite={onToggleFavorite}
-                      isFavorite={favoriteIds.includes(product.id)}
-                      onToggleCompare={onToggleCompare}
-                      isComparing={comparisonIds.includes(product.id)}
-                    />
-                  );
-                })}
-              </div>
+              <>
+                <CatalogProductGrid
+                  products={sortedProducts.slice(0, visibleProductCount)}
+                  brands={activeBrands}
+                  viewMode={viewMode}
+                  theme={theme}
+                  settings={settings}
+                  favoriteIds={favoriteIds}
+                  comparisonIds={comparisonIds}
+                  onSelectProduct={onSelectProduct}
+                  onShare={onShare}
+                  onWhatsApp={onWhatsApp}
+                  onCall={onCall}
+                  onCopyLink={onCopyLink}
+                  onAddToCart={onAddToCart}
+                  onToggleFavorite={onToggleFavorite}
+                  onToggleCompare={onToggleCompare}
+                />
+                {sortedProducts.length > visibleProductCount && (
+                  <button type="button" className="catalog-load-more" onClick={showMore}>
+                    Daha çox bax{' '}
+                    <span>
+                      (
+                      {Math.min(
+                        sortedProducts.length - visibleProductCount,
+                        8 * (viewMode === 'list' ? 1 : viewportColumns)
+                      )}{' '}
+                      model)
+                    </span>
+                  </button>
+                )}
+              </>
             )}
           </main>
         </div>
       </div>
-
       {/* Floating Bottom Comparison Dock */}
       {comparisonIds && comparisonIds.length > 0 && (
         <div
@@ -1428,7 +1513,8 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
             zIndex: 90,
             maxWidth: '94vw',
             width: '680px',
-            backgroundColor: themeMode === 'dark' ? 'rgba(15, 23, 42, 0.94)' : 'rgba(255, 255, 255, 0.96)',
+            backgroundColor:
+              themeMode === 'dark' ? 'rgba(15, 23, 42, 0.94)' : 'rgba(255, 255, 255, 0.96)',
             backdropFilter: 'blur(16px)',
             WebkitBackdropFilter: 'blur(16px)',
             border: `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(226, 232, 240, 0.95)'}`,
@@ -1762,7 +1848,14 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                                 minWidth: '200px',
                               }}
                             >
-                              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  flexDirection: 'column',
+                                  alignItems: 'center',
+                                  gap: '8px',
+                                }}
+                              >
                                 {/* Product Image */}
                                 <div
                                   style={{
@@ -1779,7 +1872,9 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                                   }}
                                 >
                                   <ShimmerImage
-                                    src={p.image || (Array.isArray(p.gallery) && p.gallery[0]) || ''}
+                                    src={
+                                      p.image || (Array.isArray(p.gallery) && p.gallery[0]) || ''
+                                    }
                                     alt={p.title}
                                     style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                                   />
@@ -1809,7 +1904,9 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                                 </div>
 
                                 {/* Code & Title */}
-                                <span style={{ fontSize: '11px', fontWeight: 800, color: '#e31e24' }}>
+                                <span
+                                  style={{ fontSize: '11px', fontWeight: 800, color: '#e31e24' }}
+                                >
                                   {p.code}
                                 </span>
                                 <span
@@ -1826,17 +1923,27 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                                 </span>
 
                                 {pPrice && (
-                                  <span style={{ fontSize: '15px', fontWeight: 900, color: theme.text }}>
+                                  <span
+                                    style={{ fontSize: '15px', fontWeight: 900, color: theme.text }}
+                                  >
                                     {pPrice}
                                   </span>
                                 )}
 
                                 {/* Quick Action Cluster */}
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginTop: '4px' }}>
+                                <div
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    gap: '6px',
+                                    marginTop: '4px',
+                                  }}
+                                >
                                   {onAddToCart && (
                                     <button
                                       type="button"
                                       onClick={() => onAddToCart(p)}
+                                      className="sahara-soft-red-action"
                                       style={{
                                         padding: '5px 10px',
                                         borderRadius: '8px',
@@ -1858,6 +1965,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                                   <button
                                     type="button"
                                     onClick={() => onWhatsApp(p)}
+                                    className="sahara-soft-green-action"
                                     style={{
                                       width: '28px',
                                       height: '28px',
@@ -1872,16 +1980,17 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                                     }}
                                     title="WhatsApp"
                                   >
-                                    <WhatsAppIcon size={14} color="#ffffff" />
+                                    <WhatsAppIcon size={14} color="currentColor" />
                                   </button>
                                   <button
                                     type="button"
                                     onClick={() => onCall()}
+                                    className="sahara-soft-red-action"
                                     style={{
                                       width: '28px',
                                       height: '28px',
                                       borderRadius: '50%',
-                                      backgroundColor: '#0284c7',
+                                      backgroundColor: '#dc2626',
                                       color: '#ffffff',
                                       border: 'none',
                                       cursor: 'pointer',
@@ -1891,7 +2000,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                                     }}
                                     title="Zəng et"
                                   >
-                                    <Phone size={12} color="#ffffff" />
+                                    <Phone size={12} color="currentColor" />
                                   </button>
                                 </div>
                               </div>
@@ -1905,13 +2014,29 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                       {(!onlyDifferencesInModal ||
                         new Set(comparedProducts.map((p) => p.brandId || '')).size > 1) && (
                         <tr style={{ borderBottom: `1px solid ${theme.border}` }}>
-                          <td style={{ padding: '10px 12px', fontSize: '12.5px', fontWeight: 700, color: theme.textMuted }}>
+                          <td
+                            style={{
+                              padding: '10px 12px',
+                              fontSize: '12.5px',
+                              fontWeight: 700,
+                              color: theme.textMuted,
+                            }}
+                          >
                             Brend
                           </td>
                           {comparedProducts.map((p) => {
                             const b = activeBrands.find((br) => br.id === p.brandId);
                             return (
-                              <td key={p.id} style={{ padding: '10px 12px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: theme.text }}>
+                              <td
+                                key={p.id}
+                                style={{
+                                  padding: '10px 12px',
+                                  textAlign: 'center',
+                                  fontSize: '13px',
+                                  fontWeight: 600,
+                                  color: theme.text,
+                                }}
+                              >
                                 {b?.name || p.brandId || '-'}
                               </td>
                             );
@@ -1921,14 +2046,31 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
 
                       {/* Origin Country */}
                       {(!onlyDifferencesInModal ||
-                        new Set(comparedProducts.map((p) => p.manufacturingCountry || '')).size > 1) && (
+                        new Set(comparedProducts.map((p) => verifiedManufacturingCountry(p))).size >
+                          1) && (
                         <tr style={{ borderBottom: `1px solid ${theme.border}` }}>
-                          <td style={{ padding: '10px 12px', fontSize: '12.5px', fontWeight: 700, color: theme.textMuted }}>
+                          <td
+                            style={{
+                              padding: '10px 12px',
+                              fontSize: '12.5px',
+                              fontWeight: 700,
+                              color: theme.textMuted,
+                            }}
+                          >
                             Mənşə ölkəsi
                           </td>
                           {comparedProducts.map((p) => (
-                            <td key={p.id} style={{ padding: '10px 12px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: theme.text }}>
-                              {p.manufacturingCountry || '-'}
+                            <td
+                              key={p.id}
+                              style={{
+                                padding: '10px 12px',
+                                textAlign: 'center',
+                                fontSize: '13px',
+                                fontWeight: 600,
+                                color: theme.text,
+                              }}
+                            >
+                              {verifiedManufacturingCountry(p) || '-'}
                             </td>
                           ))}
                         </tr>
@@ -1936,13 +2078,30 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
 
                       {/* Category */}
                       {(!onlyDifferencesInModal ||
-                        new Set(comparedProducts.map((p) => p.categoryName || p.category || '')).size > 1) && (
+                        new Set(comparedProducts.map((p) => p.categoryName || p.category || ''))
+                          .size > 1) && (
                         <tr style={{ borderBottom: `1px solid ${theme.border}` }}>
-                          <td style={{ padding: '10px 12px', fontSize: '12.5px', fontWeight: 700, color: theme.textMuted }}>
+                          <td
+                            style={{
+                              padding: '10px 12px',
+                              fontSize: '12.5px',
+                              fontWeight: 700,
+                              color: theme.textMuted,
+                            }}
+                          >
                             Kateqoriya
                           </td>
                           {comparedProducts.map((p) => (
-                            <td key={p.id} style={{ padding: '10px 12px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: theme.text }}>
+                            <td
+                              key={p.id}
+                              style={{
+                                padding: '10px 12px',
+                                textAlign: 'center',
+                                fontSize: '13px',
+                                fontWeight: 600,
+                                color: theme.text,
+                              }}
+                            >
                               {p.categoryName || p.category || '-'}
                             </td>
                           ))}
@@ -1953,11 +2112,27 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                       {(!onlyDifferencesInModal ||
                         new Set(comparedProducts.map((p) => p.energyClass || '')).size > 1) && (
                         <tr style={{ borderBottom: `1px solid ${theme.border}` }}>
-                          <td style={{ padding: '10px 12px', fontSize: '12.5px', fontWeight: 700, color: theme.textMuted }}>
+                          <td
+                            style={{
+                              padding: '10px 12px',
+                              fontSize: '12.5px',
+                              fontWeight: 700,
+                              color: theme.textMuted,
+                            }}
+                          >
                             Enerji Sinfi
                           </td>
                           {comparedProducts.map((p) => (
-                            <td key={p.id} style={{ padding: '10px 12px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: theme.text }}>
+                            <td
+                              key={p.id}
+                              style={{
+                                padding: '10px 12px',
+                                textAlign: 'center',
+                                fontSize: '13px',
+                                fontWeight: 600,
+                                color: theme.text,
+                              }}
+                            >
                               {p.energyClass || '-'}
                             </td>
                           ))}
@@ -1968,11 +2143,27 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                       {(!onlyDifferencesInModal ||
                         new Set(comparedProducts.map((p) => p.motorType || '')).size > 1) && (
                         <tr style={{ borderBottom: `1px solid ${theme.border}` }}>
-                          <td style={{ padding: '10px 12px', fontSize: '12.5px', fontWeight: 700, color: theme.textMuted }}>
+                          <td
+                            style={{
+                              padding: '10px 12px',
+                              fontSize: '12.5px',
+                              fontWeight: 700,
+                              color: theme.textMuted,
+                            }}
+                          >
                             Mühərrik Növü
                           </td>
                           {comparedProducts.map((p) => (
-                            <td key={p.id} style={{ padding: '10px 12px', textAlign: 'center', fontSize: '13px', fontWeight: 600, color: theme.text }}>
+                            <td
+                              key={p.id}
+                              style={{
+                                padding: '10px 12px',
+                                textAlign: 'center',
+                                fontSize: '13px',
+                                fontWeight: 600,
+                                color: theme.text,
+                              }}
+                            >
                               {p.motorType || '-'}
                             </td>
                           ))}
@@ -1993,7 +2184,14 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                         })
                         .map((specName) => (
                           <tr key={specName} style={{ borderBottom: `1px solid ${theme.border}` }}>
-                            <td style={{ padding: '10px 12px', fontSize: '12.5px', fontWeight: 700, color: theme.textMuted }}>
+                            <td
+                              style={{
+                                padding: '10px 12px',
+                                fontSize: '12.5px',
+                                fontWeight: 700,
+                                color: theme.textMuted,
+                              }}
+                            >
                               {specName}
                             </td>
                             {comparedProducts.map((p) => {
@@ -2068,12 +2266,20 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Filter size={18} color="#e31e24" />
-                <span style={{ fontSize: '16px', fontWeight: 800, color: theme.text }}>Məhsul Filtrləri</span>
+                <span style={{ fontSize: '16px', fontWeight: 800, color: theme.text }}>
+                  Məhsul Filtrləri
+                </span>
               </div>
               <button
                 type="button"
                 onClick={() => setIsMobileDrawerOpen(false)}
-                style={{ background: 'none', border: 'none', color: theme.textMuted, cursor: 'pointer', padding: '4px' }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: theme.textMuted,
+                  cursor: 'pointer',
+                  padding: '4px',
+                }}
               >
                 <X size={20} />
               </button>
@@ -2083,7 +2289,15 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
             <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', flex: 1 }}>
               {/* Category selector */}
               <div>
-                <label style={{ fontSize: '13px', fontWeight: 800, color: theme.text, display: 'block', marginBottom: '8px' }}>
+                <label
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: 800,
+                    color: theme.text,
+                    display: 'block',
+                    marginBottom: '8px',
+                  }}
+                >
                   Kateqoriyalar
                 </label>
                 <select
@@ -2111,7 +2325,15 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
 
               {/* Brands selection */}
               <div>
-                <label style={{ fontSize: '13px', fontWeight: 800, color: theme.text, display: 'block', marginBottom: '8px' }}>
+                <label
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: 800,
+                    color: theme.text,
+                    display: 'block',
+                    marginBottom: '8px',
+                  }}
+                >
                   Rəsmi Brendlər
                 </label>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
@@ -2142,13 +2364,21 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
 
               {/* Price range */}
               <div>
-                <label style={{ fontSize: '13px', fontWeight: 800, color: theme.text, display: 'block', marginBottom: '8px' }}>
+                <label
+                  style={{
+                    fontSize: '13px',
+                    fontWeight: 800,
+                    color: theme.text,
+                    display: 'block',
+                    marginBottom: '8px',
+                  }}
+                >
                   Qiymət Aralığı (₼)
                 </label>
                 <div style={{ display: 'flex', gap: '8px' }}>
                   <input
                     type="number"
-                    value={minPrice}
+                    value={selectedMinPrice}
                     onChange={(e) => setMinPrice(Number(e.target.value))}
                     placeholder="Min"
                     style={{
@@ -2162,7 +2392,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                   />
                   <input
                     type="number"
-                    value={maxPrice}
+                    value={selectedMaxPrice}
                     onChange={(e) => setMaxPrice(Number(e.target.value))}
                     placeholder="Maks"
                     style={{
@@ -2179,7 +2409,15 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
 
               {/* Switches */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: theme.text }}>
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    fontSize: '13px',
+                    color: theme.text,
+                  }}
+                >
                   <input
                     type="checkbox"
                     checked={onlyDiscounted}
@@ -2188,7 +2426,15 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                   />
                   <span>Yalnız endirimli</span>
                 </label>
-                <label style={{ display: 'flex', alignItems: 'center', gap: '10px', fontSize: '13px', color: theme.text }}>
+                <label
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    fontSize: '13px',
+                    color: theme.text,
+                  }}
+                >
                   <input
                     type="checkbox"
                     checked={onlyWithVideo}
@@ -2234,13 +2480,13 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                   flex: 2,
                   padding: '12px',
                   borderRadius: '10px',
-                  backgroundColor: '#e31e24',
-                  color: '#ffffff',
+                  backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                  color: '#dc2626',
                   border: 'none',
                   fontSize: '13px',
                   fontWeight: 700,
                   cursor: 'pointer',
-                  boxShadow: '0 4px 14px rgba(227, 30, 36, 0.35)',
+                  boxShadow: 'none',
                 }}
               >
                 Göstər ({sortedProducts.length})

@@ -3,6 +3,7 @@ import { Search, ChevronRight, X, Loader2, ArrowRight } from 'lucide-react';
 import { Brand, CatalogCategory, Product, ProductCategory } from '../types/product';
 import { ThemeColors, DESIGN_TOKENS } from '../types/theme';
 import { ShimmerImage } from './ShimmerImage';
+import { CategoryGlyph } from './CategoryGlyph';
 import { useHorizontalScroll } from '../hooks/useHorizontalScroll';
 import { pushOverlay, popOverlay, isTopOverlay } from '../utils/backgroundIsolation';
 
@@ -89,7 +90,9 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
 }) => {
   const [hoveredItem, setHoveredItem] = useState<SuggestionItem | null>(null);
   const [hoveredCategoryId, setHoveredCategoryId] = useState<string | null>(null);
+  const [isHoveredMore, setIsHoveredMore] = useState(false);
   const [isInputFocused, setIsInputFocused] = useState(false);
+  const [showAllCategories, setShowAllCategories] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const modalRef = useRef<HTMLDivElement>(null);
@@ -109,9 +112,7 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
     containerRef: productsScrollRef,
     dragProps: productsDragProps,
     hasMoved: productsHasMoved,
-  } = useHorizontalScroll({
-    mouseDrag: true,
-  });
+  } = useHorizontalScroll();
 
   const needle = searchQuery.trim().toLocaleLowerCase('az');
 
@@ -424,7 +425,9 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
     const selection: Product[] = [];
     activeBrands.forEach((brand) => {
       if (selection.length < 6) {
-        const items = publishedProducts.filter((p) => p.brandId === brand.id && !selection.some((s) => s.id === p.id));
+        const items = publishedProducts.filter(
+          (p) => p.brandId === brand.id && !selection.some((s) => s.id === p.id)
+        );
         items.forEach((item) => {
           if (selection.length < 6) {
             selection.push(item);
@@ -468,8 +471,23 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
 
   // Bottom Section: Categories
   const categoryPills = useMemo(() => {
-    return activeCategories.slice(0, 8);
-  }, [activeCategories]);
+    const populated = new Set(publishedProducts.map((product) => product.category));
+    const available = activeCategories.filter((category) => populated.has(category.id));
+    return showAllCategories ? available : available.slice(0, 8);
+  }, [activeCategories, publishedProducts, showAllCategories]);
+
+  const availableCategoryCount = useMemo(() => {
+    const populated = new Set(publishedProducts.map((product) => product.category));
+    return activeCategories.filter((category) => populated.has(category.id)).length;
+  }, [activeCategories, publishedProducts]);
+
+  const revealNextProductOnHover = (card: HTMLElement) => {
+    const viewport = productsScrollRef.current;
+    if (!viewport || viewport.scrollLeft + viewport.clientWidth >= viewport.scrollWidth - 2) return;
+    if (card.getBoundingClientRect().right >= viewport.getBoundingClientRect().right - 24) {
+      viewport.scrollBy({ left: Math.round(card.clientWidth * 0.55), behavior: 'smooth' });
+    }
+  };
 
   const handleSuggestionClick = (item: SuggestionItem) => {
     if (item.type === 'category' && item.categoryId) {
@@ -539,11 +557,15 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
                 style={{ color: theme.text }}
               >
                 <div className="smart-search-item-left">
-                  <Search
-                    size={14}
-                    className="smart-search-item-icon"
-                    style={{ color: theme.textMuted }}
-                  />
+                  {item.type === 'category' && item.categoryId ? (
+                    <CategoryGlyph id={item.categoryId} compact plain />
+                  ) : (
+                    <Search
+                      size={14}
+                      className="smart-search-item-icon"
+                      style={{ color: theme.textMuted }}
+                    />
+                  )}
                   <span className="smart-search-item-text">
                     <HighlightedQueryText
                       text={item.displayText}
@@ -608,22 +630,16 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
                   key={prod.id}
                   className="smart-search-product-card"
                   onClick={() => {
-                    if (productsHasMoved.current) return;
+                    if (productsHasMoved()) return;
                     handleProductCardClick(prod);
                   }}
+                  onMouseEnter={(event) => revealNextProductOnHover(event.currentTarget)}
                   style={{
-                    backgroundColor: isDarkMode
-                      ? '#1e293b'
-                      : '#ffffff',
-                    borderColor: isDarkMode
-                      ? 'rgba(255, 255, 255, 0.08)'
-                      : '#e2e8f0',
+                    backgroundColor: '#ffffff',
+                    borderColor: '#e2e8f0',
                   }}
                 >
-                  <div
-                    className="smart-search-img-box"
-                    style={{ backgroundColor: isDarkMode ? '#1e293b' : '#ffffff' }}
-                  >
+                  <div className="smart-search-img-box" style={{ backgroundColor: '#ffffff' }}>
                     {prodImg ? (
                       <ShimmerImage
                         src={prodImg}
@@ -636,9 +652,7 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
                       />
                     ) : (
                       <div className="smart-search-placeholder-img">
-                        <span
-                          style={{ fontSize: '20px', fontWeight: 800, color: theme.primary }}
-                        >
+                        <span style={{ fontSize: '20px', fontWeight: 800, color: theme.primary }}>
                           {brandObj?.name?.slice(0, 1) || 'S'}
                         </span>
                       </div>
@@ -659,26 +673,24 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
                         justifyContent: 'center',
                         padding: '2px 8px',
                         borderRadius: '6px',
-                        backgroundColor: isDarkMode
-                          ? 'rgba(15, 23, 42, 0.88)'
-                          : 'rgba(255, 255, 255, 0.94)',
+                        backgroundColor: 'rgba(255, 255, 255, 0.94)',
                         backdropFilter: 'blur(8px)',
                         WebkitBackdropFilter: 'blur(8px)',
                         boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-                        border: `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.08)'}`,
+                        border: '1px solid rgba(0, 0, 0, 0.08)',
                         zIndex: 4,
                       }}
                     >
                       {brandObj.logo ? (
-                        <img
+                        <ShimmerImage
                           src={brandObj.logo}
                           alt={brandObj.name}
-                          style={{
-                            maxHeight: '18px',
-                            maxWidth: '68px',
-                            objectFit: 'contain',
-                            display: 'block',
-                          }}
+                          objectFit="contain"
+                          spinnerSize={9}
+                          containerStyle={{ width: '68px', height: '18px' }}
+                          fallback={
+                            <span className="smart-search-brand-name">{brandObj.name}</span>
+                          }
                         />
                       ) : (
                         <span
@@ -705,9 +717,8 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
                       right: 0,
                       zIndex: 4,
                       padding: '10px 14px 8px',
-                      background: isDarkMode
-                        ? 'linear-gradient(to top, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.72) 65%, transparent 100%)'
-                        : 'linear-gradient(to top, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.75) 65%, transparent 100%)',
+                      background:
+                        'linear-gradient(to top, rgba(255, 255, 255, 0.98) 0%, rgba(255, 255, 255, 0.78) 65%, transparent 100%)',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'space-between',
@@ -717,16 +728,13 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
                   >
                     <span
                       className="smart-search-card-title"
-                      style={{ color: theme.text }}
+                      style={{ color: '#0f172a' }}
                       title={prod.title}
                     >
                       {prod.title}
                     </span>
 
-                    <span
-                      className="smart-search-card-action"
-                      style={{ color: theme.primary }}
-                    >
+                    <span className="smart-search-card-action" style={{ color: theme.primary }}>
                       <span>Ətraflı bax</span>
                       <ArrowRight size={12} />
                     </span>
@@ -769,13 +777,38 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
                       : isDarkMode
                         ? 'rgba(30, 41, 59, 0.7)'
                         : 'rgba(241, 245, 249, 0.9)',
-                  borderColor: hoveredCategoryId === cat.id ? theme.primary : theme.border,
+                  borderColor: 'transparent',
                   color: hoveredCategoryId === cat.id ? theme.primary : theme.text,
                 }}
               >
-                {cat.name}
+                <CategoryGlyph id={cat.id} slug={cat.slug} compact plain />
+                <span>{cat.name}</span>
               </button>
             ))}
+
+            {availableCategoryCount > 8 && (
+              <button
+                type="button"
+                className={`smart-search-categories-more ${isHoveredMore ? 'is-hovered' : ''}`}
+                aria-expanded={showAllCategories}
+                onClick={() => setShowAllCategories((value) => !value)}
+                onMouseEnter={() => setIsHoveredMore(true)}
+                onMouseLeave={() => setIsHoveredMore(false)}
+                style={{
+                  backgroundColor: isHoveredMore
+                    ? 'rgba(220, 38, 38, 0.12)'
+                    : isDarkMode
+                      ? 'rgba(30, 41, 59, 0.7)'
+                      : 'rgba(241, 245, 249, 0.9)',
+                  borderColor: 'transparent',
+                  border: 'none',
+                  color: isHoveredMore ? theme.primary : theme.text,
+                }}
+              >
+                <span>{showAllCategories ? 'Daha az göstər' : 'Daha çoxuna bax'}</span>
+                <ChevronRight size={14} aria-hidden="true" />
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -922,7 +955,7 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
             <Search
               size={18}
               style={{
-                color: searchQuery.trim().length > 0 ? '#e31e24' : (theme.textMuted || '#94a3b8'),
+                color: searchQuery.trim().length > 0 ? '#e31e24' : theme.textMuted || '#94a3b8',
                 transition: 'color 0.2s ease',
                 flexShrink: 0,
               }}

@@ -66,4 +66,21 @@ describe('ShimmerImage Component & Spinner Loading Suite', () => {
     expect(container.querySelector('.img-fallback-box')).toBeTruthy();
     expect(container.textContent).toContain('Şəkil yoxdur');
   });
+
+  it('does not reset a newly loaded replacement image after its load event', () => {
+    const { container, rerender } = render(<ShimmerImage src="/first.jpg" alt="Product" />);
+    const first = container.querySelector('img') as HTMLImageElement;
+    fireEvent.load(first);
+    expect(first.style.opacity).toBe('1');
+
+    rerender(<ShimmerImage src="/second.jpg" alt="Product" />);
+    const second = container.querySelector('img') as HTMLImageElement;
+    expect(second.getAttribute('src')).toBe('/second.jpg');
+    expect(second.style.opacity).toBe('0');
+    fireEvent.load(second);
+    expect(second.style.opacity).toBe('1');
+    expect(container.querySelector('.img-shimmer-overlay')?.classList.contains('is-loaded')).toBe(
+      true
+    );
+  });
 });

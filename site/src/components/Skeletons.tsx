@@ -224,122 +224,147 @@ export const BrandShowcaseSkeleton: React.FC<SkeletonProps> = ({ theme }) => {
 export const BannerHeroSkeleton: React.FC<SkeletonProps> = ({ theme }) => {
   return (
     <div
-      className="banner-hero-wrapper"
+      className="banner-hero-wrapper catalog-container"
       aria-busy="true"
       aria-label="Banner bölməsi yüklənir"
       style={{
-        width: 'calc(100% + (100vw - 100%) / 2)',
-        maxWidth: '100vw',
-        marginLeft: 'calc((-50vw + 50%) / 2)',
-        marginRight: 'calc((-50vw + 50%) / 2)',
-        padding: '6px clamp(8px, 1.5vw, 16px) 16px',
+        width: '100%',
+        maxWidth: '1560px',
+        margin: '0 auto',
+        paddingTop: '8px',
+        paddingBottom: '8px',
+        paddingLeft: 'clamp(16px, 2vw, 28px)',
+        paddingRight: 'clamp(16px, 2vw, 28px)',
         boxSizing: 'border-box',
-        overflow: 'hidden',
       }}
     >
-      <div
-        className="banner-hero-card"
-        style={{
-          width: '100%',
-          maxWidth: '100%',
-          backgroundColor: theme.bgCard,
-          border: 'none',
-          boxShadow:
-            theme.mode === 'dark'
-              ? '0 12px 36px rgba(0, 0, 0, 0.4)'
-              : '0 8px 28px rgba(0, 0, 0, 0.06)',
-          borderRadius: '20px',
-          padding: 'clamp(36px, 5vw, 64px) clamp(24px, 4vw, 56px) 28px',
-        }}
-      >
-        {/* Top Badges & Tagline */}
-        <div className="banner-hero-header-row">
-          <div className="banner-hero-badges">
-            <span
-              className="banner-hero-guarantee-pill"
-              style={{
-                backgroundColor: theme.badgeBg,
-                color: theme.badgeText,
-                borderColor: theme.primaryLight,
-              }}
-            >
-              <Sparkles size={13} color={theme.primary} />
-              <span>Kataloq Platforması</span>
-            </span>
-          </div>
-
-          <span className="banner-hero-counter" style={{ color: theme.textMuted }}>
-            Texnologiya bələdçisi (1/5)
-          </span>
-        </div>
-
-        {/* Title & Description */}
-        <div className="banner-hero-text-block">
-          <h2 className="banner-hero-title" style={{ color: theme.text }}>
-            <span>Sahara Electronics — Məhsul Kataloqu</span>
-          </h2>
-          <p className="banner-hero-subtitle" style={{ color: theme.textSecondary }}>
-            Məişət və mətbəx texnikası modelləri, texniki parametrlər və rəsmi məhsul seçimi.
-          </p>
-        </div>
-
-        {/* Dynamic Interactive Auto-Rotating Technology Carousel Bar Placeholder */}
+      <div className="banner-hero-stage">
         <div
-          className="tech-spotlight-card"
+          className="banner-hero-card is-video"
           style={{
-            backgroundColor: theme.mode === 'dark' ? 'rgba(239, 68, 68, 0.09)' : '#fef2f2',
-            borderColor: theme.mode === 'dark' ? 'rgba(239, 68, 68, 0.22)' : '#fee2e2',
+            width: '100%',
+            maxWidth: '100%',
+            aspectRatio: '16 / 9',
+            minHeight: '540px',
+            position: 'relative',
+            overflow: 'hidden',
+            backgroundColor: '#0a0e17',
+            border: 'none',
+            boxShadow:
+              theme.mode === 'dark'
+                ? '0 14px 40px rgba(0, 0, 0, 0.35)'
+                : '0 12px 32px rgba(0, 0, 0, 0.08)',
+            borderRadius: '24px',
+            display: 'flex',
+            flexDirection: 'column',
           }}
         >
-          <div className="tech-spotlight-main">
+          <SkeletonBox
+            width="100%"
+            height="100%"
+            borderRadius="24px"
+            style={{ position: 'absolute', inset: 0, opacity: 0.35 }}
+          />
+          <div
+            style={{
+              position: 'absolute',
+              top: 24,
+              right: 'clamp(24px, 4vw, 56px)',
+              display: 'grid',
+              justifyItems: 'end',
+              gap: 8,
+            }}
+          >
+            <SkeletonBox width="150px" height="20px" borderRadius="6px" />
+            <SkeletonBox width="130px" height="24px" borderRadius="6px" />
+          </div>
+          <div
+            style={{
+              position: 'relative',
+              zIndex: 1,
+              maxWidth: 620,
+              padding: 'clamp(36px, 5vw, 64px) clamp(24px, 4vw, 56px) 16px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              flex: 1,
+            }}
+          >
             <div
-              className="tech-spotlight-icon-box"
+              className="banner-hero-title"
+              style={{ display: 'grid', gap: 10, marginBottom: 16 }}
+            >
+              <SkeletonBox width="min(100%, 340px)" height="48px" borderRadius="8px" />
+              <SkeletonBox width="min(90%, 300px)" height="48px" borderRadius="8px" />
+              <SkeletonBox width="min(100%, 370px)" height="48px" borderRadius="8px" />
+            </div>
+            <div
+              className="banner-hero-subtitle"
+              style={{ display: 'grid', gap: 8, marginBottom: 24 }}
+            >
+              <SkeletonBox width="min(100%, 410px)" height="18px" borderRadius="6px" />
+              <SkeletonBox width="min(86%, 350px)" height="18px" borderRadius="6px" />
+            </div>
+            <div className="banner-hero-actions-row">
+              <SkeletonBox width="168px" height="44px" borderRadius="12px" />
+            </div>
+            <div
+              className="tech-spotlight-card"
               style={{
-                backgroundColor: theme.mode === 'dark' ? '#2e0e0e' : '#fee2e2',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                width: 'min(100%, 480px)',
+                height: 64,
+                padding: '10px 16px',
+                marginTop: 20,
+                borderRadius: 14,
+                backgroundColor: 'rgba(15, 23, 42, 0.72)',
               }}
             >
-              <SkeletonBox width="24px" height="24px" borderRadius="6px" />
-            </div>
-
-            <div className="tech-spotlight-content">
-              <div className="tech-spotlight-title-row">
-                <SkeletonBox width="160px" height="20px" borderRadius="6px" />
-                <SkeletonBox width="65px" height="18px" borderRadius="6px" />
+              <SkeletonBox width="34px" height="34px" borderRadius="8px" />
+              <div style={{ display: 'grid', gap: 6, flex: 1 }}>
+                <SkeletonBox width="160px" height="14px" borderRadius="6px" />
+                <SkeletonBox width="220px" height="11px" borderRadius="6px" />
               </div>
-              <SkeletonBox
-                width="280px"
-                height="14px"
-                borderRadius="4px"
-                style={{ marginTop: '4px' }}
-              />
             </div>
           </div>
-
-          <div
-            className="tech-spotlight-actions"
-            style={{ borderTopColor: theme.mode === 'dark' ? 'rgba(239, 68, 68, 0.2)' : '#fee2e2' }}
-          >
-            <div className="tech-spotlight-nav-group">
-              <div style={{ width: '32px', height: '32px' }}>
-                <SkeletonBox width="32px" height="32px" borderRadius="8px" />
-              </div>
-              <div style={{ width: '32px', height: '32px' }}>
-                <SkeletonBox width="32px" height="32px" borderRadius="8px" />
-              </div>
-            </div>
-
-            <div
-              className="tech-spotlight-cta"
-              style={{
-                backgroundColor: theme.primary,
-                color: '#ffffff',
-                opacity: 0.85,
-              }}
-            >
-              <span>Ətraflı Bax</span>
-            </div>
+          <div className="banner-hero-pagination-row" aria-hidden="true">
+            {[1, 2, 3].map((item) => (
+              <React.Fragment key={item}>
+                <SkeletonBox width="18px" height="14px" borderRadius="4px" />
+                <SkeletonBox width="38px" height="3px" borderRadius="99px" />
+              </React.Fragment>
+            ))}
           </div>
         </div>
+        <aside className="banner-hero-companion" aria-hidden="true">
+          <SkeletonBox
+            width="100%"
+            height="100%"
+            borderRadius="24px"
+            style={{ position: 'absolute', inset: 0 }}
+          />
+          <div className="banner-hero-companion-copy">
+            <SkeletonBox width="150px" height="10px" borderRadius="4px" />
+            <SkeletonBox width="190px" height="22px" borderRadius="6px" />
+          </div>
+          <div
+            className="banner-hero-companion-dots banner-hero-companion-progress-row"
+            style={{
+              position: 'absolute',
+              zIndex: 3,
+              left: 20,
+              bottom: 18,
+              display: 'flex',
+              gap: 8,
+            }}
+          >
+            {[1, 2, 3].map((item) => (
+              <SkeletonBox key={item} width="32px" height="3.5px" borderRadius="99px" />
+            ))}
+          </div>
+        </aside>
       </div>
     </div>
   );
@@ -541,7 +566,7 @@ export const FeaturedProductCardSkeleton: React.FC<SkeletonProps> = ({ theme }) 
     <div
       className="featured-product-card skeleton-card"
       style={{
-        backgroundColor: '#ffffff',
+        backgroundColor: theme.bgCard,
         border: 'none',
         borderRadius: '16px',
         padding: '16px 20px',
@@ -596,75 +621,66 @@ export const FeaturedProductCardSkeleton: React.FC<SkeletonProps> = ({ theme }) 
 export const VisualCategoryCardsSkeleton: React.FC<SkeletonProps> = ({ theme }) => {
   return (
     <section className="catalog-container visual-categories-section" aria-busy="true">
-      <div
-        style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          marginBottom: '16px',
-        }}
-      >
-        <div>
-          <SkeletonBox width="180px" height="24px" borderRadius="6px" style={{ marginBottom: '6px' }} />
-          <SkeletonBox width="140px" height="14px" borderRadius="4px" />
+      <div className="visual-categories-header">
+        <div className="visual-categories-title-wrap">
+          <SkeletonBox width="240px" height="28px" borderRadius="8px" />
+        </div>
+        <div className="visual-categories-controls">
+          <SkeletonBox width="160px" height="34px" borderRadius="10px" />
+          <SkeletonBox width="90px" height="34px" borderRadius="8px" />
         </div>
       </div>
 
       <div
-        style={{
-          display: 'flex',
-          gap: '12px',
-          overflowX: 'hidden',
-          paddingBottom: '8px',
-        }}
+        className="visual-category-scroll-track visual-category-skeleton-track collage-track-bento"
+        aria-hidden="true"
       >
-        {[1, 2, 3, 4].map((idx) => (
+        {[1, 2, 3, 4, 5].map((idx) => (
           <div
             key={`cat-skel-${idx}`}
-            style={{
-              flexShrink: 0,
-              width: '339px',
-              height: '339px',
-              backgroundColor: '#ffffff',
-              border: 'none',
-              borderRadius: '16px',
-              padding: '16px 20px',
-              display: 'flex',
-              flexDirection: 'column',
-              alignItems: 'center',
-              boxSizing: 'border-box',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
-            }}
+            className={`visual-category-reveal visual-category-card-${idx}`}
           >
             <div
+              className="visual-category-card"
               style={{
-                width: '100%',
-                flex: 1,
-                minHeight: '265px',
-                maxHeight: '275px',
-                borderRadius: '12px',
-                backgroundColor: '#f8fafc',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                padding: 0,
-              }}
-            >
-              <SkeletonBox width="65%" height="80%" borderRadius="10px" />
-            </div>
-            <div
-              style={{
-                marginTop: 'auto',
-                paddingTop: '2px',
                 display: 'flex',
                 flexDirection: 'column',
                 alignItems: 'center',
-                gap: '2px',
-                width: '100%',
+                backgroundColor: theme.bgCard,
               }}
             >
-              <SkeletonBox width="60%" height="14px" borderRadius="4px" />
-              <SkeletonBox width="35%" height="12px" borderRadius="4px" />
+              <div className="visual-category-top-badge">
+                <SkeletonBox width="30px" height="30px" borderRadius="8px" />
+              </div>
+              <div
+                className="visual-category-img-box"
+                style={{
+                  width: '100%',
+                  flex: 1,
+                  borderRadius: '12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                <SkeletonBox width="72%" height="78%" borderRadius="10px" />
+              </div>
+              <div
+                className="visual-category-meta-skeleton"
+                style={{
+                  marginTop: 'auto',
+                  paddingTop: '2px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px',
+                  width: '100%',
+                }}
+              >
+                <SkeletonBox width="70%" height={idx === 1 ? '23px' : '18px'} borderRadius="4px" />
+                <div className="visual-category-meta">
+                  <SkeletonBox width="55px" height="12px" borderRadius="4px" />
+                </div>
+              </div>
             </div>
           </div>
         ))}
@@ -677,7 +693,13 @@ export const SiteHomePageSkeleton: React.FC<SkeletonProps> = ({ theme }) => {
   return (
     <div
       className="home-page-container"
-      style={{ display: 'flex', flexDirection: 'column', gap: '32px', paddingBottom: '48px' }}
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '24px',
+        paddingTop: '6px',
+        paddingBottom: '48px',
+      }}
       aria-busy="true"
     >
       <BannerHeroSkeleton theme={theme} />
@@ -689,7 +711,7 @@ export const SiteHomePageSkeleton: React.FC<SkeletonProps> = ({ theme }) => {
           <SkeletonBox width="100px" height="20px" borderRadius="6px" />
         </div>
         <div
-          className="featured-products-grid"
+          className="featured-products-grid featured-products-skeleton-grid"
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fill, minmax(339px, 1fr))',
@@ -697,12 +719,14 @@ export const SiteHomePageSkeleton: React.FC<SkeletonProps> = ({ theme }) => {
             justifyItems: 'center',
           }}
         >
-          {[1, 2, 3, 4, 5, 6].map((i) => (
+          {Array.from({ length: 40 }, (_, index) => index + 1).map((i) => (
             <FeaturedProductCardSkeleton key={`feat-skel-${i}`} theme={theme} />
           ))}
+        </div>
+        <div className="featured-load-more-wrap" aria-hidden="true">
+          <SkeletonBox width="178px" height="44px" borderRadius="999px" />
         </div>
       </section>
     </div>
   );
 };
-

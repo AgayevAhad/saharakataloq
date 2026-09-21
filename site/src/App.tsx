@@ -11,9 +11,11 @@ import { SiteHeader } from './components/site/SiteHeader';
 import { SaharaMatchModal } from './components/site/SaharaMatchModal';
 import { MobileBottomNav } from './components/site/MobileBottomNav';
 import { UserAccountDrawer } from './components/site/UserAccountDrawer';
+import { CustomerChatWidget } from './components/site/CustomerChatWidget';
 import { HomePage } from './pages/HomePage';
 import { CatalogPage } from './pages/CatalogPage';
 import { BrandsPage } from './pages/BrandsPage';
+import { BrandDetailPage } from './pages/BrandDetailPage';
 import { ServicesPage } from './pages/ServicesPage';
 import { StoresPage } from './pages/StoresPage';
 import { ComparePage } from './pages/ComparePage';
@@ -26,6 +28,8 @@ import { SaharaLogo } from './components/SaharaLogo';
 import { BrandShowcase } from './components/BrandShowcase';
 import { BannerHero } from './components/BannerHero';
 import { ProductCard } from './components/ProductCard';
+import { BrandCategoryFilter } from './components/BrandCategoryFilter';
+import { FloatingActions } from './components/FloatingActions';
 import { ProductDetailModal } from './components/ProductDetailModal';
 import { InverterInfoModal } from './components/InverterInfoModal';
 import { ShareModal } from './components/ShareModal';
@@ -39,20 +43,21 @@ import { AboutPage } from './pages/AboutPage';
 import { CareersPage } from './pages/CareersPage';
 import { TermsPage } from './pages/TermsPage';
 import { PrivacyPage } from './pages/PrivacyPage';
+import { CustomerCarePage } from './pages/CustomerCarePage';
 import { AuthUser, LoginCredentials, RegisterCredentials } from './types/auth';
-
+import { customerSupportApi } from './services/customerSupportApi';
 
 const CatalogAdmin = lazy(() =>
   import('./components/CatalogAdmin').then((m) => ({ default: m.CatalogAdmin }))
 );
 import {
   BannerHeroSkeleton,
-  BrandShowcaseSkeleton,
   ProductGridSkeleton,
   SiteHomePageSkeleton,
 } from './components/Skeletons';
 import { Breadcrumbs } from './components/Breadcrumbs';
 import { featureFlags } from './utils/featureFlags';
+import { useScrollReveal } from './hooks/useScrollReveal';
 
 const THEME_KEY = 'sahara_theme_mode';
 const COMPARE_KEY = 'sahara_compare_items';
@@ -63,6 +68,7 @@ type RouteName =
   | 'home'
   | 'catalog'
   | 'brands'
+  | 'brand'
   | 'services'
   | 'stores'
   | 'compare'
@@ -75,6 +81,10 @@ type RouteName =
   | 'careers'
   | 'terms'
   | 'privacy'
+  | 'delivery'
+  | 'warranty'
+  | 'returns'
+  | 'faq'
   | '404';
 
 export interface AppProps {
@@ -89,18 +99,44 @@ export const resolveRouteFromPath = (
   if (!path) return { route: 'home' };
   const clean = path.split('?')[0].replace(/\/$/, '') || '/';
   if (clean === '/' || clean === '') return { route: 'home' };
-  if (clean === '/catalog') return { route: 'catalog' };
-  if (clean === '/brands') return { route: 'brands' };
-  if (clean === '/services') return { route: 'services' };
-  if (clean === '/support' || clean === '/elaqe' || clean === '/faq' || clean === '/komek' || clean === '/qaytarma') return { route: 'support' };
-  if (clean === '/stores' || clean === '/magazalar') return { route: 'stores' };
-  if (clean === '/services' || clean === '/catdirilma' || clean === '/zemanet') return { route: 'services' };
-  if (clean === '/cart') return { route: 'cart' };
-  if (clean === '/favorites' || clean === '/wishlist') return { route: 'favorites' };
-  if (clean === '/about' || clean === '/haqqimizda') return { route: 'about' };
-  if (clean === '/careers' || clean === '/karyera') return { route: 'careers' };
-  if (clean === '/terms' || clean === '/istifade-sertleri' || clean === '/qaydalar') return { route: 'terms' };
-  if (clean === '/privacy' || clean === '/mexfilik-siyaseti' || clean === '/mexfilik') return { route: 'privacy' };
+  if (clean === '/catalog' || clean === '/kataloq') return { route: 'catalog' };
+  if (clean === '/brands' || clean === '/brendler' || clean === '/brend')
+    return { route: 'brands' };
+  if (clean === '/services' || clean === '/xidmetler') return { route: 'services' };
+  if (
+    clean === '/support' ||
+    clean === '/elaqe' ||
+    clean === '/komek' ||
+    clean === '/destek' ||
+    clean === '/musteri-desteyi' ||
+    clean === '/musteri-xidmetleri'
+  )
+    return { route: 'support' };
+  if (clean === '/faq' || clean === '/tez-tez-verilen-suallar' || clean === '/suallar')
+    return { route: 'faq' };
+  if (clean === '/qaytarma' || clean === '/geri-qaytarma' || clean === '/returns')
+    return { route: 'returns' };
+  if (clean === '/stores' || clean === '/magazalar' || clean === '/magaza')
+    return { route: 'stores' };
+  if (clean === '/catdirilma' || clean === '/delivery') return { route: 'delivery' };
+  if (clean === '/zemanet' || clean === '/warranty') return { route: 'warranty' };
+  if (clean === '/cart' || clean === '/sebet') return { route: 'cart' };
+  if (
+    clean === '/favorites' ||
+    clean === '/wishlist' ||
+    clean === '/secilmisler' ||
+    clean === '/sevimliler' ||
+    clean === '/beyenilenler'
+  )
+    return { route: 'favorites' };
+  if (clean === '/about' || clean === '/haqqimizda' || clean === '/haqqinda')
+    return { route: 'about' };
+  if (clean === '/careers' || clean === '/karyera' || clean === '/vakansiyalar')
+    return { route: 'careers' };
+  if (clean === '/terms' || clean === '/istifade-sertleri' || clean === '/qaydalar')
+    return { route: 'terms' };
+  if (clean === '/privacy' || clean === '/mexfilik-siyaseti' || clean === '/mexfilik')
+    return { route: 'privacy' };
   if (
     clean === '/account' ||
     clean === '/profile' ||
@@ -122,7 +158,7 @@ export const resolveRouteFromPath = (
   }
   if (clean.startsWith('/brand/')) {
     const slug = clean.replace('/brand/', '');
-    return { route: 'catalog', brand: slug };
+    return { route: 'brand', brand: slug };
   }
   if (clean === '/404') return { route: '404' };
   return { route: '404' };
@@ -199,6 +235,7 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
     initialData?.catalog ? false : !isSsr
   );
   const [currentRoute, setCurrentRoute] = useState<RouteName>(initialResolved.route);
+  useScrollReveal([currentRoute, catalog.products.length]);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(
     initialResolved.category || null
   );
@@ -211,27 +248,25 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
   const [shareTargetProduct, setShareTargetProduct] = useState<Product | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [isUserDrawerOpen, setIsUserDrawerOpen] = useState(false);
+  const [mobileMenuOpenSignal, setMobileMenuOpenSignal] = useState(0);
   const [isSearchOverlayOpen, setIsSearchOverlayOpen] = useState(false);
   const [isSaharaMatchOpen, setIsSaharaMatchOpen] = useState(false);
   const [comparisonIds, setComparisonIds] = useState<string[]>(getInitialCompare);
   const [cartItems, setCartItems] = useState<CartItem[]>(getInitialCart);
   const [favoriteIds, setFavoriteIds] = useState<string[]>(getInitialFavorites);
   const [themeMode, setThemeMode] = useState<ThemeMode>(getInitialThemeMode);
-  const [toast, setToast] = useState<{ message: string; visible: boolean }>({
+  const [toast, setToast] = useState<{
+    message: string;
+    visible: boolean;
+    type: 'success' | 'warning';
+  }>({
     message: '',
     visible: false,
+    type: 'success',
   });
 
   // Auth state
-  const [authUser, setAuthUser] = useState<AuthUser | null>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const saved = localStorage.getItem('sahara_auth_user');
-        if (saved) return JSON.parse(saved);
-      } catch {}
-    }
-    return null;
-  });
+  const [authUser, setAuthUser] = useState<AuthUser | null>(null);
 
   // Admin state
   const [adminChecked, setAdminChecked] = useState(false);
@@ -241,88 +276,107 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
   const appMode = getAppMode();
   const isSiteMode = appMode === 'site';
 
-  const showToast = useCallback((message: string) => {
-    setToast({ message, visible: true });
+  const showToast = useCallback((message: string, type: 'success' | 'warning' = 'success') => {
+    setToast({ message, visible: true, type });
     window.setTimeout(() => setToast((prev) => ({ ...prev, visible: false })), 2600);
   }, []);
 
-  const handleLogin = useCallback((credentials: LoginCredentials) => {
-    let matchedUser: AuthUser | null = null;
+  useEffect(() => {
+    if (!isSiteMode) return;
+    // Legacy browser-only accounts stored plaintext passwords and cannot prove identity.
     try {
-      const usersList: any[] = JSON.parse(localStorage.getItem('sahara_registered_users') || '[]');
-      const cleanId = credentials.identifier.replace(/\D/g, '');
-      const found = usersList.find(
-        (u) =>
-          (u.phone && cleanId && u.phone.includes(cleanId)) ||
-          (u.email && u.email.toLowerCase() === credentials.identifier.toLowerCase())
-      );
-      if (found) {
-        matchedUser = found;
-      }
-    } catch {}
-
-    if (!matchedUser) {
-      const isPhone = !credentials.identifier.includes('@');
-      matchedUser = {
-        id: `user-${Date.now()}`,
-        fullName: isPhone ? `İstifadəçi (+994 ${credentials.identifier})` : credentials.identifier.split('@')[0],
-        phone: isPhone ? credentials.identifier.replace(/\D/g, '') : '',
-        email: isPhone ? undefined : credentials.identifier,
-        role: 'customer',
-        registeredAt: new Date().toISOString(),
-      };
-    }
-
-    setAuthUser(matchedUser);
-    try {
-      localStorage.setItem('sahara_auth_user', JSON.stringify(matchedUser));
-    } catch {}
-    showToast('Hesabınıza uğurla daxil oldunuz.');
-    return true;
-  }, [showToast]);
-
-  const handleRegister = useCallback((credentials: RegisterCredentials) => {
-    const newUser: AuthUser = {
-      id: `user-${Date.now()}`,
-      fullName: credentials.fullName,
-      phone: credentials.phone,
-      email: credentials.email,
-      role: 'customer',
-      registeredAt: new Date().toISOString(),
-    };
-
-    try {
-      const usersList: any[] = JSON.parse(localStorage.getItem('sahara_registered_users') || '[]');
-      usersList.push({ ...newUser, password: credentials.password });
-      localStorage.setItem('sahara_registered_users', JSON.stringify(usersList));
-      localStorage.setItem('sahara_auth_user', JSON.stringify(newUser));
-    } catch {}
-
-    setAuthUser(newUser);
-    showToast(`Xoş gəlmisiniz, ${newUser.fullName}! Qeydiyyat tamamlandı.`);
-    return true;
-  }, [showToast]);
-
-  const handleLogout = useCallback(() => {
-    setAuthUser(null);
-    try {
+      localStorage.removeItem('sahara_registered_users');
       localStorage.removeItem('sahara_auth_user');
     } catch {}
-    showToast('Hesabdan çıxış edildi.');
-  }, [showToast]);
+    let active = true;
+    customerSupportApi
+      .session()
+      .then((user) => {
+        if (active) setAuthUser(user);
+      })
+      .catch(() => {
+        if (active) setAuthUser(null);
+      });
+    return () => {
+      active = false;
+    };
+  }, [isSiteMode]);
 
-  const handleUpdateProfile = useCallback((updated: Partial<AuthUser>) => {
-    setAuthUser((prev) => {
-      if (!prev) return null;
-      const nextUser = { ...prev, ...updated };
+  const handleLogin = useCallback(
+    async (credentials: LoginCredentials) => {
       try {
-        localStorage.setItem('sahara_auth_user', JSON.stringify(nextUser));
-      } catch {}
-      return nextUser;
-    });
-    showToast('Profil məlumatları yeniləndi.');
+        const user = await customerSupportApi.login(credentials);
+        setAuthUser(user);
+        showToast('Hesabınıza uğurla daxil oldunuz.');
+        return true;
+      } catch (error) {
+        showToast(error instanceof Error ? error.message : 'Giriş alınmadı', 'warning');
+        return false;
+      }
+    },
+    [showToast]
+  );
+
+  const handleRegister = useCallback(
+    async (credentials: RegisterCredentials) => {
+      try {
+        const user = await customerSupportApi.register(credentials);
+        setAuthUser(user);
+        showToast(`Xoş gəlmisiniz, ${user.fullName}! Qeydiyyat tamamlandı.`);
+        return true;
+      } catch (error) {
+        showToast(error instanceof Error ? error.message : 'Qeydiyyat alınmadı', 'warning');
+        return false;
+      }
+    },
+    [showToast]
+  );
+
+  const handleLogout = useCallback(async () => {
+    try {
+      await customerSupportApi.logout();
+      setAuthUser(null);
+      showToast('Hesabdan çıxış edildi.');
+    } catch (error) {
+      showToast(error instanceof Error ? error.message : 'Çıxış alınmadı', 'warning');
+    }
   }, [showToast]);
 
+  const handleUpdateProfile = useCallback(
+    async (updated: Partial<AuthUser>) => {
+      if (!authUser) return;
+      const next = { ...authUser, ...updated };
+      if ('fullName' in updated || 'email' in updated || 'birthDate' in updated) {
+        try {
+          const saved = await customerSupportApi.updateProfile(next);
+          setAuthUser({ ...next, ...saved });
+          showToast('Profil məlumatları yeniləndi.');
+          return true;
+        } catch (error) {
+          showToast(error instanceof Error ? error.message : 'Profil yenilənmədi', 'warning');
+          return false;
+        }
+      } else {
+        setAuthUser(next);
+        return true;
+      }
+    },
+    [authUser, showToast]
+  );
+
+  const handleChangeCustomerPassword = useCallback(
+    async (currentPassword: string, newPassword: string) => {
+      try {
+        await customerSupportApi.changePassword(currentPassword, newPassword);
+        showToast('Şifrəniz yeniləndi.');
+        return true;
+      } catch (error) {
+        showToast(error instanceof Error ? error.message : 'Şifrə yenilənmədi', 'warning');
+        return false;
+      }
+    },
+    [showToast]
+  );
 
   const parseDeepLink = useCallback(
     (items: Product[]) => {
@@ -330,7 +384,8 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
       const id = params.get('product');
       if (id) {
         const found = items.find(
-          (item) => item.id === id || item.code.toLocaleLowerCase('az') === id.toLocaleLowerCase('az')
+          (item) =>
+            item.id === id || item.code.toLocaleLowerCase('az') === id.toLocaleLowerCase('az')
         );
         if (found) {
           setSelectedProduct(found);
@@ -360,6 +415,10 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
           services: true,
           stores: true,
           support: true,
+          delivery: true,
+          warranty: true,
+          returns: true,
+          faq: true,
           favorites: true,
           cart: true,
           compare: featureFlags.isEnabled('enableCompare'),
@@ -576,7 +635,7 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
           showToast(`${product.code} müqayisədən çıxarıldı.`);
         } else {
           if (prev.length >= 4) {
-            showToast('Maksimum 4 məhsul müqayisə edilə bilər.', 'error');
+            showToast('Maksimum 4 məhsul müqayisə edilə bilər.', 'warning');
             return prev;
           }
           next = [...prev, product.id];
@@ -638,9 +697,7 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
       if (quantity <= 0) {
         next = prev.filter((item) => item.product.id !== productId);
       } else {
-        next = prev.map((item) =>
-          item.product.id === productId ? { ...item, quantity } : item
-        );
+        next = prev.map((item) => (item.product.id === productId ? { ...item, quantity } : item));
       }
       try {
         localStorage.setItem(CART_KEY, JSON.stringify(next));
@@ -782,6 +839,16 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
         { label: 'Brendlər', href: '/brands' },
       ];
     }
+    if (currentRoute === 'brand' && selectedBrand) {
+      const brand = catalog.brands.find(
+        (item) => item.id === selectedBrand || item.slug === selectedBrand
+      );
+      return [
+        { label: 'Ana Səhifə', href: '/' },
+        { label: 'Brendlər', href: '/brands' },
+        { label: brand?.name || selectedBrand, href: `/brand/${selectedBrand}` },
+      ];
+    }
     if (currentRoute === 'stores') {
       return [
         { label: 'Ana Səhifə', href: '/' },
@@ -830,7 +897,10 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
         { label: 'Ana Səhifə', href: '/' },
         { label: 'Kataloq', href: '/catalog' },
         ...(cat ? [{ label: cat.name, href: `/category/${cat.id}` }] : []),
-        { label: selectedProduct.title || selectedProduct.code, href: `/product/${selectedProduct.id}` },
+        {
+          label: selectedProduct.title || selectedProduct.code,
+          href: `/product/${selectedProduct.id}`,
+        },
       ];
     }
     if (currentRoute === 'about') {
@@ -857,11 +927,43 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
         { label: 'Məxfilik Siyasəti', href: '/privacy' },
       ];
     }
+    if (currentRoute === 'delivery') {
+      return [
+        { label: 'Ana Səhifə', href: '/' },
+        { label: 'Çatdırılma', href: '/catdirilma' },
+      ];
+    }
+    if (currentRoute === 'warranty') {
+      return [
+        { label: 'Ana Səhifə', href: '/' },
+        { label: 'Zəmanət', href: '/zemanet' },
+      ];
+    }
+    if (currentRoute === 'returns') {
+      return [
+        { label: 'Ana Səhifə', href: '/' },
+        { label: 'Qaytarma', href: '/qaytarma' },
+      ];
+    }
+    if (currentRoute === 'faq') {
+      return [
+        { label: 'Ana Səhifə', href: '/' },
+        { label: 'Tez-tez verilən suallar', href: '/faq' },
+      ];
+    }
     return [
       { label: 'Ana Səhifə', href: '/' },
       { label: 'Səhifə tapılmadı', href: '/404' },
     ];
-  }, [currentRoute, selectedCategory, selectedBrand, selectedProduct, catalog.categories, catalog.brands, authUser]);
+  }, [
+    currentRoute,
+    selectedCategory,
+    selectedBrand,
+    selectedProduct,
+    catalog.categories,
+    catalog.brands,
+    authUser,
+  ]);
 
   const handleNavigate = useCallback(
     (route: string, param?: string) => {
@@ -869,6 +971,7 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
         home: true,
         catalog: true,
         brands: true,
+        brand: true,
         services: true,
         stores: true,
         support: true,
@@ -883,6 +986,10 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
         careers: true,
         terms: true,
         privacy: true,
+        delivery: true,
+        warranty: true,
+        returns: true,
+        faq: true,
         compare: featureFlags.isEnabled('enableCompare'),
         guides: featureFlags.isEnabled('enableGuides'),
         brandDetail: featureFlags.isEnabled('enableBrandDetail'),
@@ -904,12 +1011,7 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
       }
 
       let validRoute = route as RouteName;
-      if (
-        route === 'profile' ||
-        route === 'login' ||
-        route === 'register' ||
-        route === 'auth'
-      ) {
+      if (route === 'profile' || route === 'login' || route === 'register' || route === 'auth') {
         validRoute = 'account';
       }
       setCurrentRoute(validRoute);
@@ -944,7 +1046,10 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
           cleanUrl = `/product/${param}`;
         }
       } else if (validRoute === 'brands') cleanUrl = '/brands';
-      else if (validRoute === 'services') cleanUrl = '/services';
+      else if (validRoute === 'brand') {
+        if (param) setSelectedBrand(param);
+        cleanUrl = `/brand/${param || selectedBrand || ''}`;
+      } else if (validRoute === 'services') cleanUrl = '/services';
       else if (validRoute === 'stores') cleanUrl = '/stores';
       else if (validRoute === 'support') cleanUrl = '/support';
       else if (validRoute === 'cart') cleanUrl = '/cart';
@@ -955,8 +1060,11 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
       else if (validRoute === 'careers') cleanUrl = '/careers';
       else if (validRoute === 'terms') cleanUrl = '/terms';
       else if (validRoute === 'privacy') cleanUrl = '/privacy';
+      else if (validRoute === 'delivery') cleanUrl = '/catdirilma';
+      else if (validRoute === 'warranty') cleanUrl = '/zemanet';
+      else if (validRoute === 'returns') cleanUrl = '/qaytarma';
+      else if (validRoute === 'faq') cleanUrl = '/faq';
       else if (validRoute === '404') cleanUrl = '/404';
-
 
       if (typeof window !== 'undefined') {
         if (window.location.pathname !== cleanUrl) {
@@ -965,7 +1073,7 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
         window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     },
-    [catalog.brands, catalog.products]
+    [catalog.brands, catalog.products, selectedBrand]
   );
 
   useEffect(() => {
@@ -975,7 +1083,8 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
       setCurrentRoute(parsed.route);
       if (parsed.productId) {
         const found = catalog.products.find(
-          (p) => p.id === parsed.productId || p.code.toLowerCase() === parsed.productId?.toLowerCase()
+          (p) =>
+            p.id === parsed.productId || p.code.toLowerCase() === parsed.productId?.toLowerCase()
         );
         if (found) setSelectedProduct(found);
       }
@@ -992,6 +1101,9 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
       const heading = document.querySelector('h1, [role="heading"]');
       if (heading && heading instanceof HTMLElement) {
         heading.setAttribute('tabindex', '-1');
+        heading.style.outline = 'none';
+        heading.style.border = 'none';
+        heading.style.boxShadow = 'none';
         heading.focus({ preventScroll: true });
       }
     }
@@ -1109,7 +1221,12 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
             }}
           />
         </Suspense>
-        <Toast message={toast.message} visible={toast.visible} theme={activeTheme} />
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          visible={toast.visible}
+          theme={activeTheme}
+        />
       </>
     );
   }
@@ -1349,9 +1466,8 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
           onOpenDrawer={() => setIsDrawerOpen(true)}
           onOpenUserDrawer={() => handleNavigate('account')}
           authUser={authUser}
+          mobileMenuOpenSignal={mobileMenuOpenSignal}
         />
-
-
       ) : (
         <Header
           theme={activeTheme}
@@ -1411,7 +1527,7 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
               <SiteHomePageSkeleton theme={activeTheme} />
             ) : (
               <>
-                {currentRoute !== 'home' && (
+                {currentRoute !== 'home' && currentRoute !== 'catalog' && (
                   <div className="catalog-container" style={{ padding: '0 16px' }}>
                     <Breadcrumbs items={breadcrumbsList} />
                   </div>
@@ -1452,7 +1568,6 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
                     initialCategory={selectedCategory}
                     initialBrand={selectedBrand}
                     searchQuery={searchQuery}
-                    onSearchChange={setSearchQuery}
                     onSelectProduct={selectProduct}
                     onWhatsApp={openWhatsApp}
                     onCall={openCall}
@@ -1475,6 +1590,27 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
                     onNavigate={handleNavigate}
                   />
                 )}
+                {currentRoute === 'brand' &&
+                  (() => {
+                    const brand = catalog.brands.find(
+                      (item) => item.id === selectedBrand || item.slug === selectedBrand
+                    );
+                    return brand ? (
+                      <BrandDetailPage
+                        brand={brand}
+                        products={catalog.products}
+                        categories={catalog.categories}
+                        theme={activeTheme}
+                        onNavigate={handleNavigate}
+                      />
+                    ) : (
+                      <NotFoundPage
+                        theme={activeTheme}
+                        onNavigate={handleNavigate}
+                        message="Brend tapılmadı."
+                      />
+                    );
+                  })()}
                 {currentRoute === 'services' && (
                   <ServicesPage
                     settings={catalog.settings}
@@ -1568,6 +1704,7 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
                     onRegister={handleRegister}
                     onLogout={handleLogout}
                     onUpdateProfile={handleUpdateProfile}
+                    onChangePassword={handleChangeCustomerPassword}
                     onNavigate={handleNavigate}
                     onWhatsAppSupport={() => openWhatsApp(null)}
                     onCallSupport={openCall}
@@ -1626,6 +1763,20 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
                     onNavigate={handleNavigate}
                   />
                 )}
+                {(currentRoute === 'delivery' ||
+                  currentRoute === 'warranty' ||
+                  currentRoute === 'returns' ||
+                  currentRoute === 'faq') && (
+                  <CustomerCarePage
+                    kind={currentRoute}
+                    settings={catalog.settings}
+                    theme={activeTheme}
+                    themeMode={themeMode}
+                    onNavigate={handleNavigate}
+                    onWhatsApp={() => openWhatsApp(null)}
+                    onCall={() => openCall()}
+                  />
+                )}
                 {currentRoute === '404' && (
                   <NotFoundPage theme={activeTheme} onNavigate={handleNavigate} />
                 )}
@@ -1673,15 +1824,14 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
           onNavigate={handleNavigate}
           onOpenSearch={() => setIsSearchOverlayOpen(true)}
           onOpenUserDrawer={() => handleNavigate('account')}
+          onOpenMenu={() => setMobileMenuOpenSignal((value) => value + 1)}
           comparisonCount={comparisonIds.length}
           cartCount={cartItems.reduce((acc, i) => acc + i.quantity, 0)}
           favoritesCount={favoriteIds.length}
           authUser={authUser}
           theme={activeTheme}
         />
-
       )}
-
 
       {/* Modals & Overlays (Only in legacy standalone catalog mode) */}
       <ProductDetailModal
@@ -1821,7 +1971,15 @@ export const App: React.FC<AppProps> = ({ initialRoute, initialData, isSsr = fal
         onUpdateProfile={handleUpdateProfile}
       />
 
-      <Toast message={toast.message} visible={toast.visible} theme={activeTheme} />
+      {isSiteMode && (
+        <CustomerChatWidget user={authUser} onOpenAccount={() => handleNavigate('account')} />
+      )}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        visible={toast.visible}
+        theme={activeTheme}
+      />
     </div>
   );
 };

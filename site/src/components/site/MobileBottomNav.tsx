@@ -1,5 +1,5 @@
 import React from 'react';
-import { Home, LayoutGrid, ShoppingCart, User, Heart } from 'lucide-react';
+import { Home, LayoutGrid, ShoppingCart, User, Menu } from 'lucide-react';
 import { AuthUser } from '../../types/auth';
 import { ThemeColors, DESIGN_TOKENS } from '../../types/theme';
 
@@ -8,6 +8,7 @@ interface MobileBottomNavProps {
   onNavigate: (route: string) => void;
   onOpenSearch?: () => void;
   onOpenUserDrawer?: () => void;
+  onOpenMenu?: () => void;
   comparisonCount?: number;
   cartCount?: number;
   favoritesCount?: number;
@@ -19,12 +20,11 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
   currentRoute,
   onNavigate,
   onOpenUserDrawer,
+  onOpenMenu,
   cartCount = 0,
-  favoritesCount = 0,
   authUser,
   theme,
 }) => {
-
   return (
     <nav
       className="mobile-bottom-nav no-print hide-on-desktop"
@@ -68,7 +68,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             fontSize: '11px',
             fontWeight: currentRoute === 'home' ? 800 : 500,
             cursor: 'pointer',
-            padding: '4px 8px',
+            padding: '4px 5px',
           }}
         >
           <Home size={20} />
@@ -91,7 +91,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             fontSize: '11px',
             fontWeight: currentRoute === 'catalog' ? 800 : 500,
             cursor: 'pointer',
-            padding: '4px 8px',
+            padding: '4px 5px',
           }}
         >
           <LayoutGrid size={20} />
@@ -115,7 +115,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             fontSize: '11px',
             fontWeight: currentRoute === 'cart' ? 800 : 500,
             cursor: 'pointer',
-            padding: '4px 8px',
+            padding: '4px 5px',
           }}
         >
           <div style={{ position: 'relative' }}>
@@ -145,7 +145,31 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
           <span>Səbət</span>
         </button>
 
-        {/* 4. Profil */}
+        {/* 4. Menyu */}
+        <button
+          type="button"
+          onClick={() => onOpenMenu?.()}
+          className="mobile-nav-item mobile-nav-menu-trigger"
+          style={{
+            background: 'transparent',
+            border: 'none',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            gap: '3px',
+            color: theme.textMuted,
+            fontSize: '11px',
+            fontWeight: 500,
+            cursor: 'pointer',
+            padding: '4px 5px',
+          }}
+          aria-label="Əsas menyunu aç"
+        >
+          <Menu size={20} />
+          <span>Menyu</span>
+        </button>
+
+        {/* 5. Profil */}
         <button
           type="button"
           onClick={() => {
@@ -168,7 +192,7 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
             fontSize: '11px',
             fontWeight: currentRoute === 'account' ? 800 : 500,
             cursor: 'pointer',
-            padding: '4px 8px',
+            padding: '4px 5px',
           }}
         >
           <div style={{ position: 'relative' }}>
@@ -178,7 +202,12 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
                   width: '20px',
                   height: '20px',
                   borderRadius: '50%',
-                  backgroundColor: currentRoute === 'account' ? '#dc2626' : (theme.mode === 'dark' ? '#334155' : '#e2e8f0'),
+                  backgroundColor:
+                    currentRoute === 'account'
+                      ? '#dc2626'
+                      : theme.mode === 'dark'
+                        ? '#334155'
+                        : '#e2e8f0',
                   color: currentRoute === 'account' ? '#ffffff' : theme.text,
                   display: 'flex',
                   alignItems: 'center',
@@ -193,13 +222,18 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
               <User size={20} />
             )}
           </div>
-          <span style={{ maxWidth: '60px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+          <span
+            style={{
+              maxWidth: '60px',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              whiteSpace: 'nowrap',
+            }}
+          >
             {authUser ? authUser.fullName.split(' ')[0] : 'Profil'}
           </span>
         </button>
-
       </div>
     </nav>
   );
 };
-

@@ -1,6 +1,7 @@
 import React from 'react';
 import { ArrowRight } from 'lucide-react';
 import { ThemeColors } from '../types/theme';
+import { ShimmerImage } from './ShimmerImage';
 
 interface SpecialDiscountBannerProps {
   theme: ThemeColors;
@@ -12,7 +13,10 @@ export const SpecialDiscountBanner: React.FC<SpecialDiscountBannerProps> = ({
   onNavigateDiscounts,
 }) => {
   return (
-    <section className="catalog-container special-discount-section scroll-reveal-item" aria-label="Xüsusi Endirimlər">
+    <section
+      className="catalog-container special-discount-section scroll-reveal-item"
+      aria-label="Xüsusi Endirimlər"
+    >
       <div
         className="special-discount-card"
         style={{
@@ -45,9 +49,10 @@ export const SpecialDiscountBanner: React.FC<SpecialDiscountBannerProps> = ({
           }}
           className="hide-on-mobile"
         >
-          <img
+          <ShimmerImage
             src="/media/promo-discount.jpg"
             alt="Endirimli texnikalar"
+            containerStyle={{ width: '100%', height: '100%' }}
             style={{
               width: '100%',
               height: '100%',
@@ -74,8 +79,20 @@ export const SpecialDiscountBanner: React.FC<SpecialDiscountBannerProps> = ({
           >
             Xüsusi endirimlər
             <br />
-            sizi gözləyir!
+            kataloq qiymətləri ilə
           </h2>
+
+          <p
+            style={{
+              color: 'rgba(255,255,255,.86)',
+              margin: '-6px 0 18px',
+              maxWidth: '430px',
+              lineHeight: 1.55,
+              fontSize: '14px',
+            }}
+          >
+            Əvvəlki və cari qiyməti kataloqda göstərilən modelləri nəzərdən keçirin.
+          </p>
 
           <button
             type="button"

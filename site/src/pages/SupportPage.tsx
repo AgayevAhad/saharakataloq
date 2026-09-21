@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
-import { Phone, MessageCircle, ChevronDown } from 'lucide-react';
+import { Phone, ChevronDown } from 'lucide-react';
 import { CatalogSettings } from '../types/product';
 import { ThemeColors } from '../types/theme';
-import { Button } from '../components/ui/Button';
+import { WhatsAppIcon } from '../components/WhatsAppIcon';
 
 interface SupportPageProps {
   settings?: CatalogSettings;
@@ -47,6 +47,7 @@ export const SupportPage: React.FC<SupportPageProps> = ({
 
       {/* Support Contact Channels */}
       <div
+        className="support-contact-grid"
         style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
@@ -56,78 +57,136 @@ export const SupportPage: React.FC<SupportPageProps> = ({
         }}
       >
         <div
+          className="scroll-reveal-item"
           style={{
             backgroundColor: theme.bgCard,
             border: `1px solid ${theme.border}`,
             borderRadius: '16px',
             padding: '24px',
             textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
           }}
         >
-          <div
+          <div>
+            <div
+              style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(37, 211, 102, 0.1)',
+                color: '#25d366',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 14px',
+              }}
+            >
+              <WhatsAppIcon size={24} color="#25d366" />
+            </div>
+            <h3
+              style={{ fontSize: '17px', fontWeight: 700, color: theme.text, marginBottom: '6px' }}
+            >
+              WhatsApp Dəstək Xətti
+            </h3>
+            <p style={{ fontSize: '13px', color: theme.textMuted, marginBottom: '16px' }}>
+              Sualınızı yazın, menecerlərimiz dərhal cavablandırsın.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onWhatsApp}
             style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '50%',
-              backgroundColor: 'rgba(37, 211, 102, 0.1)',
-              color: '#25d366',
+              width: '100%',
+              height: '46px',
+              padding: '0 18px',
+              borderRadius: '12px',
+              border: 'none',
+              backgroundColor: 'rgba(34, 197, 94, 0.12)',
+              color: '#16a34a',
+              fontWeight: 800,
+              fontSize: '14px',
+              cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              margin: '0 auto 14px',
+              gap: '8px',
+              transition: 'all 0.15s ease',
             }}
           >
-            <MessageCircle size={24} />
-          </div>
-          <h3 style={{ fontSize: '17px', fontWeight: 700, color: theme.text, marginBottom: '6px' }}>
-            WhatsApp Dəstək Xətti
-          </h3>
-          <p style={{ fontSize: '13px', color: theme.textMuted, marginBottom: '16px' }}>
-            Sualınızı yazın, menecerlərimiz dərhal cavablandırsın.
-          </p>
-          <Button variant="primary" size="sm" onClick={onWhatsApp} style={{ width: '100%' }}>
-            WhatsApp ilə Yazın
-          </Button>
+            <WhatsAppIcon size={18} color="#16a34a" />
+            <span>WhatsApp ilə Yazın</span>
+          </button>
         </div>
 
         <div
+          className="scroll-reveal-item"
           style={{
             backgroundColor: theme.bgCard,
             border: `1px solid ${theme.border}`,
             borderRadius: '16px',
             padding: '24px',
             textAlign: 'center',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
           }}
         >
-          <div
+          <div>
+            <div
+              style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(220, 38, 38, 0.1)',
+                color: '#dc2626',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                margin: '0 auto 14px',
+              }}
+            >
+              <Phone size={24} color="#dc2626" />
+            </div>
+            <h3
+              style={{ fontSize: '17px', fontWeight: 700, color: theme.text, marginBottom: '6px' }}
+            >
+              Telefonla Əlaqə
+            </h3>
+            <p style={{ fontSize: '13px', color: theme.textMuted, marginBottom: '16px' }}>
+              Zəng edərək birbaşa satış şöbəsi ilə danışın.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={onCall}
             style={{
-              width: '48px',
-              height: '48px',
-              borderRadius: '50%',
-              backgroundColor: 'rgba(220, 38, 38, 0.1)',
-              color: theme.primary,
+              width: '100%',
+              height: '46px',
+              padding: '0 18px',
+              borderRadius: '12px',
+              border: 'none',
+              backgroundColor: 'rgba(220, 38, 38, 0.10)',
+              color: '#dc2626',
+              fontWeight: 800,
+              fontSize: '14px',
+              cursor: 'pointer',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
-              margin: '0 auto 14px',
+              gap: '8px',
+              transition: 'all 0.15s ease',
             }}
           >
-            <Phone size={24} />
-          </div>
-          <h3 style={{ fontSize: '17px', fontWeight: 700, color: theme.text, marginBottom: '6px' }}>
-            Telefonla Əlaqə
-          </h3>
-          <p style={{ fontSize: '13px', color: theme.textMuted, marginBottom: '16px' }}>
-            Zəng edərək birbaşa satış şöbəsi ilə danışın.
-          </p>
-          <Button variant="outline" size="sm" onClick={onCall} style={{ width: '100%' }}>
-            Zəng Et
-          </Button>
+            <Phone size={17} color="#dc2626" />
+            <span>Zəng Et</span>
+          </button>
         </div>
       </div>
 
       {/* FAQ Section */}
-      <div style={{ maxWidth: '720px', margin: '0 auto' }}>
+      <div className="scroll-reveal-item" style={{ maxWidth: '720px', margin: '0 auto' }}>
         <h3
           style={{
             fontSize: '20px',

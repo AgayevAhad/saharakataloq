@@ -10,52 +10,109 @@ import { CatalogCategory, Brand, Product, CatalogSettings } from '../types/produ
 afterEach(cleanup);
 
 const mockCategories: CatalogCategory[] = [
-  { id: 'washing_machine', name: 'Paltaryuyanlar', active: true, sortOrder: 1 },
-  { id: 'refrigerator', name: 'Soyuducular', active: true, sortOrder: 2 },
-  { id: 'built_in_oven', name: 'Quraşdırılan Sobalar', active: true, sortOrder: 3 },
-  { id: 'airfryer', name: 'Airfryer', active: true, sortOrder: 4 },
+  {
+    id: 'washing_machine',
+    slug: 'washing-machine',
+    name: 'Paltaryuyanlar',
+    active: true,
+    sortOrder: 1,
+  },
+  { id: 'refrigerator', slug: 'refrigerator', name: 'Soyuducular', active: true, sortOrder: 2 },
+  {
+    id: 'built_in_oven',
+    slug: 'built-in-oven',
+    name: 'Quraşdırılan Sobalar',
+    active: true,
+    sortOrder: 3,
+  },
+  { id: 'airfryer', slug: 'airfryer', name: 'Airfryer', active: true, sortOrder: 4 },
 ];
 
 const mockBrands: Brand[] = [
-  { id: 'ardo', name: 'ARDO', active: true, originCountry: 'İtaliya', logo: '/media/brands/ardo-logo.png' },
-  { id: 'lotus', name: 'Lotus', active: true, originCountry: 'Türkiyə', logo: '/media/brands/lotus-logo.png' },
-  { id: 'artel', name: 'Artel', active: true, originCountry: 'Özbəkistan', logo: '/media/brands/artel-logo.svg' },
+  {
+    id: 'ardo',
+    slug: 'ardo',
+    name: 'ARDO',
+    active: true,
+    originCountry: 'İtaliya',
+    manufacturingCountries: [],
+    logo: '/media/brands/ardo-logo.png',
+  },
+  {
+    id: 'lotus',
+    slug: 'lotus',
+    name: 'Lotus',
+    active: true,
+    originCountry: 'Türkiyə',
+    manufacturingCountries: [],
+    logo: '/media/brands/lotus-logo.png',
+  },
+  {
+    id: 'artel',
+    slug: 'artel',
+    name: 'Artel',
+    active: true,
+    originCountry: 'Özbəkistan',
+    manufacturingCountries: [],
+    logo: '/media/brands/artel-logo.svg',
+  },
 ];
 
 const mockProducts: Product[] = [
   {
     id: 'prod-1',
     modelCode: 'ARDO-WM-01',
+    code: 'ARDO-WM-01',
     title: 'ARDO 9kq Paltaryuyan İnverter',
     category: 'washing_machine',
+    categoryName: 'Paltaryuyanlar',
     brandId: 'ardo',
     price: 1100,
     oldPrice: 1300,
     status: 'published',
     images: ['/media/ardo-wm.jpg'],
-    specifications: { 'Enerji sinfi': 'A+++', 'Mühərrik': 'İnverter' },
+    image: '/media/ardo-wm.jpg',
+    shortDesc: '',
+    specs: [
+      { id: 'energy', name: 'Enerji sinfi', value: 'A+++' },
+      { id: 'motor', name: 'Mühərrik', value: 'İnverter' },
+    ],
+    highlights: [],
+    specifications: { 'Enerji sinfi': 'A+++', Mühərrik: 'İnverter' },
   },
   {
     id: 'prod-2',
     modelCode: 'LOTUS-AF-01',
+    code: 'LOTUS-AF-01',
     title: 'Lotus Dual Zone Airfryer',
     category: 'airfryer',
+    categoryName: 'Airfryer',
     brandId: 'lotus',
     price: 350,
     status: 'published',
     images: ['/media/lotus-af.jpg'],
+    image: '/media/lotus-af.jpg',
+    shortDesc: '',
+    specs: [{ id: 'color', name: 'Rəng', value: 'Qara' }],
+    highlights: [],
     videoUrl: '/media/lotus-af.mp4',
-    specifications: { 'Rəng': 'Qara' },
+    specifications: { Rəng: 'Qara' },
   },
   {
     id: 'prod-3',
     modelCode: 'ARTEL-REF-01',
+    code: 'ARTEL-REF-01',
     title: 'Artel NoFrost Soyuducu',
     category: 'refrigerator',
+    categoryName: 'Soyuducular',
     brandId: 'artel',
     price: 850,
     status: 'published',
     images: ['/media/artel-ref.jpg'],
+    image: '/media/artel-ref.jpg',
+    shortDesc: '',
+    specs: [{ id: 'energy', name: 'Enerji sinfi', value: 'A+' }],
+    highlights: [],
     specifications: { 'Enerji sinfi': 'A+' },
   },
 ];
@@ -64,6 +121,8 @@ const mockSettings: CatalogSettings = {
   companyName: 'Sahara Electronics',
   heroBannerTitle: 'Sahara Keyfiyyəti',
   heroBannerSubtitle: 'Müasir Məişət Texnikası',
+  phoneNumber: '+994 50 123 45 67',
+  whatsappNumber: '994501234567',
 };
 
 describe('BannerHero Edge Dissolve & Boundary-Free Masking', () => {
@@ -122,6 +181,42 @@ describe('SiteHeader Kataloq Mega Preview', () => {
 });
 
 describe('CatalogPage Rich Filters & Navigation', () => {
+  it('does not freeze the empty initial price range when products load later', () => {
+    const props = {
+      categories: mockCategories,
+      brands: mockBrands,
+      settings: mockSettings,
+      theme: lightTheme,
+      themeMode: 'light' as const,
+      onSelectProduct: vi.fn(),
+      onWhatsApp: vi.fn(),
+      onCall: vi.fn(),
+      onShare: vi.fn(),
+      onCopyLink: vi.fn(),
+      onNavigate: vi.fn(),
+    };
+    const premium = {
+      ...mockProducts[0],
+      id: 'premium',
+      code: 'PREMIUM',
+      title: 'Premium soyuducu',
+      price: 18999,
+    };
+    const withoutPrice = {
+      ...mockProducts[1],
+      id: 'without-price',
+      code: 'QUOTE',
+      title: 'Qiyməti soruşulan məhsul',
+      price: undefined,
+    };
+    const { container, rerender } = render(<CatalogPage {...props} products={[]} />);
+
+    rerender(<CatalogPage {...props} products={[premium, withoutPrice]} />);
+
+    expect(container.querySelectorAll('.catalog-products-container .product-card')).toHaveLength(2);
+    expect(screen.getByText('2 model')).toBeTruthy();
+  });
+
   it('renders products and filters by category when clicked', () => {
     const onSelectProduct = vi.fn();
     render(

@@ -1,7 +1,21 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { Brand, CatalogCategory, Product } from '../../types/product';
 import { ThemeColors, DESIGN_TOKENS } from '../../types/theme';
-import { X, Layers, MapPin, ChevronRight, Phone, ShieldCheck, Tag } from 'lucide-react';
+import {
+  X,
+  Layers,
+  MapPin,
+  ChevronRight,
+  Phone,
+  ShieldCheck,
+  Tag,
+  Home,
+  Percent,
+  Building2,
+} from 'lucide-react';
+import { BrandMark } from '../BrandMark';
+import { ShimmerImage } from '../ShimmerImage';
+import { CategoryGlyph } from '../CategoryGlyph';
 
 interface MobileCategoryDrawerProps {
   isOpen: boolean;
@@ -85,6 +99,16 @@ export const MobileCategoryDrawer: React.FC<MobileCategoryDrawerProps> = ({
     };
   }, [isOpen, onClose, triggerRef]);
 
+  const productCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    products.forEach((product) => {
+      if (product.status === 'published') {
+        counts.set(product.category, (counts.get(product.category) || 0) + 1);
+      }
+    });
+    return counts;
+  }, [products]);
+
   if (!isOpen) return null;
 
   const sortedCategories = [...categories]
@@ -158,9 +182,12 @@ export const MobileCategoryDrawer: React.FC<MobileCategoryDrawerProps> = ({
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <img
+            <ShimmerImage
               src={themeMode === 'dark' ? '/media/SaharaLogo-dark.png' : '/media/SaharaLogo.png'}
               alt="Sahara Electronics"
+              objectFit="contain"
+              spinnerSize={12}
+              containerStyle={{ height: '26px', width: '120px' }}
               style={{
                 height: '26px',
                 width: 'auto',
@@ -195,6 +222,53 @@ export const MobileCategoryDrawer: React.FC<MobileCategoryDrawerProps> = ({
           </button>
         </div>
 
+        <nav
+          className="mobile-drawer-primary-nav"
+          aria-label="Əsas sayt menyusu"
+          style={{
+            padding: '14px 20px 8px',
+            display: 'grid',
+            gridTemplateColumns: 'repeat(2, minmax(0, 1fr))',
+            gap: '8px',
+          }}
+        >
+          {[
+            { label: 'Ana səhifə', route: 'home', icon: <Home size={15} /> },
+            { label: 'Kataloq', route: 'catalog', icon: <Layers size={15} /> },
+            { label: 'Brendlər', route: 'brands', icon: <Tag size={15} /> },
+            { label: 'Mağazalar', route: 'stores', icon: <Building2 size={15} /> },
+            { label: 'Endirimlər', route: 'catalog', icon: <Percent size={15} /> },
+            { label: 'Dəstək', route: 'support', icon: <Phone size={15} /> },
+          ].map((item) => (
+            <button
+              key={item.label}
+              type="button"
+              onClick={() => {
+                onNavigate(item.route);
+                onClose();
+              }}
+              style={{
+                minWidth: 0,
+                minHeight: '42px',
+                padding: '9px 10px',
+                borderRadius: '10px',
+                border: `1px solid ${theme.border}`,
+                background: themeMode === 'dark' ? '#161d2b' : '#f8fafc',
+                color: theme.text,
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '12px',
+                fontWeight: 750,
+                cursor: 'pointer',
+              }}
+            >
+              <span style={{ color: theme.primary, display: 'inline-flex' }}>{item.icon}</span>
+              <span>{item.label}</span>
+            </button>
+          ))}
+        </nav>
+
         {/* Brand Bar */}
         <div style={{ padding: '16px 20px 8px 20px', borderBottom: `1px solid ${theme.border}` }}>
           <div
@@ -226,8 +300,8 @@ export const MobileCategoryDrawer: React.FC<MobileCategoryDrawerProps> = ({
                   padding: '8px 14px',
                   borderRadius: '8px',
                   border: `1px solid ${theme.border}`,
-                  backgroundColor: themeMode === 'dark' ? '#161d2b' : '#f1f5f9',
-                  color: theme.text,
+                  backgroundColor: '#ffffff',
+                  color: '#0f172a',
                   fontSize: '13px',
                   fontWeight: 700,
                   cursor: 'pointer',
@@ -238,7 +312,13 @@ export const MobileCategoryDrawer: React.FC<MobileCategoryDrawerProps> = ({
                   gap: '6px',
                 }}
               >
-                <span>{brand.name}</span>
+                <span className="mobile-drawer-brand-logo" title={brand.name}>
+                  {brand.logo ? (
+                    <BrandMark brand={brand} compact />
+                  ) : (
+                    <span className="mobile-drawer-brand-name">{brand.name}</span>
+                  )}
+                </span>
                 {brand.comingSoon && (
                   <span
                     style={{
@@ -279,7 +359,7 @@ export const MobileCategoryDrawer: React.FC<MobileCategoryDrawerProps> = ({
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
             {sortedCategories.map((cat) => {
-              const count = products.filter((p) => p.category === cat.id).length;
+              const count = productCounts.get(cat.id) || 0;
               return (
                 <button
                   key={cat.id}
@@ -305,7 +385,10 @@ export const MobileCategoryDrawer: React.FC<MobileCategoryDrawerProps> = ({
                     transition: 'all 0.15s ease',
                   }}
                 >
-                  <span>{cat.name}</span>
+                  <span className="mobile-drawer-category-label">
+                    <CategoryGlyph id={cat.id} slug={cat.slug} compact plain />
+                    <span>{cat.name}</span>
+                  </span>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                     {count > 0 && (
                       <span

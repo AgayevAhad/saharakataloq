@@ -63,6 +63,7 @@ describe('Responsive Layout & Visual Integrity Tests (Desktop & Mobile)', () => 
     // 1. Outer card container must have netflix-card-pop for grid/flex compatibility
     const cardEl = container.querySelector('.netflix-card-pop.product-card') as HTMLElement;
     expect(cardEl).toBeTruthy();
+    expect(cardEl.classList.contains('scroll-reveal-item')).toBe(false);
     expect(cardEl.style.display).toBe('flex');
     expect(cardEl.style.flexDirection).toBe('column');
     expect(cardEl.style.height).toBe('100%');

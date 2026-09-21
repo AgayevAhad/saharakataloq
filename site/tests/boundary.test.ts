@@ -41,7 +41,6 @@ describe('Boundary Isolation & Root Catalog Protection Test Suite', () => {
     expect(result.errors).toHaveLength(0);
   });
 
-
   it('NEGATIVE TEST: deliberately fails when root file tampering is simulated', () => {
     const isStandalone = !isMonorepoRoot(repoRoot);
     if (isStandalone) {

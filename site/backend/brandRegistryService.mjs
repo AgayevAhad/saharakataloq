@@ -566,7 +566,8 @@ export class BrandRegistryService {
   }
 
   /**
-   * Returns public brands strictly filtering out candidate / unapproved brands.
+   * Returns public brands, including legacy PIM `unverified` records that predate
+   * the candidate approval workflow, while filtering out new candidate brands.
    */
   getPublicBrands() {
     const hasVerifStatus = this.hasColumn('brands', 'verification_status');
@@ -580,7 +581,7 @@ export class BrandRegistryService {
           SELECT b.*, (SELECT COUNT(*) FROM products p WHERE p.brand_id = b.id AND ${prodStatusCond}) as product_count
           FROM brands b
           WHERE b.active = 1
-            AND b.verification_status IN ('published', 'legacy_unreviewed')
+            AND b.verification_status IN ('published', 'legacy_unreviewed', 'unverified')
           ORDER BY b.name ASC
         `).all()
       : this.db.prepare(`
