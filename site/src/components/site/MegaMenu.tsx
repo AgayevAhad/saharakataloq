@@ -241,7 +241,7 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
           p.categoryName.toLowerCase().includes(activeTargetCategory.name.toLowerCase()))
       );
     })
-    .slice(0, 3);
+    .slice(0, 4);
 
   return (
     <div
@@ -271,11 +271,11 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
       }}
     >
       <div className="catalog-container" style={{ padding: '0 clamp(24px, 4vw, 56px)' }}>
-        {/* Clean 3-Section Layout: Left (Departments) | Center (Category Grid + Optional Showcase) | Right (Official Brands) */}
+        {/* Clean 3-Section Layout: Left (Departments) | Center (Category Grid + 4-Card Showcase) | Right (Single Column Brands) */}
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: '220px 1fr 280px',
+            gridTemplateColumns: '200px 1fr 165px',
             gap: '24px',
             alignItems: 'start',
           }}
@@ -370,6 +370,43 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                 </button>
               );
             })}
+
+            <div
+              style={{
+                marginTop: 'auto',
+                paddingTop: '16px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '4px',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  onNavigate('catalog');
+                  onClose();
+                }}
+                style={{
+                  width: '100%',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '7px 10px',
+                  borderRadius: '8px',
+                  border: `1px dashed ${theme?.mode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)'}`,
+                  backgroundColor:
+                    theme?.mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
+                  color: theme?.primary || '#e31e24',
+                  fontSize: '11.5px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease',
+                }}
+              >
+                <span>Bütün kataloq</span>
+                <ArrowRight size={12} />
+              </button>
+            </div>
           </div>
 
           {/* Center Column: Kateqoriyalar (Categories Grid + Showcase) */}
@@ -618,7 +655,7 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                     className="mega-menu-products-grid"
                     style={{
                       display: 'grid',
-                      gridTemplateColumns: `repeat(${Math.min(3, Math.max(1, matchingCategoryProducts.length))}, minmax(0, 1fr))`,
+                      gridTemplateColumns: `repeat(${Math.min(4, Math.max(1, matchingCategoryProducts.length))}, minmax(0, 1fr))`,
                       gap: '10px',
                       width: '100%',
                     }}
@@ -657,14 +694,14 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
               )}
           </div>
 
-          {/* Right Column: Rəsmi Brendlər (Official Brands Showcase) */}
+          {/* Right Column: Rəsmi Brendlər (Official Brands Single-Column Showcase) */}
           <div
             style={{
               display: 'flex',
               flexDirection: 'column',
-              gap: '10px',
+              gap: '8px',
               borderLeft: `1px solid ${theme?.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
-              paddingLeft: '18px',
+              paddingLeft: '14px',
             }}
           >
             <div
@@ -716,12 +753,12 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
 
             <div
               style={{
-                display: 'grid',
-                gridTemplateColumns: 'repeat(2, 1fr)',
-                gap: '6px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '5px',
               }}
             >
-              {publishedBrands.slice(0, 10).map((brand) => (
+              {publishedBrands.slice(0, 7).map((brand) => (
                 <button
                   key={brand.id}
                   type="button"
@@ -734,16 +771,17 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    padding: '6px 8px',
+                    padding: '4px 6px',
                     borderRadius: '8px',
                     backgroundColor:
-                      theme?.mode === 'dark' ? '#ffffff' : 'rgba(248, 250, 252, 0.9)',
+                      theme?.mode === 'dark' ? '#ffffff' : 'rgba(248, 250, 252, 0.95)',
                     border: 'none',
                     outline: 'none',
                     cursor: 'pointer',
                     transition: 'all 0.15s ease',
                     boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-                    height: '42px',
+                    height: '36px',
+                    width: '100%',
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor =
@@ -753,7 +791,7 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                   }}
                   onMouseLeave={(e) => {
                     e.currentTarget.style.backgroundColor =
-                      theme?.mode === 'dark' ? '#ffffff' : 'rgba(248, 250, 252, 0.9)';
+                      theme?.mode === 'dark' ? '#ffffff' : 'rgba(248, 250, 252, 0.95)';
                     e.currentTarget.style.transform = 'none';
                     e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)';
                   }}
@@ -764,7 +802,7 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                       alt={brand.name}
                       spinnerSize={10}
                       objectFit="contain"
-                      containerStyle={{ width: '82px', height: '24px' }}
+                      containerStyle={{ width: '76px', height: '20px' }}
                     />
                   ) : (
                     <span className="brand-logo-text-fallback brand-logo-text-fallback-small">
@@ -788,11 +826,11 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                 color: '#e31e24',
                 background: 'transparent',
                 border: 'none',
-                fontSize: '11.5px',
+                fontSize: '11px',
                 fontWeight: 700,
                 cursor: 'pointer',
                 padding: '4px 2px',
-                marginTop: '4px',
+                marginTop: '2px',
               }}
             >
               <span>Bütün brendlər ({publishedBrands.length})</span>

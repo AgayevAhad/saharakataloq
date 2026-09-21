@@ -169,4 +169,85 @@ describe('Header Kataloq Monolithic MegaMenu Expansion', () => {
     const overlay = document.querySelector('#mega-menu-overlay');
     expect(overlay).toBeTruthy();
   });
+
+  it('renders up to 4 product cards in showcase and single-column brand list', () => {
+    const fourProducts: Product[] = [
+      {
+        id: 'w-1',
+        code: 'w-1',
+        title: 'Washer 1',
+        category: 'washer',
+        categoryName: 'Paltaryuyanlar',
+        image: '/media/w1.jpg',
+        shortDesc: 'Washer 1 description',
+        brandId: 'ardo',
+        price: 500,
+        status: 'published',
+        specs: [],
+        highlights: [],
+      },
+      {
+        id: 'w-2',
+        code: 'w-2',
+        title: 'Washer 2',
+        category: 'washer',
+        categoryName: 'Paltaryuyanlar',
+        image: '/media/w2.jpg',
+        shortDesc: 'Washer 2 description',
+        brandId: 'ardo',
+        price: 600,
+        status: 'published',
+        specs: [],
+        highlights: [],
+      },
+      {
+        id: 'w-3',
+        code: 'w-3',
+        title: 'Washer 3',
+        category: 'washer',
+        categoryName: 'Paltaryuyanlar',
+        image: '/media/w3.jpg',
+        shortDesc: 'Washer 3 description',
+        brandId: 'ardo',
+        price: 700,
+        status: 'published',
+        specs: [],
+        highlights: [],
+      },
+      {
+        id: 'w-4',
+        code: 'w-4',
+        title: 'Washer 4',
+        category: 'washer',
+        categoryName: 'Paltaryuyanlar',
+        image: '/media/w4.jpg',
+        shortDesc: 'Washer 4 description',
+        brandId: 'ardo',
+        price: 800,
+        status: 'published',
+        specs: [],
+        highlights: [],
+      },
+    ];
+
+    const { container } = render(
+      <MegaMenu
+        isOpen={true}
+        onClose={vi.fn()}
+        categories={mockCategories}
+        brands={mockBrands}
+        products={fourProducts}
+        theme={lightTheme}
+        onSelectCategory={vi.fn()}
+        onSelectBrand={vi.fn()}
+        onNavigate={vi.fn()}
+      />
+    );
+
+    const productCards = container.querySelectorAll('.mega-menu-product-card-wrap');
+    expect(productCards.length).toBe(4);
+
+    const brandsList = container.querySelectorAll('.mega-menu-brand-card');
+    expect(brandsList.length).toBeGreaterThanOrEqual(2);
+  });
 });
