@@ -271,11 +271,11 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
       }}
     >
       <div className="catalog-container" style={{ padding: '0 clamp(24px, 4vw, 56px)' }}>
-        {/* Clean 3-Section Layout: Left (Departments) | Center (Category Grid + 4-Card Showcase) | Right (Single Column Brands) */}
+        {/* Top 3-Column Navigation Grid: Bölmələr (Left) | Kateqoriyalar (Center) | Rəsmi Brendlər (Right) */}
         <div
           style={{
             display: 'grid',
-            gridTemplateColumns: '200px 1fr 165px',
+            gridTemplateColumns: '210px 1fr 175px',
             gap: '24px',
             alignItems: 'start',
           }}
@@ -374,7 +374,7 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
             <div
               style={{
                 marginTop: 'auto',
-                paddingTop: '16px',
+                paddingTop: '12px',
                 display: 'flex',
                 flexDirection: 'column',
                 gap: '4px',
@@ -409,14 +409,13 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
             </div>
           </div>
 
-          {/* Center Column: Kateqoriyalar (Categories Grid + Showcase) */}
+          {/* Center Column: Kateqoriyalar (Categories Grid) */}
           <div
             style={{
               display: 'flex',
               flexDirection: 'column',
               gap: '12px',
               minWidth: 0,
-              paddingRight: '12px',
             }}
           >
             {/* Header row for active department */}
@@ -591,117 +590,18 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                 </div>
               );
             })}
-
-            {/* Optional matching showcase below categories if products available */}
-            {products &&
-              products.length > 0 &&
-              activeTargetCategory &&
-              matchingCategoryProducts.length > 0 && (
-                <div
-                  className="mega-menu-products-showcase"
-                  style={{
-                    marginTop: '6px',
-                    paddingTop: '8px',
-                    borderTop: `1px solid ${theme?.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)'}`,
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '8px',
-                  }}
-                >
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'space-between',
-                    }}
-                  >
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <span
-                        style={{
-                          fontSize: '11.5px',
-                          fontWeight: 800,
-                          color: theme?.text,
-                        }}
-                      >
-                        {activeTargetCategory.name} üzrə seçilmiş modellər
-                      </span>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => {
-                        onSelectCategory(activeTargetCategory.id);
-                        onClose();
-                      }}
-                      style={{
-                        background: 'transparent',
-                        border: 'none',
-                        color: '#dc2626',
-                        fontSize: '11px',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                        display: 'inline-flex',
-                        alignItems: 'center',
-                        gap: '3px',
-                        padding: 0,
-                      }}
-                    >
-                      <span>Modellərə bax</span>
-                      <ArrowRight size={10} />
-                    </button>
-                  </div>
-
-                  <div
-                    className="mega-menu-products-grid"
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: `repeat(${Math.min(4, Math.max(1, matchingCategoryProducts.length))}, minmax(0, 1fr))`,
-                      gap: '10px',
-                      width: '100%',
-                    }}
-                  >
-                    {matchingCategoryProducts.map((prod) => (
-                      <div
-                        key={prod.id}
-                        className="mega-menu-product-card-wrap"
-                        style={{
-                          width: '100%',
-                          display: 'flex',
-                          justifyContent: 'center',
-                        }}
-                      >
-                        <FeaturedProductCard
-                          product={prod}
-                          theme={theme}
-                          brand={brands.find((b) => b.id === prod.brandId)}
-                          onSelect={(p) => {
-                            if (onSelectProduct) {
-                              onSelectProduct(p);
-                            } else {
-                              onNavigate('product', p.id);
-                            }
-                            onClose();
-                          }}
-                          onAddToCart={(p) => {
-                            if (onSelectProduct) onSelectProduct(p);
-                            onClose();
-                          }}
-                        />
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
           </div>
 
-          {/* Right Column: Rəsmi Brendlər (Official Brands Single-Column Showcase) */}
+          {/* Right Column: Rəsmi Brendlər (Official Brands Snug Column) */}
           <div
             style={{
               display: 'flex',
               flexDirection: 'column',
               gap: '8px',
               borderLeft: `1px solid ${theme?.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)'}`,
-              paddingLeft: '14px',
+              paddingLeft: '16px',
+              width: '100%',
+              boxSizing: 'border-box',
             }}
           >
             <div
@@ -755,7 +655,8 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
               style={{
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '5px',
+                gap: '6px',
+                width: '100%',
               }}
             >
               {publishedBrands.slice(0, 7).map((brand) => (
@@ -771,7 +672,7 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    padding: '4px 6px',
+                    padding: '6px 10px',
                     borderRadius: '8px',
                     backgroundColor:
                       theme?.mode === 'dark' ? '#ffffff' : 'rgba(248, 250, 252, 0.95)',
@@ -782,6 +683,7 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                     boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
                     height: '36px',
                     width: '100%',
+                    boxSizing: 'border-box',
                   }}
                   onMouseEnter={(e) => {
                     e.currentTarget.style.backgroundColor =
@@ -802,7 +704,7 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                       alt={brand.name}
                       spinnerSize={10}
                       objectFit="contain"
-                      containerStyle={{ width: '76px', height: '20px' }}
+                      containerStyle={{ width: '88px', height: '22px' }}
                     />
                   ) : (
                     <span className="brand-logo-text-fallback brand-logo-text-fallback-small">
@@ -838,6 +740,114 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
             </button>
           </div>
         </div>
+
+        {/* Full-Width Bottom Showcase: Spanning 100% width from under Bölmələr to under Brendlər */}
+        {products &&
+          products.length > 0 &&
+          activeTargetCategory &&
+          matchingCategoryProducts.length > 0 && (
+            <div
+              className="mega-menu-products-showcase"
+              style={{
+                width: '100%',
+                marginTop: '16px',
+                paddingTop: '14px',
+                borderTop: `1px solid ${theme?.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)'}`,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+              }}
+            >
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  flexWrap: 'wrap',
+                  gap: '8px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Sparkles size={14} style={{ color: '#e31e24' }} />
+                  <span
+                    style={{
+                      fontSize: '13px',
+                      fontWeight: 800,
+                      color: theme?.text,
+                    }}
+                  >
+                    {activeTargetCategory.name} üzrə seçilmiş modellər
+                  </span>
+                  <span style={{ fontSize: '11.5px', color: theme?.textMuted, fontWeight: 500 }}>
+                    (Tövsiyə olunan 4 model)
+                  </span>
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    onSelectCategory(activeTargetCategory.id);
+                    onClose();
+                  }}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    color: '#dc2626',
+                    fontSize: '12px',
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    padding: '2px 6px',
+                  }}
+                >
+                  <span>Bütün {activeTargetCategory.name} modellərinə bax</span>
+                  <ArrowRight size={12} />
+                </button>
+              </div>
+
+              <div
+                className="mega-menu-products-grid"
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: `repeat(${Math.min(4, Math.max(1, matchingCategoryProducts.length))}, minmax(0, 1fr))`,
+                  gap: '16px',
+                  width: '100%',
+                }}
+              >
+                {matchingCategoryProducts.map((prod) => (
+                  <div
+                    key={prod.id}
+                    className="mega-menu-product-card-wrap"
+                    style={{
+                      width: '100%',
+                      display: 'flex',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <FeaturedProductCard
+                      product={prod}
+                      theme={theme}
+                      brand={brands.find((b) => b.id === prod.brandId)}
+                      onSelect={(p) => {
+                        if (onSelectProduct) {
+                          onSelectProduct(p);
+                        } else {
+                          onNavigate('product', p.id);
+                        }
+                        onClose();
+                      }}
+                      onAddToCart={(p) => {
+                        if (onSelectProduct) onSelectProduct(p);
+                        onClose();
+                      }}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
       </div>
     </div>
   );

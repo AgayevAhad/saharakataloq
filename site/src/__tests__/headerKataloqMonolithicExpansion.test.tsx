@@ -247,6 +247,10 @@ describe('Header Kataloq Monolithic MegaMenu Expansion', () => {
     const productCards = container.querySelectorAll('.mega-menu-product-card-wrap');
     expect(productCards.length).toBe(4);
 
+    const showcase = container.querySelector('.mega-menu-products-showcase');
+    expect(showcase).toBeTruthy();
+    expect(showcase?.parentElement?.classList.contains('catalog-container')).toBe(true);
+
     const brandsList = container.querySelectorAll('.mega-menu-brand-card');
     expect(brandsList.length).toBeGreaterThanOrEqual(2);
   });
