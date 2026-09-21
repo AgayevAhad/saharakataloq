@@ -10,6 +10,19 @@ const getCategoryIcon = (id: string, slug?: string) => {
   return <CategoryGlyph id={id} slug={slug} compact />;
 };
 
+const getBrandLogoStyle = (brandSlugOrId: string): { maxWidth: string; maxHeight: string } => {
+  const key = (brandSlugOrId || '').toLowerCase();
+  if (key.includes('samsung')) return { maxWidth: '82px', maxHeight: '14px' };
+  if (key.includes('bosch')) return { maxWidth: '80px', maxHeight: '16px' };
+  if (key.includes('artel')) return { maxWidth: '58px', maxHeight: '22px' };
+  if (key.includes('ardo')) return { maxWidth: '78px', maxHeight: '20px' };
+  if (key.includes('lotus')) return { maxWidth: '80px', maxHeight: '19px' };
+  if (key.includes('lg')) return { maxWidth: '58px', maxHeight: '20px' };
+  if (key.includes('beko')) return { maxWidth: '72px', maxHeight: '17px' };
+  if (key.includes('gorenje')) return { maxWidth: '78px', maxHeight: '18px' };
+  return { maxWidth: '80px', maxHeight: '19px' };
+};
+
 interface MegaMenuProps {
   isOpen: boolean;
   onClose: () => void;
@@ -659,60 +672,86 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                 width: '100%',
               }}
             >
-              {publishedBrands.slice(0, 7).map((brand) => (
-                <button
-                  key={brand.id}
-                  type="button"
-                  onClick={() => {
-                    onSelectBrand(brand.id);
-                    onClose();
-                  }}
-                  className="mega-menu-link mega-menu-brand-card"
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    padding: '6px 10px',
-                    borderRadius: '8px',
-                    backgroundColor:
-                      theme?.mode === 'dark' ? '#ffffff' : 'rgba(248, 250, 252, 0.95)',
-                    border: 'none',
-                    outline: 'none',
-                    cursor: 'pointer',
-                    transition: 'all 0.15s ease',
-                    boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-                    height: '36px',
-                    width: '100%',
-                    boxSizing: 'border-box',
-                  }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.backgroundColor =
-                      theme?.mode === 'dark' ? '#f8fafc' : '#ffffff';
-                    e.currentTarget.style.transform = 'translateY(-1px)';
-                    e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.08)';
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.backgroundColor =
-                      theme?.mode === 'dark' ? '#ffffff' : 'rgba(248, 250, 252, 0.95)';
-                    e.currentTarget.style.transform = 'none';
-                    e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)';
-                  }}
-                >
-                  {brand.logo ? (
-                    <ShimmerImage
-                      src={brand.logo}
-                      alt={brand.name}
-                      spinnerSize={10}
-                      objectFit="contain"
-                      containerStyle={{ width: '88px', height: '22px' }}
-                    />
-                  ) : (
-                    <span className="brand-logo-text-fallback brand-logo-text-fallback-small">
-                      {brand.name}
-                    </span>
-                  )}
-                </button>
-              ))}
+              {publishedBrands.slice(0, 5).map((brand) => {
+                const logoStyle = getBrandLogoStyle(brand.slug || brand.id);
+                return (
+                  <button
+                    key={brand.id}
+                    type="button"
+                    onClick={() => {
+                      onSelectBrand(brand.id);
+                      onClose();
+                    }}
+                    className="mega-menu-link mega-menu-brand-card"
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      padding: '6px 10px',
+                      borderRadius: '8px',
+                      backgroundColor:
+                        theme?.mode === 'dark' ? '#ffffff' : 'rgba(248, 250, 252, 0.95)',
+                      border: 'none',
+                      outline: 'none',
+                      cursor: 'pointer',
+                      transition: 'all 0.15s ease',
+                      boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
+                      height: '38px',
+                      width: '100%',
+                      boxSizing: 'border-box',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.backgroundColor =
+                        theme?.mode === 'dark' ? '#f8fafc' : '#ffffff';
+                      e.currentTarget.style.transform = 'translateY(-1px)';
+                      e.currentTarget.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.08)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.backgroundColor =
+                        theme?.mode === 'dark' ? '#ffffff' : 'rgba(248, 250, 252, 0.95)';
+                      e.currentTarget.style.transform = 'none';
+                      e.currentTarget.style.boxShadow = '0 1px 3px rgba(0,0,0,0.04)';
+                    }}
+                  >
+                    {brand.logo ? (
+                      <div
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                        }}
+                      >
+                        <ShimmerImage
+                          src={brand.logo}
+                          alt={brand.name}
+                          spinnerSize={10}
+                          objectFit="contain"
+                          containerStyle={{
+                            width: logoStyle.maxWidth,
+                            height: logoStyle.maxHeight,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                          }}
+                          style={{
+                            maxWidth: '100%',
+                            maxHeight: '100%',
+                            width: 'auto',
+                            height: 'auto',
+                            objectFit: 'contain',
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <span className="brand-logo-text-fallback brand-logo-text-fallback-small">
+                        {brand.name}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
             </div>
 
             <button
