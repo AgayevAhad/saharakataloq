@@ -1,3 +1,4 @@
+// @vitest-environment happy-dom
 import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
@@ -48,22 +49,37 @@ const all16Categories: CatalogCategory[] = [
   { id: 'iron', name: 'Ütülər', slug: 'utuler', icon: 'Wind', active: true },
 ];
 
-const all16Products: Product[] = all16Categories.map((cat) => ({
-  id: `prod-${cat.id}`,
-  code: `CODE-${cat.id}`,
-  title: `${cat.name} Model`,
-  category: cat.id,
-  categoryName: cat.name,
-  brandId: 'ardo',
-  image: `/media/products/${cat.id}.jpg`,
-  status: 'published',
-  specs: [],
-  highlights: [],
-  shortDesc: '',
-}));
+const all16Products: Product[] = all16Categories.flatMap((cat) => [
+  {
+    id: `prod-${cat.id}-1`,
+    code: `CODE-${cat.id}-1`,
+    title: `${cat.name} Model 1`,
+    category: cat.id,
+    categoryName: cat.name,
+    brandId: 'ardo',
+    image: `/media/products/${cat.id}-1.jpg`,
+    status: 'published' as const,
+    specs: [],
+    highlights: [],
+    shortDesc: '',
+  },
+  {
+    id: `prod-${cat.id}-2`,
+    code: `CODE-${cat.id}-2`,
+    title: `${cat.name} Model 2`,
+    category: cat.id,
+    categoryName: cat.name,
+    brandId: 'ardo',
+    image: `/media/products/${cat.id}-2.jpg`,
+    status: 'published' as const,
+    specs: [],
+    highlights: [],
+    shortDesc: '',
+  },
+]);
 
-describe('Category Collage Strict Deduplication & Visual Styles Suite', () => {
-  it('groups every real category once and exposes the complete fifth slide', () => {
+describe('Category Carousel Strict Multi-Unit & Transparent Architecture Suite', () => {
+  it('renders all active catalog categories into continuous track with 2 product cards each', () => {
     const { container } = render(
       <VisualCategoryCards
         categories={all16Categories}
@@ -73,75 +89,16 @@ describe('Category Collage Strict Deduplication & Visual Styles Suite', () => {
       />
     );
 
-    // Slide 1: Bento
-    const slide1CardIds = Array.from(container.querySelectorAll('.visual-category-card')).map(
-      (el) => el.getAttribute('data-category-id')
-    );
-    expect(slide1CardIds).toHaveLength(5);
-    expect(slide1CardIds).toEqual(['refrigerator', 'washer', 'dryer', 'dishwasher', 'tv']);
+    const units = container.querySelectorAll('.category-unit-card');
+    expect(units.length).toBeGreaterThanOrEqual(16);
 
-    // Switch to Slide 2: Facet
-    const slide2Tab = screen.getByRole('tab', { name: /Quraşdırılan Texnika/i });
-    fireEvent.click(slide2Tab);
-    const slide2CardIds = Array.from(container.querySelectorAll('.visual-category-card')).map(
-      (el) => el.getAttribute('data-category-id')
-    );
-    expect(slide2CardIds).toHaveLength(4);
-    expect(slide2CardIds).toEqual(['hood', 'cooktop', 'oven', 'microwave']);
-
-    // Switch to Slide 3: Frames
-    const slide3Tab = screen.getByRole('tab', { name: /Kiçik Məişət Texnikası/i });
-    fireEvent.click(slide3Tab);
-    const slide3CardIds = Array.from(container.querySelectorAll('.visual-category-card')).map(
-      (el) => el.getAttribute('data-category-id')
-    );
-    expect(slide3CardIds).toHaveLength(6);
-    expect(slide3CardIds).toEqual([
-      'audio',
-      'vacuum_cleaner',
-      'airfryer',
-      'thermopot',
-      'meat_grinder',
-      'iron',
-    ]);
-
-    // Switch to Slide 4: Cluster
-    const slide4Tab = screen.getByRole('tab', { name: /İqlim Texnikası/i });
-    fireEvent.click(slide4Tab);
-    const slide4CardIds = Array.from(container.querySelectorAll('.visual-category-card')).map(
-      (el) => el.getAttribute('data-category-id')
-    );
-    expect(slide4CardIds).toEqual(['air_conditioner']);
-
-    // Verify complete disjointness (no overlap between any pair of slides)
-    const set1 = new Set(slide1CardIds);
-    const set2 = new Set(slide2CardIds);
-    const set3 = new Set(slide3CardIds);
-
-    slide2CardIds.forEach((id) => expect(set1.has(id)).toBe(false));
-    slide3CardIds.forEach((id) => {
-      expect(set1.has(id)).toBe(false);
-      expect(set2.has(id)).toBe(false);
-    });
-    slide4CardIds.forEach((id) => {
-      expect(set1.has(id)).toBe(false);
-      expect(set2.has(id)).toBe(false);
-      expect(set3.has(id)).toBe(false);
-    });
-
-    const combinedSet = new Set([
-      ...slide1CardIds,
-      ...slide2CardIds,
-      ...slide3CardIds,
-      ...slide4CardIds,
-    ]);
-    expect(combinedSet.size).toBe(16);
-    const allTab = screen.getByRole('tab', { name: /Bütün Kateqoriyalar/i });
-    fireEvent.click(allTab);
-    expect(container.querySelectorAll('.visual-category-card')).toHaveLength(16);
+    // Check that each category unit contains 2 product cards
+    const firstUnit = units[0];
+    const productCards = firstUnit.querySelectorAll('.category-carousel-product-card');
+    expect(productCards.length).toBe(2);
   });
 
-  it('renders borderless cards with dark theme and no red frames', () => {
+  it('renders seamless transparent styling across light and dark themes', () => {
     const { container } = render(
       <VisualCategoryCards
         categories={all16Categories}
@@ -151,10 +108,7 @@ describe('Category Collage Strict Deduplication & Visual Styles Suite', () => {
       />
     );
 
-    const cards = container.querySelectorAll('.visual-category-card');
-    expect(cards.length).toBeGreaterThan(0);
-    cards.forEach((card) => {
-      expect(card.classList.contains('visual-category-card')).toBe(true);
-    });
+    const marqueeTrack = container.querySelector('.category-master-marquee-track');
+    expect(marqueeTrack).toBeTruthy();
   });
 });

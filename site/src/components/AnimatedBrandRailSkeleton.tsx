@@ -24,7 +24,7 @@ export const AnimatedBrandRailSkeleton: React.FC<AnimatedBrandRailSkeletonProps>
       <div
         className="brand-rail-unified-container brand-rail-fullwidth"
         style={{
-          backgroundColor: theme?.bgCard || '#ffffff',
+          backgroundColor: 'transparent',
           border: 'none',
           borderWidth: 0,
           borderRadius: 0,

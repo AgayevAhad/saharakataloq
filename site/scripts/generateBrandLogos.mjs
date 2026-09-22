@@ -173,14 +173,6 @@ const BRAND_SVGS = {
     <text x="50%" y="62%" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="26" letter-spacing="2" fill="#FF3B30">KONKA</text>
   </svg>`,
 
-  konko: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 48">
-    <text x="50%" y="62%" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="26" letter-spacing="2" fill="#FF3B30">KONKA</text>
-  </svg>`,
-
-  lanova: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 160 48">
-    <text x="50%" y="62%" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="25" letter-spacing="2" fill="#0D9488">LANOVA</text>
-  </svg>`,
-
   mgi: `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 150 48">
     <text x="50%" y="62%" dominant-baseline="middle" text-anchor="middle" font-family="'Outfit', 'Helvetica Neue', Arial, sans-serif" font-weight="900" font-size="28" letter-spacing="3" fill="#4338CA">MGI</text>
   </svg>`,

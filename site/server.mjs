@@ -148,7 +148,7 @@ const baseBrands = [
     originCountry: '',
     manufacturingCountries: [],
     description: '',
-    logo: '/media/brands/lotus-mark.svg',
+    logo: '/media/brands/lotus-logo.png',
     active: true,
     comingSoon: true,
   },

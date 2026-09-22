@@ -2,9 +2,21 @@ import { Brand, CatalogCategory, Product } from '../types/product';
 
 const CORE_BRANDS = ['ardo', 'lotus', 'artel'];
 const FOLLOWING_BRANDS = ['lg', 'bosch', 'samsung'];
-export const FEATURED_ROWS_PER_PAGE = 8;
+export const FEATURED_ROWS_PER_PAGE = 4;
 export const FEATURED_CARD_WIDTH = 339;
 export const FEATURED_GRID_GAP = 16;
+
+export interface CuratedTab {
+  id: 'featured' | 'bestsellers' | 'for_you' | 'super_deals';
+  name: string;
+}
+
+export const CURATED_FEATURED_TABS: CuratedTab[] = [
+  { id: 'featured', name: 'Önə çıxan məhsullar' },
+  { id: 'bestsellers', name: 'Çox satılan məhsullar' },
+  { id: 'for_you', name: 'Sənin üçün seçdiklərimiz' },
+  { id: 'super_deals', name: 'Super təkliflər' },
+];
 
 export const getFeaturedGridColumns = (width: number): number =>
   Math.max(
@@ -51,27 +63,62 @@ export const sortFeaturedProducts = (products: Product[], brands: Brand[] = []):
   return [...core, ...following, ...takeTier(otherBrands)];
 };
 
-export const buildFeaturedTabs = (
-  categories: CatalogCategory[],
+export const getCuratedTabProducts = (
+  tabId: string,
   products: Product[],
-  limit = 5
-) => {
-  const countByCategory = new Map<string, number>();
-  products.forEach((product) => {
-    countByCategory.set(product.category, (countByCategory.get(product.category) || 0) + 1);
-  });
+  brands: Brand[] = []
+): Product[] => {
+  const published = products.filter((p) => p.status === 'published');
+  if (published.length === 0) return [];
 
-  return [
-    { id: 'all', name: 'Hamısı' },
-    ...categories
-      .filter(
-        (category) => category.active !== false && (countByCategory.get(category.id) || 0) > 0
-      )
-      .sort((a, b) => {
-        const countDifference = (countByCategory.get(b.id) || 0) - (countByCategory.get(a.id) || 0);
-        return countDifference || (a.sortOrder || 0) - (b.sortOrder || 0);
-      })
-      .slice(0, limit)
-      .map((category) => ({ id: category.id, name: category.name })),
-  ];
+  switch (tabId) {
+    case 'bestsellers': {
+      const bestsellers = published.filter(
+        (p) =>
+          p.isBestSeller ||
+          (p.badgeText && /çox satılan|bestseller|populyar|hit/i.test(p.badgeText)) ||
+          (p as any).isPopular
+      );
+      const others = published.filter((p) => !bestsellers.includes(p));
+      return sortFeaturedProducts([...bestsellers, ...others], brands);
+    }
+    case 'super_deals': {
+      const deals = published.filter(
+        (p) =>
+          (p.oldPrice && p.price && p.oldPrice > p.price) ||
+          (p.badgeText && /endirim|super|kampaniya|təklif|fırsat/i.test(p.badgeText)) ||
+          p.badgeColor === 'red' ||
+          p.badgeColor === 'amber'
+      );
+      const others = published.filter((p) => !deals.includes(p));
+      return sortFeaturedProducts([...deals, ...others], brands);
+    }
+    case 'for_you': {
+      const sorted = sortFeaturedProducts(published, brands);
+      const categoriesSeen = new Set<string>();
+      const picked: Product[] = [];
+      const rest: Product[] = [];
+
+      for (const p of sorted) {
+        if (!categoriesSeen.has(p.category)) {
+          categoriesSeen.add(p.category);
+          picked.push(p);
+        } else {
+          rest.push(p);
+        }
+      }
+      return [...picked, ...rest];
+    }
+    case 'featured':
+    default:
+      return sortFeaturedProducts(published, brands);
+  }
+};
+
+export const buildFeaturedTabs = (
+  _categories: CatalogCategory[] = [],
+  _products: Product[] = [],
+  _limit = 5
+) => {
+  return CURATED_FEATURED_TABS;
 };

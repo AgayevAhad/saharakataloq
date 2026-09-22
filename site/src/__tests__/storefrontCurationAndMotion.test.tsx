@@ -76,23 +76,17 @@ describe('storefront curation', () => {
     ]);
   });
 
-  it('derives eight actual grid rows from the available width', () => {
+  it('derives four actual grid rows from the available width', () => {
     expect(getFeaturedGridColumns(390)).toBe(1);
     expect(getFeaturedGridColumns(768)).toBe(2);
     expect(getFeaturedGridColumns(1334)).toBe(3);
     expect(getFeaturedGridColumns(1410)).toBe(4);
-    expect(FEATURED_ROWS_PER_PAGE * getFeaturedGridColumns(1334)).toBe(24);
+    expect(FEATURED_ROWS_PER_PAGE * getFeaturedGridColumns(1334)).toBe(12);
   });
 
-  it('builds tabs only from real populated categories', () => {
-    const categories = [
-      { id: 'washer', name: 'Paltaryuyan', slug: 'washer', active: true },
-      { id: 'notebook', name: 'Notebook', slug: 'notebook', active: true },
-    ];
-    expect(buildFeaturedTabs(categories, [makeProduct('p1', 'ardo')])).toEqual([
-      { id: 'all', name: 'Hamısı' },
-      { id: 'washer', name: 'Paltaryuyan' },
-    ]);
+  it('builds the four official curated storefront tabs', () => {
+    const tabs = buildFeaturedTabs();
+    expect(tabs.map((t) => t.id)).toEqual(['featured', 'bestsellers', 'for_you', 'super_deals']);
   });
 });
 
@@ -114,7 +108,7 @@ describe('storefront identity and category density', () => {
     expect(getByAltText('ARDO loqosu').getAttribute('src')).toBe('/media/brands/ardo-logo.png');
   });
 
-  it('limits the homepage visual selection to five populated real categories', () => {
+  it('renders all populated real categories into the infinite marquee carousel', () => {
     const categories = Array.from({ length: 7 }, (_, index) => ({
       id: `cat-${index}`,
       slug: `cat-${index}`,
@@ -132,7 +126,7 @@ describe('storefront identity and category density', () => {
         onSelectCategory={vi.fn()}
       />
     );
-    expect(container.querySelectorAll('.visual-category-card')).toHaveLength(5);
+    expect(container.querySelectorAll('.category-unit-box').length).toBeGreaterThanOrEqual(7);
   });
 });
 

@@ -1,10 +1,14 @@
 import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
-import { render, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, afterEach } from 'vitest';
+import { render, fireEvent, cleanup } from '@testing-library/react';
 import { BannerHero } from '../components/BannerHero';
 import { BannerHeroSkeleton, SiteHomePageSkeleton } from '../components/Skeletons';
 import { HomePage } from '../pages/HomePage';
 import { lightTheme, darkTheme } from '../types/theme';
+
+afterEach(() => {
+  cleanup();
+});
 
 describe('BannerHero Refined Spacing & Expanded Carousel Width', () => {
   it('BannerHero wrapper uses expanded maxWidth (1560px) and minimal vertical padding (8px)', () => {

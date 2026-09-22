@@ -1,11 +1,15 @@
-import { describe, it, expect, vi } from 'vitest';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { SiteHeader } from '../components/site/SiteHeader';
 import { MegaMenu } from '../components/site/MegaMenu';
 import { VisualCategoryCards } from '../components/VisualCategoryCards';
 import { lightTheme } from '../types/theme';
 import { DEFAULT_CATALOG } from '../data/catalog';
+
+afterEach(() => {
+  cleanup();
+});
 
 describe('Header Kataloq Nav, MegaMenu Half-Screen & Category Spacing Refinements', () => {
   it('VisualCategoryCards scroll track uses 16px gap matching product cards', () => {
@@ -31,7 +35,7 @@ describe('Header Kataloq Nav, MegaMenu Half-Screen & Category Spacing Refinement
       />
     );
 
-    const track = container.querySelector('.visual-category-scroll-track') as HTMLElement;
+    const track = container.querySelector('.category-master-marquee-track') as HTMLElement;
     expect(track).toBeTruthy();
     expect(track.style.gap).toBe('16px');
   });
@@ -96,13 +100,8 @@ describe('Header Kataloq Nav, MegaMenu Half-Screen & Category Spacing Refinement
     expect(overlay).toBeTruthy();
     expect(overlay.style.maxHeight).toBe('min(90vh, 760px)');
 
-    // Verify "Bütün brendlər (X)" button exists
-    const allBrandsBtn = screen.getByText(
-      new RegExp(
-        `Bütün brendlər \\(${DEFAULT_CATALOG.brands.filter((b) => b.active).length}\\)`,
-        'i'
-      )
-    );
+    // Verify "Hamısı" brands link button exists
+    const allBrandsBtn = screen.getAllByText('Hamısı')[0];
     expect(allBrandsBtn).toBeTruthy();
 
     fireEvent.click(allBrandsBtn);
@@ -182,7 +181,7 @@ describe('Header Kataloq Nav, MegaMenu Half-Screen & Category Spacing Refinement
     }
 
     // Now showcase should update to Sobalar products
-    expect(screen.getByText(/Sobalar üzrə seçilmiş modellər/i)).toBeTruthy();
+    expect(screen.getByText(/Sobalar üzrə tövsiyə olunanlar/i)).toBeTruthy();
     expect(screen.getByText('Ardo Built-in Oven')).toBeTruthy();
 
     // Clicking product card triggers onSelectProduct

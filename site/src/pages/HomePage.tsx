@@ -14,6 +14,7 @@ import { AnimatedBrandRailSkeleton } from '../components/AnimatedBrandRailSkelet
 import { VisualCategoryCards } from '../components/VisualCategoryCards';
 import { FeaturedProductsSection } from '../features/home/FeaturedProductsSection';
 import { SpecialDiscountBanner } from '../components/SpecialDiscountBanner';
+import { ProductVideoReviewsSection } from '../components/ProductVideoReviewsSection';
 import { TrustHighlights } from '../components/TrustHighlights';
 
 interface HomePageProps {
@@ -103,9 +104,17 @@ export const HomePage: React.FC<HomePageProps> = ({
       <VisualCategoryCards
         categories={categories}
         products={products}
+        brands={brands}
         theme={theme}
         onSelectCategory={(catId) => onNavigate('catalog', catId)}
-        onViewAll={() => onNavigate('catalog')}
+        onSelectProduct={onSelectProduct}
+        onAddToCart={onAddToCart}
+        onToggleFavorite={onToggleFavorite}
+        favoriteIds={favoriteIds}
+        comparisonIds={comparisonIds}
+        onToggleCompare={onToggleCompare}
+        onWhatsApp={onWhatsApp}
+        onCall={onCall}
       />
 
       {/* 4. Featured products: responsive eight-row window with in-place expansion. */}
@@ -131,7 +140,10 @@ export const HomePage: React.FC<HomePageProps> = ({
         onNavigateDiscounts={() => onNavigate('catalog', 'discounts')}
       />
 
-      {/* 7. Trust Highlights / USP Bar */}
+      {/* 7. Sahara Product Video Reviews (YouTube Integration) */}
+      <ProductVideoReviewsSection theme={theme} />
+
+      {/* 8. Trust Highlights / USP Bar */}
       <TrustHighlights theme={theme} onNavigate={onNavigate} />
     </div>
   );

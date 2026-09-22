@@ -4,23 +4,24 @@ import { ThemeColors } from '../../types/theme';
 import { ShimmerImage } from '../ShimmerImage';
 import { CategoryGlyph } from '../CategoryGlyph';
 import { FeaturedProductCard } from '../FeaturedProductCard';
-import { ArrowRight, Tag, Package, Flame, Wind, Zap, ChevronRight, Sparkles } from 'lucide-react';
+import { ArrowRight, Package, Flame, Wind, Zap, ChevronRight, Sparkles } from 'lucide-react';
 
 const getCategoryIcon = (id: string, slug?: string) => {
   return <CategoryGlyph id={id} slug={slug} compact />;
 };
 
-const getBrandLogoStyle = (brandSlugOrId: string): { maxWidth: string; maxHeight: string } => {
+const getBrandLogoStyle = (brandSlugOrId: string): { maxWidth: string; maxHeight: string; scale?: string } => {
   const key = (brandSlugOrId || '').toLowerCase();
+  if (key.includes('ardo')) return { maxWidth: '115px', maxHeight: '32px', scale: '1.1' };
+  if (key.includes('lotus')) return { maxWidth: '96px', maxHeight: '23px', scale: '1.0' };
+  if (key.includes('artel')) return { maxWidth: '82px', maxHeight: '19px', scale: '1.05' };
+  if (key.includes('bosch')) return { maxWidth: '80px', maxHeight: '15.5px' };
   if (key.includes('samsung')) return { maxWidth: '82px', maxHeight: '14px' };
-  if (key.includes('bosch')) return { maxWidth: '80px', maxHeight: '16px' };
-  if (key.includes('artel')) return { maxWidth: '58px', maxHeight: '22px' };
-  if (key.includes('ardo')) return { maxWidth: '78px', maxHeight: '20px' };
-  if (key.includes('lotus')) return { maxWidth: '80px', maxHeight: '19px' };
-  if (key.includes('lg')) return { maxWidth: '58px', maxHeight: '20px' };
-  if (key.includes('beko')) return { maxWidth: '72px', maxHeight: '17px' };
-  if (key.includes('gorenje')) return { maxWidth: '78px', maxHeight: '18px' };
-  return { maxWidth: '80px', maxHeight: '19px' };
+  if (key.includes('lg')) return { maxWidth: '75px', maxHeight: '20px' };
+  if (key.includes('lanova')) return { maxWidth: '90px', maxHeight: '14px' };
+  if (key.includes('beko')) return { maxWidth: '78px', maxHeight: '16px' };
+  if (key.includes('gorenje')) return { maxWidth: '82px', maxHeight: '16px' };
+  return { maxWidth: '82px', maxHeight: '17px' };
 };
 
 interface MegaMenuProps {
@@ -384,42 +385,6 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
               );
             })}
 
-            <div
-              style={{
-                marginTop: 'auto',
-                paddingTop: '12px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '4px',
-              }}
-            >
-              <button
-                type="button"
-                onClick={() => {
-                  onNavigate('catalog');
-                  onClose();
-                }}
-                style={{
-                  width: '100%',
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '7px 10px',
-                  borderRadius: '8px',
-                  border: `1px dashed ${theme?.mode === 'dark' ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.1)'}`,
-                  backgroundColor:
-                    theme?.mode === 'dark' ? 'rgba(255,255,255,0.03)' : 'rgba(0,0,0,0.02)',
-                  color: theme?.primary || '#e31e24',
-                  fontSize: '11.5px',
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  transition: 'all 0.15s ease',
-                }}
-              >
-                <span>Bütün kataloq</span>
-                <ArrowRight size={12} />
-              </button>
-            </div>
           </div>
 
           {/* Center Column: Kateqoriyalar (Categories Grid) */}
@@ -632,13 +597,9 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                   textTransform: 'uppercase',
                   letterSpacing: '0.06em',
                   color: theme?.textMuted,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '5px',
                 }}
               >
-                <Tag size={12} color="#e31e24" />
-                <span>Rəsmi Brendlər</span>
+                Brendlər
               </div>
               <button
                 type="button"
@@ -687,7 +648,7 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                      padding: '6px 10px',
+                      padding: '6px 12px',
                       borderRadius: '8px',
                       backgroundColor:
                         theme?.mode === 'dark' ? '#ffffff' : 'rgba(248, 250, 252, 0.95)',
@@ -696,7 +657,7 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                       cursor: 'pointer',
                       transition: 'all 0.15s ease',
                       boxShadow: '0 1px 3px rgba(0,0,0,0.04)',
-                      height: '38px',
+                      height: '40px',
                       width: '100%',
                       boxSizing: 'border-box',
                     }}
@@ -741,6 +702,7 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                             width: 'auto',
                             height: 'auto',
                             objectFit: 'contain',
+                            transform: logoStyle.scale ? `scale(${logoStyle.scale})` : undefined,
                           }}
                         />
                       </div>
@@ -753,30 +715,6 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                 );
               })}
             </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                onNavigate('brands');
-                onClose();
-              }}
-              style={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px',
-                color: '#e31e24',
-                background: 'transparent',
-                border: 'none',
-                fontSize: '11px',
-                fontWeight: 700,
-                cursor: 'pointer',
-                padding: '4px 2px',
-                marginTop: '2px',
-              }}
-            >
-              <span>Bütün brendlər ({publishedBrands.length})</span>
-              <ArrowRight size={11} />
-            </button>
           </div>
         </div>
 
@@ -815,10 +753,7 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                       color: theme?.text,
                     }}
                   >
-                    {activeTargetCategory.name} üzrə seçilmiş modellər
-                  </span>
-                  <span style={{ fontSize: '11.5px', color: theme?.textMuted, fontWeight: 500 }}>
-                    (Tövsiyə olunan 4 model)
+                    {activeTargetCategory.name} üzrə tövsiyə olunanlar
                   </span>
                 </div>
 

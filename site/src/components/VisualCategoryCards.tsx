@@ -1,35 +1,15 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
-  ChevronLeft,
-  ChevronRight,
-  Flame,
-  Wind,
-  Refrigerator,
-  Box,
-  Layers,
+  ArrowRight,
   Sparkles,
-  Zap,
-  Tv,
-  Shirt,
-  Waves,
-  CookingPot,
+  ChevronRight,
 } from 'lucide-react';
-import { CatalogCategory, Product } from '../types/product';
+import { Brand, CatalogCategory, Product } from '../types/product';
 import { ThemeColors } from '../types/theme';
-import { ShimmerImage } from './ShimmerImage';
-import { useHorizontalScroll } from '../hooks/useHorizontalScroll';
+import { FeaturedProductCard } from './FeaturedProductCard';
+import { CategoryGlyph } from './CategoryGlyph';
 
 export type CategoryCollageStyle = 'bento' | 'facet' | 'frames' | 'cluster';
-
-interface VisualCategoryCardsProps {
-  categories: CatalogCategory[];
-  products: Product[];
-  selectedCategory?: string;
-  onSelectCategory: (categoryId: string) => void;
-  onViewAll?: () => void;
-  theme: ThemeColors;
-  autoPlayIntervalMs?: number;
-}
 
 export interface CategoryCardData extends CatalogCategory {
   count: number;
@@ -43,555 +23,613 @@ export interface CollageSlideItem {
   categories: CategoryCardData[];
 }
 
-const getCategoryIcon = (iconName?: string, categoryId?: string, size = 26, color = '#475569') => {
-  const normalized = (iconName || categoryId || '').toLowerCase();
-  if (
-    normalized.includes('flame') ||
-    normalized.includes('hob') ||
-    normalized.includes('cook') ||
-    normalized.includes('piltə') ||
-    normalized.includes('cooktop')
-  ) {
-    return <Flame size={size} color={color} />;
-  }
-  if (normalized.includes('soba') || normalized.includes('oven')) {
-    return <CookingPot size={size} color={color} />;
-  }
-  if (
-    normalized.includes('wind') ||
-    normalized.includes('hood') ||
-    normalized.includes('aspirator') ||
-    normalized.includes('kondisioner') ||
-    normalized.includes('air_conditioner')
-  ) {
-    return <Wind size={size} color={color} />;
-  }
-  if (
-    normalized.includes('fridge') ||
-    normalized.includes('refrigerator') ||
-    normalized.includes('soyuducu')
-  ) {
-    return <Refrigerator size={size} color={color} />;
-  }
-  if (normalized.includes('tv') || normalized.includes('televizor')) {
-    return <Tv size={size} color={color} />;
-  }
-  if (normalized.includes('washer') || normalized.includes('paltaryuyan')) {
-    return <Shirt size={size} color={color} />;
-  }
-  if (normalized.includes('dishwasher') || normalized.includes('qabyuyan')) {
-    return <Waves size={size} color={color} />;
-  }
-  if (
-    normalized.includes('zap') ||
-    normalized.includes('micro') ||
-    normalized.includes('electronic')
-  ) {
-    return <Zap size={size} color={color} />;
-  }
-  if (normalized.includes('sparkle')) {
-    return <Sparkles size={size} color={color} />;
-  }
-  if (normalized.includes('box') || normalized.includes('package')) {
-    return <Box size={size} color={color} />;
-  }
-  return <Layers size={size} color={color} />;
-};
-
-const DEFAULT_CATEGORY_IMAGES: Record<string, string[]> = {
-  hood: ['/media/products/ardo-6331-gb.jpg', '/media/products/ardo-6001-b.jpg'],
-  cooktop: ['/media/products/ardo-6046-bc.jpg', '/media/products/ardo-604b.jpg'],
-  oven: ['/media/products/beko/beko-bbim17300bpsea_01.webp', '/media/products/ardo-6032-b.jpg'],
-  refrigerator: ['/media/products/ardesto/ardesto-dfm-90x_01.webp'],
-  air_conditioner: [
-    '/media/products/lotus/lotus-air-conditioner-li09410_li09410.jpg',
-    '/media/products/ardo-ar12ws.jpg',
-  ],
-  washer: ['/media/products/ardesto/ardesto-wmw-6103dgbdi_01.webp'],
-  dryer: ['/media/products/beko/beko-b3t68110_01.webp'],
-  dishwasher: ['/media/products/beko/beko-bdin36530_01.webp', '/media/products/ardo-6342w.jpg'],
-  tv: ['/media/products/haier/haier-hqled_01.webp'],
-  audio: ['/media/products/lg/lg-s75traarellk_01.webp'],
-  microwave: ['/media/products/ardo-d680b.jpg'],
-  vacuum_cleaner: ['/media/products/artel/artel-vcc-0220-blue_01.jpg'],
-  airfryer: [
-    '/media/products/lotus-airfryer-5-5-black.jpg',
-    '/media/products/lotus/lotus-5-5-black_01.jpg',
-  ],
-  thermopot: [
-    '/media/products/lotus-thermopot-lt-50-eb.jpg',
-    '/media/products/lotus/lotus-lt-50-eb-1010-black_01.jpg',
-  ],
-  meat_grinder: [
-    '/media/products/lotus-meat-grinder-lt-02003.jpg',
-    '/media/products/lotus/lotus-meat-grinder-lt-02003-pro_01.jpg',
-  ],
-  iron: [
-    '/media/products/lotus-iron-lt-8801.jpg',
-    '/media/products/lotus/lotus-iron-lt-8801_01.jpg',
-  ],
-};
-
-function resolveCategoryRepresentativeImages(products: Product[], categoryId?: string): string[] {
-  const isUsableImage = (url?: string) =>
-    Boolean(url && url.trim() !== '' && !url.includes('placeholder') && !url.startsWith('blob:'));
-
-  const candidates: string[] = [];
-  // Prioritize one admin-selected cover per distinct product, so a collage does
-  // not accidentally become four angles of the same model.
-  for (const product of products) {
-    if (isUsableImage(product.image) && !candidates.includes(product.image))
-      candidates.push(product.image);
-  }
-  for (const product of products) {
-    const sources = [
-      ...(Array.isArray(product.gallery) ? product.gallery : []),
-      ...(Array.isArray(product.media)
-        ? product.media.filter((media) => media.type === 'image').map((media) => media.url)
-        : []),
-    ];
-    for (const source of sources) {
-      if (isUsableImage(source) && !candidates.includes(source)) candidates.push(source);
-    }
-  }
-
-  if (categoryId && DEFAULT_CATEGORY_IMAGES[categoryId]) {
-    for (const def of DEFAULT_CATEGORY_IMAGES[categoryId]) {
-      if (!candidates.includes(def)) candidates.push(def);
-    }
-  }
-
-  return candidates;
+export interface VisualCategoryCardsProps {
+  categories: CatalogCategory[];
+  products: Product[];
+  brands?: Brand[];
+  selectedCategory?: string;
+  onSelectCategory: (categoryId: string) => void;
+  onSelectProduct?: (product: Product) => void;
+  onViewAll?: () => void;
+  onAddToCart?: (product: Product) => void;
+  onToggleFavorite?: (product: Product) => void;
+  favoriteIds?: string[];
+  comparisonIds?: string[];
+  onToggleCompare?: (product: Product) => void;
+  onWhatsApp?: (product: Product) => void;
+  onCall?: (product: Product) => void;
+  theme: ThemeColors;
+  autoPlayIntervalMs?: number;
 }
 
-const CategoryCover: React.FC<{
-  sources: string[];
-  name: string;
-  icon?: string;
-  categoryId: string;
-  collage: boolean;
-}> = ({ sources, name, icon, categoryId, collage }) => {
-  const [failedIndex, setFailedIndex] = useState(0);
-  const src = sources[failedIndex];
-  const fallback = getCategoryIcon(icon, categoryId, 44, '#64748b');
-  if (!src) return fallback;
-  if (collage && sources.length > 1) {
-    return (
-      <div className="category-cover-collage" aria-label={`${name} məhsul kolajı`}>
-        {sources.slice(0, 4).map((source, index) => (
-          <div className={`category-cover-tile category-cover-tile-${index + 1}`} key={source}>
-            <ShimmerImage
-              src={source}
-              alt={`${name} — məhsul ${index + 1}`}
-              fallback={getCategoryIcon(icon, categoryId, 22, '#64748b')}
-              containerStyle={{ width: '100%', height: '100%' }}
-              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-            />
-          </div>
-        ))}
-      </div>
-    );
-  }
-  return (
-    <ShimmerImage
-      src={src}
-      alt={name}
-      fallback={fallback}
-      onError={() => setFailedIndex((index) => index + 1)}
-      style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-    />
+/**
+ * High-Performance Lightweight Category Unit:
+ * Displays exactly 2 products side-by-side (339px x 339px) with zero internal timers
+ * and zero DOM churn, utilizing CSS containment for 60-120fps smooth scrolling.
+ */
+const CategoryUnitCard: React.FC<{
+  category: CatalogCategory;
+  categoryProducts: Product[];
+  brandsById: Map<string, Brand>;
+  theme: ThemeColors;
+  onSelectCategory: (categoryId: string) => void;
+  onSelectProduct?: (product: Product) => void;
+  onAddToCart?: (product: Product) => void;
+  onToggleFavorite?: (product: Product) => void;
+  favoriteIdSet: Set<string>;
+  comparisonIdSet: Set<string>;
+  onToggleCompare?: (product: Product) => void;
+  onWhatsApp?: (product: Product) => void;
+  onCall?: (product: Product) => void;
+  isSelected?: boolean;
+  hasDraggedRef?: React.MutableRefObject<boolean>;
+}> = React.memo(({
+  category,
+  categoryProducts,
+  brandsById,
+  theme,
+  onSelectCategory,
+  onSelectProduct,
+  onAddToCart,
+  onToggleFavorite,
+  favoriteIdSet,
+  comparisonIdSet,
+  onToggleCompare,
+  onWhatsApp,
+  onCall,
+  isSelected,
+  hasDraggedRef,
+}) => {
+  const visibleProducts = useMemo(
+    () => categoryProducts.slice(0, 2),
+    [categoryProducts]
   );
-};
+
+  const handleCategoryClick = () => {
+    if (hasDraggedRef?.current) return;
+    onSelectCategory(category.id);
+  };
+
+  const handleProductClick = (prod: Product) => {
+    if (hasDraggedRef?.current) return;
+    if (onSelectProduct) onSelectProduct(prod);
+    else onSelectCategory(category.id);
+  };
+
+  return (
+    <div
+      className={`category-unit-box category-unit-card visual-category-card ${isSelected ? 'is-selected' : ''}`}
+      style={{
+        flexShrink: 0,
+        width: '694px',
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '12px',
+        backgroundColor: 'transparent',
+        border: 'none',
+        boxShadow: 'none',
+        padding: 0,
+        boxSizing: 'border-box',
+        contain: 'paint layout',
+      }}
+    >
+      {/* Category Unit Header */}
+      <div
+        className="category-unit-header"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 4px',
+        }}
+      >
+        <button
+          type="button"
+          onClick={handleCategoryClick}
+          data-category-id={category.id}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            background: 'transparent',
+            border: 'none',
+            padding: 0,
+            cursor: 'pointer',
+            textAlign: 'left',
+          }}
+        >
+          <div
+            style={{
+              width: '30px',
+              height: '30px',
+              borderRadius: '8px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              backgroundColor:
+                theme.mode === 'dark'
+                  ? 'rgba(239, 48, 56, 0.16)'
+                  : 'rgba(239, 48, 56, 0.08)',
+              color: '#e31e24',
+              flexShrink: 0,
+            }}
+          >
+            <CategoryGlyph id={category.id} slug={category.slug || category.id} compact plain />
+          </div>
+          <span
+            className="visual-category-title"
+            style={{
+              fontSize: '15.5px',
+              fontWeight: 850,
+              color: theme.text,
+              letterSpacing: '-0.01em',
+              whiteSpace: 'nowrap',
+              overflow: 'visible',
+              textOverflow: 'clip',
+              maxWidth: 'none',
+            }}
+          >
+            {category.name}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          onClick={handleCategoryClick}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '4px',
+            background: 'transparent',
+            border: 'none',
+            color: '#e31e24',
+            fontSize: '12px',
+            fontWeight: 750,
+            cursor: 'pointer',
+            padding: '2px 6px',
+          }}
+        >
+          <span>Hamısı</span>
+          <ArrowRight size={12} />
+        </button>
+      </div>
+
+      {/* 2 FeaturedProductCards Side by Side */}
+      <div
+        className="category-unit-products-viewport"
+        style={{
+          width: '694px',
+          overflow: 'hidden',
+          position: 'relative',
+        }}
+      >
+        <div
+          className="category-unit-products-slide"
+          style={{
+            width: '694px',
+            display: 'grid',
+            gridTemplateColumns: '339px 339px',
+            gap: '16px',
+          }}
+        >
+          {visibleProducts.map((prod, pIdx) => {
+            if (!prod) return null;
+            return (
+              <div
+                key={`${prod.id}-${pIdx}`}
+                className="category-product-subcard category-carousel-product-card"
+                role="button"
+                tabIndex={0}
+                onClick={() => handleProductClick(prod)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    handleProductClick(prod);
+                  }
+                }}
+                style={{
+                  width: '339px',
+                  minWidth: '339px',
+                  maxWidth: '339px',
+                  height: '339px',
+                  flexShrink: 0,
+                  cursor: 'pointer',
+                }}
+              >
+                <FeaturedProductCard
+                  product={prod}
+                  theme={theme}
+                  transparentBg={true}
+                  hideBrandAndCategoryMeta={true}
+                  onSelect={(p) => {
+                    if (hasDraggedRef?.current) return;
+                    if (onSelectProduct) onSelectProduct(p);
+                    else onSelectCategory(category.id);
+                  }}
+                  onAddToCart={onAddToCart}
+                  onToggleFavorite={onToggleFavorite}
+                  isFavorite={favoriteIdSet.has(prod.id)}
+                  onToggleCompare={onToggleCompare}
+                  isComparing={comparisonIdSet.has(prod.id)}
+                  onWhatsApp={onWhatsApp}
+                  onCall={onCall}
+                  brand={brandsById.get(prod.brandId || '')}
+                />
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+});
 
 export const VisualCategoryCards: React.FC<VisualCategoryCardsProps> = ({
-  categories,
-  products,
+  categories = [],
+  products = [],
+  brands = [],
   selectedCategory,
   onSelectCategory,
-  onViewAll,
+  onSelectProduct,
+  onAddToCart,
+  onToggleFavorite,
+  favoriteIds = [],
+  comparisonIds = [],
+  onToggleCompare,
+  onWhatsApp,
+  onCall,
   theme,
-  autoPlayIntervalMs = 5000,
 }) => {
   const sectionRef = useRef<HTMLElement>(null);
-  const [activeSlideIndex, setActiveSlideIndex] = useState(0);
+  const trackRef = useRef<HTMLDivElement>(null);
   const [isHovered, setIsHovered] = useState(false);
-  const [progressKey, setProgressKey] = useState(0);
-  const didHintSwipe = useRef(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(true);
+  const [isInViewport, setIsInViewport] = useState(true);
 
-  const { containerRef, scrollItemIntoView, hasMoved, dragProps } =
-    useHorizontalScroll<HTMLDivElement>({
-      activeSelector: '.visual-category-card.is-selected',
-      activeDependency: selectedCategory,
-    });
+  const currentIndexRef = useRef(0);
+  currentIndexRef.current = currentIndex;
 
+  const isDraggingRef = useRef(false);
+  const startXRef = useRef(0);
+  const currentDragDeltaRef = useRef(0);
+  const hasDraggedRef = useRef(false);
+  const rafIdRef = useRef<number | null>(null);
+
+  const brandsById = useMemo(() => new Map(brands.map((b) => [b.id, b])), [brands]);
+  const favoriteIdSet = useMemo(() => new Set(favoriteIds), [favoriteIds]);
+  const comparisonIdSet = useMemo(() => new Set(comparisonIds), [comparisonIds]);
+
+  // Group published products by category ID
   const publishedProductsByCategory = useMemo(() => {
     const grouped = new Map<string, Product[]>();
     for (const product of products) {
       if (product.status !== 'published') continue;
-      const items = grouped.get(product.category) || [];
+      const catId = product.category;
+      const items = grouped.get(catId) || [];
       items.push(product);
-      grouped.set(product.category, items);
+      grouped.set(catId, items);
     }
     return grouped;
   }, [products]);
 
-  // Extract all active populated categories (AC-2 strict published count)
-  const allActiveCategories = useMemo<CategoryCardData[]>(() => {
+  // Active categories with published products
+  const activePopulatedCategories = useMemo(() => {
     return categories
+      .filter((cat) => cat.active !== false)
       .map((cat) => {
-        const categoryProducts = publishedProductsByCategory.get(cat.id) || [];
-        const count = categoryProducts.length;
-        const imageUrls = resolveCategoryRepresentativeImages(categoryProducts, cat.id);
+        const catProducts = publishedProductsByCategory.get(cat.id) || [];
         return {
-          ...cat,
-          count,
-          imageUrls,
+          category: cat,
+          products:
+            catProducts.length > 0
+              ? catProducts
+              : products.filter((p) => p.status !== 'draft').slice(0, 4),
+          count: catProducts.length,
         };
       })
-      .filter((cat) => cat.count > 0 && cat.active !== false)
-      .sort((a, b) => b.count - a.count);
-  }, [categories, publishedProductsByCategory]);
+      .filter((item) => item.count > 0);
+  }, [categories, publishedProductsByCategory, products]);
 
-  // Keep the mobile selector aligned with the site's real catalog groups.
-  const collageSlides = useMemo<CollageSlideItem[]>(() => {
-    if (allActiveCategories.length === 0) return [];
-    const group = (ids: string[]) => allActiveCategories.filter((cat) => ids.includes(cat.id));
+  const totalCategories = activePopulatedCategories.length;
 
-    const slides: CollageSlideItem[] = [
-      {
-        id: 'slide-large-appliances',
-        title: 'Böyük Məişət Texnikası',
-        style: 'bento',
-        categories: group(['refrigerator', 'washer', 'dryer', 'dishwasher', 'tv']).length
-          ? group(['refrigerator', 'washer', 'dryer', 'dishwasher', 'tv'])
-          : allActiveCategories.slice(0, 5),
-      },
-      {
-        id: 'slide-built-in',
-        title: 'Quraşdırılan Texnika',
-        style: 'facet',
-        categories: group(['hood', 'oven', 'cooktop', 'microwave']),
-      },
-      {
-        id: 'slide-small-appliances',
-        title: 'Kiçik Məişət Texnikası',
-        style: 'frames',
-        categories: group([
-          'airfryer',
-          'vacuum_cleaner',
-          'iron',
-          'meat_grinder',
-          'thermopot',
-          'audio',
-        ]),
-      },
-      {
-        id: 'slide-climate',
-        title: 'İqlim Texnikası',
-        style: 'cluster',
-        categories: group(['air_conditioner']),
-      },
-      {
-        id: 'slide-all-categories',
-        title: 'Bütün Kateqoriyalar',
-        style: 'bento',
-        categories: allActiveCategories,
-      },
-    ];
+  // Measure dynamic unit step width (unit width + gap)
+  const getUnitStep = (): number => {
+    const track = trackRef.current;
+    if (!track) return 710;
+    const firstUnit = track.querySelector<HTMLElement>('.category-unit-box');
+    if (firstUnit) {
+      return firstUnit.offsetWidth + 16;
+    }
+    return 710;
+  };
 
-    return slides.filter((slide) => slide.categories.length > 0);
-  }, [allActiveCategories]);
-
+  // IntersectionObserver to pause carousel when offscreen
   useEffect(() => {
     const section = sectionRef.current;
-    const track = containerRef.current;
-    if (
-      !section ||
-      !track ||
-      didHintSwipe.current ||
-      collageSlides.length < 1 ||
-      window.matchMedia('(min-width: 769px), (prefers-reduced-motion: reduce)').matches
-    )
-      return;
-    let outboundTimer: number | undefined;
-    let returnTimer: number | undefined;
-    let restoreTimer: number | undefined;
-    let cancelled = false;
-    const cancel = () => {
-      cancelled = true;
-      window.clearTimeout(outboundTimer);
-      window.clearTimeout(returnTimer);
-      window.clearTimeout(restoreTimer);
-      track.style.removeProperty('scroll-snap-type');
-    };
-    const hint = () => {
-      if (didHintSwipe.current || track.scrollWidth <= track.clientWidth + 20) return;
-      outboundTimer = window.setTimeout(() => {
-        if (cancelled) return;
-        didHintSwipe.current = true;
-        track.style.setProperty('scroll-snap-type', 'none', 'important');
-        track.scrollTo({ left: Math.min(track.clientWidth * 0.48, 170), behavior: 'smooth' });
-        returnTimer = window.setTimeout(() => {
-          if (cancelled) return;
-          track.scrollTo({ left: 0, behavior: 'smooth' });
-          restoreTimer = window.setTimeout(() => {
-            track.style.removeProperty('scroll-snap-type');
-          }, 500);
-        }, 1250);
-      }, 300);
-    };
+    if (!section || typeof IntersectionObserver === 'undefined') return;
+
     const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          observer.disconnect();
-          hint();
-        }
+      ([entry]) => {
+        setIsInViewport(entry.isIntersecting);
       },
-      { threshold: 0.25 }
+      { rootMargin: '100px', threshold: 0.05 }
     );
+
     observer.observe(section);
-    track.addEventListener('touchstart', cancel, { passive: true, once: true });
-    track.addEventListener('pointerdown', cancel, { passive: true, once: true });
-    return () => {
-      observer.disconnect();
-      cancel();
-      track.removeEventListener('touchstart', cancel);
-      track.removeEventListener('pointerdown', cancel);
-    };
-  }, [collageSlides.length, containerRef]);
+    return () => observer.disconnect();
+  }, []);
 
-  // Handle slide change with progress key reset
-  const changeSlide = (newIndex: number) => {
-    setActiveSlideIndex(newIndex);
-    setProgressKey((k) => k + 1);
-  };
+  // Listen to browser tab visibility to pause timers
+  const [isTabVisible, setIsTabVisible] = useState(
+    typeof document !== 'undefined' ? document.visibilityState === 'visible' : true
+  );
 
-  // Auto-play timer rotation (5 seconds)
   useEffect(() => {
-    if (
-      collageSlides.length <= 1 ||
-      isHovered ||
-      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches
-    )
-      return;
+    if (typeof document === 'undefined') return;
+    const handleVisibilityChange = () => {
+      setIsTabVisible(document.visibilityState === 'visible');
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange, { passive: true });
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, []);
 
-    const timer = setInterval(() => {
-      if (document.visibilityState === 'hidden') return;
-      setActiveSlideIndex((prev) => (prev + 1) % collageSlides.length);
-      setProgressKey((k) => k + 1);
-    }, autoPlayIntervalMs);
+  // High-performance Step-and-Pause Carousel interval (paused if offscreen/hidden/hovered/dragging)
+  useEffect(() => {
+    if (totalCategories <= 1 || isHovered || isDragging || !isInViewport || !isTabVisible) return;
 
-    return () => clearInterval(timer);
-  }, [collageSlides.length, isHovered, autoPlayIntervalMs]);
+    const intervalTimer = setInterval(() => {
+      setIsTransitioning(true);
+      setCurrentIndex((prev) => prev + 1);
+    }, 4500);
 
-  if (
-    collageSlides.length === 0 ||
-    allActiveCategories.length === 0 ||
-    allActiveCategories.every((cat) => cat.count === 0)
-  ) {
-    return null;
-  }
+    return () => clearInterval(intervalTimer);
+  }, [totalCategories, isHovered, isDragging, isInViewport, isTabVisible]);
 
-  const currentSlide = collageSlides[activeSlideIndex] || collageSlides[0];
+  // Seamless infinite loop wrap-around handler
+  useEffect(() => {
+    if (currentIndex >= totalCategories && totalCategories > 0) {
+      const resetTimeout = setTimeout(() => {
+        setIsTransitioning(false);
+        setCurrentIndex(0);
+      }, 1100);
 
-  const handleNextSlide = () => {
-    changeSlide((activeSlideIndex + 1) % collageSlides.length);
-  };
+      return () => clearTimeout(resetTimeout);
+    }
+  }, [currentIndex, totalCategories]);
 
-  const handlePrevSlide = () => {
-    changeSlide((activeSlideIndex - 1 + collageSlides.length) % collageSlides.length);
-  };
-
-  const handleCategoryClick = (catId: string, event: React.MouseEvent<HTMLButtonElement>) => {
-    if (typeof hasMoved === 'function' && hasMoved()) return;
-    onSelectCategory(catId);
+  // Hardware-accelerated direct GPU pointer drag & touch swipe
+  const handlePointerDown = (e: React.PointerEvent) => {
     try {
-      if (typeof scrollItemIntoView === 'function') {
-        scrollItemIntoView(event);
-      }
+      (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     } catch {
-      // safe fallback for test/mock DOM
+      // ignore
+    }
+
+    isDraggingRef.current = true;
+    hasDraggedRef.current = false;
+    startXRef.current = e.clientX;
+    currentDragDeltaRef.current = 0;
+    setIsDragging(true);
+    setIsTransitioning(false);
+
+    if (trackRef.current) {
+      trackRef.current.style.transition = 'none';
     }
   };
+
+  const handlePointerMove = (e: React.PointerEvent) => {
+    if (!isDraggingRef.current) return;
+
+    const delta = e.clientX - startXRef.current;
+    if (Math.abs(delta) > 5) {
+      hasDraggedRef.current = true;
+    }
+
+    currentDragDeltaRef.current = delta;
+
+    // Direct GPU transform update via requestAnimationFrame without triggering React re-renders
+    if (rafIdRef.current === null) {
+      rafIdRef.current = requestAnimationFrame(() => {
+        rafIdRef.current = null;
+        if (!isDraggingRef.current || !trackRef.current) return;
+        const step = getUnitStep();
+        const baseOffset = -currentIndexRef.current * step;
+        trackRef.current.style.transform = `translate3d(${baseOffset + currentDragDeltaRef.current}px, 0, 0)`;
+      });
+    }
+  };
+
+  const handlePointerUp = (e: React.PointerEvent) => {
+    if (!isDraggingRef.current) return;
+    isDraggingRef.current = false;
+    setIsDragging(false);
+
+    if (rafIdRef.current !== null) {
+      cancelAnimationFrame(rafIdRef.current);
+      rafIdRef.current = null;
+    }
+
+    try {
+      (e.currentTarget as HTMLElement).releasePointerCapture(e.pointerId);
+    } catch {
+      // ignore
+    }
+
+    const unitStep = getUnitStep();
+    const draggedUnits = -currentDragDeltaRef.current / unitStep;
+    let newIndex = Math.round(currentIndexRef.current + draggedUnits);
+
+    if (newIndex < 0) newIndex = 0;
+    if (newIndex > totalCategories) newIndex = totalCategories;
+
+    setIsTransitioning(true);
+    setCurrentIndex(newIndex);
+
+    if (trackRef.current) {
+      trackRef.current.style.transition = 'transform 1.05s cubic-bezier(0.22, 1, 0.36, 1)';
+      trackRef.current.style.transform = `translate3d(${-newIndex * unitStep}px, 0, 0)`;
+    }
+
+    setTimeout(() => {
+      hasDraggedRef.current = false;
+    }, 100);
+  };
+
+  if (activePopulatedCategories.length === 0) return null;
 
   return (
     <section
       ref={sectionRef}
-      className="catalog-container visual-categories-section scroll-reveal-item"
-      aria-label="Məhsul Kateqoriyaları"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
-      onFocusCapture={() => setIsHovered(true)}
-      onBlurCapture={(event) => {
-        if (!event.currentTarget.contains(event.relatedTarget)) setIsHovered(false);
+      className="visual-category-infinite-section visual-categories-section scroll-reveal-item"
+      aria-label="Məhsul Kateqoriyaları Karuseli"
+      style={{
+        width: '100vw',
+        marginLeft: 'calc(50% - 50vw)',
+        marginRight: 'calc(50% - 50vw)',
+        maxWidth: '100vw',
+        backgroundColor: 'transparent',
+        padding: '24px 0 32px',
+        overflow: 'hidden',
+        position: 'relative',
+        boxSizing: 'border-box',
+        contain: 'layout paint',
       }}
-      onTouchStart={() => setIsHovered(true)}
     >
-      {/* Header with Title, 4 Slide Indicators, Prev/Next Navigation */}
-      <div className="visual-categories-header">
-        <div className="visual-categories-title-wrap">
-          <h2 className="visual-categories-title">Məhsul Kateqoriyaları</h2>
-          <span className="category-swipe-hint">
-            Sürüşdürərək digər kateqoriyalara baxın <ChevronRight size={13} />
-          </span>
-        </div>
-
-        <div className="visual-categories-controls">
-          {/* Real catalog groups; the final item opens the complete catalog. */}
-          <div
-            className={`collage-slide-indicators ${isHovered ? 'is-paused' : ''}`}
-            role="tablist"
-            aria-label="Kolaj slayd göstəriciləri"
+      {/* Centered Section Header - Side by Side in Single Row */}
+      <div
+        className="catalog-container visual-categories-header"
+        style={{
+          display: 'flex',
+          flexDirection: 'row',
+          alignItems: 'center',
+          justifyContent: 'center',
+          textAlign: 'center',
+          marginBottom: '20px',
+          gap: '12px',
+          flexWrap: 'nowrap',
+        }}
+      >
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
+          <Sparkles size={18} color="#e31e24" />
+          <h2
+            className="visual-categories-title"
+            style={{
+              fontSize: '20px',
+              fontWeight: 850,
+              letterSpacing: '-0.02em',
+              color: theme.text,
+              margin: 0,
+              whiteSpace: 'nowrap',
+            }}
           >
-            {collageSlides.map((slide, idx) => {
-              const isActive = idx === activeSlideIndex;
-              return (
-                <button
-                  key={slide.id}
-                  type="button"
-                  role="tab"
-                  aria-selected={isActive}
-                  className={`collage-slide-tab ${isActive ? 'active' : ''}`}
-                  onClick={() => changeSlide(idx)}
-                  title={slide.title}
-                >
-                  <span className="collage-tab-num">0{idx + 1}</span>
-                  <span className="collage-tab-title">{slide.title}</span>
-                  {/* YouTube-style 5-second progress fill line */}
-                  <div className="collage-tab-progress-bar">
-                    {isActive && (
-                      <div
-                        key={`prog-${progressKey}-${idx}`}
-                        className="collage-tab-progress-fill"
-                        style={{
-                          animationDuration: `${autoPlayIntervalMs}ms`,
-                        }}
-                      />
-                    )}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Prev / Next Slide Arrow Buttons */}
-          <div className="collage-nav-arrows">
-            <button
-              type="button"
-              className="collage-arrow-btn collage-prev-btn"
-              onClick={handlePrevSlide}
-              aria-label="Əvvəlki kolaj slaydı"
-              title="Əvvəlki kolaj"
-            >
-              <ChevronLeft size={16} />
-            </button>
-            <button
-              type="button"
-              className="collage-arrow-btn collage-next-btn"
-              onClick={handleNextSlide}
-              aria-label="Növbəti kolaj slaydı"
-              title="Növbəti kolaj"
-            >
-              <ChevronRight size={16} />
-            </button>
-          </div>
-
-          {onViewAll && (
-            <button
-              type="button"
-              onClick={onViewAll}
-              className="visual-category-view-all-btn"
-              style={{
-                background: 'transparent',
-                border: 'none',
-                color: theme.primary,
-                fontWeight: 700,
-                fontSize: '13px',
-                cursor: 'pointer',
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: '4px',
-                padding: '6px 12px',
-                borderRadius: '8px',
-              }}
-            >
-              <span>Hamısına bax</span>
-              <ChevronRight size={14} />
-            </button>
-          )}
+            Məhsul Kateqoriyaları
+          </h2>
         </div>
+        <span
+          className="category-swipe-hint"
+          style={{
+            fontSize: '13px',
+            color: theme.textMuted,
+            fontWeight: 500,
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '4px',
+            whiteSpace: 'nowrap',
+            flexShrink: 0,
+          }}
+        >
+          Sürüşdürərək digər kateqoriyalara baxın <ChevronRight size={14} />
+        </span>
       </div>
 
-      {/* Dynamic Grand Live Collage Slide Container */}
+      {/* Master Outer Carousel with GPU Marquee, Hover Pause, Direct Drag & Touch Swiping */}
       <div
-        key={`slide-${activeSlideIndex}-${currentSlide.id}`}
-        ref={containerRef}
-        {...dragProps}
-        className={`visual-category-scroll-track collage-track-${currentSlide.style} collage-slide-animate-in`}
-        data-category-count={currentSlide.categories.length}
-        style={{ gap: '16px' }}
-        role="region"
-        aria-label={`Kateqoriyalar kolajı: ${currentSlide.title}`}
+        className={`category-master-marquee-container ${isDragging ? 'is-dragging' : ''}`}
+        onMouseEnter={() => setIsHovered(true)}
+        onMouseLeave={() => setIsHovered(false)}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={handlePointerUp}
+        onPointerCancel={handlePointerUp}
+        style={{
+          width: '100%',
+          overflow: 'hidden',
+          position: 'relative',
+          backgroundColor: 'transparent',
+          cursor: isDragging ? 'grabbing' : 'grab',
+          userSelect: 'none',
+          WebkitUserSelect: 'none',
+          touchAction: 'pan-y',
+          contain: 'layout paint',
+        }}
       >
-        {currentSlide.categories.map((cat, index) => {
-          const isSelected = selectedCategory === cat.id;
+        <div
+          ref={trackRef}
+          className="category-master-marquee-track"
+          style={{
+            display: 'flex',
+            flexDirection: 'row',
+            flexWrap: 'nowrap',
+            alignItems: 'stretch',
+            gap: '16px',
+            width: 'max-content',
+            transform: `translate3d(${-currentIndex * getUnitStep()}px, 0, 0)`,
+            transition:
+              isTransitioning && !isDragging
+                ? 'transform 1.05s cubic-bezier(0.22, 1, 0.36, 1)'
+                : 'none',
+            willChange: 'transform',
+            backgroundColor: 'transparent',
+            paddingLeft: 0,
+            paddingRight: 0,
+          }}
+        >
+          {/* Group 1: Original Category Units Side by Side */}
+          {activePopulatedCategories.map(({ category, products: catProds }) => (
+            <CategoryUnitCard
+              key={`cat-g1-${category.id}`}
+              category={category}
+              categoryProducts={catProds}
+              brandsById={brandsById}
+              theme={theme}
+              onSelectCategory={onSelectCategory}
+              onSelectProduct={onSelectProduct}
+              onAddToCart={onAddToCart}
+              onToggleFavorite={onToggleFavorite}
+              favoriteIdSet={favoriteIdSet}
+              comparisonIdSet={comparisonIdSet}
+              onToggleCompare={onToggleCompare}
+              onWhatsApp={onWhatsApp}
+              onCall={onCall}
+              isSelected={selectedCategory === category.id}
+              hasDraggedRef={hasDraggedRef}
+            />
+          ))}
 
-          return (
-            <div
-              key={cat.id}
-              className={`visual-category-reveal visual-category-card-${index + 1} collage-item-${currentSlide.style}-${index + 1}`}
-            >
-              <button
-                data-category-id={cat.id}
-                type="button"
-                onClick={(e) => handleCategoryClick(cat.id, e)}
-                className={`visual-category-card visual-category-card-style-${currentSlide.style} ${isSelected ? 'is-selected' : ''}`}
-                aria-pressed={isSelected}
-              >
-                {/* Decorative Mosaic Pixel Clusters for Cluster Style (Kolak1.jpeg Matrix) */}
-                {currentSlide.style === 'cluster' && (
-                  <div className="mosaic-cluster-accents" aria-hidden="true">
-                    <span className="cluster-dot dot-1" />
-                    <span className="cluster-dot dot-2" />
-                    <span className="cluster-dot dot-3" />
-                  </div>
-                )}
-
-                {/* Top Badge: Product Count & Icon */}
-                <div className="visual-category-top-badge">
-                  <div className="visual-category-icon-pill">
-                    {getCategoryIcon(cat.icon, cat.id, 16, '#64748b')}
-                  </div>
-                </div>
-
-                {/* Category Visual Media Box */}
-                <div className="visual-category-img-box">
-                  <div className="visual-category-img-inner">
-                    <CategoryCover
-                      sources={cat.imageUrls}
-                      name={cat.name}
-                      icon={cat.icon}
-                      categoryId={cat.id}
-                      collage={cat.count > 1}
-                    />
-                  </div>
-                </div>
-
-                {/* Category Name & Action Footer */}
-                <div className="visual-category-card-footer">
-                  <div className="visual-category-title" title={cat.name}>
-                    {cat.name}
-                  </div>
-                  <div className="visual-category-meta">
-                    <span className="visual-category-explore">
-                      Kəşf et <ChevronRight size={13} />
-                    </span>
-                  </div>
-                </div>
-              </button>
-            </div>
-          );
-        })}
+          {/* Group 2: Cloned Category Units for Seamless Infinite Loop */}
+          {activePopulatedCategories.map(({ category, products: catProds }) => (
+            <CategoryUnitCard
+              key={`cat-g2-${category.id}`}
+              category={category}
+              categoryProducts={catProds}
+              brandsById={brandsById}
+              theme={theme}
+              onSelectCategory={onSelectCategory}
+              onSelectProduct={onSelectProduct}
+              onAddToCart={onAddToCart}
+              onToggleFavorite={onToggleFavorite}
+              favoriteIdSet={favoriteIdSet}
+              comparisonIdSet={comparisonIdSet}
+              onToggleCompare={onToggleCompare}
+              onWhatsApp={onWhatsApp}
+              onCall={onCall}
+              isSelected={selectedCategory === category.id}
+              hasDraggedRef={hasDraggedRef}
+            />
+          ))}
+        </div>
       </div>
     </section>
   );

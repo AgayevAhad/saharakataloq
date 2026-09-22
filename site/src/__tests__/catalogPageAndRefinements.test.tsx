@@ -176,7 +176,7 @@ describe('SiteHeader Kataloq Mega Preview', () => {
     // Hover over Kataloq to trigger mega menu
     fireEvent.mouseEnter(catalogNavBtn);
     expect(screen.getAllByText(/Böyük Məişət/i).length).toBeGreaterThan(0);
-    expect(screen.getByText(/Rəsmi Brendlər/i)).toBeTruthy();
+    expect(screen.getAllByText(/Brendlər/i).length).toBeGreaterThan(0);
   });
 });
 

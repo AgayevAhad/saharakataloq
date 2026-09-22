@@ -18,7 +18,7 @@ const placeholders = (items) => items.map(() => '?').join(',');
 const defaultBrandLogos = {
   ardo: '/media/brands/ardo-logo.png',
   artel: '/media/brands/artel-logo.svg',
-  lotus: '/media/brands/lotus-mark.svg',
+  lotus: '/media/brands/lotus-logo.png',
 };
 const defaultCountriesList = [
   'Türkiyə',

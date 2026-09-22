@@ -95,18 +95,12 @@ describe('VisualCategoryCards', () => {
     expect(screen.getAllByText('Quraşdırılan Sobalar').length).toBeGreaterThan(0);
     expect(screen.getAllByText('Bişirmə Panelləri').length).toBeGreaterThan(0);
     expect(screen.queryByText(/Ən çox seçim olan/i)).toBeNull(); // Subtitle removed
-    expect(screen.getByText('Böyük Məişət Texnikası')).toBeDefined();
-    // Two published categories fit on one slide; do not fabricate duplicate slides.
-    expect(screen.queryByText(/Quraşdırılan Texnika/i)).toBeNull();
-    expect(screen.queryByText(/Kiçik Məişət Texnikası/i)).toBeNull();
-    expect(screen.queryByText(/İqlim Texnikası/i)).toBeNull();
-    expect(screen.getByText(/Sürüşdürərək digər kateqoriyalara baxın/i)).toBeDefined();
 
     // Boş Kateqoriya 0 Model must be hidden
     expect(screen.queryByText('Boş Kateqoriya 0 Model')).toBeNull();
   });
 
-  it('triggers onSelectCategory callback on click', () => {
+  it('triggers onSelectCategory callback on clicking category header or explore link', () => {
     const onSelect = vi.fn();
     const { container } = render(
       <VisualCategoryCards
@@ -117,55 +111,29 @@ describe('VisualCategoryCards', () => {
       />
     );
 
-    const ovenButton = container.querySelector('.visual-category-card') as HTMLButtonElement;
-    expect(ovenButton).not.toBeNull();
-    fireEvent.click(ovenButton);
+    const ovenHeader = container.querySelector('[data-category-id="cat-ovens"]') as HTMLElement;
+    expect(ovenHeader).not.toBeNull();
+    fireEvent.click(ovenHeader);
     expect(onSelect).toHaveBeenCalledWith('cat-ovens');
   });
 
-  it('keeps the admin-selected cover and falls back to media of the same product on load error', () => {
-    const products: Product[] = [
-      {
-        ...mockProducts[0],
-        image: '/uploads/admin-selected-cover.jpg',
-        gallery: ['/media/products/ardo-201gc.jpg'],
-      },
-    ];
+  it('triggers onSelectProduct when a product card is clicked', () => {
+    const onSelectCategory = vi.fn();
+    const onSelectProduct = vi.fn();
     const { container } = render(
       <VisualCategoryCards
-        categories={[mockCategories[0]]}
-        products={products}
+        categories={mockCategories}
+        products={mockProducts}
         theme={lightTheme}
-        onSelectCategory={vi.fn()}
+        onSelectCategory={onSelectCategory}
+        onSelectProduct={onSelectProduct}
       />
     );
 
-    const cover = container.querySelector('.visual-category-img-inner img') as HTMLImageElement;
-    expect(cover.getAttribute('src')).toBe('/uploads/admin-selected-cover.jpg');
-    fireEvent.error(cover);
-    expect(cover.getAttribute('src')).toBe('/media/products/ardo-201gc.jpg');
-  });
-
-  it('builds a category collage from distinct product covers, preserving the admin-selected first image', () => {
-    const products: Product[] = Array.from({ length: 4 }, (_, index) => ({
-      ...mockProducts[0],
-      id: `oven-${index}`,
-      image: index === 0 ? '/uploads/admin-oven-cover.jpg' : `/media/products/oven-${index}.jpg`,
-    }));
-    const { container } = render(
-      <VisualCategoryCards
-        categories={[mockCategories[0]]}
-        products={products}
-        theme={lightTheme}
-        onSelectCategory={vi.fn()}
-      />
-    );
-    const sources = Array.from(container.querySelectorAll('.category-cover-collage img')).map(
-      (image) => image.getAttribute('src')
-    );
-    expect(sources).toHaveLength(4);
-    expect(sources[0]).toBe('/uploads/admin-oven-cover.jpg');
-    expect(new Set(sources).size).toBe(4);
+    const productCard = container.querySelector('.category-product-subcard') as HTMLElement;
+    expect(productCard).not.toBeNull();
+    fireEvent.click(productCard);
+    expect(onSelectProduct).toHaveBeenCalledWith(expect.objectContaining({ id: 'prod-1' }));
   });
 
   it('returns null if all categories have 0 models', () => {

@@ -66,7 +66,7 @@ function createTestDb() {
   db.prepare(
     `
     INSERT INTO brands (id, name, slug, origin_country, logo, active, coming_soon, sort_order, verification_status, logo_rights_status, created_at)
-    VALUES ('brand_lotus', 'Lotus', 'lotus', 'Türkiyə', '/media/brands/lotus-mark.svg', 1, 0, 2, 'legacy_unreviewed', 'unreviewed', ?)
+    VALUES ('brand_lotus', 'Lotus', 'lotus', 'Türkiyə', '/media/brands/lotus-logo.png', 1, 0, 2, 'legacy_unreviewed', 'unreviewed', ?)
   `
   ).run(now);
   db.prepare(

@@ -6,7 +6,7 @@ export const CANONICAL_54_BRANDS = [
   { name: 'LG', slug: 'lg', originCountry: 'Cənubi Koreya', logo: '/media/brands/lg-logo.svg' },
 
   // Block 2: LOTUS (Hero) + Top Appliances
-  { name: 'LOTUS', slug: 'lotus', originCountry: 'Türkiyə', logo: '/media/brands/lotus-mark.svg' },
+  { name: 'LOTUS', slug: 'lotus', originCountry: 'Türkiyə', logo: '/media/brands/lotus-logo.png' },
   { name: 'Beko', slug: 'beko', originCountry: 'Türkiyə', logo: '/media/brands/beko-logo.svg' },
   { name: 'Arçelik', slug: 'arcelik', originCountry: 'Türkiyə', logo: '/media/brands/arcelik-logo.svg' },
   { name: 'Sharp', slug: 'sharp', originCountry: 'Yaponiya', logo: '/media/brands/sharp-logo.svg' },
@@ -42,7 +42,7 @@ export const CANONICAL_54_BRANDS = [
   { name: 'Eurolux', slug: 'eurolux', originCountry: 'Almaniya', logo: '/media/brands/eurolux-logo.svg' },
   { name: 'Biryusa', slug: 'biryusa', originCountry: 'Rusiya', logo: '/media/brands/biryusa-logo.svg' },
   { name: 'Pozis', slug: 'pozis', originCountry: 'Rusiya', logo: '/media/brands/pozis-logo.svg' },
-  { name: 'Lanova', slug: 'lanova', originCountry: 'İtaliya', logo: '/media/brands/lanova-logo.svg' },
+  { name: 'Lanova', slug: 'lanova', originCountry: 'Türkiyə', logo: '/media/brands/lanova-logo.png' },
   { name: 'Konka', slug: 'konka', originCountry: 'Çin', logo: '/media/brands/konka-logo.svg' },
   { name: 'Hailang', slug: 'hailang', originCountry: 'Çin', logo: '/media/brands/hailang-logo.svg' },
   { name: 'Everest', slug: 'everest', originCountry: 'Türkiyə', logo: '/media/brands/everest-logo.svg' },
@@ -53,7 +53,6 @@ export const CANONICAL_54_BRANDS = [
   { name: 'Darkin', slug: 'darkin', originCountry: 'Çin', logo: '/media/brands/darkin-logo.svg' },
   { name: 'Arlant', slug: 'arlant', originCountry: 'Türkiyə', logo: '/media/brands/arlant-logo.svg' },
   { name: 'ES', slug: 'es', originCountry: 'İspaniya', logo: '/media/brands/es-logo.svg' },
-  { name: 'Konko', slug: 'konko', originCountry: 'Çin', logo: '/media/brands/konko-logo.svg' },
   { name: 'Hayland', slug: 'hayland', originCountry: 'Çin', logo: '/media/brands/hayland-logo.svg' },
   { name: 'MGI', slug: 'mgi', originCountry: 'İtaliya', logo: '/media/brands/mgi-logo.svg' },
   { name: 'Neos', slug: 'neos', originCountry: 'Çin', logo: '/media/brands/neos-logo.svg' },

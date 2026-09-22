@@ -40,7 +40,7 @@ test.describe('Phase 5: Animated Brand Rail Public & Admin E2E Tests', () => {
       'lotus',
       'darkin',
       'konka',
-      'konko',
+      'lanova',
       'winsor',
       'ficher',
       'es',

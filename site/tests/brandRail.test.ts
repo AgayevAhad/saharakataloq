@@ -30,24 +30,26 @@ describe('Phase 5: Animated Brand Rail & 54 Canonical Brands Integration Tests',
     } catch {}
   });
 
-  describe('1. 54 Canonical Brands & Manifest Integrity', () => {
-    it('should have exactly 54 canonical brands in definition', () => {
-      expect(CANONICAL_54_BRANDS.length).toBe(54);
+  describe('1. 53 Canonical Brands & Manifest Integrity', () => {
+    it('should have exactly 53 canonical brands in definition', () => {
+      expect(CANONICAL_54_BRANDS.length).toBe(53);
     });
 
-    it('should enforce distinct, unique slugs for all 54 brands', () => {
+    it('should enforce distinct, unique slugs for all 53 brands', () => {
       const slugs = CANONICAL_54_BRANDS.map((b) => b.slug);
       const uniqueSlugs = new Set(slugs);
-      expect(uniqueSlugs.size).toBe(54);
+      expect(uniqueSlugs.size).toBe(53);
     });
 
     it('should preserve required distinctive brands without confusion or alias errors', () => {
       const brandNames = CANONICAL_54_BRANDS.map((b) => b.name);
       // Darkin
       expect(brandNames).toContain('Darkin');
-      // Konka & Konko
+      // Konka (and Konko removed)
       expect(brandNames).toContain('Konka');
-      expect(brandNames).toContain('Konko');
+      expect(brandNames).not.toContain('Konko');
+      // Lanova
+      expect(brandNames).toContain('Lanova');
       // Hailang & Hayland
       expect(brandNames).toContain('Hailang');
       expect(brandNames).toContain('Hayland');
@@ -74,21 +76,21 @@ describe('Phase 5: Animated Brand Rail & 54 Canonical Brands Integration Tests',
       expect(isPhase5BrandRailReady(draftDb)).toBe(true);
     });
 
-    it('should seed 54 canonical brands deterministically on empty database', () => {
+    it('should seed 53 canonical brands deterministically on empty database', () => {
       applyPhase5BrandRailSchema(draftDb);
       seedCanonical54Brands(draftDb);
 
       const count = draftDb.prepare('SELECT COUNT(*) as count FROM brand_rail_items').get() as {
         count: number;
       };
-      expect(count.count).toBe(54);
+      expect(count.count).toBe(53);
 
       // Verify idempotency (calling seed again does not duplicate items)
       seedCanonical54Brands(draftDb);
       const countAfter = draftDb
         .prepare('SELECT COUNT(*) as count FROM brand_rail_items')
         .get() as { count: number };
-      expect(countAfter.count).toBe(54);
+      expect(countAfter.count).toBe(53);
     });
   });
 
@@ -131,9 +133,9 @@ describe('Phase 5: Animated Brand Rail & 54 Canonical Brands Integration Tests',
       expect(updated.title).toBe('Partnyorlarımız');
     });
 
-    it('should retrieve 54 items in sorted order', () => {
+    it('should retrieve 53 items in sorted order', () => {
       const items = railService.getItems();
-      expect(items.length).toBe(54);
+      expect(items.length).toBe(53);
       expect(items[0].sortOrder).toBeLessThanOrEqual(items[1].sortOrder);
     });
 
@@ -309,7 +311,7 @@ describe('Phase 5: Animated Brand Rail & 54 Canonical Brands Integration Tests',
 
       // Promote to public DB
       const result = draftService.publishToPublicDb(publicDb, 'test-admin');
-      expect(result.published_items_count).toBe(54);
+      expect(result.published_items_count).toBe(53);
 
       // Verify public DB has exact promoted data
       const publicService = new BrandRailService(publicDb);
@@ -318,7 +320,7 @@ describe('Phase 5: Animated Brand Rail & 54 Canonical Brands Integration Tests',
       expect(publicSettings.direction).toBe('right');
 
       const publicItems = publicService.getItems();
-      expect(publicItems.length).toBe(54);
+      expect(publicItems.length).toBe(53);
       expect(publicItems.find((i) => i.id === draftItems[0].id)?.sortOrder).toBe(10);
     });
   });

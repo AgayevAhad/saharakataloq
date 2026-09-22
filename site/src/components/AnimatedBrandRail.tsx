@@ -54,7 +54,7 @@ const LOGO_MAP: Record<string, string> = {
   eurolux: '/media/brands/eurolux-logo.svg',
   biryusa: '/media/brands/biryusa-logo.svg',
   pozis: '/media/brands/pozis-logo.svg',
-  lanova: '/media/brands/lanova-logo.svg',
+  lanova: '/media/brands/lanova-logo.png',
   konka: '/media/brands/konka-logo.svg',
   hailang: '/media/brands/hailang-logo.svg',
   everest: '/media/brands/everest-logo.svg',
@@ -65,7 +65,6 @@ const LOGO_MAP: Record<string, string> = {
   darkin: '/media/brands/darkin-logo.svg',
   arlant: '/media/brands/arlant-logo.svg',
   es: '/media/brands/es-logo.svg',
-  konko: '/media/brands/konko-logo.svg',
   hayland: '/media/brands/hayland-logo.svg',
 };
 
@@ -313,7 +312,7 @@ export const AnimatedBrandRail: React.FC<AnimatedBrandRailProps> = ({
       <div
         className="brand-rail-unified-container brand-rail-fullwidth"
         style={{
-          backgroundColor: theme?.bgCard || '#ffffff',
+          backgroundColor: 'transparent',
           border: 'none',
           borderWidth: 0,
           borderRadius: 0,

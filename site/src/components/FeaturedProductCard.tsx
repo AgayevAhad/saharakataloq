@@ -24,6 +24,8 @@ interface FeaturedProductCardProps {
   onWhatsApp?: (product: Product) => void;
   onCall?: (product: Product) => void;
   brand?: Brand;
+  transparentBg?: boolean;
+  hideBrandAndCategoryMeta?: boolean;
 }
 
 export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
@@ -38,6 +40,8 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
   onWhatsApp,
   onCall,
   brand,
+  transparentBg = false,
+  hideBrandAndCategoryMeta = false,
 }) => {
   const [internalFavorite, setInternalFavorite] = useState(false);
   const isFavorite = isFavoriteProp !== undefined ? isFavoriteProp : internalFavorite;
@@ -110,7 +114,7 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       style={{
-        backgroundColor: '#ffffff',
+        backgroundColor: transparentBg ? 'transparent' : '#ffffff',
         border: 'none',
         borderRadius: '16px',
         padding: '16px 20px',
@@ -122,7 +126,11 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
         flexDirection: 'column',
         position: 'relative',
         cursor: 'pointer',
-        boxShadow: isActive ? '0 12px 32px rgba(0, 0, 0, 0.12)' : '0 4px 20px rgba(0, 0, 0, 0.05)',
+        boxShadow: transparentBg
+          ? 'none'
+          : isActive
+            ? '0 12px 32px rgba(0, 0, 0, 0.12)'
+            : '0 4px 20px rgba(0, 0, 0, 0.05)',
         transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease',
         overflow: 'visible',
       }}
@@ -135,12 +143,14 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
         }
       }}
     >
-      <ProductBrandBadge brand={brand} />
-      <div className="product-card-category-top" aria-label={`Kateqoriya: ${product.categoryName}`}>
-        <CategoryGlyph id={product.category} compact plain />
-        <span>{product.categoryName}</span>
-      </div>
-      {manufacturingCountryFlag(verifiedManufacturingCountry(product)) && (
+      {!hideBrandAndCategoryMeta && <ProductBrandBadge brand={brand} />}
+      {!hideBrandAndCategoryMeta && (
+        <div className="product-card-category-top" aria-label={`Kateqoriya: ${product.categoryName}`}>
+          <CategoryGlyph id={product.category} compact plain />
+          <span>{product.categoryName}</span>
+        </div>
+      )}
+      {!hideBrandAndCategoryMeta && manufacturingCountryFlag(verifiedManufacturingCountry(product)) && (
         <span
           className="product-card-country-flag"
           data-country={verifiedManufacturingCountry(product)}
@@ -151,7 +161,7 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
         </span>
       )}
 
-      {getVisibleBadgeText(product) && (
+      {!hideBrandAndCategoryMeta && getVisibleBadgeText(product) && (
         <span
           className="featured-product-badge"
           style={{ backgroundColor: getProductBadgeColor(product.badgeColor) }}
@@ -372,7 +382,7 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
           minHeight: '265px',
           maxHeight: '275px',
           borderRadius: '12px',
-          backgroundColor: '#ffffff',
+          backgroundColor: transparentBg ? 'transparent' : '#f8fafc',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',

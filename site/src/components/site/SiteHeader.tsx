@@ -31,9 +31,9 @@ import { ShimmerImage } from '../ShimmerImage';
 import { useMobileSearchHistory } from '../../hooks/useMobileSearchHistory';
 
 const HEADER_BRAND_LOGOS = [
-  { slug: 'ardo', name: 'ARDO', logo: '/media/brands/ardo-logo.svg' },
+  { slug: 'ardo', name: 'ARDO', logo: '/media/brands/ardo-logo.png' },
   { slug: 'artel', name: 'ARTEL', logo: '/media/brands/artel-logo.svg' },
-  { slug: 'lotus', name: 'LOTUS', logo: '/media/brands/lotus-logo.svg' },
+  { slug: 'lotus', name: 'LOTUS', logo: '/media/brands/lotus-logo.png' },
   { slug: 'bosch', name: 'Bosch', logo: '/media/brands/bosch-logo.svg' },
   { slug: 'samsung', name: 'Samsung', logo: '/media/brands/samsung-logo.svg' },
   { slug: 'lg', name: 'LG', logo: '/media/brands/lg-logo.svg' },

@@ -1,19 +1,19 @@
 import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { ChevronRight } from 'lucide-react';
 import { FeaturedProductCard } from '../../components/FeaturedProductCard';
-import { useScrollReveal } from '../../hooks/useScrollReveal';
 import { Brand, CatalogCategory, Product } from '../../types/product';
 import { ThemeColors } from '../../types/theme';
 import {
-  buildFeaturedTabs,
+  CURATED_FEATURED_TABS,
+  CuratedTab,
   FEATURED_ROWS_PER_PAGE,
+  getCuratedTabProducts,
   getFeaturedGridColumns,
-  sortFeaturedProducts,
 } from '../../utils/storefrontCuration';
 
 interface FeaturedProductsSectionProps {
   brands: Brand[];
-  categories: CatalogCategory[];
+  categories?: CatalogCategory[];
   products: Product[];
   theme: ThemeColors;
   onNavigateCatalog: () => void;
@@ -28,10 +28,10 @@ interface FeaturedProductsSectionProps {
 }
 
 const useBrowserLayoutEffect = typeof window === 'undefined' ? useEffect : useLayoutEffect;
+const TAB_DURATION_MS = 5000;
 
 export const FeaturedProductsSection: React.FC<FeaturedProductsSectionProps> = ({
   brands,
-  categories,
   products,
   theme,
   onNavigateCatalog,
@@ -44,7 +44,8 @@ export const FeaturedProductsSection: React.FC<FeaturedProductsSectionProps> = (
   comparisonIds = [],
   onToggleCompare,
 }) => {
-  const [selectedTab, setSelectedTab] = useState('all');
+  const [selectedTab, setSelectedTab] = useState<CuratedTab['id']>('featured');
+  const [tabKey, setTabKey] = useState(0);
   const [visibleRows, setVisibleRows] = useState(FEATURED_ROWS_PER_PAGE);
   const [columns, setColumns] = useState(3);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -53,27 +54,55 @@ export const FeaturedProductsSection: React.FC<FeaturedProductsSectionProps> = (
     () => products.filter((product) => product.status === 'published'),
     [products]
   );
-  const featuredTabs = useMemo(
-    () => buildFeaturedTabs(categories, publishedProducts),
-    [categories, publishedProducts]
+
+  const sortedProducts = useMemo(
+    () => getCuratedTabProducts(selectedTab, publishedProducts, brands),
+    [selectedTab, publishedProducts, brands]
   );
-  const sortedProducts = useMemo(() => {
-    const matching =
-      selectedTab === 'all'
-        ? publishedProducts
-        : publishedProducts.filter((product) => product.category === selectedTab);
-    return sortFeaturedProducts(matching, brands);
-  }, [publishedProducts, selectedTab, brands]);
+
   const visibleProducts = useMemo(
     () => sortedProducts.slice(0, visibleRows * columns),
     [sortedProducts, visibleRows, columns]
   );
-  const hasMore = sortedProducts.length > visibleProducts.length;
 
+  const hasMore = sortedProducts.length > visibleProducts.length;
   const brandsById = useMemo(() => new Map(brands.map((brand) => [brand.id, brand])), [brands]);
   const favoriteIdSet = useMemo(() => new Set(favoriteIds), [favoriteIds]);
   const comparisonIdSet = useMemo(() => new Set(comparisonIds), [comparisonIds]);
 
+  const sectionRef = useRef<HTMLElement>(null);
+  const [isInViewport, setIsInViewport] = useState(true);
+  const [isTabVisible, setIsTabVisible] = useState(
+    typeof document !== 'undefined' ? document.visibilityState === 'visible' : true
+  );
+
+  // Viewport intersection observer: only rotate tabs when visible
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section || typeof IntersectionObserver === 'undefined') return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        setIsInViewport(entry.isIntersecting);
+      },
+      { rootMargin: '100px', threshold: 0.05 }
+    );
+
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, []);
+
+  // Document tab visibility listener
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const handleVisibility = () => {
+      setIsTabVisible(document.visibilityState === 'visible');
+    };
+    document.addEventListener('visibilitychange', handleVisibility, { passive: true });
+    return () => document.removeEventListener('visibilitychange', handleVisibility);
+  }, []);
+
+  // Responsive column detection
   useBrowserLayoutEffect(() => {
     const grid = gridRef.current;
     if (!grid) return;
@@ -91,21 +120,39 @@ export const FeaturedProductsSection: React.FC<FeaturedProductsSectionProps> = (
     return () => window.removeEventListener('resize', measure);
   }, []);
 
-  useScrollReveal(
-    [selectedTab, visibleProducts.map((product) => product.id).join('|')],
-    '.featured-products-grid .scroll-reveal-item'
-  );
+  // Exact 5-second auto-rotation timer: advances tabs when in viewport and tab is active
+  useEffect(() => {
+    if (!isInViewport || !isTabVisible) return;
 
-  const selectTab = (tabId: string) => {
+    const timer = setTimeout(() => {
+      setSelectedTab((prevTab) => {
+        const currentIdx = CURATED_FEATURED_TABS.findIndex((t) => t.id === prevTab);
+        const nextIdx = (currentIdx + 1) % CURATED_FEATURED_TABS.length;
+        return CURATED_FEATURED_TABS[nextIdx].id;
+      });
+      setVisibleRows(FEATURED_ROWS_PER_PAGE);
+      setTabKey((k) => k + 1);
+    }, TAB_DURATION_MS);
+
+    return () => clearTimeout(timer);
+  }, [selectedTab, tabKey, isInViewport, isTabVisible]);
+
+  const selectTab = (tabId: CuratedTab['id']) => {
     setSelectedTab(tabId);
     setVisibleRows(FEATURED_ROWS_PER_PAGE);
+    setTabKey((k) => k + 1);
   };
 
   return (
     <section
+      ref={sectionRef}
       className="catalog-container featured-products-section"
       aria-label="Önə çıxan məhsullar"
+      style={{
+        contain: 'layout paint',
+      }}
     >
+      {/* 4 Curated Tabs in Section Header with 5s Progress Line */}
       <div
         className="featured-section-header"
         style={{
@@ -117,56 +164,48 @@ export const FeaturedProductsSection: React.FC<FeaturedProductsSectionProps> = (
           marginBottom: '20px',
         }}
       >
-        <div style={{ display: 'flex', alignItems: 'center', gap: '20px', flexWrap: 'wrap' }}>
-          <h2
-            style={{
-              fontSize: 'clamp(1.25rem, 2.2vw, 1.5rem)',
-              fontWeight: 900,
-              color: theme.text,
-              margin: 0,
-              fontFamily: 'Outfit, -apple-system, sans-serif',
-              letterSpacing: '-0.02em',
-            }}
-          >
-            Önə çıxan məhsullar
-          </h2>
-
-          <div
-            className="featured-filter-tabs hide-on-mobile"
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              overflowX: 'auto',
-              scrollbarWidth: 'none',
-            }}
-          >
-            {featuredTabs.map((tab) => {
-              const isActive = selectedTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  type="button"
-                  aria-pressed={isActive}
-                  onClick={() => selectTab(tab.id)}
+        <div
+          className="featured-curated-tabs"
+          role="tablist"
+          aria-label="Vitrin kateqoriya seçimləri"
+        >
+          {CURATED_FEATURED_TABS.map((tab) => {
+            const isActive = selectedTab === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                role="tab"
+                aria-selected={isActive}
+                onClick={() => selectTab(tab.id)}
+                className={`featured-tab-btn ${isActive ? 'is-active' : ''}`}
+                style={{
+                  color: isActive
+                    ? '#dc2626'
+                    : theme.mode === 'dark'
+                      ? '#94a3b8'
+                      : '#64748b',
+                }}
+              >
+                <span>{tab.name}</span>
+                <div
+                  className="featured-tab-progress-track"
                   style={{
-                    background: 'transparent',
-                    border: 'none',
-                    padding: '4px 10px',
-                    borderRadius: '6px',
-                    fontSize: '13px',
-                    fontWeight: isActive ? 800 : 500,
-                    color: isActive ? '#e31e24' : theme.textMuted || '#64748b',
-                    cursor: 'pointer',
-                    borderBottom: isActive ? '2px solid #e31e24' : '2px solid transparent',
-                    transition: 'all 0.15s ease',
+                    backgroundColor: isActive
+                      ? 'rgba(220, 38, 38, 0.14)'
+                      : 'transparent',
                   }}
                 >
-                  {tab.name}
-                </button>
-              );
-            })}
-          </div>
+                  {isActive && (
+                    <div
+                      key={`${tab.id}-${tabKey}`}
+                      className="featured-tab-progress-fill"
+                    />
+                  )}
+                </div>
+              </button>
+            );
+          })}
         </div>
 
         <button
@@ -178,7 +217,7 @@ export const FeaturedProductsSection: React.FC<FeaturedProductsSectionProps> = (
             border: 'none',
             color: '#e31e24',
             fontWeight: 800,
-            fontSize: '13px',
+            fontSize: '13.5px',
             cursor: 'pointer',
             display: 'inline-flex',
             alignItems: 'center',
@@ -191,7 +230,9 @@ export const FeaturedProductsSection: React.FC<FeaturedProductsSectionProps> = (
         </button>
       </div>
 
+      {/* Grid of Product Cards with Top-to-Bottom Staggered Cascade Entrance Animation */}
       <div
+        key={selectedTab}
         ref={gridRef}
         className="featured-products-grid"
         data-visible-rows={visibleRows}
@@ -204,11 +245,14 @@ export const FeaturedProductsSection: React.FC<FeaturedProductsSectionProps> = (
           justifyContent: 'flex-start',
         }}
       >
-        {visibleProducts.map((product) => (
+        {visibleProducts.map((product, pIdx) => (
           <div
             key={product.id}
-            className="featured-product-reveal scroll-reveal-item"
+            className="featured-product-reveal featured-product-cascade"
             data-featured-product-reveal={product.id}
+            style={{
+              animationDelay: `${pIdx * 35}ms`,
+            }}
           >
             <FeaturedProductCard
               product={product}
@@ -229,12 +273,15 @@ export const FeaturedProductsSection: React.FC<FeaturedProductsSectionProps> = (
 
       {sortedProducts.length === 0 && (
         <p className="featured-products-empty" style={{ color: theme.textMuted }}>
-          Hazırda bu kateqoriyada dərc edilmiş məhsul yoxdur.
+          Hazırda bu bölmədə dərc edilmiş məhsul yoxdur.
         </p>
       )}
+
       <span className="sr-only" aria-live="polite">
         {visibleProducts.length} məhsul göstərilir.
       </span>
+
+      {/* Load more ("Ardına bax") button expanding by 4 rows */}
       {(hasMore || visibleRows > FEATURED_ROWS_PER_PAGE) && (
         <div className="featured-load-more-wrap">
           <button

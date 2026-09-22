@@ -187,8 +187,8 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
     }
 
     const startedAt = Date.now();
-    const interval = window.setInterval(() => {
-      if (disposed) return;
+    const interval = setInterval(() => {
+      if (disposed || typeof window === 'undefined') return;
       const video = companionVideoRefs.current[companionIndex];
       let progress = 0;
       if (video && video.duration && !isNaN(video.duration) && video.duration > 0) {
@@ -210,7 +210,7 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
 
     return () => {
       disposed = true;
-      window.clearInterval(interval);
+      clearInterval(interval);
     };
   }, [companionIndex]);
 
@@ -225,8 +225,8 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
         video.currentTime = 0;
         video.play().catch(() => undefined);
       }
-      const interval = window.setInterval(() => {
-        if (disposed) return;
+      const interval = setInterval(() => {
+        if (disposed || typeof window === 'undefined') return;
         const activeVideo = videoRef.current;
         const elapsed = activeVideo?.currentTime || 0;
         setSlideProgress(Math.min(100, (elapsed / currentSlide.duration) * 100));
@@ -234,20 +234,20 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
       }, stepMs);
       return () => {
         disposed = true;
-        window.clearInterval(interval);
+        clearInterval(interval);
       };
     }
 
     const startedAt = Date.now();
-    const interval = window.setInterval(() => {
-      if (disposed) return;
+    const interval = setInterval(() => {
+      if (disposed || typeof window === 'undefined') return;
       const progress = ((Date.now() - startedAt) / (currentSlide.duration * 1000)) * 100;
       if (progress >= 100) goToSlide(currentIndex + 1);
       else setSlideProgress(progress);
     }, stepMs);
     return () => {
       disposed = true;
-      window.clearInterval(interval);
+      clearInterval(interval);
     };
   }, [currentIndex, currentSlide.duration, currentSlide.type]);
 
@@ -453,7 +453,6 @@ export const BannerHero: React.FC<BannerHeroProps> = ({
                   onClick={() => goToSlide(index)}
                   aria-label={`Slayd ${index + 1}: ${slide.titlePart1}`}
                 >
-                  <span>{String(index + 1).padStart(2, '0')}</span>
                   <span className="hero-progress-track" aria-hidden="true">
                     <span
                       className="hero-progress-fill"

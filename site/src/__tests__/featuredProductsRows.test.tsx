@@ -53,8 +53,8 @@ const renderSection = (
     />
   );
 
-describe('featured products responsive eight-row window', () => {
-  it('renders exactly eight desktop rows and expands another eight in place', () => {
+describe('featured products responsive four-row window', () => {
+  it('renders exactly four desktop rows and expands another four in place', () => {
     let resize: (() => void) | undefined;
     class ResizeObserverStub {
       constructor(callback: () => void) {
@@ -70,14 +70,14 @@ describe('featured products responsive eight-row window', () => {
     act(() => resize?.());
 
     expect(grid.dataset.columnCount).toBe('3');
+    expect(grid.dataset.visibleRows).toBe('4');
+    expect(screen.getAllByTestId('featured-test-card')).toHaveLength(12);
+    fireEvent.click(screen.getByTestId('featured-load-more'));
     expect(grid.dataset.visibleRows).toBe('8');
     expect(screen.getAllByTestId('featured-test-card')).toHaveLength(24);
-    fireEvent.click(screen.getByTestId('featured-load-more'));
-    expect(grid.dataset.visibleRows).toBe('16');
-    expect(screen.getAllByTestId('featured-test-card')).toHaveLength(48);
   });
 
-  it('keeps eight rows on mobile and never renders draft products', () => {
+  it('keeps four rows on mobile and never renders draft products', () => {
     let resize: (() => void) | undefined;
     class ResizeObserverStub {
       constructor(callback: () => void) {
@@ -95,37 +95,28 @@ describe('featured products responsive eight-row window', () => {
     act(() => resize?.());
 
     expect(grid.dataset.columnCount).toBe('1');
-    expect(screen.getAllByTestId('featured-test-card')).toHaveLength(8);
+    expect(screen.getAllByTestId('featured-test-card')).toHaveLength(4);
     expect(screen.queryByText('P-0')).toBeNull();
     fireEvent.click(screen.getByTestId('featured-load-more'));
-    expect(screen.getAllByTestId('featured-test-card')).toHaveLength(16);
+    expect(screen.getAllByTestId('featured-test-card')).toHaveLength(8);
   });
 
-  it('resets to eight rows and changes product content when a category tab is selected', () => {
-    const fridgeProducts = makeProducts(12).map((product, index) => ({
-      ...product,
-      id: `fridge-${index}`,
-      code: `F-${index}`,
-      category: 'fridge',
-      categoryName: 'Soyuducu',
-    }));
-    const { container } = renderSection(
-      [...makeProducts(70), ...fridgeProducts],
-      [
-        { id: 'washer', slug: 'washer', name: 'Paltaryuyan', active: true },
-        { id: 'fridge', slug: 'fridge', name: 'Soyuducu', active: true },
-      ]
-    );
+  it('resets to four rows and changes product content when a curated tab is selected', () => {
+    const products = makeProducts(30);
+    products[0].isBestSeller = true;
+    products[0].title = 'Bestseller Item 1';
+    products[0].code = 'BS-1';
+
+    const { container } = renderSection(products);
     const grid = container.querySelector('.featured-products-grid') as HTMLDivElement;
     fireEvent.click(screen.getByTestId('featured-load-more'));
-    expect(grid.dataset.visibleRows).toBe('16');
-
-    const fridgeTab = screen.getByRole('button', { name: 'Soyuducu' });
-    fireEvent.click(fridgeTab);
-    expect(fridgeTab.getAttribute('aria-pressed')).toBe('true');
     expect(grid.dataset.visibleRows).toBe('8');
-    expect(screen.getAllByTestId('featured-test-card')).toHaveLength(12);
-    expect(screen.getByText('F-0')).toBeDefined();
-    expect(screen.queryByText('P-0')).toBeNull();
+
+    const bestsellerTab = screen.getByRole('tab', { name: /Çox satılan məhsullar/i });
+    fireEvent.click(bestsellerTab);
+    expect(bestsellerTab.getAttribute('aria-selected')).toBe('true');
+    const updatedGrid = container.querySelector('.featured-products-grid') as HTMLDivElement;
+    expect(updatedGrid.dataset.visibleRows).toBe('4');
+    expect(screen.getByText('BS-1')).toBeDefined();
   });
 });
