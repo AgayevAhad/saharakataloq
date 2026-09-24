@@ -2,13 +2,19 @@ import React, { useCallback, useEffect, useMemo, useState, lazy, Suspense } from
 import { catalogApi } from '../services/catalogApi';
 import { Product, TechnologyArticle } from '../types/product';
 import { filterCatalogProducts } from '../utils/filter';
+import {
+  CatalogSortOption,
+  filterCatalogPageProducts,
+  sortCatalogPageProducts,
+} from '../features/catalog/catalogSelection';
 import { phoneHref, whatsappHref } from '../utils/contact';
-import { ArrowLeft, Lock, MessageCircle, Moon, Phone, Sparkles, Sun } from 'lucide-react';
+import { ArrowLeft, Filter, Lock, MessageCircle, Moon, Phone, RotateCcw, Sparkles, Sun, X } from 'lucide-react';
 import { Header } from '../components/Header';
 import { SaharaLogo } from '../components/SaharaLogo';
 import { BrandShowcase } from '../components/BrandShowcase';
 import { ProductCard } from '../components/ProductCard';
 import { BrandCategoryFilter } from '../components/BrandCategoryFilter';
+import { CatalogSidebarFilter } from '../components/CatalogSidebarFilter';
 import { FloatingActions } from '../components/FloatingActions';
 import { Toast } from '../components/Toast';
 import { Drawer } from '../components/ui/Drawer';
@@ -45,6 +51,15 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState('');
+  const [minPrice, setMinPrice] = useState<number | null>(null);
+  const [maxPrice, setMaxPrice] = useState<number | null>(null);
+  const [onlyDiscounted, setOnlyDiscounted] = useState(false);
+  const [onlyWithVideo, setOnlyWithVideo] = useState(false);
+  const [selectedEnergyClass, setSelectedEnergyClass] = useState('all');
+  const [selectedMotorType, setSelectedMotorType] = useState('all');
+  const [selectedColor, setSelectedColor] = useState('all');
+  const [sortBy, setSortBy] = useState<CatalogSortOption>('recommended');
+  const [isMobileFilterDrawerOpen, setIsMobileFilterDrawerOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isInverterModalOpen, setIsInverterModalOpen] = useState(false);
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
@@ -162,18 +177,100 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
     setIsInverterModalOpen(true);
   };
 
+  const activeCatalogProducts = useMemo(() => {
+    return catalog.products.filter((p) => p.status !== 'draft');
+  }, [catalog.products]);
+
+  const { minAvailablePrice, maxAvailablePrice } = useMemo(() => {
+    const prices = activeCatalogProducts
+      .map((p) => p.price)
+      .filter((price): price is number => typeof price === 'number' && price > 0);
+    return {
+      minAvailablePrice: prices.length ? Math.min(...prices) : 0,
+      maxAvailablePrice: prices.length ? Math.max(...prices) : 5000,
+    };
+  }, [activeCatalogProducts]);
+
+  const selectedMinPrice = minPrice ?? minAvailablePrice;
+  const selectedMaxPrice = maxPrice ?? maxAvailablePrice;
+  const priceFilterActive =
+    selectedMinPrice > minAvailablePrice || selectedMaxPrice < maxAvailablePrice;
+
   const isCatalogActive =
-    selectedBrand !== null || selectedCategory !== null || searchQuery.trim().length > 0;
+    selectedBrand !== null ||
+    (selectedCategory !== null && selectedCategory !== 'all') ||
+    searchQuery.trim().length > 0 ||
+    priceFilterActive ||
+    onlyDiscounted ||
+    onlyWithVideo ||
+    selectedEnergyClass !== 'all' ||
+    selectedMotorType !== 'all' ||
+    selectedColor !== 'all';
+
+  const resetFilters = useCallback(() => {
+    setSelectedCategory('all');
+    setMinPrice(null);
+    setMaxPrice(null);
+    setOnlyDiscounted(false);
+    setOnlyWithVideo(false);
+    setSelectedEnergyClass('all');
+    setSelectedMotorType('all');
+    setSelectedColor('all');
+    setSearchQuery('');
+  }, []);
+
+  const hasActiveFilters =
+    (selectedCategory !== null && selectedCategory !== 'all') ||
+    priceFilterActive ||
+    onlyDiscounted ||
+    onlyWithVideo ||
+    selectedEnergyClass !== 'all' ||
+    selectedMotorType !== 'all' ||
+    selectedColor !== 'all' ||
+    Boolean(searchQuery.trim());
+
+  const activeFiltersCount =
+    Number(selectedCategory !== null && selectedCategory !== 'all') +
+    Number(priceFilterActive) +
+    Number(onlyDiscounted) +
+    Number(onlyWithVideo) +
+    Number(selectedEnergyClass !== 'all') +
+    Number(selectedMotorType !== 'all') +
+    Number(selectedColor !== 'all');
 
   const filteredProducts = useMemo(() => {
     if (!isCatalogActive) return [];
-    return filterCatalogProducts(
-      catalog.products,
-      selectedCategory || 'all',
-      selectedBrand || 'all',
-      searchQuery
-    );
-  }, [catalog.products, isCatalogActive, searchQuery, selectedBrand, selectedCategory]);
+    const brandsFilter = selectedBrand && selectedBrand !== 'all' ? [selectedBrand] : [];
+    const filtered = filterCatalogPageProducts(catalog.products, {
+      query: searchQuery,
+      category: selectedCategory || 'all',
+      brands: brandsFilter,
+      minPrice: selectedMinPrice,
+      maxPrice: selectedMaxPrice,
+      priceActive: priceFilterActive,
+      onlyDiscounted,
+      onlyWithVideo,
+      energyClass: selectedEnergyClass,
+      motorType: selectedMotorType,
+      color: selectedColor,
+    });
+    return sortCatalogPageProducts(filtered, sortBy);
+  }, [
+    catalog.products,
+    isCatalogActive,
+    searchQuery,
+    selectedCategory,
+    selectedBrand,
+    selectedMinPrice,
+    selectedMaxPrice,
+    priceFilterActive,
+    onlyDiscounted,
+    onlyWithVideo,
+    selectedEnergyClass,
+    selectedMotorType,
+    selectedColor,
+    sortBy,
+  ]);
 
   const activeBrandObj =
     selectedBrand && selectedBrand !== 'all'
@@ -380,34 +477,360 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                   </div>
                 )}
 
-                {!filteredProducts.length ? (
-                  <div
-                    className="empty-state"
-                    style={{ background: activeTheme.bgCard, borderColor: activeTheme.border }}
-                  >
-                    <p style={{ color: activeTheme.text }}>Axtarışa uyğun məhsul tapılmadı.</p>
+                <div
+                  className="catalog-body-layout"
+                  style={{
+                    display: 'flex',
+                    gap: '24px',
+                    alignItems: 'flex-start',
+                    width: '100%',
+                    marginTop: '20px',
+                  }}
+                >
+                  {/* Desktop Left Sidebar Filters */}
+                  <aside className="catalog-desktop-sidebar">
+                    <CatalogSidebarFilter
+                      categories={
+                        activeBrandObj
+                          ? catalog.categories.filter((cat) =>
+                              catalog.products.some(
+                                (p) =>
+                                  p.brandId === activeBrandObj.id &&
+                                  p.category === cat.id &&
+                                  p.status !== 'draft'
+                              )
+                            )
+                          : catalog.categories
+                      }
+                      activeProducts={
+                        activeBrandObj
+                          ? catalog.products.filter(
+                              (p) => p.brandId === activeBrandObj.id && p.status !== 'draft'
+                            )
+                          : activeCatalogProducts
+                      }
+                      selectedCategory={selectedCategory || 'all'}
+                      onSelectCategory={(catId) => setSelectedCategory(catId)}
+                      minPrice={selectedMinPrice}
+                      maxPrice={selectedMaxPrice}
+                      minAvailablePrice={minAvailablePrice}
+                      maxAvailablePrice={maxAvailablePrice}
+                      onMinPriceChange={(val) => setMinPrice(val)}
+                      onMaxPriceChange={(val) => setMaxPrice(val)}
+                      onlyDiscounted={onlyDiscounted}
+                      onToggleDiscounted={setOnlyDiscounted}
+                      onlyWithVideo={onlyWithVideo}
+                      onToggleWithVideo={setOnlyWithVideo}
+                      selectedEnergyClass={selectedEnergyClass}
+                      onSelectEnergyClass={setSelectedEnergyClass}
+                      selectedMotorType={selectedMotorType}
+                      onSelectMotorType={setSelectedMotorType}
+                      selectedColor={selectedColor}
+                      onSelectColor={setSelectedColor}
+                      hasActiveFilters={hasActiveFilters}
+                      onResetFilters={resetFilters}
+                      theme={activeTheme}
+                      isDarkMode={themeMode === 'dark'}
+                    />
+                  </aside>
+
+                  {/* Right Area: Products Grid & Controls */}
+                  <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
+                    {/* Top Controls Toolbar */}
+                    <div
+                      className="catalog-top-controls"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'space-between',
+                        flexWrap: 'wrap',
+                        gap: '12px',
+                        padding: '10px 16px',
+                        borderRadius: '14px',
+                        backgroundColor: activeTheme.bgCard,
+                        border: `1px solid ${activeTheme.border}`,
+                        marginBottom: '16px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                        <button
+                          type="button"
+                          onClick={() => setIsMobileFilterDrawerOpen(true)}
+                          className="catalog-mobile-filter-btn"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '8px 14px',
+                            borderRadius: '10px',
+                            backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                            color: '#dc2626',
+                            border: 'none',
+                            fontSize: '13px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <Filter size={15} />
+                          <span>Filtrlər</span>
+                          {activeFiltersCount > 0 && (
+                            <span
+                              style={{
+                                backgroundColor: activeTheme.primary,
+                                color: '#ffffff',
+                                borderRadius: '50%',
+                                width: '18px',
+                                height: '18px',
+                                fontSize: '11px',
+                                fontWeight: 800,
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              {activeFiltersCount}
+                            </span>
+                          )}
+                        </button>
+
+                        <span style={{ fontSize: '13px', fontWeight: 700, color: activeTheme.textMuted }}>
+                          Tapılan: <b style={{ color: activeTheme.text }}>{filteredProducts.length}</b> model
+                        </span>
+
+                        {hasActiveFilters && (
+                          <button
+                            type="button"
+                            onClick={resetFilters}
+                            style={{
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                              padding: '5px 10px',
+                              borderRadius: '8px',
+                              backgroundColor: 'transparent',
+                              color: activeTheme.primary,
+                              border: `1px dashed ${activeTheme.primary}`,
+                              fontSize: '12px',
+                              fontWeight: 600,
+                              cursor: 'pointer',
+                            }}
+                          >
+                            <RotateCcw size={12} />
+                            <span>Sıfırla</span>
+                          </button>
+                        )}
+                      </div>
+
+                      {/* Sort Selector */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <span style={{ fontSize: '12px', color: activeTheme.textMuted, fontWeight: 600 }}>
+                          Sırala:
+                        </span>
+                        <select
+                          value={sortBy}
+                          onChange={(e) => setSortBy(e.target.value as CatalogSortOption)}
+                          style={{
+                            padding: '6px 10px',
+                            borderRadius: '8px',
+                            backgroundColor: activeTheme.bgSecondary,
+                            border: `1px solid ${activeTheme.border}`,
+                            color: activeTheme.text,
+                            fontSize: '12.5px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <option value="recommended">Tövsiyə olunan</option>
+                          <option value="price-asc">Əvvəlcə ucuz</option>
+                          <option value="price-desc">Əvvəlcə baha</option>
+                          <option value="newest">Ən yenilər</option>
+                          <option value="discount">Endirimli</option>
+                        </select>
+                      </div>
+                    </div>
+
+                    {!filteredProducts.length ? (
+                      <div
+                        className="empty-state"
+                        style={{ background: activeTheme.bgCard, borderColor: activeTheme.border }}
+                      >
+                        <p style={{ color: activeTheme.text }}>
+                          Axtarışa və seçilmiş filtrlərə uyğun məhsul tapılmadı.
+                        </p>
+                        {hasActiveFilters && (
+                          <button
+                            type="button"
+                            onClick={resetFilters}
+                            className="brand-back-btn"
+                            style={{
+                              marginTop: '12px',
+                              borderColor: activeTheme.primary,
+                              color: '#ffffff',
+                              backgroundColor: activeTheme.primary,
+                            }}
+                          >
+                            <RotateCcw size={14} />
+                            <span>Filtrləri sıfırla</span>
+                          </button>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="product-grid">
+                        {filteredProducts.map((p) => {
+                          const brandObj = catalog.brands.find((b) => b.id === p.brandId);
+                          return (
+                            <ProductCard
+                              key={p.id}
+                              product={p}
+                              brand={brandObj}
+                              brandName={brandObj?.name || p.brandId || ''}
+                              theme={activeTheme}
+                              onSelect={selectProduct}
+                              onShare={openShare}
+                              onWhatsApp={openWhatsApp}
+                              onCall={openCall}
+                              onCopyLink={copyLink}
+                              whatsappButtonText={catalog.settings?.whatsappButtonText}
+                              callButtonText={catalog.settings?.callButtonText}
+                            />
+                          );
+                        })}
+                      </div>
+                    )}
                   </div>
-                ) : (
-                  <div className="product-grid">
-                    {filteredProducts.map((p) => {
-                      const brandObj = catalog.brands.find((b) => b.id === p.brandId);
-                      return (
-                        <ProductCard
-                          key={p.id}
-                          product={p}
-                          brand={brandObj}
-                          brandName={brandObj?.name || p.brandId || ''}
-                          theme={activeTheme}
-                          onSelect={selectProduct}
-                          onShare={openShare}
-                          onWhatsApp={openWhatsApp}
-                          onCall={openCall}
-                          onCopyLink={copyLink}
-                          whatsappButtonText={catalog.settings?.whatsappButtonText}
-                          callButtonText={catalog.settings?.callButtonText}
-                        />
-                      );
-                    })}
+                </div>
+
+                {/* Mobile Filter Drawer */}
+                {isMobileFilterDrawerOpen && (
+                  <div
+                    className="catalog-mobile-filter-backdrop"
+                    onClick={() => setIsMobileFilterDrawerOpen(false)}
+                    style={{
+                      position: 'fixed',
+                      inset: 0,
+                      zIndex: 200,
+                      backgroundColor: 'rgba(0, 0, 0, 0.65)',
+                      backdropFilter: 'blur(4px)',
+                      display: 'flex',
+                      justifyContent: 'flex-start',
+                    }}
+                  >
+                    <div
+                      className="catalog-mobile-filter-drawer"
+                      onClick={(e) => e.stopPropagation()}
+                      style={{
+                        width: '85%',
+                        maxWidth: '340px',
+                        height: '100%',
+                        backgroundColor: activeTheme.bg,
+                        padding: '20px',
+                        overflowY: 'auto',
+                        boxSizing: 'border-box',
+                        display: 'flex',
+                        flexDirection: 'column',
+                        gap: '16px',
+                      }}
+                    >
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: activeTheme.text }}>
+                          Filtrlər
+                        </h3>
+                        <button
+                          type="button"
+                          onClick={() => setIsMobileFilterDrawerOpen(false)}
+                          style={{
+                            background: 'transparent',
+                            border: 'none',
+                            color: activeTheme.text,
+                            cursor: 'pointer',
+                            padding: '4px',
+                          }}
+                        >
+                          <X size={20} />
+                        </button>
+                      </div>
+
+                      <CatalogSidebarFilter
+                        categories={
+                          activeBrandObj
+                            ? catalog.categories.filter((cat) =>
+                                catalog.products.some(
+                                  (p) =>
+                                    p.brandId === activeBrandObj.id &&
+                                    p.category === cat.id &&
+                                    p.status !== 'draft'
+                                )
+                              )
+                            : catalog.categories
+                        }
+                        activeProducts={
+                          activeBrandObj
+                            ? catalog.products.filter(
+                                (p) => p.brandId === activeBrandObj.id && p.status !== 'draft'
+                              )
+                            : activeCatalogProducts
+                        }
+                        selectedCategory={selectedCategory || 'all'}
+                        onSelectCategory={(catId) => setSelectedCategory(catId)}
+                        minPrice={selectedMinPrice}
+                        maxPrice={selectedMaxPrice}
+                        minAvailablePrice={minAvailablePrice}
+                        maxAvailablePrice={maxAvailablePrice}
+                        onMinPriceChange={(val) => setMinPrice(val)}
+                        onMaxPriceChange={(val) => setMaxPrice(val)}
+                        onlyDiscounted={onlyDiscounted}
+                        onToggleDiscounted={setOnlyDiscounted}
+                        onlyWithVideo={onlyWithVideo}
+                        onToggleWithVideo={setOnlyWithVideo}
+                        selectedEnergyClass={selectedEnergyClass}
+                        onSelectEnergyClass={setSelectedEnergyClass}
+                        selectedMotorType={selectedMotorType}
+                        onSelectMotorType={setSelectedMotorType}
+                        selectedColor={selectedColor}
+                        onSelectColor={setSelectedColor}
+                        hasActiveFilters={hasActiveFilters}
+                        onResetFilters={resetFilters}
+                        theme={activeTheme}
+                        isDarkMode={themeMode === 'dark'}
+                      />
+
+                      <div style={{ marginTop: 'auto', paddingTop: '16px', display: 'flex', gap: '8px' }}>
+                        <button
+                          type="button"
+                          onClick={resetFilters}
+                          style={{
+                            flex: 1,
+                            padding: '10px',
+                            borderRadius: '8px',
+                            backgroundColor: activeTheme.bgSecondary,
+                            color: activeTheme.text,
+                            border: 'none',
+                            fontSize: '13px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          Sıfırla
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setIsMobileFilterDrawerOpen(false)}
+                          style={{
+                            flex: 2,
+                            padding: '10px',
+                            borderRadius: '8px',
+                            backgroundColor: activeTheme.primary,
+                            color: '#ffffff',
+                            border: 'none',
+                            fontSize: '13px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          Göstər ({filteredProducts.length})
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 )}
               </section>
