@@ -59,7 +59,7 @@ export const BrandCategoryFilter: React.FC<BrandCategoryFilterProps> = ({
       className="brand-category-filter-bar"
       style={{
         backgroundColor: theme.bgCard,
-        borderColor: theme.border,
+        border: 'none',
       }}
     >
       {coverImage && (
@@ -79,9 +79,9 @@ export const BrandCategoryFilter: React.FC<BrandCategoryFilterProps> = ({
             onClick={onBackToBrands}
             title="Bütün brendlərə qayıt"
             style={{
-              borderColor: theme.border,
+              border: 'none',
               color: theme.text,
-              backgroundColor: theme.bgSecondary,
+              backgroundColor: 'transparent',
             }}
           >
             <ArrowLeft size={16} />
@@ -105,7 +105,7 @@ export const BrandCategoryFilter: React.FC<BrandCategoryFilterProps> = ({
               style={{
                 backgroundColor: `${theme.primary}18`,
                 color: theme.primary,
-                borderColor: `${theme.primary}40`,
+                border: 'none',
               }}
             >
               <Sparkles size={12} /> {totalCount} model
@@ -141,7 +141,7 @@ export const BrandCategoryFilter: React.FC<BrandCategoryFilterProps> = ({
           style={{
             backgroundColor: selectedCategory === 'all' ? theme.primary : theme.bgSecondary,
             color: selectedCategory === 'all' ? '#ffffff' : theme.text,
-            borderColor: selectedCategory === 'all' ? theme.primary : theme.border,
+            border: 'none',
           }}
         >
           <CategoryGlyph id="all" compact plain />
@@ -166,7 +166,7 @@ export const BrandCategoryFilter: React.FC<BrandCategoryFilterProps> = ({
               style={{
                 backgroundColor: isActive ? theme.primary : theme.bgSecondary,
                 color: isActive ? '#ffffff' : theme.text,
-                borderColor: isActive ? theme.primary : theme.border,
+                border: 'none',
               }}
             >
               <CategoryGlyph id={cat.id} slug={cat.slug} compact plain />

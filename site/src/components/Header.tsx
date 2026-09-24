@@ -45,9 +45,10 @@ interface HeaderProps {
 const pillStyle = (theme: ThemeColors) =>
   ({
     '--pill-color': theme.primary,
-    '--pill-border': theme.border,
+    '--pill-border': 'transparent',
     '--pill-bg': theme.bgSecondary,
     '--pill-text': theme.textSecondary,
+    border: 'none',
   }) as React.CSSProperties;
 
 export const Header: React.FC<HeaderProps> = ({
@@ -172,7 +173,7 @@ export const Header: React.FC<HeaderProps> = ({
             />
           </div>
 
-          {/* Sağ İdarəetmə Paneli (Böyüdülmüş İkonlar və Düymələr) */}
+          {/* Sağ İdarəetmə Paneli (Arxa plansız və çərçivəsiz təmiz ikonlar) */}
           <div className="header-actions">
             {/* Seçilmişlər / Favorites ❤️ */}
             {onOpenFavorites && (
@@ -184,8 +185,8 @@ export const Header: React.FC<HeaderProps> = ({
                 style={{
                   position: 'relative',
                   color: currentView === 'favorites' || favoritesCount > 0 ? '#ef4444' : theme.text,
-                  borderColor: currentView === 'favorites' ? '#ef4444' : theme.border,
-                  background: currentView === 'favorites' ? (isDarkMode ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.08)') : theme.bgSecondary,
+                  border: 'none',
+                  background: 'transparent',
                 }}
                 title={favoritesCount > 0 ? `Seçilmişlər (${favoritesCount})` : 'Seçilmişlər'}
                 aria-label={favoritesCount > 0 ? `Seçilmişlər (${favoritesCount})` : 'Seçilmişlər'}
@@ -232,8 +233,8 @@ export const Header: React.FC<HeaderProps> = ({
                 style={{
                   position: 'relative',
                   color: currentView === 'cart' || cartCount > 0 ? '#dc2626' : theme.text,
-                  borderColor: currentView === 'cart' ? '#dc2626' : theme.border,
-                  background: currentView === 'cart' ? (isDarkMode ? 'rgba(220,38,38,0.15)' : 'rgba(220,38,38,0.08)') : theme.bgSecondary,
+                  border: 'none',
+                  background: 'transparent',
                 }}
                 title={cartCount > 0 ? `Səbət (${cartCount})` : 'Səbət'}
                 aria-label={cartCount > 0 ? `Səbət (${cartCount})` : 'Səbət'}
@@ -289,8 +290,8 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={onOpenInverterInfo}
               style={{
                 color: theme.primary,
-                borderColor: theme.border,
-                background: theme.bgSecondary,
+                border: 'none',
+                background: 'transparent',
               }}
               title="Texnologiyalar və bələdçi haqqında"
             >
@@ -303,8 +304,8 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={onOpenDrawer}
                 style={{
                   color: theme.primary,
-                  borderColor: theme.border,
-                  background: theme.bgSecondary,
+                  border: 'none',
+                  background: 'transparent',
                 }}
                 title="Sərgi salonları və ünvanlar"
                 aria-label="Sərgi salonları və ünvanlar"
@@ -325,8 +326,8 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={onToggleTheme}
               style={{
                 color: isDarkMode ? '#f59e0b' : '#475569',
-                borderColor: theme.border,
-                background: theme.bgSecondary,
+                border: 'none',
+                background: 'transparent',
               }}
               title="Görünüşü dəyiş"
             >

@@ -660,9 +660,9 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                       }}
                       className="brand-back-btn"
                       style={{
-                        borderColor: activeTheme.border,
+                        border: 'none',
                         color: activeTheme.text,
-                        backgroundColor: activeTheme.bgSecondary,
+                        backgroundColor: 'transparent',
                       }}
                     >
                       <ArrowLeft size={15} />
@@ -742,7 +742,7 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                         padding: '10px 16px',
                         borderRadius: '14px',
                         backgroundColor: activeTheme.bgCard,
-                        border: `1px solid ${activeTheme.border}`,
+                        border: 'none',
                         marginBottom: '16px',
                       }}
                     >
@@ -827,7 +827,7 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                             padding: '6px 10px',
                             borderRadius: '8px',
                             backgroundColor: activeTheme.bgSecondary,
-                            border: `1px solid ${activeTheme.border}`,
+                            border: 'none',
                             color: activeTheme.text,
                             fontSize: '12.5px',
                             fontWeight: 600,

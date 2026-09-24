@@ -90,9 +90,9 @@ export const CatalogSidebarFilter: React.FC<CatalogSidebarFilterProps> = ({
   };
 
   const cardBg = isDarkMode ? 'rgba(30, 41, 59, 0.45)' : '#ffffff';
-  const cardBorder = isDarkMode ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0';
+  const cardBorder = 'transparent';
   const inputBg = isDarkMode ? '#1e293b' : '#f8fafc';
-  const inputBorder = isDarkMode ? 'rgba(255, 255, 255, 0.12)' : '#cbd5e1';
+  const inputBorder = isDarkMode ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0';
 
   return (
     <div
@@ -114,7 +114,7 @@ export const CatalogSidebarFilter: React.FC<CatalogSidebarFilterProps> = ({
             padding: '10px 14px',
             borderRadius: '12px',
             backgroundColor: isDarkMode ? 'rgba(227, 30, 36, 0.12)' : 'rgba(220, 38, 38, 0.06)',
-            border: `1px solid ${isDarkMode ? 'rgba(227, 30, 36, 0.25)' : 'rgba(220, 38, 38, 0.15)'}`,
+            border: 'none',
           }}
         >
           <span style={{ fontSize: '12px', fontWeight: 700, color: theme.primary }}>
@@ -513,7 +513,7 @@ export const CatalogSidebarFilter: React.FC<CatalogSidebarFilterProps> = ({
                     padding: '4px 7px',
                     borderRadius: '6px',
                     backgroundColor: isDarkMode ? '#1e293b' : '#f1f5f9',
-                    border: `1px solid ${isDarkMode ? 'rgba(255,255,255,0.06)' : '#e2e8f0'}`,
+                    border: 'none',
                     color: theme.text,
                     fontSize: '11px',
                     fontWeight: 600,
@@ -696,7 +696,7 @@ export const CatalogSidebarFilter: React.FC<CatalogSidebarFilterProps> = ({
                             ? '#1e293b'
                             : '#f1f5f9',
                       color: selectedEnergyClass === cls ? '#ffffff' : theme.text,
-                      border: `1px solid ${selectedEnergyClass === cls ? theme.primary : isDarkMode ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
+                      border: 'none',
                       fontSize: '11px',
                       fontWeight: 700,
                       cursor: 'pointer',
@@ -741,7 +741,7 @@ export const CatalogSidebarFilter: React.FC<CatalogSidebarFilterProps> = ({
                             ? '#1e293b'
                             : '#f1f5f9',
                       color: selectedMotorType === motor.id ? '#ffffff' : theme.text,
-                      border: `1px solid ${selectedMotorType === motor.id ? theme.primary : isDarkMode ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
+                      border: 'none',
                       fontSize: '11px',
                       fontWeight: 700,
                       cursor: 'pointer',
@@ -788,7 +788,7 @@ export const CatalogSidebarFilter: React.FC<CatalogSidebarFilterProps> = ({
                             ? '#1e293b'
                             : '#f1f5f9',
                       color: selectedColor === col.id ? '#ffffff' : theme.text,
-                      border: `1px solid ${selectedColor === col.id ? theme.primary : isDarkMode ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
+                      border: 'none',
                       fontSize: '11px',
                       fontWeight: 700,
                       cursor: 'pointer',
