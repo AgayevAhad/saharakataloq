@@ -214,6 +214,9 @@ select {
   -webkit-overflow-scrolling: touch;
 }
 .filter-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   white-space: nowrap;
   border: 1px solid var(--pill-border);
   background: var(--pill-bg);

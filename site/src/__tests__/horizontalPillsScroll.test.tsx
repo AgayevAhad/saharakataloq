@@ -78,6 +78,11 @@ describe('Universal Horizontal Pill/Chip Touch & Drag Scrolling Suite', () => {
     const pills = container.querySelectorAll('.filter-pill');
     expect(pills.length).toBeGreaterThan(1);
 
+    // Verify all pills have CategoryGlyph icons rendered
+    pills.forEach((pill) => {
+      expect(pill.querySelector('.category-glyph')).not.toBeNull();
+    });
+
     fireEvent.click(pills[1]);
 
     expect(onSelectCategory).toHaveBeenCalled();

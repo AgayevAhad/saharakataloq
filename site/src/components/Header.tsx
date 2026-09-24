@@ -11,6 +11,7 @@ import { ThemeColors, DESIGN_TOKENS } from '../types/theme';
 import { SaharaLogo } from './SaharaLogo';
 import { SocialPopoverButton } from './SocialIcons';
 import { SmartSearchOverlay } from './SmartSearchOverlay';
+import { CategoryGlyph } from './CategoryGlyph';
 
 import { useHorizontalScroll } from '../hooks/useHorizontalScroll';
 
@@ -244,7 +245,8 @@ export const Header: React.FC<HeaderProps> = ({
               }}
               style={pillStyle(theme)}
             >
-              Bütün məhsullar
+              <CategoryGlyph id="all" compact plain />
+              <span>Bütün məhsullar</span>
             </button>
             {categories.map((category) => (
               <button
@@ -257,7 +259,8 @@ export const Header: React.FC<HeaderProps> = ({
                 }}
                 style={pillStyle(theme)}
               >
-                {category.name}
+                <CategoryGlyph id={category.id} slug={category.slug || category.id} compact plain />
+                <span>{category.name}</span>
               </button>
             ))}
           </div>
