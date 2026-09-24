@@ -164,6 +164,12 @@ describe('Brand-First Interactive Navigation & Contextual Filter Suite', () => {
     expect(getByText('Aspiratorlar')).toBeDefined();
     expect(getByText('Fritözlər & Airfryer')).toBeDefined();
 
+    // Verify CategoryGlyph icons are rendered inside the pill buttons
+    const allPill = getByText('Hamısı').closest('button')!;
+    expect(allPill.querySelector('.category-glyph')).not.toBeNull();
+    const aspiratorPill = getByText('Aspiratorlar').closest('button')!;
+    expect(aspiratorPill.querySelector('.category-glyph')).not.toBeNull();
+
     // Check back button
     const backBtn = getByRole('button', { name: /brendlər/i });
     fireEvent.click(backBtn);

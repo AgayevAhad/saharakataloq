@@ -3,6 +3,7 @@ import { ArrowLeft, Sparkles } from 'lucide-react';
 import { Brand, CatalogCategory, Product } from '../types/product';
 import { ThemeColors } from '../types/theme';
 import { ShimmerImage } from './ShimmerImage';
+import { CategoryGlyph } from './CategoryGlyph';
 
 import { useHorizontalScroll } from '../hooks/useHorizontalScroll';
 
@@ -143,6 +144,7 @@ export const BrandCategoryFilter: React.FC<BrandCategoryFilterProps> = ({
             borderColor: selectedCategory === 'all' ? theme.primary : theme.border,
           }}
         >
+          <CategoryGlyph id="all" compact plain />
           <span>Hamısı</span>
           <small className="pill-count">({totalCount})</small>
         </button>
@@ -167,6 +169,7 @@ export const BrandCategoryFilter: React.FC<BrandCategoryFilterProps> = ({
                 borderColor: isActive ? theme.primary : theme.border,
               }}
             >
+              <CategoryGlyph id={cat.id} slug={cat.slug} compact plain />
               <span>{cat.name}</span>
               <small className="pill-count">({cat.count})</small>
             </button>
