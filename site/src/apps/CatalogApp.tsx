@@ -7,14 +7,13 @@ import { ArrowLeft, Lock, MessageCircle, Moon, Phone, Sparkles, Sun } from 'luci
 import { Header } from '../components/Header';
 import { SaharaLogo } from '../components/SaharaLogo';
 import { BrandShowcase } from '../components/BrandShowcase';
-import { BannerHero } from '../components/BannerHero';
 import { ProductCard } from '../components/ProductCard';
 import { BrandCategoryFilter } from '../components/BrandCategoryFilter';
 import { FloatingActions } from '../components/FloatingActions';
 import { Toast } from '../components/Toast';
 import { Drawer } from '../components/ui/Drawer';
 import { Footer } from '../components/Footer';
-import { BannerHeroSkeleton, ProductGridSkeleton } from '../components/Skeletons';
+import { ProductGridSkeleton } from '../components/Skeletons';
 import {
   useTheme,
   useToast,
@@ -311,7 +310,6 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
       <main>
         {isLoadingCatalog ? (
           <div className="catalog-loading-skeleton-wrap">
-            <BannerHeroSkeleton theme={activeTheme} />
             <ProductGridSkeleton theme={activeTheme} count={8} />
           </div>
         ) : (
@@ -327,13 +325,6 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                   document.querySelector('.catalog-section')?.scrollIntoView({ behavior: 'smooth' });
                 }, 60);
               }}
-            />
-            <BannerHero
-              theme={activeTheme}
-              articles={catalog.articles}
-              heroTitle={catalog.settings?.heroBannerTitle}
-              heroSubtitle={catalog.settings?.heroBannerSubtitle}
-              onOpenArticle={openArticle}
             />
 
             {isCatalogActive && (
