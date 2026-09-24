@@ -88,11 +88,10 @@
 /* Brand showcase — verified marks and subtle product backdrop */
 .brand-showcase-card {
   min-height: 176px;
-  color: #fff;
-  background: #111827 !important;
   overflow: hidden !important;
-  contain: paint !important;
+  contain: layout paint;
   border-radius: 17px;
+  color: inherit;
 }
 .brand-showcase-card::after {
   z-index: 0;
@@ -116,6 +115,15 @@
   animation: brandBackdrop 20s linear infinite;
 }
 .brand-card-shade {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.94),
+    rgba(255, 255, 255, 0.76) 58%,
+    rgba(255, 255, 255, 0.4)
+  );
+}
+[data-theme='dark'] .brand-card-shade,
+.dark .brand-card-shade {
   background: linear-gradient(
     90deg,
     rgba(4, 8, 18, 0.94),
@@ -172,19 +180,15 @@
 .brand-card-copy {
   position: relative;
   z-index: 2;
-  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
 }
 .brand-card-top strong,
 .brand-card-copy p,
-.brand-card-copy button {
-  color: #fff;
-}
-.brand-card-copy button {
-  text-shadow: none;
+.brand-card-copy button,
+.brand-card-copy .brand-card-action {
+  color: inherit;
 }
 .brand-showcase-card.coming-soon {
-  opacity: 1;
-  background: linear-gradient(145deg, #111827, #1e1b4b) !important;
+  opacity: 0.92;
 }
 .soon-atmosphere {
   position: absolute;

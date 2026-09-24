@@ -25,28 +25,35 @@ export const BrandShowcase: React.FC<{
   products: Product[];
   theme: ThemeColors;
   onSelect: (id: string) => void;
-}> = ({ brands, products, theme, onSelect }) => (
-  <section className="brand-showcase" aria-labelledby="brand-showcase-title">
-    <div className="brand-showcase-heading">
-      <div>
-        <span style={{ color: theme.primary }}>
-          <Sparkles size={14} /> Brendlər
-        </span>
-        <h1 id="brand-showcase-title" style={{ color: theme.text }}>
-          Məhsul ailələrimizi kəşf edin
-        </h1>
+}> = ({ brands, products, theme, onSelect }) => {
+  const displayBrands = React.useMemo(() => {
+    const coreIds = ['ardo', 'lotus', 'artel'];
+    const matched = brands.filter((b) => coreIds.includes(b.id));
+    return matched.length > 0 ? matched : brands.slice(0, 3);
+  }, [brands]);
+
+  return (
+    <section className="brand-showcase" aria-labelledby="brand-showcase-title">
+      <div className="brand-showcase-heading">
+        <div>
+          <span style={{ color: theme.primary }}>
+            <Sparkles size={14} /> Brendlər
+          </span>
+          <h1 id="brand-showcase-title" style={{ color: theme.text }}>
+            Məhsul ailələrimizi kəşf edin
+          </h1>
+        </div>
+        <p style={{ color: theme.textMuted }}>
+          Mövcud kataloqa baxın; hazırlanmaqda olan bölmələri tezliklə burada görəcəksiniz.
+        </p>
       </div>
-      <p style={{ color: theme.textMuted }}>
-        Mövcud kataloqa baxın; hazırlanmaqda olan bölmələri tezliklə burada görəcəksiniz.
-      </p>
-    </div>
-    <div className="brand-showcase-grid">
-      {brands.map((brand, index) => {
-        const count = products.filter(
-          (product) => product.brandId === brand.id && product.status !== 'draft'
-        ).length;
-        const soon = brand.comingSoon || count === 0;
-        const backdrops = brandBackdrops[brand.id] || [];
+      <div className="brand-showcase-grid">
+        {displayBrands.map((brand, index) => {
+          const count = products.filter(
+            (product) => product.brandId === brand.id && product.status !== 'draft'
+          ).length;
+          const soon = brand.comingSoon || count === 0;
+          const backdrops = brandBackdrops[brand.id] || [];
         return (
           <article
             key={brand.id}
@@ -124,4 +131,5 @@ export const BrandShowcase: React.FC<{
       })}
     </div>
   </section>
-);
+  );
+};
