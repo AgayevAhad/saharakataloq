@@ -81,6 +81,7 @@ export const Breadcrumbs: React.FC<BreadcrumbsProps> = ({ items, className = '' 
               {isLast || !item.href ? (
                 <span
                   aria-current={isLast ? 'page' : undefined}
+                  className="breadcrumb-current"
                   style={{
                     color: isLast ? 'var(--text, #0f172a)' : 'inherit',
                     fontWeight: isLast ? 600 : 400,

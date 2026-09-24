@@ -180,10 +180,6 @@ describe('ProductDetailPage Tests (Strict Real-Data & Authenticated Reviews)', (
     fireEvent.click(callBtn);
     expect(handleCall).toHaveBeenCalledWith(mockProduct);
 
-    const cartBtn = screen.getAllByText('Səbətə əlavə et')[0];
-    fireEvent.click(cartBtn);
-    expect(handleAddToCart).toHaveBeenCalledWith(mockProduct);
-
     const favBtn = screen.getAllByText(/Seçilmişlərə at/i)[0];
     fireEvent.click(favBtn);
     expect(handleFavorite).toHaveBeenCalledWith(mockProduct);
@@ -213,8 +209,8 @@ describe('ProductDetailPage Tests (Strict Real-Data & Authenticated Reviews)', (
     // Default tab: Description
     expect(screen.getByText(/Məhsul Haqqında Ətraflı Məlumat/i)).toBeDefined();
     expect(
-      screen.getByText(/İtaliya istehsalı, yüksək enerji səmərəliliyinə malik premium/i)
-    ).toBeDefined();
+      screen.getAllByText(/İtaliya istehsalı, yüksək enerji səmərəliliyinə malik premium/i).length
+    ).toBeGreaterThan(0);
 
     // Click "Bütün Texniki Xüsusiyyətlərə Bax"
     const viewAllSpecsBtn = screen.getByRole('button', {

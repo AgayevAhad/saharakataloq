@@ -170,6 +170,7 @@ export const AnimatedBrandRail: React.FC<AnimatedBrandRailProps> = ({
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState(0);
   const [isReducedMotion, setIsReducedMotion] = useState(false);
+  const isPointerDownRef = useRef(false);
   const dragStartXRef = useRef<number>(0);
   const dragMovedRef = useRef<boolean>(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -222,39 +223,40 @@ export const AnimatedBrandRail: React.FC<AnimatedBrandRailProps> = ({
 
   const handleCardClick = (item: BrandRailItem) => {
     if (dragMovedRef.current) return;
-    if (item.linkEnabled && item.hasPublishedProducts && onNavigateBrand) {
-      onNavigateBrand(item.brandSlug || item.brandId);
+    if (onNavigateBrand) {
+      onNavigateBrand(item.brandSlug || item.brandId || item.brandName);
     }
   };
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.pointerType === 'mouse' && e.button !== 0) return;
+    isPointerDownRef.current = true;
     dragStartXRef.current = e.clientX;
     dragMovedRef.current = false;
-    e.currentTarget.setPointerCapture?.(e.pointerId);
-    setIsDragging(true);
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!isDragging) return;
+    if (!isPointerDownRef.current) return;
     const delta = e.clientX - dragStartXRef.current;
-    if (Math.abs(delta) > 5) {
+    if (Math.abs(delta) > 6) {
       dragMovedRef.current = true;
+      setIsDragging(true);
+      setDragOffset(Math.max(-240, Math.min(240, delta)));
     }
-    setDragOffset(Math.max(-240, Math.min(240, delta)));
   };
 
-  const handlePointerEnd = (e: React.PointerEvent<HTMLDivElement>) => {
-    e.currentTarget.releasePointerCapture?.(e.pointerId);
+  const handlePointerEnd = () => {
+    if (!isPointerDownRef.current) return;
+    isPointerDownRef.current = false;
     setIsDragging(false);
     setDragOffset(0);
     setTimeout(() => {
       dragMovedRef.current = false;
-    }, 180);
+    }, 100);
   };
 
   const renderBrandCard = (item: BrandRailItem, isDuplicate = false) => {
-    const isInteractive = item.linkEnabled && item.hasPublishedProducts;
+    const isInteractive = Boolean(onNavigateBrand);
     const displayName = item.optionalDisplayLabel || item.brandName;
     const logoUrl = resolveBrandLogo(item);
 

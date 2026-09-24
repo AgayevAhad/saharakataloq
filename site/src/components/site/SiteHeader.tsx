@@ -1067,9 +1067,13 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               onClick={() => {
                 setIsSearchExpanded(false);
                 setHoveredNavTab(null);
-                setIsMegaMenuOpen((prev) => !prev);
+                setIsMegaMenuOpen(false);
+                onNavigate('catalog');
               }}
-              onMouseEnter={() => handleNavMouseEnter('catalog')}
+              onMouseEnter={() => {
+                handleNavMouseEnter('catalog');
+                setIsMegaMenuOpen(true);
+              }}
               onMouseLeave={handleNavMouseLeave}
               className={`mega-menu-trigger-btn ${isMegaMenuOpen || hoveredNavTab === 'catalog' ? 'is-active' : ''}`}
               style={{

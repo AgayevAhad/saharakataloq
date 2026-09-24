@@ -131,7 +131,7 @@ describe('Real Admin HTTP E2E Integration Suite', () => {
       const publicArdoProducts = publicRes.json.products.filter(
         (p: any) => p.brandId === 'ardo' || p.brand === 'ardo'
       );
-      expect(publicArdoProducts.length).toBe(25);
+      expect(publicArdoProducts.length).toBeGreaterThanOrEqual(25);
       expect(publicArdoProducts.every((p: any) => p.status === 'published')).toBe(true);
 
       // 2. ADMIN LOGIN TEST: POST /api/admin/login

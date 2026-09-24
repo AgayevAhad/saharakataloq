@@ -1,35 +1,14 @@
 {
-  "name": "ardo-kataloq",
+  "name": "ardo-kataloq-workspace",
   "private": true,
-  "version": "1.0.0",
+  "version": "2.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc && vite build",
-    "start": "node --env-file-if-exists=.env server.mjs",
-    "preview": "vite preview",
-    "import:ardo": "node scripts/importArdoCatalog.mjs",
-    "test": "vitest run && node --test backend/*.test.mjs && python3 scripts/test_extract_ardo_catalog.py"
+    "dev": "cd site && npm run dev",
+    "build": "cd site && npm run build",
+    "start": "cd site && npm start",
+    "test": "cd site && npm test",
+    "install:all": "npm install && cd site && npm install"
   },
-  "dependencies": {
-    "lucide-react": "^0.475.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-native-web": "^0.19.13",
-    "xlsx": "^0.18.5"
-  },
-  "devDependencies": {
-    "@testing-library/dom": "^10.4.1",
-    "@testing-library/react": "^16.3.3",
-    "@testing-library/user-event": "^14.6.6",
-    "@types/node": "^26.4.0",
-    "@types/react": "^18.3.18",
-    "@types/react-dom": "^18.3.5",
-    "@types/react-native": "^0.73.0",
-    "@vitejs/plugin-react": "^4.3.4",
-    "happy-dom": "^20.11.12",
-    "typescript": "^5.7.3",
-    "vite": "^6.2.0",
-    "vitest": "^4.1.11"
-  }
+  "description": "ArdoKataloq workspace — aktiv layihə site/ qovluğundadır"
 }

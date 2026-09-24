@@ -195,6 +195,32 @@ seçimləri bax bu seçimlər olsun.
     daha gözəl edir
     Seçilmiş brendlər, rəsmi zəmanət, etibarlı seçim – Sahara Electronics-də. sözü bir hissəsi çöldə bir hissəsi içəridə sağda da Daha çox imkan sənə yaxın yazısıda bir hissəsi video çölündə bir hissəsi içində görsənsin.
 
+
+
+54. Deməli dark moda uyğun olmayan hissələri izah edirəm. Sağda mesajlaşma iconu lighd mod kimi qalır darkdada bunu düzəldək. Peşekar dəstək vare aşağıda o düymə kimi et rəngini.
+
+Dark modda Ana səhifə sözü vare yuxarıda panelin altında o da dark moda uyğun deyil. Əslində xüsusi olaraq bu ana səhifədə yox bütün səhifələrdə yaşanır bütün səhifələr üçün bunu tap düzəlt. Bundan sonra saytı analiz et hansı başqa dark moda uyğunlaşmayan hissələr var analiz edib məsləhətlərini de.
+
+55. Deməli Kataloq səhifəsində Bütün məhsullar Aspiratorlar belə yan yana düzülən düymələr vare o seçilməmiş halda çərçivəsini ləğv et. Seçilən halda qırmızı yazı ağ olur. Seçilən halda qutu açıq qırmızı yazı qırmızı olsun. Açıq deyəndə şəffaflığı nəzərdə tuturam . Sağda mesaj düyməsi vare onun kimi.
+
+Həmçinin sağda mesaj düyməsinində yumrunun çərçivəsini ləğv et. Ona bir canlılıq yanıb sönmə kimi effekt verki diqqət cəlb etsin.
+
+Məhsul kataloqu sözü müqayisə qutusu vare onunda çərçivəsini ləğv et. 
+
+Onun altında kategoryalar bölməsi vare onunda qutu çərçivəsini ləğv et.
+
+Sağda fitrlər vare Bütün məhsullar Aspiratorlar belə yan yana düzülən düymələr altındaki hissə o hissənində çərçivəsini ləğv et.İçində tövsüyə olunan filtr düyməsi çərçivəsini də ləğv et. Düzülüş düməsi vare alt alta ya kart kimi onunda çərçivəsini ləğv et.
+
+56. Deməli kataloq səhifəsində məhsul kartlarının için yadındadırsa elə light saxladıq şəkil yaxşı görsənsin deyə. İndi isə bunun içindəki düymələr vare səbət zəng və s birdə müqayisə seçilmiş onlarıda elə light mod saxla çünki şəkil içindədirlər . Məsələn ətraflı sözü light mod olub deyə ağda lap itib batır. Bundan başqa isə kartın üstünə gələndə netflixdə necə film kartı biraz genişlənire belə bizdədə də genişlənsin. Deməli düymələrdə artıq şəkil üzərində yox aşağı düymələr üçün uyğun ölçüdə genişlənərək orada görsənsin şəkil üstü örtülməsin. Sadəcə birlikdə olan vp zəng səbət ətarflı düymələrini nəzərdə tuturam.
+
+
+
+
+
+
+
+
+
 ### Refaktoring
 
 1. Bizim kodlarmız layhiyəmiz çox qarışqdır. Ciddi refaktoring ehtiyacımız var. Mərhələli şəkildə bunu düzgün etməliyik. Əvvəlcə hardana necə başlayacağını seç . Arxitektura qur . Hansılar hara danışmalıdır və s. Hər şeyi ciddi analiz et. Daha sonra işləməyə başla. Mərhələ mərhələ et. Hər komponenti ayrı bir fayla çıxar. Etdiyin hər dəyişikliyin nəyisə korlamdığlndan əmin olmaq üçün testlər yarat və yoxla. Mən faylda 1000 sətr kod istəmirəm ən minimal sətirlərə bizim kodlarmız bölünməlidir.

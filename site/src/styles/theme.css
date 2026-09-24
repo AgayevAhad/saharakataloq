@@ -1,0 +1,113 @@
+/* Theme Tokens & Light / Dark Mode Color Overrides */
+
+/* Dark Theme Overrides - ZERO RED BORDER */
+.theme-dark .visual-category-card {
+  background: #ffffff !important;
+  border: none !important;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4) !important;
+}
+
+.theme-dark .visual-category-card:hover {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6) !important;
+}
+
+.theme-dark .visual-category-icon-pill {
+  background: #1e293b;
+}
+
+.theme-dark .visual-category-card:hover .visual-category-icon-pill {
+  background: #334155;
+}
+
+.theme-dark .visual-categories-title,
+[data-theme='dark'] .visual-categories-title {
+  color: #f8fafc !important;
+}
+
+.theme-dark .visual-category-title {
+  color: #0f172a !important;
+}
+
+.theme-dark .visual-category-card-footer {
+  border-top-color: rgba(255, 255, 255, 0.06);
+}
+
+.theme-dark .visual-category-count-badge {
+  background: #1e293b;
+  color: #94a3b8;
+  border: none;
+}
+
+.theme-dark .visual-category-explore {
+  color: #64748b;
+}
+
+.theme-dark .visual-category-card:hover .visual-category-explore {
+  color: #0f172a;
+}
+
+.theme-dark .visual-category-card-style-facet {
+  background: #ffffff !important;
+}
+
+.theme-dark .visual-category-card-style-frames {
+  background: #ffffff !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45) !important;
+}
+
+.theme-dark .visual-category-card-style-cluster {
+  background: #ffffff !important;
+}
+
+@media (min-width: 769px) {
+  .visual-categories-section {
+    min-height: 0;
+  }
+
+  .visual-category-scroll-track,
+  .category-master-marquee-track {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    width: max-content !important;
+    align-items: stretch !important;
+    gap: 20px !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .visual-categories-section {
+    min-height: auto;
+  }
+  .visual-categories-header,
+  .visual-categories-title-wrap {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .visual-category-scroll-track,
+  .category-master-marquee-track {
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: nowrap !important;
+    width: max-content !important;
+    gap: 14px !important;
+  }
+}
+
+@keyframes categoryVisualFloat {
+  0%,
+  100% {
+    transform: translate3d(0, 3px, 0) scale(0.98);
+  }
+  50% {
+    transform: translate3d(0, -6px, 0) scale(1.02);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .visual-category-card .visual-category-img-inner {
+    animation: none !important;
+  }
+}
+

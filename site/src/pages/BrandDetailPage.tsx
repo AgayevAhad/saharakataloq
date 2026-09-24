@@ -1,8 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState, useEffect } from 'react';
 import { ArrowLeft, ArrowRight, Boxes, Factory, Globe2 } from 'lucide-react';
 import { Brand, CatalogCategory, Product } from '../types/product';
 import { ThemeColors } from '../types/theme';
 import { ShimmerImage } from '../components/ShimmerImage';
+import { CategoryGlyph } from '../components/CategoryGlyph';
+import { FeaturedProductCard } from '../components/FeaturedProductCard';
 
 interface BrandDetailPageProps {
   brand: Brand;
@@ -10,6 +12,14 @@ interface BrandDetailPageProps {
   categories: CatalogCategory[];
   theme: ThemeColors;
   onNavigate: (route: string, param?: string) => void;
+  onSelectProduct?: (product: Product) => void;
+  onAddToCart?: (product: Product) => void;
+  onToggleFavorite?: (product: Product) => void;
+  favoriteIds?: string[];
+  comparisonIds?: string[];
+  onToggleCompare?: (product: Product) => void;
+  onWhatsApp?: (product: Product) => void;
+  onCall?: (product: Product) => void;
 }
 
 export const BrandDetailPage: React.FC<BrandDetailPageProps> = ({
@@ -18,7 +28,29 @@ export const BrandDetailPage: React.FC<BrandDetailPageProps> = ({
   categories = [],
   theme,
   onNavigate,
+  onSelectProduct,
+  onAddToCart,
+  onToggleFavorite,
+  favoriteIds = [],
+  comparisonIds = [],
+  onToggleCompare,
+  onWhatsApp,
+  onCall,
 }) => {
+  const [selectedCategory, setSelectedCategory] = useState<string>('all');
+  const [visibleCount, setVisibleCount] = useState<number>(12);
+
+  useEffect(() => {
+    setSelectedCategory('all');
+    setVisibleCount(12);
+  }, [brand.id]);
+
+  useEffect(() => {
+    setVisibleCount(12);
+  }, [selectedCategory]);
+
+  const favoriteIdSet = useMemo(() => new Set(favoriteIds), [favoriteIds]);
+  const comparisonIdSet = useMemo(() => new Set(comparisonIds), [comparisonIds]);
   const publishedProducts = useMemo(
     () =>
       (products || []).filter(
@@ -26,6 +58,45 @@ export const BrandDetailPage: React.FC<BrandDetailPageProps> = ({
       ),
     [brand.id, products]
   );
+
+  // Mixed/interleaved products across categories so items appear mixed in 'Hamısı' view
+  const mixedProducts = useMemo(() => {
+    if (!publishedProducts.length) return [];
+    const categoryBuckets: { [cat: string]: Product[] } = {};
+    for (const prod of publishedProducts) {
+      const catKey = prod.category || 'other';
+      if (!categoryBuckets[catKey]) categoryBuckets[catKey] = [];
+      categoryBuckets[catKey].push(prod);
+    }
+    const bucketKeys = Object.keys(categoryBuckets);
+    const mixed: Product[] = [];
+    let hasMore = true;
+    let index = 0;
+    while (hasMore) {
+      hasMore = false;
+      for (const key of bucketKeys) {
+        if (index < categoryBuckets[key].length) {
+          mixed.push(categoryBuckets[key][index]);
+          hasMore = true;
+        }
+      }
+      index++;
+    }
+    return mixed;
+  }, [publishedProducts]);
+
+  const displayedProducts = useMemo(() => {
+    if (selectedCategory === 'all') {
+      return mixedProducts;
+    }
+    return publishedProducts.filter((product) => product.category === selectedCategory);
+  }, [selectedCategory, mixedProducts, publishedProducts]);
+
+  const visibleProducts = useMemo(
+    () => displayedProducts.slice(0, visibleCount),
+    [displayedProducts, visibleCount]
+  );
+
   const categoryRows = useMemo(
     () =>
       (categories || [])
@@ -120,15 +191,10 @@ export const BrandDetailPage: React.FC<BrandDetailPageProps> = ({
             {brand.name}
           </h1>
           {brand.description ? (
-            <p style={{ color: theme.textMuted, lineHeight: 1.7, maxWidth: '700px' }}>
+            <p style={{ color: theme.textMuted, lineHeight: 1.7, maxWidth: '700px', margin: '0 0 10px 0' }}>
               {brand.description}
             </p>
-          ) : (
-            <p style={{ color: theme.textMuted }}>
-              Bu brend üçün təqdimat mətni əlavə edilməyib. Aşağıdakı məlumatlar aktiv kataloq
-              qeydlərindən hesablanır.
-            </p>
-          )}
+          ) : null}
           <div
             className="brand-fact-row"
             style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginTop: '18px' }}
@@ -159,24 +225,102 @@ export const BrandDetailPage: React.FC<BrandDetailPageProps> = ({
             className="brand-category-summary"
             style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}
           >
-            {categoryRows.map(({ category, count }) => (
-              <button
-                key={category.id}
-                type="button"
-                onClick={() => onNavigate('catalog', brand.id)}
+            {/* 1st Option: Hamısı */}
+            <button
+              type="button"
+              onClick={() => setSelectedCategory('all')}
+              style={{
+                border: selectedCategory === 'all' ? '1px solid #e31e24' : `1px solid ${theme.border}`,
+                background: selectedCategory === 'all' ? '#e31e24' : theme.bgCard,
+                color: selectedCategory === 'all' ? '#ffffff' : theme.text,
+                borderRadius: '999px',
+                padding: '8px 16px',
+                fontWeight: 750,
+                fontSize: '13.5px',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                boxShadow: selectedCategory === 'all' ? '0 4px 14px rgba(227, 30, 36, 0.25)' : '0 2px 8px rgba(0, 0, 0, 0.04)',
+                transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+              }}
+            >
+              <span
                 style={{
-                  border: `1px solid ${theme.border}`,
-                  background: theme.bgCard,
-                  color: theme.text,
-                  borderRadius: '999px',
-                  padding: '9px 14px',
-                  fontWeight: 750,
-                  cursor: 'pointer',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  color: selectedCategory === 'all' ? '#ffffff' : '#e31e24',
+                  width: '18px',
+                  height: '18px',
+                  flexShrink: 0,
                 }}
               >
-                {category.name} · {count}
-              </button>
-            ))}
+                <Boxes size={15} />
+              </span>
+              <span>Hamısı</span>
+              <span
+                style={{
+                  fontSize: '12px',
+                  fontWeight: 800,
+                  color: selectedCategory === 'all' ? 'rgba(255, 255, 255, 0.85)' : theme.textMuted,
+                  marginLeft: '2px',
+                }}
+              >
+                · {publishedProducts.length}
+              </span>
+            </button>
+
+            {categoryRows.map(({ category, count }) => {
+              const isSelected = selectedCategory === category.id;
+              return (
+                <button
+                  key={category.id}
+                  type="button"
+                  onClick={() => setSelectedCategory(category.id)}
+                  style={{
+                    border: isSelected ? '1px solid #e31e24' : `1px solid ${theme.border}`,
+                    background: isSelected ? '#e31e24' : theme.bgCard,
+                    color: isSelected ? '#ffffff' : theme.text,
+                    borderRadius: '999px',
+                    padding: '8px 16px',
+                    fontWeight: 750,
+                    fontSize: '13.5px',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    boxShadow: isSelected ? '0 4px 14px rgba(227, 30, 36, 0.25)' : '0 2px 8px rgba(0, 0, 0, 0.04)',
+                    transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                  }}
+                >
+                  <span
+                    style={{
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      color: isSelected ? '#ffffff' : '#e31e24',
+                      width: '18px',
+                      height: '18px',
+                      flexShrink: 0,
+                    }}
+                  >
+                    <CategoryGlyph id={category.id} slug={category.slug || category.id} compact plain />
+                  </span>
+                  <span>{category.name}</span>
+                  <span
+                    style={{
+                      fontSize: '12px',
+                      fontWeight: 800,
+                      color: isSelected ? 'rgba(255, 255, 255, 0.85)' : theme.textMuted,
+                      marginLeft: '2px',
+                    }}
+                  >
+                    · {count}
+                  </span>
+                </button>
+              );
+            })}
           </div>
         ) : (
           <p style={{ color: theme.textMuted }}>Bu brend üzrə dərc edilmiş model yoxdur.</p>
@@ -191,7 +335,10 @@ export const BrandDetailPage: React.FC<BrandDetailPageProps> = ({
               alignItems: 'end',
               justifyContent: 'space-between',
               gap: '16px',
-              marginBottom: '16px',
+              maxWidth: '1060px',
+              margin: '0 auto 16px auto',
+              width: '100%',
+              boxSizing: 'border-box',
             }}
           >
             <h2 style={{ color: theme.text, fontSize: '24px', margin: 0 }}>
@@ -206,50 +353,89 @@ export const BrandDetailPage: React.FC<BrandDetailPageProps> = ({
                 color: '#e31e24',
                 fontWeight: 800,
                 cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px',
               }}
             >
-              Hamısına bax <ArrowRight size={14} />
+              Kataloqa keçid et <ArrowRight size={14} />
             </button>
           </div>
-          <div className="brand-products-grid">
-            {publishedProducts.slice(0, 8).map((product) => (
-              <button
-                key={product.id}
-                type="button"
-                className="brand-product-mini-card scroll-reveal-item"
-                onClick={() => onNavigate('product', product.id)}
-                style={{
-                  border: `1px solid ${theme.border}`,
-                  background: theme.bgCard,
-                  color: theme.text,
-                  borderRadius: '18px',
-                  padding: '14px',
-                  textAlign: 'left',
-                  cursor: 'pointer',
-                }}
-              >
-                <ShimmerImage
-                  src={product.image}
-                  alt={product.title}
-                  containerStyle={{ width: '100%', height: '180px', borderRadius: '12px' }}
-                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
-                />
-                <strong style={{ display: 'block', marginTop: '12px' }}>{product.title}</strong>
-                {product.price ? (
-                  <span
+          {visibleProducts.length > 0 ? (
+            <>
+              <div className="brand-detail-products-grid">
+                {visibleProducts.map((product) => (
+                  <div
+                    key={product.id}
+                    className="featured-product-reveal"
+                    style={{ width: '100%', maxWidth: '339px' }}
+                  >
+                    <FeaturedProductCard
+                      product={product}
+                      theme={theme}
+                      onSelect={(p) => {
+                        if (onSelectProduct) onSelectProduct(p);
+                        else onNavigate('product', p.id);
+                      }}
+                      onAddToCart={onAddToCart}
+                      onToggleFavorite={onToggleFavorite}
+                      isFavorite={favoriteIdSet.has(product.id)}
+                      onToggleCompare={onToggleCompare}
+                      isComparing={comparisonIdSet.has(product.id)}
+                      onWhatsApp={onWhatsApp}
+                      onCall={onCall}
+                      brand={brand}
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {displayedProducts.length > visibleCount && (
+                <div
+                  style={{
+                    display: 'flex',
+                    justifyContent: 'center',
+                    marginTop: '32px',
+                    width: '100%',
+                  }}
+                >
+                  <button
+                    type="button"
+                    onClick={() => setVisibleCount((prev) => prev + 12)}
                     style={{
-                      display: 'block',
-                      marginTop: '6px',
-                      color: '#e31e24',
-                      fontWeight: 850,
+                      border: `1px solid ${theme.border}`,
+                      background: theme.bgCard,
+                      color: theme.text,
+                      padding: '12px 32px',
+                      borderRadius: '999px',
+                      fontWeight: 800,
+                      fontSize: '14px',
+                      cursor: 'pointer',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      boxShadow: '0 4px 14px rgba(0, 0, 0, 0.06)',
+                      transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
+                    }}
+                    onMouseEnter={(e) => {
+                      e.currentTarget.style.borderColor = '#e31e24';
+                      e.currentTarget.style.color = '#e31e24';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.currentTarget.style.borderColor = theme.border;
+                      e.currentTarget.style.color = theme.text;
                     }}
                   >
-                    {product.price} ₼
-                  </span>
-                ) : null}
-              </button>
-            ))}
-          </div>
+                    Daha çox göstər
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <p style={{ color: theme.textMuted, textAlign: 'center', margin: '40px 0' }}>
+              Bu kateqoriya üzrə model tapılmadı.
+            </p>
+          )}
         </section>
       )}
     </main>

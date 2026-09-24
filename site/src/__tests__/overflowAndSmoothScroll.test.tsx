@@ -33,7 +33,23 @@ describe('Horizontal Overflow Prevention & Smooth Scroll Suite', () => {
 
   it('index.html and index.css strictly enforce overflow-x: hidden and no unconstrained 100vw', () => {
     const indexHtml = fs.readFileSync(path.resolve(__dirname, '../../index.html'), 'utf-8');
-    const indexCss = fs.readFileSync(path.resolve(__dirname, '../index.css'), 'utf-8');
+    const stylesDir = path.resolve(__dirname, '../styles');
+    const loadAllCss = (dir: string): string => {
+      let combined = '';
+      const entries = fs.readdirSync(dir, { withFileTypes: true });
+      for (const entry of entries) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) {
+          combined += '\n' + loadAllCss(full);
+        } else if (entry.name.endsWith('.css')) {
+          combined += '\n' + fs.readFileSync(full, 'utf-8');
+        }
+      }
+      return combined;
+    };
+    const indexCss = fs.existsSync(stylesDir)
+      ? loadAllCss(stylesDir)
+      : fs.readFileSync(path.resolve(__dirname, '../index.css'), 'utf-8');
 
     // Verify index.html has overflow-x: hidden !important and scroll-behavior: smooth
     expect(indexHtml).toContain('overflow-x: hidden !important');

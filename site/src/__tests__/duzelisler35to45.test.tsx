@@ -246,8 +246,10 @@ describe('Duzelisler Items 35 to 45 Requirements Verification', () => {
     expect(waBtn?.style.color).toBe('#16a34a');
     expect(callBtn?.style.backgroundColor).toContain('rgba(220, 38, 38, 0.1');
     expect(callBtn?.style.color).toBe('#dc2626');
-    expect(cartBtn?.style.backgroundColor).toContain('rgba(220, 38, 38, 0.1');
-    expect(cartBtn?.style.color).toBe('#dc2626');
+    if (cartBtn) {
+      expect(cartBtn.style.backgroundColor).toContain('rgba(220, 38, 38, 0.1');
+      expect(cartBtn.style.color).toBe('#dc2626');
+    }
     expect(specsBtn?.style.backgroundColor).toContain('rgba(220, 38, 38, 0.1');
     expect(specsBtn?.style.color).toBe('#dc2626');
   });

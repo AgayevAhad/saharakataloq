@@ -21,6 +21,9 @@ import {
   Volume2,
   VolumeX,
   PlayCircle,
+  Play,
+  ChevronDown,
+  ChevronUp,
   Layers,
   Sparkles,
   ExternalLink,
@@ -133,6 +136,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const [hoverRating, setHoverRating] = useState<number | null>(null);
   const [newComment, setNewComment] = useState('');
   const [reviewSuccessMessage, setReviewSuccessMessage] = useState('');
+  const [isDescExpanded, setIsDescExpanded] = useState(false);
 
   const videoRef = useRef<HTMLVideoElement>(null);
   const fullscreenVideoRef = useRef<HTMLVideoElement>(null);
@@ -150,6 +154,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     setActiveTab('description');
     setIsVideoMuted(true);
     setIsFullscreenGallery(false);
+    setIsDescExpanded(false);
     setZoomScale(1);
     setRotation(0);
     setPanPosition({ x: 0, y: 0 });
@@ -173,11 +178,11 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
   // Brand and category info
   const brand = useMemo(
-    () => brands.find((b) => b.id === product.brandId),
-    [brands, product.brandId]
+    () => (brands || []).find((b) => b.id === product.brandId || b.slug === (product as any).brand),
+    [brands, product.brandId, (product as any).brand]
   );
   const category = useMemo(
-    () => categories.find((c) => c.id === product.category),
+    () => (categories || []).find((c) => c.id === product.category || c.id === (product as any).categoryId),
     [categories, product.category]
   );
 
@@ -242,6 +247,31 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   }, [product]);
 
   const activeMedia = mediaList[activeMediaIndex] || mediaList[0];
+  const overviewVideo = useMemo(() => mediaList.find((m) => m.type === 'video'), [mediaList]);
+
+  const displayDescription = useMemo(() => {
+    const cleanScraped = (txt?: string) => {
+      if (!txt) return '';
+      let res = txt
+        .replace(/-\s*\d+[\d\s.,]*\s*₼/g, '')
+        .replace(/\b\d+\s+\d+\s+rəy\b/gi, '')
+        .replace(/\b\d+\s*rəy\b/gi, '')
+        .replace(/\b\d+\s*ay\s+[\d\s.,]+\s*₼/gi, '')
+        .replace(/Səbətə əlavə et/gi, '')
+        .replace(/Səbətə at/gi, '')
+        .replace(/Onlayn üçün xüsusi qiymət/gi, '')
+        .replace(/\s{2,}/g, ' ')
+        .trim();
+      return res;
+    };
+
+    const cleanDesc = cleanScraped(product.description);
+    if (cleanDesc) return cleanDesc;
+    const cleanShort = cleanScraped(product.shortDesc);
+    if (cleanShort) return cleanShort;
+
+    return '';
+  }, [product.description, product.shortDesc]);
 
   // Grouped Specs
   const specGroups = useMemo(() => {
@@ -955,7 +985,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 </span>
 
                 {/* Rating Badge (Only shows if real reviews exist) */}
-                {averageRating !== null ? (
+                {averageRating !== null && (
                   <button
                     type="button"
                     onClick={() => scrollToTabs('reviews')}
@@ -980,28 +1010,6 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     <span style={{ color: theme.textMuted, fontWeight: 600 }}>
                       ({reviews.length} rəy)
                     </span>
-                  </button>
-                ) : (
-                  <button
-                    type="button"
-                    onClick={() => scrollToTabs('reviews')}
-                    style={{
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: '4px',
-                      backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f1f5f9',
-                      color: theme.textSecondary,
-                      border: 'none',
-                      borderRadius: '8px',
-                      padding: '4px 9px',
-                      fontSize: '11.5px',
-                      fontWeight: 700,
-                      cursor: 'pointer',
-                    }}
-                    title="Rəy yazmaq"
-                  >
-                    <Star size={13} color="#94a3b8" />
-                    <span>0 rəy</span>
                   </button>
                 )}
               </div>
@@ -1053,25 +1061,212 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             >
               {product.title}
             </h1>
+          </div>
 
-            {product.shortDesc && (
-              <p
+          {/* Overview & Description Preview Section (DIRECTLY UNDER TITLE: Max 3 lines with 'Davamını oxu...' and Video Overview Preview) */}
+          {(Boolean(displayDescription) || Boolean(overviewVideo)) && (
+            <div
+              className="product-detail-overview-card"
+              style={{
+                margin: '2px 0 12px 0',
+                padding: '16px',
+                borderRadius: '16px',
+                backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.45)' : '#f8fafc',
+                border: `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0'}`,
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px',
+              }}
+            >
+              {/* Description Text with 3-line clamp & expand toggle */}
+              {displayDescription ? (
+                <div>
+                  <div
+                    style={{
+                      fontSize: '14px',
+                      color: theme.textSecondary,
+                      lineHeight: 1.65,
+                      whiteSpace: 'pre-line',
+                      display: isDescExpanded ? 'block' : '-webkit-box',
+                      WebkitLineClamp: isDescExpanded ? 'unset' : 3,
+                      WebkitBoxOrient: 'vertical',
+                      overflow: isDescExpanded ? 'visible' : 'hidden',
+                      textOverflow: 'ellipsis',
+                      transition: 'all 0.25s ease',
+                    }}
+                  >
+                    {displayDescription}
+                  </div>
+                  {(displayDescription.length > 130 || displayDescription.includes('\n')) && (
+                    <button
+                      type="button"
+                      onClick={() => setIsDescExpanded(!isDescExpanded)}
+                      style={{
+                        marginTop: '6px',
+                        padding: '0',
+                        border: 'none',
+                        background: 'none',
+                        color: '#dc2626',
+                        fontWeight: 800,
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px',
+                        transition: 'opacity 0.15s ease',
+                      }}
+                    >
+                      <span>{isDescExpanded ? 'Qısalt' : 'Davamını oxu...'}</span>
+                      {isDescExpanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                    </button>
+                  )}
+                </div>
+              ) : null}
+
+            {/* Video Overview Preview Card (Displayed ONLY if video is attached) */}
+            {overviewVideo && (
+              <div
+                onClick={() => {
+                  const vIdx = mediaList.findIndex((m) => m.type === 'video');
+                  if (vIdx !== -1) setActiveMediaIndex(vIdx);
+                  setIsFullscreenGallery(true);
+                }}
                 style={{
-                  fontSize: '14.5px',
-                  color: theme.textSecondary,
-                  lineHeight: 1.6,
-                  margin: '0 0 14px 0',
+                  position: 'relative',
+                  borderRadius: '12px',
+                  overflow: 'hidden',
+                  backgroundColor: '#0f172a',
+                  cursor: 'pointer',
+                  border: `1.5px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)'}`,
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '14px',
+                  padding: '10px 14px',
+                  boxShadow: '0 4px 14px rgba(0, 0, 0, 0.08)',
+                  transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.transform = 'translateY(-2px)';
+                  e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.15)';
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.transform = 'translateY(0)';
+                  e.currentTarget.style.boxShadow = '0 4px 14px rgba(0, 0, 0, 0.08)';
                 }}
               >
-                {product.shortDesc}
-              </p>
+                {/* Mini Thumbnail / Play Box */}
+                <div
+                  style={{
+                    position: 'relative',
+                    width: '64px',
+                    height: '48px',
+                    borderRadius: '8px',
+                    overflow: 'hidden',
+                    backgroundColor: '#1e293b',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    flexShrink: 0,
+                  }}
+                >
+                  {overviewVideo.poster ? (
+                    <img
+                      src={overviewVideo.poster}
+                      alt=""
+                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                    />
+                  ) : (
+                    <video
+                      src={overviewVideo.url}
+                      muted
+                      playsInline
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }}
+                    />
+                  )}
+                  <div
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      backgroundColor: 'rgba(0, 0, 0, 0.35)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: '24px',
+                        height: '24px',
+                        borderRadius: '50%',
+                        backgroundColor: '#dc2626',
+                        color: '#ffffff',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 2px 8px rgba(220, 38, 38, 0.5)',
+                      }}
+                    >
+                      <Play size={12} fill="#ffffff" color="#ffffff" style={{ marginLeft: '1px' }} />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Video Info & Call to Action */}
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                    <span
+                      style={{
+                        backgroundColor: 'rgba(220, 38, 38, 0.15)',
+                        color: '#dc2626',
+                        fontSize: '10.5px',
+                        fontWeight: 800,
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        textTransform: 'uppercase',
+                      }}
+                    >
+                      Video İcmal
+                    </span>
+                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>HD Keyfiyyət</span>
+                  </div>
+                  <div
+                    style={{
+                      fontSize: '13px',
+                      fontWeight: 700,
+                      color: '#ffffff',
+                      overflow: 'hidden',
+                      textOverflow: 'ellipsis',
+                      whiteSpace: 'nowrap',
+                    }}
+                  >
+                    Məhsulun video icmalını izləyin
+                  </div>
+                </div>
+
+                {/* Arrow / Play text */}
+                <div
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    color: '#38bdf8',
+                    fontSize: '12px',
+                    fontWeight: 800,
+                    flexShrink: 0,
+                  }}
+                >
+                  <span>İzlə</span>
+                  <ChevronRight size={14} />
+                </div>
+              </div>
             )}
           </div>
+        )}
 
           {/* Clean Borderless Price Section */}
           <div
             style={{
-              padding: '2px 0 6px',
+              padding: '4px 0 10px',
               display: 'flex',
               alignItems: 'baseline',
               gap: '12px',
@@ -1105,21 +1300,6 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     {oldPrice.toLocaleString('az-AZ')} ₼
                   </span>
                 )}
-
-                {discountPercent && (
-                  <span
-                    style={{
-                      fontSize: '12px',
-                      fontWeight: 900,
-                      backgroundColor: '#dc2626',
-                      color: '#ffffff',
-                      padding: '4px 10px',
-                      borderRadius: '6px',
-                    }}
-                  >
-                    -{discountPercent}%
-                  </span>
-                )}
               </div>
             ) : (
               <span style={{ fontSize: '22px', fontWeight: 800, color: '#dc2626' }}>
@@ -1130,7 +1310,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
           {/* Key Highlights Checklist */}
           {product.highlights && product.highlights.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '4px' }}>
               <div
                 style={{
                   fontSize: '12px',
@@ -2780,6 +2960,8 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
       {/* Fullscreen Interactive Lightbox Modal with Studio White Canvas, Click-to-Zoom & Drag/Pan */}
       {isFullscreenGallery && (
         <div
+          role="dialog"
+          aria-label="Tam ekran baxış"
           style={{
             position: 'fixed',
             inset: 0,

@@ -164,10 +164,13 @@ describe('Header Kataloq Monolithic MegaMenu Expansion', () => {
     const kataloqButton = container.querySelector('.mega-menu-trigger-btn') as HTMLButtonElement;
     expect(kataloqButton).toBeTruthy();
 
-    fireEvent.click(kataloqButton);
+    fireEvent.mouseEnter(kataloqButton);
 
     const overlay = document.querySelector('#mega-menu-overlay');
     expect(overlay).toBeTruthy();
+
+    fireEvent.click(kataloqButton);
+    expect(handleNavigate).toHaveBeenCalledWith('catalog');
   });
 
   it('renders up to 4 product cards in showcase and single-column brand list', () => {

@@ -118,6 +118,7 @@ export const TrustHighlights: React.FC<TrustHighlightsProps> = ({ items, theme, 
       >
         {activeItems.map((item) => {
           const targetRoute = resolveTrustRoute(item.id);
+          const isDark = theme.mode === 'dark';
           return (
             <div
               key={item.id}
@@ -130,22 +131,21 @@ export const TrustHighlights: React.FC<TrustHighlightsProps> = ({ items, theme, 
                   handleCardClick(item.id);
                 }
               }}
-              className="trust-highlight-card scroll-reveal-item"
+              className={`trust-highlight-card trust-btn-${item.id} scroll-reveal-item`}
               title={`${item.title} — ${targetRoute} səhifəsinə keç`}
               style={{
-                backgroundColor: theme.mode === 'dark' ? '#11141a' : '#ffffff',
-                border: `1px solid ${theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0'}`,
+                backgroundColor: isDark ? '#1c2737' : '#ffffff',
+                border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : '#e2e8f0'}`,
                 borderRadius: '16px',
                 padding: '18px 20px',
                 display: 'flex',
                 alignItems: 'center',
                 gap: '16px',
-                boxShadow:
-                  theme.mode === 'dark'
-                    ? '0 6px 18px -4px rgba(0, 0, 0, 0.3)'
-                    : '0 4px 14px -3px rgba(0, 0, 0, 0.03)',
+                boxShadow: isDark
+                  ? '0 6px 18px -4px rgba(0, 0, 0, 0.45)'
+                  : '0 4px 14px -3px rgba(0, 0, 0, 0.04)',
                 cursor: 'pointer',
-                transition: 'transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease',
+                transition: 'transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease',
               }}
             >
               <div
@@ -153,24 +153,25 @@ export const TrustHighlights: React.FC<TrustHighlightsProps> = ({ items, theme, 
                   width: '46px',
                   height: '46px',
                   borderRadius: '12px',
-                  backgroundColor:
-                    theme.mode === 'dark' ? 'rgba(227, 30, 36, 0.15)' : 'rgba(227, 30, 36, 0.08)',
+                  backgroundColor: isDark ? 'rgba(239, 68, 68, 0.18)' : 'rgba(227, 30, 36, 0.08)',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   flexShrink: 0,
+                  transition: 'background-color 0.2s ease, transform 0.2s ease',
                 }}
               >
-                {getTrustIcon(item.icon, '#e31e24')}
+                {getTrustIcon(item.icon, isDark ? '#ef4444' : '#e31e24')}
               </div>
-              <div>
+              <div style={{ flex: 1, minWidth: 0 }}>
                 <h4
                   style={{
                     fontSize: '14.5px',
                     fontWeight: 800,
                     margin: '0 0 3px 0',
-                    color: theme.text,
+                    color: isDark ? '#f8fafc' : theme.text,
                     fontFamily: 'Outfit, -apple-system, sans-serif',
+                    lineHeight: 1.3,
                   }}
                 >
                   {item.title}
@@ -179,7 +180,7 @@ export const TrustHighlights: React.FC<TrustHighlightsProps> = ({ items, theme, 
                   style={{
                     fontSize: '12.5px',
                     margin: 0,
-                    color: theme.textMuted,
+                    color: isDark ? '#94a3b8' : theme.textMuted,
                     lineHeight: 1.4,
                   }}
                 >

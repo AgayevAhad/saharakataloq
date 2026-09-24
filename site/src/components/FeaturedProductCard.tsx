@@ -117,21 +117,24 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
         backgroundColor: transparentBg ? 'transparent' : '#ffffff',
         border: 'none',
         borderRadius: '16px',
-        padding: '16px 20px',
+        padding: '12px 14px 14px',
         width: '100%',
         maxWidth: '339px',
-        height: '339px',
+        height: '100%',
+        minHeight: isActive ? '374px' : '339px',
         boxSizing: 'border-box',
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
         cursor: 'pointer',
+        transform: isActive ? 'translateY(-6px) scale(1.03)' : 'translateY(0) scale(1)',
         boxShadow: transparentBg
           ? 'none'
           : isActive
-            ? '0 12px 32px rgba(0, 0, 0, 0.12)'
+            ? '0 20px 40px -8px rgba(0, 0, 0, 0.22), 0 6px 16px rgba(0, 0, 0, 0.08)'
             : '0 4px 20px rgba(0, 0, 0, 0.05)',
-        transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease',
+        zIndex: isActive ? 20 : 1,
+        transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), min-height 0.25s ease, z-index 0.15s ease',
         overflow: 'visible',
       }}
       role="button"
@@ -204,14 +207,14 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
               justifyContent: 'center',
               cursor: 'pointer',
               padding: 0,
-              boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
+              boxShadow: '0 3px 10px rgba(0, 0, 0, 0.15)',
               color: isComparing ? '#ffffff' : '#64748b',
               transition: 'transform 0.15s ease, color 0.15s ease, background-color 0.15s ease',
             }}
             aria-label={isComparing ? 'Müqayisədən çıxar' : 'Müqayisə et'}
             title={isComparing ? 'Müqayisədən çıxar' : 'Müqayisə et'}
           >
-            <Scale size={15} color={isComparing ? 'currentColor' : '#64748b'} />
+            <Scale size={15} color="currentColor" />
           </button>
         )}
 
@@ -224,15 +227,15 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
             width: '32px',
             height: '32px',
             borderRadius: '50%',
-            backgroundColor: isFavorite ? '#ef4444' : 'rgba(255, 255, 255, 0.95)',
-            border: `1px solid ${isFavorite ? '#ef4444' : 'rgba(226, 232, 240, 0.9)'}`,
+            backgroundColor: isFavorite ? '#dc2626' : 'rgba(255, 255, 255, 0.95)',
+            border: `1px solid ${isFavorite ? '#dc2626' : 'rgba(226, 232, 240, 0.9)'}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
             padding: 0,
-            boxShadow: '0 2px 8px rgba(0, 0, 0, 0.08)',
-            color: isFavorite ? '#ffffff' : '#94a3b8',
+            boxShadow: '0 3px 10px rgba(0, 0, 0, 0.15)',
+            color: isFavorite ? '#ffffff' : '#dc2626',
             transition: 'transform 0.15s ease, color 0.15s ease, background-color 0.15s ease',
           }}
           aria-label={isFavorite ? 'Sevimlilərdən çıxar' : 'Sevimlilərə əlavə et'}
@@ -241,137 +244,12 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
           <Heart
             size={16}
             fill={isFavorite ? 'currentColor' : 'none'}
-            color={isFavorite ? 'currentColor' : '#64748b'}
+            color="currentColor"
           />
         </button>
       </div>
 
-      {/* Floating Hover Action Cluster: WhatsApp, Call, Cart, and Details (Frosted Translucent Bar) */}
-      <div
-        className="card-hover-actions-cluster"
-        style={{
-          position: 'absolute',
-          bottom: '42px',
-          left: '50%',
-          transform: `translateX(-50%) ${isActive ? 'translateY(0)' : 'translateY(8px)'}`,
-          zIndex: 6,
-          opacity: isActive ? 1 : 0,
-          pointerEvents: isActive ? 'auto' : 'none',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: 0,
-          border: 'none',
-          backgroundColor: 'transparent',
-          boxShadow: 'none',
-          transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-        }}
-      >
-        {/* WhatsApp Icon */}
-        <button
-          type="button"
-          className="card-action-btn-wa card-action-btn-item"
-          onClick={handleWhatsAppClick}
-          style={{
-            width: '32px',
-            height: '32px',
-            borderRadius: '50%',
-            backgroundColor: 'rgba(34, 197, 94, 0.12)',
-            color: '#16a34a',
-            border: 'none',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: 'none',
-            transition: 'transform 0.15s ease, background-color 0.15s ease',
-          }}
-          title="WhatsApp ilə soruş"
-          aria-label="WhatsApp"
-        >
-          <WhatsAppIcon size={16} color="#16a34a" />
-        </button>
 
-        {/* Call Icon */}
-        <button
-          type="button"
-          className="card-action-btn-call card-action-btn-item"
-          onClick={handleCallClick}
-          style={{
-            width: '32px',
-            height: '32px',
-            borderRadius: '50%',
-            backgroundColor: 'rgba(220, 38, 38, 0.10)',
-            color: '#dc2626',
-            border: 'none',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: 'none',
-            transition: 'transform 0.15s ease, background-color 0.15s ease',
-          }}
-          title="Zəng et"
-          aria-label="Zəng et"
-        >
-          <Phone size={14} color="#dc2626" />
-        </button>
-
-        {/* Add to Cart Icon */}
-        <button
-          type="button"
-          className="card-action-btn-cart card-action-btn-item"
-          onClick={handleCartClick}
-          style={{
-            width: '32px',
-            height: '32px',
-            borderRadius: '50%',
-            backgroundColor: 'rgba(220, 38, 38, 0.10)',
-            color: '#dc2626',
-            border: 'none',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: 'none',
-            transition: 'transform 0.15s ease, background-color 0.15s ease',
-          }}
-          aria-label="Səbətə əlavə et"
-          title="Səbətə əlavə et"
-        >
-          <ShoppingCart size={15} color="#dc2626" />
-        </button>
-
-        {/* Details / Ətraflı Button */}
-        <button
-          type="button"
-          className="card-action-btn-details card-action-btn-item"
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelect(product);
-          }}
-          style={{
-            height: '32px',
-            padding: '0 10px',
-            borderRadius: '16px',
-            backgroundColor: 'rgba(15, 23, 42, 0.08)',
-            color: '#0f172a',
-            border: 'none',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            fontSize: '11.5px',
-            fontWeight: 700,
-            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)',
-            transition: 'transform 0.15s ease, background-color 0.15s ease',
-          }}
-          title="Ətraflı bax"
-          aria-label="Ətraflı bax"
-        >
-          <span>Ətraflı</span>
-        </button>
-      </div>
 
       {/* Maximized Product Image Stage */}
       <div
@@ -379,8 +257,9 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
         style={{
           width: '100%',
           flex: 1,
-          minHeight: '265px',
-          maxHeight: '275px',
+          height: '232px',
+          minHeight: '216px',
+          maxHeight: '242px',
           borderRadius: '12px',
           backgroundColor: transparentBg ? 'transparent' : '#f8fafc',
           display: 'flex',
@@ -388,7 +267,7 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
           justifyContent: 'center',
           overflow: 'hidden',
           padding: 0,
-          margin: 0,
+          margin: '0 0 2px 0',
           position: 'relative',
         }}
       >
@@ -465,12 +344,141 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
               fontWeight: 900,
               color: '#0f172a',
               lineHeight: 1.2,
+              marginBottom: '1px',
               fontFamily: 'Outfit, -apple-system, sans-serif',
             }}
           >
             {displayPrice}
           </div>
         )}
+
+        {/* Action Cluster at Bottom: WhatsApp, Call, Cart, and Details (Smooth Expansion on Hover/Active) */}
+        <div
+          className="card-hover-actions-cluster"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            paddingTop: '2px',
+            paddingBottom: '2px',
+            border: 'none',
+            backgroundColor: 'transparent',
+            boxShadow: 'none',
+            marginTop: isActive ? '10px' : '0px',
+            maxHeight: isActive ? '42px' : '0px',
+            opacity: isActive ? 1 : 0,
+            pointerEvents: isActive ? 'auto' : 'none',
+            overflow: 'hidden',
+            zIndex: 6,
+            transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
+        >
+          {/* WhatsApp Icon */}
+          <button
+            type="button"
+            className="card-action-btn-wa card-action-btn-item"
+            onClick={handleWhatsAppClick}
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(34, 197, 94, 0.12)',
+              color: '#16a34a',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: 'none',
+              transition: 'transform 0.15s ease, background-color 0.15s ease',
+            }}
+            title="WhatsApp ilə soruş"
+            aria-label="WhatsApp"
+          >
+            <WhatsAppIcon size={16} color="currentColor" />
+          </button>
+
+          {/* Call Icon */}
+          <button
+            type="button"
+            className="card-action-btn-call card-action-btn-item"
+            onClick={handleCallClick}
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(220, 38, 38, 0.10)',
+              color: '#dc2626',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: 'none',
+              transition: 'transform 0.15s ease, background-color 0.15s ease',
+            }}
+            title="Zəng et"
+            aria-label="Zəng et"
+          >
+            <Phone size={14} color="currentColor" />
+          </button>
+
+          {/* Add to Cart Icon */}
+          <button
+            type="button"
+            className="card-action-btn-cart card-action-btn-item"
+            onClick={handleCartClick}
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(220, 38, 38, 0.10)',
+              color: '#dc2626',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: 'none',
+              transition: 'transform 0.15s ease, background-color 0.15s ease',
+            }}
+            aria-label="Səbətə əlavə et"
+            title="Səbətə əlavə et"
+          >
+            <ShoppingCart size={15} color="currentColor" />
+          </button>
+
+          {/* Details / Ətraflı Button */}
+          <button
+            type="button"
+            className="card-action-btn-details card-action-btn-item"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect(product);
+            }}
+            style={{
+              height: '32px',
+              padding: '0 10px',
+              borderRadius: '16px',
+              backgroundColor: 'rgba(220, 38, 38, 0.10)',
+              color: '#dc2626',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              fontSize: '11.5px',
+              fontWeight: 800,
+              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)',
+              transition: 'transform 0.15s ease, background-color 0.15s ease',
+            }}
+            title="Ətraflı bax"
+            aria-label="Ətraflı bax"
+          >
+            <span>Ətraflı</span>
+          </button>
+        </div>
       </div>
     </div>
   );

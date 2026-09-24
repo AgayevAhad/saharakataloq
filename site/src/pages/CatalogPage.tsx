@@ -252,11 +252,12 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                 style={{
                   fontSize: '13px',
                   fontWeight: 700,
-                  backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f1f5f9',
-                  color: '#e31e24',
+                  backgroundColor:
+                    themeMode === 'dark' ? 'rgba(239, 68, 68, 0.16)' : 'rgba(220, 38, 38, 0.08)',
+                  color: themeMode === 'dark' ? '#ef4444' : '#dc2626',
                   padding: '4px 10px',
                   borderRadius: '12px',
-                  border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`,
+                  border: 'none',
                 }}
               >
                 {sortedProducts.length} model
@@ -307,7 +308,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
             <div
               style={{
                 backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.45)' : '#ffffff',
-                border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
+                border: 'none',
                 borderRadius: '16px',
                 padding: '16px',
               }}
@@ -996,12 +997,19 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                   borderRadius: '20px',
                   backgroundColor:
                     selectedCategory === 'all'
-                      ? '#e31e24'
+                      ? themeMode === 'dark'
+                        ? 'rgba(239, 68, 68, 0.18)'
+                        : 'rgba(220, 38, 38, 0.12)'
                       : themeMode === 'dark'
                         ? '#1e293b'
-                        : '#ffffff',
-                  color: selectedCategory === 'all' ? '#ffffff' : theme.text,
-                  border: `1px solid ${selectedCategory === 'all' ? '#e31e24' : themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`,
+                        : '#f1f5f9',
+                  color:
+                    selectedCategory === 'all'
+                      ? themeMode === 'dark'
+                        ? '#ef4444'
+                        : '#dc2626'
+                      : theme.text,
+                  border: 'none',
                   fontSize: '13px',
                   fontWeight: 700,
                   cursor: 'pointer',
@@ -1010,7 +1018,11 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                   gap: '6px',
                   transition: 'all 0.15s ease',
                   boxShadow:
-                    selectedCategory === 'all' ? '0 4px 12px rgba(227, 30, 36, 0.3)' : 'none',
+                    selectedCategory === 'all'
+                      ? themeMode === 'dark'
+                        ? '0 4px 12px rgba(239, 68, 68, 0.2)'
+                        : '0 4px 12px rgba(220, 38, 38, 0.08)'
+                      : 'none',
                 }}
               >
                 <LayoutGrid size={14} />
@@ -1036,12 +1048,18 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                       padding: '8px 16px',
                       borderRadius: '20px',
                       backgroundColor: isSelected
-                        ? '#e31e24'
+                        ? themeMode === 'dark'
+                          ? 'rgba(239, 68, 68, 0.18)'
+                          : 'rgba(220, 38, 38, 0.12)'
                         : themeMode === 'dark'
                           ? '#1e293b'
-                          : '#ffffff',
-                      color: isSelected ? '#ffffff' : theme.text,
-                      border: `1px solid ${isSelected ? '#e31e24' : themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`,
+                          : '#f1f5f9',
+                      color: isSelected
+                        ? themeMode === 'dark'
+                          ? '#ef4444'
+                          : '#dc2626'
+                        : theme.text,
+                      border: 'none',
                       fontSize: '13px',
                       fontWeight: 700,
                       cursor: 'pointer',
@@ -1049,7 +1067,11 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                       alignItems: 'center',
                       gap: '6px',
                       transition: 'all 0.15s ease',
-                      boxShadow: isSelected ? '0 4px 12px rgba(227, 30, 36, 0.3)' : 'none',
+                      boxShadow: isSelected
+                        ? themeMode === 'dark'
+                          ? '0 4px 12px rgba(239, 68, 68, 0.2)'
+                          : '0 4px 12px rgba(220, 38, 38, 0.08)'
+                        : 'none',
                     }}
                   >
                     {getCategoryIcon(c.id, c.slug)}
@@ -1074,7 +1096,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                 padding: '10px 16px',
                 borderRadius: '14px',
                 backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.5)' : '#ffffff',
-                border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
+                border: 'none',
                 marginBottom: '14px',
               }}
             >
@@ -1219,7 +1241,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                       padding: '8px 14px',
                       borderRadius: '12px',
                       backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f8fafc',
-                      border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.12)' : '#cbd5e1'}`,
+                      border: 'none',
                       color: theme.text,
                       fontSize: '13px',
                       fontWeight: 700,
@@ -1351,7 +1373,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                     backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f1f5f9',
                     borderRadius: '8px',
                     padding: '2px',
-                    border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
+                    border: 'none',
                   }}
                 >
                   <button

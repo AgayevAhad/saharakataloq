@@ -262,19 +262,22 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         backgroundColor: '#ffffff',
         border: 'none',
         borderRadius: '16px',
-        padding: '16px 20px',
+        padding: '12px 14px 14px',
         width: '100%',
         maxWidth: '100%',
         height: '100%',
-        minHeight: '339px',
-        maxHeight: '339px',
+        minHeight: isActive ? '374px' : '339px',
         boxSizing: 'border-box',
         display: 'flex',
         flexDirection: 'column',
         position: 'relative',
         cursor: 'pointer',
-        boxShadow: isActive ? '0 12px 32px rgba(0, 0, 0, 0.12)' : '0 4px 20px rgba(0, 0, 0, 0.05)',
-        transition: 'transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease',
+        transform: isActive ? 'translateY(-6px) scale(1.03)' : 'translateY(0) scale(1)',
+        boxShadow: isActive
+          ? '0 20px 40px -8px rgba(0, 0, 0, 0.22), 0 6px 16px rgba(0, 0, 0, 0.08)'
+          : '0 4px 20px rgba(0, 0, 0, 0.05)',
+        zIndex: isActive ? 20 : 1,
+        transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), min-height 0.25s ease, z-index 0.15s ease',
         overflow: 'visible',
       }}
     >
@@ -326,12 +329,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               width: '32px',
               height: '32px',
               borderRadius: '50%',
-              backgroundColor: isComparing
-                ? '#2563eb'
-                : theme.mode === 'dark'
-                  ? 'rgba(15, 23, 42, 0.9)'
-                  : 'rgba(255, 255, 255, 0.95)',
-              border: `1px solid ${isComparing ? '#2563eb' : theme.border}`,
+              backgroundColor: isComparing ? '#2563eb' : 'rgba(255, 255, 255, 0.95)',
+              border: `1px solid ${isComparing ? '#2563eb' : 'rgba(226, 232, 240, 0.9)'}`,
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -342,7 +341,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               transition: 'all 0.15s ease',
             }}
           >
-            <Scale size={15} color={isComparing ? 'currentColor' : '#64748b'} />
+            <Scale size={15} color="currentColor" />
           </button>
         )}
 
@@ -361,12 +360,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
             width: '32px',
             height: '32px',
             borderRadius: '50%',
-            backgroundColor: isFavorite
-              ? '#dc2626'
-              : theme.mode === 'dark'
-                ? 'rgba(15, 23, 42, 0.9)'
-                : 'rgba(255, 255, 255, 0.95)',
-            border: `1px solid ${isFavorite ? '#dc2626' : theme.border}`,
+            backgroundColor: isFavorite ? '#dc2626' : 'rgba(255, 255, 255, 0.95)',
+            border: `1px solid ${isFavorite ? '#dc2626' : 'rgba(226, 232, 240, 0.9)'}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
@@ -379,7 +374,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         >
           <Heart
             size={16}
-            color={isFavorite ? 'currentColor' : '#dc2626'}
+            color="currentColor"
             fill={isFavorite ? 'currentColor' : 'none'}
             strokeWidth={2.2}
           />
@@ -422,234 +417,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </div>
       </div>
 
-      {/* Floating Hover Action Cluster: WhatsApp, Call, Cart, Details, Share */}
-      <div
-        className="card-hover-actions-cluster"
-        style={{
-          position: 'absolute',
-          bottom: '42px',
-          left: '50%',
-          transform: `translateX(-50%) ${isActionClusterVisible ? 'translateY(0)' : 'translateY(10px)'}`,
-          opacity: isActionClusterVisible ? 1 : 0,
-          pointerEvents: isActionClusterVisible ? 'auto' : 'none',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: 0,
-          border: 'none',
-          backgroundColor: 'transparent',
-          boxShadow: 'none',
-          zIndex: 8,
-          transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
-        }}
-      >
-        {/* WhatsApp Button */}
-        <button
-          type="button"
-          className="card-action-btn-wa card-action-btn-item"
-          onClick={(e) => {
-            e.stopPropagation();
-            onWhatsApp?.(product);
-          }}
-          style={{
-            width: '32px',
-            height: '32px',
-            borderRadius: '50%',
-            backgroundColor: 'rgba(34, 197, 94, 0.12)',
-            color: '#16a34a',
-            border: 'none',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: 'none',
-            transition: 'transform 0.15s ease, background-color 0.15s ease',
-          }}
-          title={whatsappButtonText}
-          aria-label={whatsappButtonText}
-        >
-          <WhatsAppIcon size={16} color="#16a34a" />
-          <span
-            style={{
-              position: 'absolute',
-              width: '1px',
-              height: '1px',
-              padding: 0,
-              margin: '-1px',
-              overflow: 'hidden',
-              clip: 'rect(0, 0, 0, 0)',
-              whiteSpace: 'nowrap',
-              border: 0,
-            }}
-          >
-            {whatsappButtonText}
-          </span>
-        </button>
 
-        {/* Call Button */}
-        <button
-          type="button"
-          className="card-action-btn-call card-action-btn-item"
-          onClick={(e) => {
-            e.stopPropagation();
-            onCall?.(product);
-          }}
-          style={{
-            width: '32px',
-            height: '32px',
-            borderRadius: '50%',
-            backgroundColor: 'rgba(220, 38, 38, 0.10)',
-            color: '#dc2626',
-            border: 'none',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            boxShadow: 'none',
-            transition: 'transform 0.15s ease, background-color 0.15s ease',
-          }}
-          title={callButtonText}
-          aria-label={callButtonText}
-        >
-          <Phone size={14} color="#dc2626" />
-          <span
-            style={{
-              position: 'absolute',
-              width: '1px',
-              height: '1px',
-              padding: 0,
-              margin: '-1px',
-              overflow: 'hidden',
-              clip: 'rect(0, 0, 0, 0)',
-              whiteSpace: 'nowrap',
-              border: 0,
-            }}
-          >
-            {callButtonText}
-          </span>
-        </button>
-
-        {/* Cart Button */}
-        {onAddToCart && (
-          <button
-            type="button"
-            className="card-action-btn-cart card-action-btn-item"
-            onClick={(e) => {
-              e.stopPropagation();
-              animateProductToCart(e.currentTarget, coverImage);
-              onAddToCart(product);
-            }}
-            style={{
-              width: '32px',
-              height: '32px',
-              borderRadius: '50%',
-              backgroundColor: 'rgba(220, 38, 38, 0.10)',
-              color: '#dc2626',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              boxShadow: 'none',
-              transition: 'transform 0.15s ease, background-color 0.15s ease',
-            }}
-            title="Səbətə əlavə et"
-            aria-label="Səbətə əlavə et"
-          >
-            <ShoppingCart size={15} color="#dc2626" />
-            <span
-              style={{
-                position: 'absolute',
-                width: '1px',
-                height: '1px',
-                padding: 0,
-                margin: '-1px',
-                overflow: 'hidden',
-                clip: 'rect(0, 0, 0, 0)',
-                whiteSpace: 'nowrap',
-                border: 0,
-              }}
-            >
-              Səbətə əlavə et
-            </span>
-          </button>
-        )}
-
-        {/* Details / Ətraflı Button */}
-        <button
-          type="button"
-          className="card-action-btn-details card-action-btn-item"
-          onClick={(e) => {
-            e.stopPropagation();
-            onSelect(product);
-          }}
-          style={{
-            height: '32px',
-            padding: '0 10px',
-            borderRadius: '16px',
-            backgroundColor:
-              theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(15, 23, 42, 0.08)',
-            color: theme.mode === 'dark' ? '#ffffff' : '#0f172a',
-            border: 'none',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '4px',
-            fontSize: '11.5px',
-            fontWeight: 700,
-            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)',
-            transition: 'transform 0.15s ease, background-color 0.15s ease',
-          }}
-          title="Ətraflı bax"
-          aria-label="Ətraflı bax"
-        >
-          <span>Ətraflı</span>
-        </button>
-
-        {/* Share Button */}
-        {onShare && (
-          <button
-            type="button"
-            className="card-action-btn-share card-action-btn-item"
-            onClick={(e) => {
-              e.stopPropagation();
-              onShare(product);
-            }}
-            title={shareButtonText}
-            aria-label={shareButtonText}
-            style={{
-              width: '30px',
-              height: '30px',
-              borderRadius: '50%',
-              backgroundColor: 'rgba(59, 130, 246, 0.12)',
-              color: '#2563eb',
-              border: 'none',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              transition: 'transform 0.15s ease, background-color 0.15s ease',
-            }}
-          >
-            <Share2 size={13} color="#2563eb" />
-            <span
-              style={{
-                position: 'absolute',
-                width: '1px',
-                height: '1px',
-                padding: 0,
-                margin: '-1px',
-                overflow: 'hidden',
-                clip: 'rect(0, 0, 0, 0)',
-                whiteSpace: 'nowrap',
-                border: 0,
-              }}
-            >
-              {shareButtonText}
-            </span>
-          </button>
-        )}
-      </div>
 
       {/* Maximized Product Image / Media Frame Container with Touch Swiping */}
       <div
@@ -657,8 +425,9 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         style={{
           width: '100%',
           flex: 1,
-          minHeight: '260px',
-          maxHeight: '272px',
+          height: '232px',
+          minHeight: '216px',
+          maxHeight: '242px',
           borderRadius: '12px',
           backgroundColor: '#ffffff',
           display: 'flex',
@@ -666,7 +435,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           justifyContent: 'center',
           overflow: 'hidden',
           padding: 0,
-          margin: 0,
+          margin: '0 0 2px 0',
           position: 'relative',
         }}
         onClick={() => onSelect(product)}
@@ -901,12 +670,242 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               fontWeight: 900,
               color: '#0f172a',
               lineHeight: 1.2,
+              marginBottom: '1px',
               fontFamily: 'Outfit, -apple-system, sans-serif',
             }}
           >
             {displayPrice}
           </div>
         )}
+
+        {/* Action Cluster at Bottom: WhatsApp, Call, Cart, Ətraflı, Share (Smooth Expansion on Hover/Active) */}
+        <div
+          className="card-hover-actions-cluster"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            gap: '8px',
+            paddingTop: '2px',
+            paddingBottom: '2px',
+            border: 'none',
+            backgroundColor: 'transparent',
+            boxShadow: 'none',
+            marginTop: isActionClusterVisible ? '10px' : '0px',
+            maxHeight: isActionClusterVisible ? '42px' : '0px',
+            opacity: isActionClusterVisible ? 1 : 0,
+            pointerEvents: isActionClusterVisible ? 'auto' : 'none',
+            overflow: 'hidden',
+            zIndex: 8,
+            transition: 'all 0.25s cubic-bezier(0.16, 1, 0.3, 1)',
+          }}
+        >
+          {/* WhatsApp Button */}
+          <button
+            type="button"
+            className="card-action-btn-wa card-action-btn-item"
+            onClick={(e) => {
+              e.stopPropagation();
+              onWhatsApp?.(product);
+            }}
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(34, 197, 94, 0.12)',
+              color: '#16a34a',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: 'none',
+              transition: 'transform 0.15s ease, background-color 0.15s ease',
+            }}
+            title={whatsappButtonText}
+            aria-label={whatsappButtonText}
+          >
+            <WhatsAppIcon size={16} color="currentColor" />
+            <span
+              style={{
+                position: 'absolute',
+                width: '1px',
+                height: '1px',
+                padding: 0,
+                margin: '-1px',
+                overflow: 'hidden',
+                clip: 'rect(0, 0, 0, 0)',
+                whiteSpace: 'nowrap',
+                border: 0,
+              }}
+            >
+              {whatsappButtonText}
+            </span>
+          </button>
+
+          {/* Call Button */}
+          <button
+            type="button"
+            className="card-action-btn-call card-action-btn-item"
+            onClick={(e) => {
+              e.stopPropagation();
+              onCall?.(product);
+            }}
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              backgroundColor: 'rgba(220, 38, 38, 0.10)',
+              color: '#dc2626',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: 'none',
+              transition: 'transform 0.15s ease, background-color 0.15s ease',
+            }}
+            title={callButtonText}
+            aria-label={callButtonText}
+          >
+            <Phone size={14} color="currentColor" />
+            <span
+              style={{
+                position: 'absolute',
+                width: '1px',
+                height: '1px',
+                padding: 0,
+                margin: '-1px',
+                overflow: 'hidden',
+                clip: 'rect(0, 0, 0, 0)',
+                whiteSpace: 'nowrap',
+                border: 0,
+              }}
+            >
+              {callButtonText}
+            </span>
+          </button>
+
+          {/* Cart Button */}
+          {onAddToCart && (
+            <button
+              type="button"
+              className="card-action-btn-cart card-action-btn-item"
+              onClick={(e) => {
+                e.stopPropagation();
+                animateProductToCart(e.currentTarget, coverImage);
+                onAddToCart(product);
+              }}
+              style={{
+                width: '32px',
+                height: '32px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                color: '#dc2626',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                boxShadow: 'none',
+                transition: 'transform 0.15s ease, background-color 0.15s ease',
+              }}
+              title="Səbətə əlavə et"
+              aria-label="Səbətə əlavə et"
+            >
+              <ShoppingCart size={15} color="currentColor" />
+              <span
+                style={{
+                  position: 'absolute',
+                  width: '1px',
+                  height: '1px',
+                  padding: 0,
+                  margin: '-1px',
+                  overflow: 'hidden',
+                  clip: 'rect(0, 0, 0, 0)',
+                  whiteSpace: 'nowrap',
+                  border: 0,
+                }}
+              >
+                Səbətə əlavə et
+              </span>
+            </button>
+          )}
+
+          {/* Details / Ətraflı Button */}
+          <button
+            type="button"
+            className="card-action-btn-details card-action-btn-item"
+            onClick={(e) => {
+              e.stopPropagation();
+              onSelect(product);
+            }}
+            style={{
+              height: '32px',
+              padding: '0 10px',
+              borderRadius: '16px',
+              backgroundColor: 'rgba(220, 38, 38, 0.10)',
+              color: '#dc2626',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '4px',
+              fontSize: '11.5px',
+              fontWeight: 800,
+              boxShadow: '0 2px 6px rgba(0, 0, 0, 0.08)',
+              transition: 'transform 0.15s ease, background-color 0.15s ease',
+            }}
+            title="Ətraflı bax"
+            aria-label="Ətraflı bax"
+          >
+            <span>Ətraflı</span>
+          </button>
+
+          {/* Share Button */}
+          {onShare && (
+            <button
+              type="button"
+              className="card-action-btn-share card-action-btn-item"
+              onClick={(e) => {
+                e.stopPropagation();
+                onShare(product);
+              }}
+              title={shareButtonText}
+              aria-label={shareButtonText}
+              style={{
+                width: '30px',
+                height: '30px',
+                borderRadius: '50%',
+                backgroundColor: 'rgba(59, 130, 246, 0.12)',
+                color: '#2563eb',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'transform 0.15s ease, background-color 0.15s ease',
+              }}
+            >
+              <Share2 size={13} color="currentColor" />
+              <span
+                style={{
+                  position: 'absolute',
+                  width: '1px',
+                  height: '1px',
+                  padding: 0,
+                  margin: '-1px',
+                  overflow: 'hidden',
+                  clip: 'rect(0, 0, 0, 0)',
+                  whiteSpace: 'nowrap',
+                  border: 0,
+                }}
+              >
+                {shareButtonText}
+              </span>
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

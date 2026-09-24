@@ -195,4 +195,44 @@ describe('Header Kataloq Nav, MegaMenu Half-Screen & Category Spacing Refinement
       expect(handleClose).toHaveBeenCalled();
     }
   });
+
+  it('VisualCategoryCards renders left and right floating navigation arrow buttons and handles clicks', () => {
+    const mockProducts = [
+      {
+        id: 'prod-1',
+        title: 'Məhsul 1',
+        category: DEFAULT_CATALOG.categories[0]?.id || 'cat-1',
+        status: 'published' as const,
+        image: '/media/test.png',
+        price: 100,
+        currency: 'AZN',
+      },
+    ];
+
+    const { container } = render(
+      <VisualCategoryCards
+        categories={DEFAULT_CATALOG.categories}
+        products={mockProducts as any}
+        theme={lightTheme}
+        selectedCategory="all"
+        onSelectCategory={() => {}}
+      />
+    );
+
+    const leftBtn = container.querySelector('button[aria-label="Əvvəlki kateqoriyalar"]');
+    const rightBtn = container.querySelector('button[aria-label="Növbəti kateqoriyalar"]');
+
+    expect(leftBtn).toBeTruthy();
+    expect(rightBtn).toBeTruthy();
+    expect(leftBtn?.classList.contains('category-carousel-floating-btn')).toBe(true);
+    expect(rightBtn?.classList.contains('category-carousel-floating-btn')).toBe(true);
+
+    // Verify click triggers
+    if (rightBtn) {
+      fireEvent.click(rightBtn);
+    }
+    if (leftBtn) {
+      fireEvent.click(leftBtn);
+    }
+  });
 });

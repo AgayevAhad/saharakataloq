@@ -99,6 +99,7 @@ export const ShimmerImage = React.forwardRef<HTMLImageElement, ShimmerImageProps
           src={src}
           alt={alt}
           loading={loading}
+          decoding="async"
           onLoad={handleLoad}
           onError={handleError}
           className={`shimmer-img ${className}`}

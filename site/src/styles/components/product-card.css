@@ -1,0 +1,767 @@
+/* Product Card, Media Stages, Rank Badges & Interactive Hovers */
+
+/* CARD IMAGE CONTAINER: Crisp, proportional, non-stretched */
+.product-card-img-wrap {
+  width: 100%;
+  height: 240px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border-radius: 12px 12px 0 0;
+  will-change: transform;
+}
+
+@media (min-width: 640px) {
+  .product-card-img-wrap {
+    height: 270px;
+  }
+}
+
+.product-card-img-wrap img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  padding: 10px;
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateZ(0);
+}
+
+/* NETFLIX-STYLE POP-OUT HOVER EFFECT */
+.netflix-card-pop {
+  position: relative;
+  transition:
+    transform 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.35s cubic-bezier(0.16, 1, 0.3, 1),
+    border-color 0.3s ease,
+    z-index 0.15s ease !important;
+  border-radius: 12px;
+  overflow: hidden;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .netflix-card-pop:hover {
+    transform: translateY(-8px) scale(1.045);
+    z-index: 40 !important;
+    box-shadow:
+      0 24px 48px -10px rgba(0, 0, 0, 0.55),
+      0 4px 16px rgba(0, 0, 0, 0.15) !important;
+  }
+
+  .netflix-card-pop:hover .product-card-img-wrap img {
+    transform: scale(1.08);
+  }
+}
+
+/* NETFLIX STYLIZED RANK NUMBER BADGE */
+.netflix-rank-badge {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  line-height: 1;
+  z-index: 8;
+  pointer-events: none;
+  user-select: none;
+}
+
+.netflix-rank-text {
+  font-family:
+    'Outfit',
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    sans-serif;
+  font-size: 74px;
+  font-weight: 900;
+  color: #000000;
+  -webkit-text-stroke: 3.5px #ffffff;
+  text-shadow: 0 6px 16px rgba(0, 0, 0, 0.9);
+  display: inline-block;
+  letter-spacing: -4px;
+}
+
+
+/* Brand showcase — verified marks and subtle product backdrop */
+.brand-showcase-card {
+  min-height: 176px;
+  color: #fff;
+  background: #111827 !important;
+  overflow: hidden !important;
+  contain: paint !important;
+  border-radius: 17px;
+}
+.brand-showcase-card::after {
+  z-index: 0;
+}
+.brand-card-backdrops,
+.brand-card-shade {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden !important;
+  border-radius: inherit;
+  contain: paint !important;
+}
+.brand-card-backdrops img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  animation: brandBackdrop 20s linear infinite;
+}
+.brand-card-shade {
+  background: linear-gradient(
+    90deg,
+    rgba(4, 8, 18, 0.94),
+    rgba(7, 12, 24, 0.76) 58%,
+    rgba(7, 12, 24, 0.4)
+  );
+}
+@keyframes brandBackdrop {
+  0%,
+  20% {
+    opacity: 0.48;
+  }
+  25%,
+  95% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0.48;
+  }
+}
+.brand-mark-shell {
+  width: 92px;
+  height: 76px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  padding: 12px;
+  border-radius: 15px;
+  background: rgba(255, 255, 255, 0.94);
+  box-shadow: 0 14px 35px rgba(0, 0, 0, 0.22);
+  position: relative;
+  z-index: 2;
+}
+.brand-artel .brand-mark-shell {
+  background: #111827;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+.brand-mark {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.brand-mark-fallback {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  color: #7c3aed;
+}
+.brand-mark-fallback svg {
+  width: 42px;
+  height: 42px;
+}
+.brand-card-copy {
+  position: relative;
+  z-index: 2;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.45);
+}
+.brand-card-top strong,
+.brand-card-copy p,
+.brand-card-copy button {
+  color: #fff;
+}
+.brand-card-copy button {
+  text-shadow: none;
+}
+.brand-showcase-card.coming-soon {
+  opacity: 1;
+  background: linear-gradient(145deg, #111827, #1e1b4b) !important;
+}
+.soon-atmosphere {
+  position: absolute;
+  inset: 0;
+  overflow: hidden !important;
+  contain: paint !important;
+  z-index: 0;
+}
+.soon-atmosphere i {
+  position: absolute;
+  width: 90px;
+  height: 90px;
+  border: 1px solid rgba(168, 85, 247, 0.32);
+  border-radius: 50%;
+  animation: soonFloat 6s ease-in-out infinite;
+}
+.soon-atmosphere i:nth-child(1) {
+  left: 0px;
+  top: -10px;
+}
+.soon-atmosphere i:nth-child(2) {
+  right: 8%;
+  bottom: -20px;
+  animation-delay: -2s;
+}
+.soon-atmosphere i:nth-child(3) {
+  right: 0px;
+  top: 16px;
+  width: 48px;
+  height: 48px;
+  animation-delay: -4s;
+}
+@keyframes soonFloat {
+  50% {
+    transform: translateY(-10px) scale(1.08);
+    opacity: 0.45;
+  }
+}
+.soon-message {
+  margin-top: 7px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+}
+.soon-message > b {
+  color: #e9d5ff;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.soon-message span {
+  height: 18px;
+  overflow: hidden;
+  display: grid;
+}
+.soon-message i {
+  grid-area: 1/1;
+  opacity: 0;
+  font-style: normal;
+  animation: soonWords 6s infinite;
+}
+.soon-message i:nth-child(2) {
+  animation-delay: 2s;
+}
+.soon-message i:nth-child(3) {
+  animation-delay: 4s;
+}
+@keyframes soonWords {
+  0%,
+  28% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+  33%,
+  100% {
+    opacity: 0;
+    transform: translateY(-7px);
+  }
+}
+.modal-call-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: #fff;
+  border: 0;
+  padding: 11px;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+@media (max-width: 760px) {
+  .brand-showcase-grid {
+    grid-template-columns: 1fr;
+  }
+  .brand-showcase-card {
+    min-height: 154px;
+    padding: 14px;
+  }
+  .brand-mark-shell {
+    width: 76px;
+    height: 66px;
+    padding: 10px;
+  }
+  .catalog-header.is-compact .header-sahara-logo {
+    width: 112px;
+    height: 38px;
+  }
+  .catalog-header.is-compact .header-actions .icon-action:first-child,
+  .catalog-header.is-compact .header-actions .share-action {
+    display: none;
+  }
+  .compact-brand-dock button {
+    width: 38px;
+    height: 30px;
+  }
+}
+@media (max-width: 430px) {
+  .catalog-header.is-compact .header-top-row {
+    gap: 6px;
+  }
+  .catalog-header.is-compact .header-sahara-logo {
+    width: 88px;
+    height: 34px;
+    padding: 1px 3px;
+  }
+  .compact-brand-dock {
+    gap: 3px;
+  }
+  .compact-brand-dock button {
+    width: 34px;
+  }
+  .result-count {
+    display: none;
+  }
+  .brand-showcase-card {
+    gap: 12px;
+  }
+  .brand-card-top {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .brand-card-backdrops img,
+  .soon-atmosphere i,
+  .soon-message i,
+  .search-spinner {
+    animation: none !important;
+  }
+  .brand-card-backdrops img:first-child,
+  .soon-message i:first-child {
+    opacity: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .admin-list-actions {
+    align-items: stretch;
+    flex-direction: column;
+  }
+  .admin-list-actions .admin-search,
+  .admin-category-select,
+  .admin-list-actions > button {
+    width: 100%;
+  }
+  .admin-toolbar {
+    flex-direction: column;
+  }
+  .admin-toolbar-actions {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .admin-toolbar-actions button {
+    justify-content: center;
+    padding-inline: 7px;
+  }
+  .contact-stat-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+/* PRODUCT CARD ACTION BUTTONS INTERACTIVE HOVER FOCUS */
+.card-action-btn-wa,
+.card-action-btn-call,
+.card-action-btn-cart,
+.card-action-btn-share,
+.card-action-btn-details {
+  transition:
+    transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.22s ease,
+    background-color 0.2s ease,
+    color 0.2s ease !important;
+  will-change: transform;
+}
+
+.card-action-btn-wa:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 18px rgba(22, 163, 74, 0.45) !important;
+}
+
+.card-action-btn-call:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.45) !important;
+}
+
+.card-action-btn-cart:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.45) !important;
+}
+
+.card-action-btn-share:hover {
+  transform: scale(1.08);
+  box-shadow: 0 6px 18px rgba(37, 99, 235, 0.4) !important;
+}
+
+
+/* Product Card Media Navigation Buttons & Mobile Touch Swiping */
+.card-media-nav-btn {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  background: rgba(15, 23, 42, 0.75);
+  color: #ffffff;
+  border: none !important;
+  outline: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  z-index: 8;
+  opacity: 0;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+}
+
+.card-media-nav-btn:hover {
+  background: var(--primary, #dc2626);
+  border: none !important;
+  transform: translateY(-50%) scale(1.12);
+  box-shadow: 0 3px 10px rgba(220, 38, 38, 0.45);
+}
+
+.card-media-nav-btn.prev {
+  left: 2px !important;
+}
+
+.card-media-nav-btn.next {
+  right: 2px !important;
+}
+
+.product-card:hover .card-media-nav-btn,
+.product-card.mobile-focused .card-media-nav-btn {
+  opacity: 0.85;
+}
+
+@media (max-width: 768px) {
+  .card-media-nav-btn {
+    opacity: 0.75;
+    width: 26px;
+    height: 26px;
+  }
+}
+
+
+/* Card Hover Floating Actions & Staggered Micro-Animations */
+.card-hover-actions-cluster {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  background-color: transparent;
+  border: 0;
+  box-shadow: none;
+  transition: all 0.28s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+  z-index: 10;
+}
+
+.theme-dark .card-hover-actions-cluster {
+  background-color: transparent;
+  border-color: transparent;
+  box-shadow: none;
+}
+
+.card-hover-actions-cluster .card-action-btn-item {
+  opacity: 0;
+  transform: translateY(8px) scale(0.7);
+  transition:
+    transform 0.18s cubic-bezier(0.16, 1, 0.3, 1),
+    box-shadow 0.18s ease;
+}
+
+.product-card:hover .card-hover-actions-cluster .card-action-btn-item,
+.product-card.hovered .card-hover-actions-cluster .card-action-btn-item,
+.product-card.mobile-focused .card-hover-actions-cluster .card-action-btn-item,
+.featured-product-card:hover .card-hover-actions-cluster .card-action-btn-item,
+.featured-product-card.is-card-hovered .card-hover-actions-cluster .card-action-btn-item {
+  animation: cardActionPopIn 0.32s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.card-hover-actions-cluster .card-action-btn-item:nth-child(1) {
+  animation-delay: 0.04s;
+}
+
+.card-hover-actions-cluster .card-action-btn-item:nth-child(2) {
+  animation-delay: 0.09s;
+}
+
+.card-hover-actions-cluster .card-action-btn-item:nth-child(3) {
+  animation-delay: 0.14s;
+}
+
+.card-hover-actions-cluster .card-action-btn-item:nth-child(4) {
+  animation-delay: 0.19s;
+}
+
+.card-hover-actions-cluster .card-action-btn-item:nth-child(5) {
+  animation-delay: 0.24s;
+}
+
+@keyframes cardActionPopIn {
+  0% {
+    opacity: 0;
+    transform: translateY(6px) scale(0.7);
+  }
+  70% {
+    opacity: 1;
+    transform: translateY(0) scale(1.05);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Light Mode Action Contrast & Button Transitions */
+.card-action-btn-details {
+  background-color: rgba(220, 38, 38, 0.10) !important;
+  color: #dc2626 !important;
+  font-weight: 800 !important;
+  border: none !important;
+  transition: transform 0.18s ease, background-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+}
+
+.card-action-btn-details:hover {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+  transform: scale(1.04) !important;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.4) !important;
+}
+
+/* Compare & Favorite Top Buttons Hover */
+.card-action-btn-compare {
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease !important;
+}
+.card-action-btn-compare:hover {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+  border-color: #2563eb !important;
+  transform: scale(1.12) !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.38) !important;
+}
+.card-action-btn-compare:hover svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.card-action-btn-heart {
+  transition: transform 0.18s cubic-bezier(0.16, 1, 0.3, 1), background-color 0.18s ease, color 0.18s ease, border-color 0.18s ease, box-shadow 0.18s ease !important;
+}
+.card-action-btn-heart:hover {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+  border-color: #dc2626 !important;
+  transform: scale(1.12) !important;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.38) !important;
+}
+.card-action-btn-heart:hover svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+  fill: currentColor !important;
+}
+
+/* Bottom Action Buttons Hover */
+.card-action-btn-wa:hover {
+  background-color: #16a34a !important;
+  color: #ffffff !important;
+  transform: scale(1.08) !important;
+  box-shadow: 0 4px 14px rgba(22, 163, 74, 0.4) !important;
+}
+.card-action-btn-wa:hover svg,
+.card-action-btn-wa:hover svg path {
+  fill: #ffffff !important;
+  color: #ffffff !important;
+}
+
+.card-action-btn-call:hover {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+  transform: scale(1.08) !important;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.4) !important;
+}
+.card-action-btn-call:hover svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.card-action-btn-cart:hover {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+  transform: scale(1.08) !important;
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.4) !important;
+}
+.card-action-btn-cart:hover svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+.card-action-btn-share:hover {
+  background-color: #2563eb !important;
+  color: #ffffff !important;
+  transform: scale(1.08) !important;
+  box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4) !important;
+}
+.card-action-btn-share:hover svg {
+  color: #ffffff !important;
+  stroke: #ffffff !important;
+}
+
+
+/* ==========================================================================
+   Sahara Product Video Reviews Section (YouTube Integration)
+   ========================================================================== */
+.video-reviews-section {
+  position: relative;
+  contain: layout paint;
+}
+
+.video-reviews-row-track {
+  will-change: scroll-position;
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+.video-reviews-row-track::-webkit-scrollbar {
+  display: none;
+}
+
+.video-review-item {
+  contain: paint layout;
+  content-visibility: auto;
+  contain-intrinsic-size: 290px 520px;
+}
+
+.category-unit-box {
+  contain: paint layout;
+  content-visibility: auto;
+  contain-intrinsic-size: 694px 380px;
+}
+
+.category-master-marquee-track {
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.youtube-subscribe-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 8px 20px;
+  border-radius: 999px;
+  background: rgba(220, 38, 38, 0.08) !important;
+  color: #dc2626 !important;
+  font-family: 'Outfit', -apple-system, sans-serif;
+  font-size: 13.5px;
+  font-weight: 800;
+  text-decoration: none;
+  border: none !important;
+  box-shadow: none !important;
+  transition:
+    background-color 0.2s ease,
+    color 0.2s ease,
+    transform 0.2s ease;
+}
+
+.youtube-subscribe-btn:hover {
+  background: rgba(220, 38, 38, 0.16) !important;
+  color: #b91c1c !important;
+  transform: translateY(-2px);
+}
+
+.youtube-subscribe-btn:active {
+  transform: translateY(0);
+}
+
+.video-carousel-floating-btn,
+.category-carousel-floating-btn {
+  opacity: 0.92;
+  transition:
+    transform 0.2s cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 0.2s ease,
+    background-color 0.2s ease,
+    color 0.2s ease,
+    border-color 0.2s ease,
+    box-shadow 0.2s ease;
+}
+
+.video-carousel-floating-btn:hover,
+.category-carousel-floating-btn:hover {
+  opacity: 1;
+  transform: translateY(-50%) scale(1.1) !important;
+  color: #dc2626 !important;
+  border-color: #dc2626 !important;
+  box-shadow: 0 10px 28px rgba(220, 38, 38, 0.25) !important;
+}
+
+.video-carousel-floating-btn:active,
+.category-carousel-floating-btn:active {
+  transform: translateY(-50%) scale(0.95) !important;
+}
+
+.video-review-item:hover .video-review-media-wrapper {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 28px -4px rgba(0, 0, 0, 0.22) !important;
+}
+
+.theme-dark .video-review-item:hover .video-review-media-wrapper {
+  box-shadow: 0 14px 32px -4px rgba(0, 0, 0, 0.65) !important;
+}
+
+.video-review-item:hover .video-review-media-wrapper img {
+  transform: scale(1.04);
+}
+
+.video-review-item:hover .video-review-play-btn {
+  transform: translate(-50%, -50%) scale(1.12);
+  background-color: #dc2626 !important;
+}
+
+.video-review-item:hover h3 {
+  color: #dc2626 !important;
+}
+
+@media (max-width: 640px) {
+  .video-carousel-floating-btn,
+  .category-carousel-floating-btn {
+    width: 38px !important;
+    height: 38px !important;
+  }
+  .video-carousel-floating-left,
+  .category-carousel-floating-left {
+    left: 8px !important;
+  }
+  .video-carousel-floating-right,
+  .category-carousel-floating-right {
+    right: 8px !important;
+  }
+  .video-review-item {
+    flex: 0 0 clamp(260px, 76vw, 320px) !important;
+    width: clamp(260px, 76vw, 320px) !important;
+  }
+  .video-review-media-wrapper {
+    min-height: 420px !important;
+  }
+}
+
+
+

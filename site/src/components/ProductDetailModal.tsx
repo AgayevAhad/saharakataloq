@@ -17,6 +17,9 @@ import {
   RotateCcw,
   RotateCw,
   Globe2,
+  Play,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { Brand, Product } from '../types/product';
 import { ThemeColors } from '../types/theme';
@@ -64,6 +67,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
     const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
     const [activeMediaIndex, setActiveMediaIndex] = useState(0);
     const [isVideoMuted, setIsVideoMuted] = useState(true);
+    const [isDescExpanded, setIsDescExpanded] = useState(false);
 
     const modalVideoRef = useRef<HTMLVideoElement>(null);
     const fsVideoRef = useRef<HTMLVideoElement>(null);
@@ -196,6 +200,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
     useEffect(() => {
       setActiveMediaIndex(0);
       setIsFullscreenImage(false);
+      setIsDescExpanded(false);
       setZoomScale(1);
       setRotation(0);
       setPanPosition({ x: 0, y: 0 });
@@ -226,9 +231,9 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
 
     // Group specs with useMemo
     const specGroups = useMemo(() => {
-      if (!product) return {};
+      if (!product || !Array.isArray(product.specs)) return {};
       const groups: { [key: string]: typeof product.specs } = {};
-      product.specs.forEach((item) => {
+      (product.specs || []).forEach((item) => {
         const group = item.group || 'Əsas';
         if (!groups[group]) {
           groups[group] = [];
@@ -302,6 +307,32 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
     }, [product]);
 
     const activeMedia = mediaItems[Math.min(activeMediaIndex, Math.max(0, mediaItems.length - 1))];
+    const overviewVideo = useMemo(() => mediaItems.find((m) => m.type === 'video'), [mediaItems]);
+
+    const displayDescription = useMemo(() => {
+      if (!product) return '';
+      const cleanScraped = (txt?: string) => {
+        if (!txt) return '';
+        let res = txt
+          .replace(/-\s*\d+[\d\s.,]*\s*₼/g, '')
+          .replace(/\b\d+\s+\d+\s+rəy\b/gi, '')
+          .replace(/\b\d+\s*rəy\b/gi, '')
+          .replace(/\b\d+\s*ay\s+[\d\s.,]+\s*₼/gi, '')
+          .replace(/Səbətə əlavə et/gi, '')
+          .replace(/Səbətə at/gi, '')
+          .replace(/Onlayn üçün xüsusi qiymət/gi, '')
+          .replace(/\s{2,}/g, ' ')
+          .trim();
+        return res;
+      };
+
+      const cleanDesc = cleanScraped(product.description);
+      if (cleanDesc) return cleanDesc;
+      const cleanShort = cleanScraped(product.shortDesc);
+      if (cleanShort) return cleanShort;
+
+      return '';
+    }, [product]);
 
     const activeObjectPosition =
       (activeMedia as any)?.objectPosition || (product as any)?.imagePosition || 'center';
@@ -902,7 +933,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                     <Globe2 size={22} aria-hidden="true" />
                     <div style={{ flex: 1 }}>
                       <div style={{ color: theme.text, fontSize: '13px', fontWeight: 700 }}>
-                        {brand?.name || product.brandId.toUpperCase()}
+                        {brand?.name || (product.brandId || (product as any).brand || '').toUpperCase()}
                       </div>
                       <div style={{ color: theme.textMuted, fontSize: '11px' }}>
                         {verifiedManufacturingCountry(product)
@@ -928,18 +959,193 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                     >
                       {product.title}
                     </h2>
-                    {product.shortDesc && (
-                      <p
+
+                    {/* Overview & Description Preview Section (DIRECTLY UNDER TITLE: Max 3 lines with 'Davamını oxu...' and Video Overview Preview) */}
+                    {(Boolean(displayDescription) || Boolean(overviewVideo)) && (
+                      <div
+                        className="modal-overview-card"
                         style={{
-                          fontSize: '13px',
-                          color: theme.textSecondary,
-                          lineHeight: '19px',
-                          marginBottom: '12px',
+                          margin: '2px 0 12px 0',
+                          padding: '14px',
+                          borderRadius: '14px',
+                          backgroundColor: theme.bgSecondary || 'rgba(30, 41, 59, 0.45)',
+                          border: `1px solid ${theme.border}`,
+                          display: 'flex',
+                          flexDirection: 'column',
+                          gap: '10px',
                         }}
                       >
-                        {product.shortDesc}
-                      </p>
-                    )}
+                        {/* Description Text with 3-line clamp & expand toggle */}
+                        {displayDescription ? (
+                          <div>
+                            <div
+                              style={{
+                                fontSize: '13px',
+                                color: theme.textSecondary,
+                                lineHeight: '19px',
+                                whiteSpace: 'pre-line',
+                                display: isDescExpanded ? 'block' : '-webkit-box',
+                                WebkitLineClamp: isDescExpanded ? 'unset' : 3,
+                                WebkitBoxOrient: 'vertical',
+                                overflow: isDescExpanded ? 'visible' : 'hidden',
+                                textOverflow: 'ellipsis',
+                                transition: 'all 0.25s ease',
+                              }}
+                            >
+                              {displayDescription}
+                            </div>
+                            {(displayDescription.length > 120 || displayDescription.includes('\n')) && (
+                              <button
+                                type="button"
+                                onClick={() => setIsDescExpanded(!isDescExpanded)}
+                                style={{
+                                  marginTop: '4px',
+                                  padding: '0',
+                                  border: 'none',
+                                  background: 'none',
+                                  color: '#dc2626',
+                                  fontWeight: 800,
+                                  fontSize: '12px',
+                                  cursor: 'pointer',
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '3px',
+                                  transition: 'opacity 0.15s ease',
+                                }}
+                              >
+                                <span>{isDescExpanded ? 'Qısalt' : 'Davamını oxu...'}</span>
+                                {isDescExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                              </button>
+                            )}
+                          </div>
+                        ) : null}
+
+                      {/* Video Overview Preview Card (Displayed ONLY if video is attached) */}
+                      {overviewVideo && (
+                        <div
+                          onClick={() => {
+                            const vIdx = mediaItems.findIndex((m) => m.type === 'video');
+                            if (vIdx !== -1) setActiveMediaIndex(vIdx);
+                            setIsFullscreenImage(true);
+                          }}
+                          style={{
+                            position: 'relative',
+                            borderRadius: '10px',
+                            overflow: 'hidden',
+                            backgroundColor: '#0f172a',
+                            cursor: 'pointer',
+                            border: '1px solid rgba(255, 255, 255, 0.12)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '12px',
+                            padding: '8px 12px',
+                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                            transition: 'transform 0.2s ease',
+                          }}
+                        >
+                          <div
+                            style={{
+                              position: 'relative',
+                              width: '56px',
+                              height: '42px',
+                              borderRadius: '6px',
+                              overflow: 'hidden',
+                              backgroundColor: '#1e293b',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0,
+                            }}
+                          >
+                            {overviewVideo.poster ? (
+                              <img
+                                src={overviewVideo.poster}
+                                alt=""
+                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                              />
+                            ) : (
+                              <video
+                                src={overviewVideo.url}
+                                muted
+                                playsInline
+                                style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }}
+                              />
+                            )}
+                            <div
+                              style={{
+                                position: 'absolute',
+                                inset: 0,
+                                backgroundColor: 'rgba(0, 0, 0, 0.35)',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                              }}
+                            >
+                              <div
+                                style={{
+                                  width: '20px',
+                                  height: '20px',
+                                  borderRadius: '50%',
+                                  backgroundColor: '#dc2626',
+                                  color: '#ffffff',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  justifyContent: 'center',
+                                }}
+                              >
+                                <Play size={10} fill="#ffffff" color="#ffffff" style={{ marginLeft: '1px' }} />
+                              </div>
+                            </div>
+                          </div>
+
+                          <div style={{ flex: 1, minWidth: 0 }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '1px' }}>
+                              <span
+                                style={{
+                                  backgroundColor: 'rgba(220, 38, 38, 0.2)',
+                                  color: '#f87171',
+                                  fontSize: '9.5px',
+                                  fontWeight: 800,
+                                  padding: '1px 5px',
+                                  borderRadius: '3px',
+                                  textTransform: 'uppercase',
+                                }}
+                              >
+                                Video İcmal
+                              </span>
+                            </div>
+                            <div
+                              style={{
+                                fontSize: '12px',
+                                fontWeight: 700,
+                                color: '#ffffff',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis',
+                                whiteSpace: 'nowrap',
+                              }}
+                            >
+                              Video icmalı izləyin
+                            </div>
+                          </div>
+
+                          <div
+                            style={{
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '3px',
+                              color: '#38bdf8',
+                              fontSize: '11.5px',
+                              fontWeight: 800,
+                              flexShrink: 0,
+                            }}
+                          >
+                            <span>İzlə</span>
+                            <ChevronRight size={13} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
 
                     {product.price !== undefined && (
                       <div
@@ -947,7 +1153,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                           display: 'flex',
                           alignItems: 'baseline',
                           gap: '10px',
-                          marginBottom: '14px',
+                          marginBottom: '12px',
                         }}
                       >
                         <span style={{ fontSize: '24px', fontWeight: 900, color: theme.text }}>

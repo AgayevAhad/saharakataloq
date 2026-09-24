@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowRight,
   Sparkles,
+  ChevronLeft,
   ChevronRight,
 } from 'lucide-react';
 import { Brand, CatalogCategory, Product } from '../types/product';
@@ -477,6 +478,20 @@ export const VisualCategoryCards: React.FC<VisualCategoryCardsProps> = ({
     }, 100);
   };
 
+  const scrollManual = (direction: 'left' | 'right') => {
+    setIsTransitioning(true);
+    if (direction === 'left') {
+      setCurrentIndex((prev) => {
+        if (prev <= 0) {
+          return totalCategories > 0 ? totalCategories - 1 : 0;
+        }
+        return prev - 1;
+      });
+    } else {
+      setCurrentIndex((prev) => prev + 1);
+    }
+  };
+
   if (activePopulatedCategories.length === 0) return null;
 
   return (
@@ -544,93 +559,166 @@ export const VisualCategoryCards: React.FC<VisualCategoryCardsProps> = ({
         </span>
       </div>
 
-      {/* Master Outer Carousel with GPU Marquee, Hover Pause, Direct Drag & Touch Swiping */}
+      {/* Outer Carousel Container with Floating Navigation Arrows */}
       <div
-        className={`category-master-marquee-container ${isDragging ? 'is-dragging' : ''}`}
-        onMouseEnter={() => setIsHovered(true)}
-        onMouseLeave={() => setIsHovered(false)}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onPointerCancel={handlePointerUp}
+        className="category-carousel-outer-wrapper"
         style={{
-          width: '100%',
-          overflow: 'hidden',
           position: 'relative',
-          backgroundColor: 'transparent',
-          cursor: isDragging ? 'grabbing' : 'grab',
-          userSelect: 'none',
-          WebkitUserSelect: 'none',
-          touchAction: 'pan-y',
-          contain: 'layout paint',
+          width: '100vw',
+          overflow: 'hidden',
         }}
       >
-        <div
-          ref={trackRef}
-          className="category-master-marquee-track"
+        {/* Floating Left Arrow */}
+        <button
+          type="button"
+          onClick={() => scrollManual('left')}
+          aria-label="Əvvəlki kateqoriyalar"
+          className="category-carousel-floating-btn video-carousel-floating-btn video-carousel-floating-left"
           style={{
+            position: 'absolute',
+            left: 'max(16px, calc((100vw - 1340px) / 2 + 12px))',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            zIndex: 10,
+            width: '46px',
+            height: '46px',
+            borderRadius: '50%',
+            backgroundColor:
+              theme.mode === 'dark' ? 'rgba(15, 23, 42, 0.88)' : 'rgba(255, 255, 255, 0.94)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            border: `1px solid ${theme.border}`,
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.22)',
+            color: theme.mode === 'dark' ? '#f8fafc' : '#0f172a',
             display: 'flex',
-            flexDirection: 'row',
-            flexWrap: 'nowrap',
-            alignItems: 'stretch',
-            gap: '16px',
-            width: 'max-content',
-            transform: `translate3d(${-currentIndex * getUnitStep()}px, 0, 0)`,
-            transition:
-              isTransitioning && !isDragging
-                ? 'transform 1.05s cubic-bezier(0.22, 1, 0.36, 1)'
-                : 'none',
-            willChange: 'transform',
-            backgroundColor: 'transparent',
-            paddingLeft: 0,
-            paddingRight: 0,
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
           }}
         >
-          {/* Group 1: Original Category Units Side by Side */}
-          {activePopulatedCategories.map(({ category, products: catProds }) => (
-            <CategoryUnitCard
-              key={`cat-g1-${category.id}`}
-              category={category}
-              categoryProducts={catProds}
-              brandsById={brandsById}
-              theme={theme}
-              onSelectCategory={onSelectCategory}
-              onSelectProduct={onSelectProduct}
-              onAddToCart={onAddToCart}
-              onToggleFavorite={onToggleFavorite}
-              favoriteIdSet={favoriteIdSet}
-              comparisonIdSet={comparisonIdSet}
-              onToggleCompare={onToggleCompare}
-              onWhatsApp={onWhatsApp}
-              onCall={onCall}
-              isSelected={selectedCategory === category.id}
-              hasDraggedRef={hasDraggedRef}
-            />
-          ))}
+          <ChevronLeft size={24} />
+        </button>
 
-          {/* Group 2: Cloned Category Units for Seamless Infinite Loop */}
-          {activePopulatedCategories.map(({ category, products: catProds }) => (
-            <CategoryUnitCard
-              key={`cat-g2-${category.id}`}
-              category={category}
-              categoryProducts={catProds}
-              brandsById={brandsById}
-              theme={theme}
-              onSelectCategory={onSelectCategory}
-              onSelectProduct={onSelectProduct}
-              onAddToCart={onAddToCart}
-              onToggleFavorite={onToggleFavorite}
-              favoriteIdSet={favoriteIdSet}
-              comparisonIdSet={comparisonIdSet}
-              onToggleCompare={onToggleCompare}
-              onWhatsApp={onWhatsApp}
-              onCall={onCall}
-              isSelected={selectedCategory === category.id}
-              hasDraggedRef={hasDraggedRef}
-            />
-          ))}
+        {/* Floating Right Arrow */}
+        <button
+          type="button"
+          onClick={() => scrollManual('right')}
+          aria-label="Növbəti kateqoriyalar"
+          className="category-carousel-floating-btn video-carousel-floating-btn video-carousel-floating-right"
+          style={{
+            position: 'absolute',
+            right: 'max(16px, calc((100vw - 1340px) / 2 + 12px))',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            zIndex: 10,
+            width: '46px',
+            height: '46px',
+            borderRadius: '50%',
+            backgroundColor:
+              theme.mode === 'dark' ? 'rgba(15, 23, 42, 0.88)' : 'rgba(255, 255, 255, 0.94)',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            border: `1px solid ${theme.border}`,
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.22)',
+            color: theme.mode === 'dark' ? '#f8fafc' : '#0f172a',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+          }}
+        >
+          <ChevronRight size={24} />
+        </button>
+
+        {/* Master Outer Carousel with GPU Marquee, Hover Pause, Direct Drag & Touch Swiping */}
+        <div
+          className={`category-master-marquee-container ${isDragging ? 'is-dragging' : ''}`}
+          onMouseEnter={() => setIsHovered(true)}
+          onMouseLeave={() => setIsHovered(false)}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          style={{
+            width: '100%',
+            overflow: 'hidden',
+            position: 'relative',
+            backgroundColor: 'transparent',
+            cursor: isDragging ? 'grabbing' : 'grab',
+            userSelect: 'none',
+            WebkitUserSelect: 'none',
+            touchAction: 'pan-y',
+            contain: 'layout paint',
+          }}
+        >
+          <div
+            ref={trackRef}
+            className="category-master-marquee-track"
+            style={{
+              display: 'flex',
+              flexDirection: 'row',
+              flexWrap: 'nowrap',
+              alignItems: 'stretch',
+              gap: '16px',
+              width: 'max-content',
+              transform: `translate3d(${-currentIndex * getUnitStep()}px, 0, 0)`,
+              transition:
+                isTransitioning && !isDragging
+                  ? 'transform 1.05s cubic-bezier(0.22, 1, 0.36, 1)'
+                  : 'none',
+              willChange: 'transform',
+              backgroundColor: 'transparent',
+              paddingLeft: 0,
+              paddingRight: 0,
+            }}
+          >
+            {/* Group 1: Original Category Units Side by Side */}
+            {activePopulatedCategories.map(({ category, products: catProds }) => (
+              <CategoryUnitCard
+                key={`cat-g1-${category.id}`}
+                category={category}
+                categoryProducts={catProds}
+                brandsById={brandsById}
+                theme={theme}
+                onSelectCategory={onSelectCategory}
+                onSelectProduct={onSelectProduct}
+                onAddToCart={onAddToCart}
+                onToggleFavorite={onToggleFavorite}
+                favoriteIdSet={favoriteIdSet}
+                comparisonIdSet={comparisonIdSet}
+                onToggleCompare={onToggleCompare}
+                onWhatsApp={onWhatsApp}
+                onCall={onCall}
+                isSelected={selectedCategory === category.id}
+                hasDraggedRef={hasDraggedRef}
+              />
+            ))}
+
+            {/* Group 2: Cloned Category Units for Seamless Infinite Loop */}
+            {activePopulatedCategories.map(({ category, products: catProds }) => (
+              <CategoryUnitCard
+                key={`cat-g2-${category.id}`}
+                category={category}
+                categoryProducts={catProds}
+                brandsById={brandsById}
+                theme={theme}
+                onSelectCategory={onSelectCategory}
+                onSelectProduct={onSelectProduct}
+                onAddToCart={onAddToCart}
+                onToggleFavorite={onToggleFavorite}
+                favoriteIdSet={favoriteIdSet}
+                comparisonIdSet={comparisonIdSet}
+                onToggleCompare={onToggleCompare}
+                onWhatsApp={onWhatsApp}
+                onCall={onCall}
+                isSelected={selectedCategory === category.id}
+                hasDraggedRef={hasDraggedRef}
+              />
+            ))}
+          </div>
         </div>
       </div>
     </section>
   );
 };
+

@@ -139,16 +139,18 @@ export const BrandsPage: React.FC<BrandsPageProps> = ({ brands, products, theme,
                       )}
                     </div>
 
-                    <p
-                      style={{
-                        fontSize: '13px',
-                        color: theme.textMuted,
-                        margin: '0 0 10px 0',
-                        lineHeight: 1.5,
-                      }}
-                    >
-                      {brand.description || 'Brend haqqında əlavə təqdimat mətni daxil edilməyib.'}
-                    </p>
+                    {brand.description ? (
+                      <p
+                        style={{
+                          fontSize: '13px',
+                          color: theme.textMuted,
+                          margin: '0 0 10px 0',
+                          lineHeight: 1.5,
+                        }}
+                      >
+                        {brand.description}
+                      </p>
+                    ) : null}
 
                     <div
                       style={{

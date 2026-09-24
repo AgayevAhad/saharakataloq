@@ -6,7 +6,7 @@ import { App } from '../App';
 import { BrandCategoryFilter } from '../components/BrandCategoryFilter';
 import { Header } from '../components/Header';
 import { lightTheme } from '../types/theme';
-import { DEFAULT_BRANDS, DEFAULT_CATEGORIES } from '../data/catalog';
+import { DEFAULT_BRANDS, DEFAULT_CATEGORIES, DEFAULT_CATALOG } from '../data/catalog';
 import { Product } from '../types/product';
 
 import { catalogApi } from '../services/catalogApi';
@@ -178,5 +178,62 @@ describe('Brand-First Interactive Navigation & Contextual Filter Suite', () => {
 
     // Featured section and curated components are active
     expect(queryByText('Seçilmiş məhsullar')).toBeDefined();
+  });
+
+  it('Clicking a brand card in AnimatedBrandRail navigates to brand detail view', () => {
+    const handleNavigateBrand = vi.fn();
+    const mockRailData = {
+      enabled: true,
+      settings: null,
+      items: [
+        {
+          id: 'rail-ardo',
+          brandId: 'ardo',
+          brandName: 'ARDO',
+          brandSlug: 'ardo',
+          brandLogo: '/media/brands/ardo-logo.png',
+          enabled: true,
+          sortOrder: 1,
+          linkEnabled: true,
+          publishedProductCount: 5,
+          hasPublishedProducts: true,
+        },
+      ],
+    };
+
+    const { container } = render(
+      <App
+        initialRoute="/"
+        initialData={{
+          catalog: {
+            ...DEFAULT_CATALOG,
+            categories: DEFAULT_CATEGORIES,
+            products: [TEST_ARDO_PRODUCT],
+            brandRail: mockRailData,
+          },
+        }}
+      />
+    );
+
+    const brandCard = container.querySelector('.brand-rail-card[data-brand="ardo"]');
+    expect(brandCard).toBeTruthy();
+    if (brandCard) {
+      fireEvent.click(brandCard);
+    }
+
+    // Should navigate to brand detail page showing brand heading and back link
+    expect(container.querySelector('.brand-detail-page')).toBeTruthy();
+    expect(container.textContent).toContain('Brendlərə qayıt');
+
+    // Verify robotic placeholder text is NOT rendered
+    expect(container.textContent).not.toContain('Bu brend üçün təqdimat mətni əlavə edilməyib');
+    expect(container.textContent).not.toContain('Aşağıdakı məlumatlar aktiv kataloq qeydlərindən hesablanır');
+
+    // Verify category summary buttons contain SVG icons (CategoryGlyph)
+    const categorySummaryBtns = container.querySelectorAll('.brand-category-summary button');
+    expect(categorySummaryBtns.length).toBeGreaterThan(0);
+    categorySummaryBtns.forEach((btn) => {
+      expect(btn.querySelector('svg')).toBeTruthy();
+    });
   });
 });

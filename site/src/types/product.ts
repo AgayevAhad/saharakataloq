@@ -10,6 +10,7 @@ export interface Brand {
   logo?: string;
   active: boolean;
   comingSoon?: boolean;
+  sortOrder?: number;
 }
 
 export interface CatalogCategory {
@@ -64,6 +65,8 @@ export interface Product {
   gallery?: string[];
   isFeatured?: boolean;
   isNew?: boolean;
+  isBestSeller?: boolean;
+  isPopular?: boolean;
   badgeText?: string;
   badgeColor?: 'red' | 'green' | 'amber' | 'blue' | 'purple';
   price?: number;
