@@ -20,6 +20,8 @@ import {
   Play,
   ChevronDown,
   ChevronUp,
+  ShoppingCart,
+  Heart,
 } from 'lucide-react';
 import { Brand, Product } from '../types/product';
 import { ThemeColors } from '../types/theme';
@@ -29,6 +31,7 @@ import { useHorizontalScroll } from '../hooks/useHorizontalScroll';
 import { pushOverlay, popOverlay, isTopOverlay } from '../utils/backgroundIsolation';
 import { verifiedManufacturingCountry } from '../utils/manufacturingCountry';
 import { getVisibleBadgeText } from './productCardVisuals';
+import { animateProductToCart, animateProductToFavorites } from '../utils/cartFlight';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -40,6 +43,9 @@ interface ProductDetailModalProps {
   onWhatsApp: (product: Product) => void;
   onCall: (product: Product) => void;
   onCopyLink: (product: Product) => void;
+  onAddToCart?: (product: Product) => void;
+  onToggleFavorite?: (product: Product) => void;
+  isFavorite?: boolean;
   whatsappButtonText?: string;
   callButtonText?: string;
 }
@@ -55,6 +61,9 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
     onWhatsApp,
     onCall,
     onCopyLink,
+    onAddToCart,
+    onToggleFavorite,
+    isFavorite = false,
     whatsappButtonText = 'WhatsApp ilə məlumat al',
     callButtonText = 'Zəng et',
   }) => {
@@ -1212,73 +1221,138 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                       marginTop: 'auto',
                     }}
                   >
-                    <button
-                      onClick={() => onWhatsApp(product)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '8px',
-                        backgroundColor: 'rgba(34, 197, 94, 0.12)',
-                        color: '#16a34a',
-                        border: 'none',
-                        padding: '12px',
-                        borderRadius: '12px',
-                        fontSize: '14px',
-                        fontWeight: 800,
-                        cursor: 'pointer',
-                        boxShadow: 'none',
-                        transition: 'background-color 0.15s ease, transform 0.15s ease',
-                      }}
-                    >
-                      <WhatsAppIcon size={18} color="#16a34a" />
-                      <span>{whatsappButtonText}</span>
-                    </button>
+                    {/* Səbətə Əlavə Et */}
+                    {onAddToCart && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          animateProductToCart(e.currentTarget, product.image);
+                          onAddToCart(product);
+                        }}
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          backgroundColor: '#dc2626',
+                          color: '#ffffff',
+                          border: 'none',
+                          padding: '12px',
+                          borderRadius: '12px',
+                          fontSize: '14px',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          boxShadow: '0 4px 14px rgba(220, 38, 38, 0.35)',
+                          transition: 'background-color 0.15s ease, transform 0.15s ease',
+                        }}
+                      >
+                        <ShoppingCart size={18} color="#ffffff" />
+                        <span>Səbətə əlavə et</span>
+                      </button>
+                    )}
 
-                    <button
-                      onClick={() => onCall(product)}
-                      className="modal-call-button"
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '8px',
-                        backgroundColor: 'rgba(220, 38, 38, 0.10)',
-                        color: '#dc2626',
-                        border: 'none',
-                        padding: '12px',
-                        borderRadius: '12px',
-                        fontSize: '14px',
-                        fontWeight: 800,
-                        cursor: 'pointer',
-                        boxShadow: 'none',
-                        transition: 'background-color 0.15s ease, transform 0.15s ease',
-                      }}
-                    >
-                      <Phone size={17} color="#dc2626" />
-                      <span>{callButtonText}</span>
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <button
+                        onClick={() => onWhatsApp(product)}
+                        style={{
+                          flex: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          backgroundColor: 'rgba(34, 197, 94, 0.12)',
+                          color: '#16a34a',
+                          border: 'none',
+                          padding: '12px',
+                          borderRadius: '12px',
+                          fontSize: '13.5px',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          boxShadow: 'none',
+                          transition: 'background-color 0.15s ease, transform 0.15s ease',
+                        }}
+                      >
+                        <WhatsAppIcon size={18} color="#16a34a" />
+                        <span>{whatsappButtonText}</span>
+                      </button>
 
-                    <button
-                      onClick={() => onCopyLink(product)}
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        gap: '6px',
-                        backgroundColor: theme.bgSecondary,
-                        border: `1px solid ${theme.border}`,
-                        color: theme.mode === 'dark' ? '#f87171' : '#b91c1c',
-                        padding: '10px',
-                        borderRadius: '12px',
-                        fontSize: '12px',
-                        fontWeight: 700,
-                        cursor: 'pointer',
-                      }}
-                    >
-                      <Copy size={14} />
-                      <span>Məhsul linki kopyala</span>
-                    </button>
+                      <button
+                        onClick={() => onCall(product)}
+                        className="modal-call-button"
+                        style={{
+                          flex: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '8px',
+                          backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                          color: '#dc2626',
+                          border: 'none',
+                          padding: '12px',
+                          borderRadius: '12px',
+                          fontSize: '13.5px',
+                          fontWeight: 800,
+                          cursor: 'pointer',
+                          boxShadow: 'none',
+                          transition: 'background-color 0.15s ease, transform 0.15s ease',
+                        }}
+                      >
+                        <Phone size={17} color="#dc2626" />
+                        <span>{callButtonText}</span>
+                      </button>
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      {onToggleFavorite && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            if (!isFavorite) animateProductToFavorites(e.currentTarget, product.image);
+                            onToggleFavorite(product);
+                          }}
+                          style={{
+                            flex: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px',
+                            backgroundColor: isFavorite ? 'rgba(239, 68, 68, 0.12)' : theme.bgSecondary,
+                            border: `1px solid ${isFavorite ? '#ef4444' : theme.border}`,
+                            color: isFavorite ? '#dc2626' : theme.text,
+                            padding: '10px',
+                            borderRadius: '12px',
+                            fontSize: '12.5px',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <Heart size={15} fill={isFavorite ? '#dc2626' : 'none'} color={isFavorite ? '#dc2626' : 'currentColor'} />
+                          <span>{isFavorite ? 'Seçilmişlərdən çıxart' : 'Seçilmişlərə əlavə et'}</span>
+                        </button>
+                      )}
+
+                      <button
+                        onClick={() => onCopyLink(product)}
+                        style={{
+                          flex: 1,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '6px',
+                          backgroundColor: theme.bgSecondary,
+                          border: `1px solid ${theme.border}`,
+                          color: theme.mode === 'dark' ? '#f87171' : '#b91c1c',
+                          padding: '10px',
+                          borderRadius: '12px',
+                          fontSize: '12px',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                        }}
+                      >
+                        <Copy size={14} />
+                        <span>Məhsul linki kopyala</span>
+                      </button>
+                    </div>
                   </div>
                 </div>
               </div>

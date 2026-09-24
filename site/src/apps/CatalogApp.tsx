@@ -20,14 +20,22 @@ import { Toast } from '../components/Toast';
 import { Drawer } from '../components/ui/Drawer';
 import { Footer } from '../components/Footer';
 import { ProductGridSkeleton } from '../components/Skeletons';
+import type { CartItem } from '../pages/CartPage';
 import {
   useTheme,
   useToast,
   useCatalog,
   useContact,
+  useFavorites,
 } from '../hooks';
 
-// Lazy Loaded Modals
+// Lazy Loaded Pages & Modals
+const CartPage = lazy(() =>
+  import('../pages/CartPage').then((m) => ({ default: m.CartPage }))
+);
+const FavoritesPage = lazy(() =>
+  import('../pages/FavoritesPage').then((m) => ({ default: m.FavoritesPage }))
+);
 const ProductDetailModal = lazy(() =>
   import('../components/ProductDetailModal').then((m) => ({ default: m.ProductDetailModal }))
 );
@@ -66,9 +74,106 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [shareTargetProduct, setShareTargetProduct] = useState<Product | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+  const [activeView, setActiveView] = useState<'catalog' | 'cart' | 'favorites'>('catalog');
+  const [cartItems, setCartItems] = useState<CartItem[]>(() => {
+    if (typeof window === 'undefined') return [];
+    try {
+      const saved = localStorage.getItem('sahara_cart_items');
+      return saved ? JSON.parse(saved) : [];
+    } catch {
+      return [];
+    }
+  });
 
   // Toast Hook
   const { toast, showToast } = useToast();
+
+  // Favorites Hook
+  const { favoriteIds, toggleFavorite, clearFavorites } = useFavorites({ showToast });
+
+  // Cart Handlers
+  const addToCart = useCallback(
+    (product: Product, qty: number = 1) => {
+      setCartItems((prev) => {
+        const existingIdx = prev.findIndex((item) => item.product.id === product.id);
+        let next: CartItem[];
+        if (existingIdx >= 0) {
+          next = prev.map((item, idx) =>
+            idx === existingIdx ? { ...item, quantity: item.quantity + qty } : item
+          );
+        } else {
+          next = [...prev, { product, quantity: qty }];
+        }
+        try {
+          localStorage.setItem('sahara_cart_items', JSON.stringify(next));
+        } catch {}
+        return next;
+      });
+      showToast(`${product.title} səbətə əlavə edildi!`);
+    },
+    [showToast]
+  );
+
+  const addAllToCart = useCallback(
+    (products: Product[]) => {
+      setCartItems((prev) => {
+        let next = [...prev];
+        for (const product of products) {
+          const existingIdx = next.findIndex((item) => item.product.id === product.id);
+          if (existingIdx >= 0) {
+            next = next.map((item, idx) =>
+              idx === existingIdx ? { ...item, quantity: item.quantity + 1 } : item
+            );
+          } else {
+            next.push({ product, quantity: 1 });
+          }
+        }
+        try {
+          localStorage.setItem('sahara_cart_items', JSON.stringify(next));
+        } catch {}
+        return next;
+      });
+      showToast(`${products.length} məhsul səbətə əlavə edildi!`);
+    },
+    [showToast]
+  );
+
+  const updateCartQuantity = useCallback((productId: string, quantity: number) => {
+    setCartItems((prev) => {
+      let next: CartItem[];
+      if (quantity <= 0) {
+        next = prev.filter((item) => item.product.id !== productId);
+      } else {
+        next = prev.map((item) => (item.product.id === productId ? { ...item, quantity } : item));
+      }
+      try {
+        localStorage.setItem('sahara_cart_items', JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  }, []);
+
+  const removeItemFromCart = useCallback(
+    (productId: string) => {
+      setCartItems((prev) => {
+        const next = prev.filter((item) => item.product.id !== productId);
+        try {
+          localStorage.setItem('sahara_cart_items', JSON.stringify(next));
+        } catch {}
+        return next;
+      });
+      showToast('Məhsul səbətdən silindi.');
+    },
+    [showToast]
+  );
+
+  const clearCart = useCallback(() => {
+    setCartItems([]);
+    try {
+      localStorage.removeItem('sahara_cart_items');
+    } catch {}
+    showToast('Səbət təmizləndi.');
+  }, [showToast]);
 
   // Catalog Deep Link Callback
   const parseDeepLink = useCallback((items: Product[]) => {
@@ -377,22 +482,38 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
         searchQuery={searchQuery}
         filteredCount={filteredProducts.length}
         totalCount={catalog.products.length}
+        favoritesCount={favoriteIds.length}
+        cartCount={cartItems.reduce((acc, i) => acc + i.quantity, 0)}
+        onOpenFavorites={() => {
+          setActiveView('favorites');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+        onOpenCart={() => {
+          setActiveView('cart');
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        }}
+        currentView={activeView}
         theme={activeTheme}
         isDarkMode={themeMode === 'dark'}
         onToggleTheme={toggleTheme}
         onSelectCategory={(catId) => {
+          setActiveView('catalog');
           setSelectedCategory(catId);
           setTimeout(() => {
             document.querySelector('.catalog-section')?.scrollIntoView({ behavior: 'smooth' });
           }, 50);
         }}
         onSelectBrand={(brandId) => {
+          setActiveView('catalog');
           setSelectedBrand(brandId);
           setTimeout(() => {
             document.querySelector('.catalog-section')?.scrollIntoView({ behavior: 'smooth' });
           }, 50);
         }}
-        onSearchChange={setSearchQuery}
+        onSearchChange={(query) => {
+          if (activeView !== 'catalog') setActiveView('catalog');
+          setSearchQuery(query);
+        }}
         onOpenInverterInfo={() => {
           setSelectedArticleId(null);
           setIsInverterModalOpen(true);
@@ -409,6 +530,79 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
           <div className="catalog-loading-skeleton-wrap">
             <ProductGridSkeleton theme={activeTheme} count={8} />
           </div>
+        ) : activeView === 'cart' ? (
+          <Suspense
+            fallback={
+              <div style={{ padding: '60px 24px', maxWidth: '1440px', margin: '0 auto' }}>
+                <ProductGridSkeleton theme={activeTheme} count={4} />
+              </div>
+            }
+          >
+            <CartPage
+              cartItems={cartItems}
+              allProducts={catalog.products}
+              settings={catalog.settings}
+              theme={activeTheme}
+              themeMode={themeMode}
+              onUpdateQuantity={updateCartQuantity}
+              onRemoveItem={removeItemFromCart}
+              onClearCart={clearCart}
+              onNavigate={(route) => {
+                if (route === 'favorites') {
+                  setActiveView('favorites');
+                } else {
+                  setActiveView('catalog');
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              onSelectProduct={selectProduct}
+              onWhatsAppCheckout={(items, totalAmount) => {
+                const lines = items.map(
+                  (item, idx) =>
+                    `${idx + 1}. ${item.product.title} (${item.product.modelCode || item.product.code}) x ${item.quantity} ədəd — ${((item.product.price || 0) * item.quantity).toLocaleString('az-AZ')} ₼`
+                );
+                const text = `Salam, Sahara Electronics topdansatış kataloqundan sifariş vermək istəyirəm:\n\n${lines.join('\n')}\n\nCəmi Məbləğ: ${totalAmount.toLocaleString('az-AZ')} ₼\n\nZəhmət olmasa sifarişi qəbul edib çatdırılma və ödəmə şərtlərini dəqiqləşdirərdiniz.`;
+                const phone = catalog.settings?.whatsappNumber || '994502047700';
+                const url = `https://wa.me/${phone.replace(/[^0-9]/g, '')}?text=${encodeURIComponent(text)}`;
+                window.open(url, '_blank', 'noopener,noreferrer');
+              }}
+              onCall={() => openCall()}
+            />
+          </Suspense>
+        ) : activeView === 'favorites' ? (
+          <Suspense
+            fallback={
+              <div style={{ padding: '60px 24px', maxWidth: '1440px', margin: '0 auto' }}>
+                <ProductGridSkeleton theme={activeTheme} count={4} />
+              </div>
+            }
+          >
+            <FavoritesPage
+              favoriteIds={favoriteIds}
+              allProducts={catalog.products}
+              categories={catalog.categories}
+              settings={catalog.settings}
+              theme={activeTheme}
+              themeMode={themeMode}
+              onToggleFavorite={toggleFavorite}
+              onClearFavorites={clearFavorites}
+              onAddToCart={addToCart}
+              onAddAllToCart={addAllToCart}
+              onSelectProduct={selectProduct}
+              onWhatsApp={openWhatsApp}
+              onCall={() => openCall()}
+              onShare={openShare}
+              onCopyLink={copyLink}
+              onNavigate={(route) => {
+                if (route === 'cart') {
+                  setActiveView('cart');
+                } else {
+                  setActiveView('catalog');
+                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+            />
+          </Suspense>
         ) : (
           <div className="catalog-loaded-wrap">
             <BrandShowcase
@@ -690,6 +884,9 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                               onWhatsApp={openWhatsApp}
                               onCall={openCall}
                               onCopyLink={copyLink}
+                              onAddToCart={addToCart}
+                              onToggleFavorite={toggleFavorite}
+                              isFavorite={favoriteIds.includes(p.id)}
                               whatsappButtonText={catalog.settings?.whatsappButtonText}
                               callButtonText={catalog.settings?.callButtonText}
                             />
@@ -872,6 +1069,9 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
           onWhatsApp={openWhatsApp}
           onCall={openCall}
           onCopyLink={copyLink}
+          onAddToCart={addToCart}
+          onToggleFavorite={toggleFavorite}
+          isFavorite={selectedProduct ? favoriteIds.includes(selectedProduct.id) : false}
         />
         <InverterInfoModal
           theme={activeTheme}

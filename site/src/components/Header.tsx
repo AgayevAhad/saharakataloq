@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Info, Moon, Search, Share2, Sun, X, MapPin } from 'lucide-react';
+import { Info, Moon, Search, Share2, Sun, X, MapPin, Heart, ShoppingCart } from 'lucide-react';
 import {
   Brand,
   CatalogCategory,
@@ -35,6 +35,11 @@ interface HeaderProps {
   onOpenDrawer?: () => void;
   totalCount: number;
   filteredCount: number;
+  favoritesCount?: number;
+  cartCount?: number;
+  onOpenFavorites?: () => void;
+  onOpenCart?: () => void;
+  currentView?: 'catalog' | 'cart' | 'favorites';
 }
 
 const pillStyle = (theme: ThemeColors) =>
@@ -65,6 +70,11 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenDrawer,
   totalCount,
   filteredCount,
+  favoritesCount = 0,
+  cartCount = 0,
+  onOpenFavorites,
+  onOpenCart,
+  currentView = 'catalog',
 }) => {
   const [searchFocused, setSearchFocused] = useState(false);
 
@@ -164,6 +174,98 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* Sağ İdarəetmə Paneli (Böyüdülmüş İkonlar və Düymələr) */}
           <div className="header-actions">
+            {/* Seçilmişlər / Favorites ❤️ */}
+            {onOpenFavorites && (
+              <button
+                type="button"
+                className="icon-action favorite-header-btn"
+                data-favorite-target
+                onClick={onOpenFavorites}
+                style={{
+                  position: 'relative',
+                  color: currentView === 'favorites' || favoritesCount > 0 ? '#ef4444' : theme.text,
+                  borderColor: currentView === 'favorites' ? '#ef4444' : theme.border,
+                  background: currentView === 'favorites' ? (isDarkMode ? 'rgba(239,68,68,0.15)' : 'rgba(239,68,68,0.08)') : theme.bgSecondary,
+                }}
+                title={favoritesCount > 0 ? `Seçilmişlər (${favoritesCount})` : 'Seçilmişlər'}
+                aria-label={favoritesCount > 0 ? `Seçilmişlər (${favoritesCount})` : 'Seçilmişlər'}
+              >
+                <Heart
+                  size={20}
+                  fill={favoritesCount > 0 || currentView === 'favorites' ? '#ef4444' : 'none'}
+                  color={favoritesCount > 0 || currentView === 'favorites' ? '#ef4444' : 'currentColor'}
+                />
+                {favoritesCount > 0 && (
+                  <span
+                    className="header-badge header-favorite-badge"
+                    style={{
+                      position: 'absolute',
+                      top: '-4px',
+                      right: '-4px',
+                      backgroundColor: '#ef4444',
+                      color: '#ffffff',
+                      fontSize: '10px',
+                      fontWeight: 800,
+                      minWidth: '18px',
+                      height: '18px',
+                      borderRadius: '9px',
+                      padding: '0 4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 2px 6px rgba(239, 68, 68, 0.4)',
+                    }}
+                  >
+                    {favoritesCount}
+                  </span>
+                )}
+              </button>
+            )}
+
+            {/* Səbət / Cart 🛒 */}
+            {onOpenCart && (
+              <button
+                type="button"
+                className="icon-action cart-header-btn"
+                data-cart-target
+                onClick={onOpenCart}
+                style={{
+                  position: 'relative',
+                  color: currentView === 'cart' || cartCount > 0 ? '#dc2626' : theme.text,
+                  borderColor: currentView === 'cart' ? '#dc2626' : theme.border,
+                  background: currentView === 'cart' ? (isDarkMode ? 'rgba(220,38,38,0.15)' : 'rgba(220,38,38,0.08)') : theme.bgSecondary,
+                }}
+                title={cartCount > 0 ? `Səbət (${cartCount})` : 'Səbət'}
+                aria-label={cartCount > 0 ? `Səbət (${cartCount})` : 'Səbət'}
+              >
+                <ShoppingCart size={20} color={currentView === 'cart' || cartCount > 0 ? '#dc2626' : 'currentColor'} />
+                {cartCount > 0 && (
+                  <span
+                    className="header-badge header-cart-badge"
+                    style={{
+                      position: 'absolute',
+                      top: '-4px',
+                      right: '-4px',
+                      backgroundColor: '#dc2626',
+                      color: '#ffffff',
+                      fontSize: '10px',
+                      fontWeight: 800,
+                      minWidth: '18px',
+                      height: '18px',
+                      borderRadius: '9px',
+                      padding: '0 4px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      boxShadow: '0 2px 6px rgba(220, 38, 38, 0.4)',
+                    }}
+                  >
+                    {cartCount}
+                  </span>
+                )}
+              </button>
+            )}
+
             {settings?.instagramUrl && (
               <SocialPopoverButton
                 platform="instagram"
