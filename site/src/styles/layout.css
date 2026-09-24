@@ -73,13 +73,21 @@ select {
   -webkit-transform: translateZ(0);
   transform: translateZ(0);
 }
-.catalog-controls-bar {
+.catalog-header {
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 100 !important;
   width: 100%;
-  max-width: 100%;
+  transition: all 0.2s ease;
+}
+.catalog-header-inner {
+  max-width: 1480px;
+  margin: 0 auto;
+  padding: 12px clamp(16px, 2.5vw, 32px) 8px;
   box-sizing: border-box;
-  padding: 10px clamp(14px, 3vw, 32px) 6px;
-  position: relative;
-  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
 }
 .header-top-row,
 .header-actions,
@@ -91,21 +99,21 @@ select {
 }
 .header-top-row {
   justify-content: space-between;
-  gap: 16px;
-  max-width: 1480px;
-  margin: auto;
+  gap: 20px;
+  width: 100%;
 }
 .brand-lockup {
-  gap: 10px;
+  gap: 12px;
   text-decoration: none;
   min-width: 0;
+  flex-shrink: 0;
 }
 .sahara-logo-surface {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   background: transparent;
-  border-radius: 9px;
+  border-radius: 10px;
   flex: 0 0 auto;
   overflow: hidden;
   max-width: 100%;
@@ -114,7 +122,7 @@ select {
     filter 0.3s ease;
 }
 .sahara-logo-surface:hover {
-  transform: scale(1.05);
+  transform: scale(1.04);
   z-index: 100;
   filter: drop-shadow(0 6px 16px rgba(0, 0, 0, 0.25));
 }
@@ -125,59 +133,67 @@ select {
   object-fit: contain;
 }
 .header-sahara-logo {
-  width: 195px;
-  height: 52px;
+  width: clamp(210px, 18vw, 255px);
+  height: clamp(54px, 4.5vw, 66px);
   padding: 2px 6px;
 }
 .sahara-logo-surface.compact {
-  width: 155px;
-  height: 56px;
+  width: 165px;
+  height: 58px;
   padding: 3px 6px;
 }
 .brand-caption {
-  font-size: 10px;
+  font-size: 11px;
+  font-weight: 600;
   white-space: nowrap;
 }
 .header-actions {
-  gap: 8px;
+  gap: 10px;
+  flex-shrink: 0;
 }
 .icon-action,
 .share-action {
-  min-height: 38px;
-  border-radius: 9px;
+  min-height: 42px;
+  border-radius: 12px;
   cursor: pointer;
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  transition: all 0.2s ease;
 }
 .icon-action {
-  width: 38px;
+  width: 42px;
   border: 1px solid;
+}
+.icon-action:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 .share-action {
-  gap: 6px;
+  gap: 8px;
   color: white;
   border: 0;
-  padding: 0 13px;
+  padding: 0 18px;
   font-weight: 750;
-  font-size: 12px;
+  font-size: 13px;
 }
-.catalog-controls {
-  max-width: 1480px;
-  width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-  margin: 0 auto;
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 8px;
+.share-action:hover {
+  opacity: 0.94;
+  transform: translateY(-1px);
 }
 .catalog-search {
-  min-height: 40px;
+  flex: 1;
+  max-width: 580px;
+  min-height: 44px;
   border: 1px solid;
-  border-radius: 10px;
-  padding: 0 10px;
-  gap: 8px;
+  border-radius: 12px;
+  padding: 0 12px;
+  gap: 10px;
+  position: relative;
+  transition: all 0.2s ease;
+}
+.catalog-search.is-focused {
+  box-shadow: 0 0 0 3px rgba(227, 30, 36, 0.15);
 }
 .catalog-search input {
   border: 0;
@@ -185,23 +201,28 @@ select {
   background: transparent;
   flex: 1;
   min-width: 80px;
-  font-size: 13px;
+  font-size: 13.5px;
+  font-weight: 500;
 }
-.catalog-search button {
+.catalog-search .search-clear-btn {
   border: 0;
   background: transparent;
   color: inherit;
   padding: 4px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 .result-count {
   border-left: 1px solid rgba(127, 127, 127, 0.24);
   padding-left: 10px;
-  font-size: 11px;
+  font-size: 11.5px;
+  font-weight: 600;
   white-space: nowrap;
 }
 .filter-row {
-  gap: 7px;
+  gap: 8px;
   overflow-x: auto;
   overflow-y: hidden;
   overscroll-behavior-x: contain;
@@ -210,7 +231,7 @@ select {
   max-width: 100%;
   width: 100%;
   box-sizing: border-box;
-  padding: 1px 0;
+  padding: 6px 0 2px;
   -webkit-overflow-scrolling: touch;
 }
 .filter-pill {
@@ -222,15 +243,37 @@ select {
   background: var(--pill-bg);
   color: var(--pill-text);
   border-radius: 999px;
-  padding: 7px 13px;
-  font-size: 11px;
+  padding: 8px 15px;
+  font-size: 12px;
   font-weight: 650;
   cursor: pointer;
+  transition: all 0.2s ease;
+}
+.filter-pill:hover {
+  transform: translateY(-1px);
 }
 .filter-pill.active {
   color: white;
   background: var(--pill-color);
   border-color: var(--pill-color);
+  box-shadow: 0 4px 12px rgba(220, 38, 38, 0.25);
+}
+
+@media (max-width: 960px) {
+  .header-top-row {
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .header-top-row .catalog-search {
+    order: 3;
+    width: 100%;
+    max-width: 100%;
+    margin: 4px 0 0 0;
+  }
+  .header-sahara-logo {
+    width: 190px;
+    height: 52px;
+  }
 }
 .catalog-main {
   max-width: 1760px;

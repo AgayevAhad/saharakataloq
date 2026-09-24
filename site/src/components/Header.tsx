@@ -81,26 +81,88 @@ export const Header: React.FC<HeaderProps> = ({
   const isQueryActive = searchQuery.trim().length > 0;
 
   return (
-    <div className="catalog-header-wrapper">
-      {/* 1. YALNIZ Yuxarı sətir (Logo, sosial ikonlar, paylaş və tema dəyişdirici) ekranda STICKY qalır */}
-      <header
-        className="catalog-header"
-        style={{
-          position: 'sticky',
-          top: 0,
-          zIndex: DESIGN_TOKENS.zIndex.sticky,
-          backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.96)' : 'rgba(255, 255, 255, 0.96)',
-          borderColor: theme.border,
-        }}
-      >
+    <header
+      className="catalog-header"
+      style={{
+        position: 'sticky',
+        top: 0,
+        zIndex: DESIGN_TOKENS.zIndex.sticky,
+        backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.96)' : 'rgba(255, 255, 255, 0.97)',
+        backdropFilter: 'blur(20px)',
+        WebkitBackdropFilter: 'blur(20px)',
+        borderBottom: `1px solid ${theme.border}`,
+        boxShadow: isDarkMode ? '0 4px 24px rgba(0, 0, 0, 0.45)' : '0 4px 20px rgba(0, 0, 0, 0.06)',
+      }}
+    >
+      <div className="catalog-header-inner">
+        {/* 1. Yuxarı Sətir: Böyüdülmüş Sol Logo - Mərkəzdə Axtarış - Sağda İkonlar */}
         <div className="header-top-row">
           <a href="/" className="brand-lockup" aria-label="Sahara Electronics kataloqu">
             <SaharaLogo className="header-sahara-logo" isDark={isDarkMode} />
-            <span className="brand-caption" style={{ color: theme.textMuted }}>
-              {settings?.headerCaption || 'Məhsul kataloqu'}
-            </span>
+            {settings?.headerCaption && (
+              <span className="brand-caption" style={{ color: theme.textMuted }}>
+                {settings.headerCaption}
+              </span>
+            )}
           </a>
 
+          {/* Mərkəzi Geniş Axtarış */}
+          <div
+            className={`catalog-search ${searchFocused ? 'is-focused' : ''} ${searchQuery ? 'has-query' : ''}`}
+            style={{
+              background: theme.bgSecondary,
+              borderColor: theme.border,
+            }}
+            onFocus={() => setSearchFocused(true)}
+          >
+            <Search
+              className="catalog-search-icon"
+              size={18}
+              color={isQueryActive ? theme.primary : theme.textMuted}
+              style={{ transition: 'color 0.2s ease', flexShrink: 0 }}
+            />
+            <input
+              aria-label="Məhsul axtarışı"
+              value={searchQuery}
+              onChange={(event) => onSearchChange(event.target.value)}
+              placeholder="Məhsul, model, brend və ya xüsusiyyət axtar..."
+              style={{ color: theme.text }}
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                aria-label="Axtarışı təmizlə"
+                onClick={() => onSearchChange('')}
+                className="search-clear-btn"
+              >
+                <X size={16} />
+              </button>
+            )}
+            <span className="result-count" style={{ color: theme.textMuted, borderColor: theme.border }}>
+              <b style={{ color: theme.primary }}>{filteredCount}</b>/{totalCount}
+            </span>
+
+            {/* Smart Search Overlay */}
+            <SmartSearchOverlay
+              visible={searchFocused}
+              searchQuery={searchQuery}
+              onSearchChange={(query) => {
+                onSearchChange(query);
+                setSearchFocused(false);
+              }}
+              onClose={() => setSearchFocused(false)}
+              products={products}
+              categories={categories}
+              brands={brands}
+              theme={theme}
+              isDarkMode={isDarkMode}
+              onSelectCategory={onSelectCategory}
+              onSelectBrand={onSelectBrand}
+              onSelectProduct={onSelectProduct}
+            />
+          </div>
+
+          {/* Sağ İdarəetmə Paneli (Böyüdülmüş İkonlar və Düymələr) */}
           <div className="header-actions">
             {settings?.instagramUrl && (
               <SocialPopoverButton
@@ -130,7 +192,7 @@ export const Header: React.FC<HeaderProps> = ({
               }}
               title="Texnologiyalar və bələdçi haqqında"
             >
-              <Info size={17} />
+              <Info size={20} />
             </button>
             {onOpenDrawer && (
               <button
@@ -145,7 +207,7 @@ export const Header: React.FC<HeaderProps> = ({
                 title="Sərgi salonları və ünvanlar"
                 aria-label="Sərgi salonları və ünvanlar"
               >
-                <MapPin size={17} />
+                <MapPin size={20} />
               </button>
             )}
             <button
@@ -153,7 +215,7 @@ export const Header: React.FC<HeaderProps> = ({
               onClick={onOpenCatalogShare}
               style={{ background: theme.primary }}
             >
-              <Share2 size={16} />
+              <Share2 size={17} />
               <span>{settings?.shareButtonText || 'Paylaş'}</span>
             </button>
             <button
@@ -166,106 +228,48 @@ export const Header: React.FC<HeaderProps> = ({
               }}
               title="Görünüşü dəyiş"
             >
-              {isDarkMode ? <Sun size={17} /> : <Moon size={17} />}
+              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
             </button>
           </div>
         </div>
-      </header>
 
-      {/* 2. Axtarış və kateqoriya filtrləri səhifə axınında yerləşir (sürüşdürəndə yuxarı hərəkət edir) */}
-      <div className="catalog-controls-bar" style={{ backgroundColor: theme.bg }}>
-        <div className="catalog-controls">
-          <div
-            className={`catalog-search ${searchFocused ? 'is-focused' : ''} ${searchQuery ? 'has-query' : ''}`}
-            style={{ background: theme.bgSecondary, borderColor: theme.border }}
-            onFocus={() => setSearchFocused(true)}
+        {/* 2. Alt Sətir: Panel daxilində yerləşən Kateqoriya Seçimləri */}
+        <div
+          ref={filterRowRef}
+          {...dragProps}
+          className="filter-row category-filter-row no-scrollbar"
+          aria-label="Kateqoriya filtri"
+          style={{ cursor: 'grab' }}
+        >
+          <button
+            className={selectedCategory === 'all' ? 'filter-pill active' : 'filter-pill'}
+            onClick={(e) => {
+              if (hasMoved()) return;
+              scrollItemIntoView(e);
+              onSelectCategory('all');
+            }}
+            style={pillStyle(theme)}
           >
-            <Search
-              className="catalog-search-icon"
-              size={16}
-              color={isQueryActive ? theme.primary : theme.textMuted}
-              style={{ transition: 'color 0.2s ease' }}
-            />
-            <input
-              aria-label="Məhsul axtarışı"
-              value={searchQuery}
-              onChange={(event) => onSearchChange(event.target.value)}
-              placeholder="Məhsul, model, brend və ya xüsusiyyət axtar..."
-              style={{ color: theme.text }}
-            />
-            {searchQuery && (
-              <>
-                <span className="search-spinner" aria-hidden="true" />
-                <button
-                  type="button"
-                  aria-label="Axtarışı təmizlə"
-                  onClick={() => onSearchChange('')}
-                >
-                  <X size={15} />
-                </button>
-              </>
-            )}
-            <span className="result-count" style={{ color: theme.textMuted }}>
-              <b style={{ color: theme.primary }}>{filteredCount}</b>/{totalCount}
-            </span>
-
-            {/* Axtarıs.png dizaynına uyğun ağıllı axtarış pəncərəsi */}
-            <SmartSearchOverlay
-              visible={searchFocused}
-              searchQuery={searchQuery}
-              onSearchChange={(query) => {
-                onSearchChange(query);
-                setSearchFocused(false);
-              }}
-              onClose={() => setSearchFocused(false)}
-              products={products}
-              categories={categories}
-              brands={brands}
-              theme={theme}
-              isDarkMode={isDarkMode}
-              onSelectCategory={onSelectCategory}
-              onSelectBrand={onSelectBrand}
-              onSelectProduct={onSelectProduct}
-            />
-          </div>
-
-          <div
-            ref={filterRowRef}
-            {...dragProps}
-            className="filter-row category-filter-row no-scrollbar"
-            aria-label="Kateqoriya filtri"
-            style={{ cursor: 'grab' }}
-          >
+            <CategoryGlyph id="all" compact plain />
+            <span>Bütün məhsullar</span>
+          </button>
+          {categories.map((category) => (
             <button
-              className={selectedCategory === 'all' ? 'filter-pill active' : 'filter-pill'}
+              key={category.id}
+              className={selectedCategory === category.id ? 'filter-pill active' : 'filter-pill'}
               onClick={(e) => {
                 if (hasMoved()) return;
                 scrollItemIntoView(e);
-                onSelectCategory('all');
+                onSelectCategory(category.id);
               }}
               style={pillStyle(theme)}
             >
-              <CategoryGlyph id="all" compact plain />
-              <span>Bütün məhsullar</span>
+              <CategoryGlyph id={category.id} slug={category.slug || category.id} compact plain />
+              <span>{category.name}</span>
             </button>
-            {categories.map((category) => (
-              <button
-                key={category.id}
-                className={selectedCategory === category.id ? 'filter-pill active' : 'filter-pill'}
-                onClick={(e) => {
-                  if (hasMoved()) return;
-                  scrollItemIntoView(e);
-                  onSelectCategory(category.id);
-                }}
-                style={pillStyle(theme)}
-              >
-                <CategoryGlyph id={category.id} slug={category.slug || category.id} compact plain />
-                <span>{category.name}</span>
-              </button>
-            ))}
-          </div>
+          ))}
         </div>
       </div>
-    </div>
+    </header>
   );
 };
