@@ -619,8 +619,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                 <button
                   onClick={handlePrint}
                   style={{
-                    background: theme.bgCard,
-                    border: `1px solid ${theme.border}`,
+                    background: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+                    border: 'none',
                     padding: '6px 8px',
                     borderRadius: '8px',
                     cursor: 'pointer',
@@ -628,6 +628,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    boxShadow: 'none',
                   }}
                   title="Çap et / PDF Saxla"
                 >
@@ -639,8 +640,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                   className="modal-share-btn"
                   onClick={() => onShare(product)}
                   style={{
-                    background: theme.bgCard,
-                    border: `1px solid ${theme.border}`,
+                    background: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+                    border: 'none',
                     padding: '6px 8px',
                     borderRadius: '8px',
                     cursor: 'pointer',
@@ -648,6 +649,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    boxShadow: 'none',
                   }}
                   title="Paylaş"
                   aria-label="Paylaş"
@@ -1474,40 +1476,181 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
               position: 'fixed',
               inset: 0,
               zIndex: 120,
-              backgroundColor: 'rgba(5, 7, 12, 0.96)',
+              backgroundColor: theme.mode === 'dark' ? '#0b0f19' : '#ffffff',
               backdropFilter: 'blur(16px)',
               display: 'flex',
               flexDirection: 'column',
+              boxSizing: 'border-box',
             }}
             onClick={(e) => {
               if (e.target === e.currentTarget && !isDragging) setIsFullscreenImage(false);
             }}
           >
-            {/* Top Bar */}
+            {/* Top Header Bar with Integrated Product Title + Controls + Close */}
             <div
+              className="lightbox-top-header"
               style={{
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
-                padding: '14px 20px',
-                borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-                background: 'rgba(15, 23, 42, 0.6)',
+                flexWrap: 'wrap',
+                gap: '12px',
+                padding: '12px 20px',
+                border: 'none',
+                background:
+                  theme.mode === 'dark' ? 'rgba(15, 23, 42, 0.85)' : 'rgba(248, 250, 252, 0.95)',
+                backdropFilter: 'blur(12px)',
                 zIndex: 30,
               }}
+              onClick={(e) => e.stopPropagation()}
             >
+              {/* Product Info Left */}
               <div
                 style={{
-                  backgroundColor: 'rgba(255, 255, 255, 0.12)',
-                  color: '#ffffff',
-                  padding: '6px 14px',
-                  borderRadius: '8px',
-                  fontSize: '13px',
-                  fontWeight: 700,
-                  backdropFilter: 'blur(8px)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '8px',
+                  maxWidth: '45%',
+                  overflow: 'hidden',
                 }}
               >
-                {product.code} — {product.title}
+                <span
+                  style={{
+                    backgroundColor: theme.primary,
+                    color: '#ffffff',
+                    padding: '4px 8px',
+                    borderRadius: '6px',
+                    fontSize: '12px',
+                    fontWeight: 800,
+                    whiteSpace: 'nowrap',
+                    flexShrink: 0,
+                  }}
+                >
+                  {product.code}
+                </span>
+                <span
+                  style={{
+                    color: theme.mode === 'dark' ? '#ffffff' : '#0f172a',
+                    fontSize: '14px',
+                    fontWeight: 800,
+                    whiteSpace: 'nowrap',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                  }}
+                >
+                  {product.title}
+                </span>
               </div>
+
+              {/* Integrated Center Controls (Rotate, Zoom, Reset) */}
+              <div
+                className="zoom-floating-controls"
+                style={{
+                  position: 'static',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background:
+                    theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.04)',
+                  padding: '4px 8px',
+                  borderRadius: '10px',
+                  border: 'none',
+                  boxShadow: 'none',
+                }}
+              >
+                <button
+                  type="button"
+                  className="zoom-btn"
+                  onClick={() => setRotation((value) => value - 90)}
+                  title="Sola fırlat"
+                  aria-label="Şəkli sola fırlat"
+                  style={{
+                    border: 'none',
+                    background: 'transparent',
+                    color: theme.mode === 'dark' ? '#ffffff' : '#0f172a',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <RotateCcw size={16} />
+                </button>
+                <button
+                  type="button"
+                  className="zoom-btn"
+                  onClick={() => setRotation((value) => value + 90)}
+                  title="Sağa fırlat"
+                  aria-label="Şəkli sağa fırlat"
+                  style={{
+                    border: 'none',
+                    background: 'transparent',
+                    color: theme.mode === 'dark' ? '#ffffff' : '#0f172a',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <RotateCw size={16} />
+                </button>
+                <button
+                  type="button"
+                  className="zoom-btn"
+                  onClick={zoomOut}
+                  disabled={zoomScale <= 1}
+                  title="Kiçilt (-)"
+                  style={{
+                    border: 'none',
+                    background: 'transparent',
+                    color: theme.mode === 'dark' ? '#ffffff' : '#0f172a',
+                    cursor: zoomScale <= 1 ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  <ZoomOut size={16} />
+                </button>
+                <span
+                  style={{
+                    color: theme.mode === 'dark' ? '#38bdf8' : '#0284c7',
+                    fontSize: '12px',
+                    fontWeight: 800,
+                    minWidth: '40px',
+                    textAlign: 'center',
+                  }}
+                >
+                  {Math.round(zoomScale * 100)}%
+                </span>
+                <button
+                  type="button"
+                  className="zoom-btn"
+                  onClick={zoomIn}
+                  disabled={zoomScale >= 4}
+                  title="Böyüt (+)"
+                  style={{
+                    border: 'none',
+                    background: 'transparent',
+                    color: theme.mode === 'dark' ? '#ffffff' : '#0f172a',
+                    cursor: zoomScale >= 4 ? 'not-allowed' : 'pointer',
+                  }}
+                >
+                  <ZoomIn size={16} />
+                </button>
+                {zoomScale > 1 && (
+                  <button
+                    type="button"
+                    onClick={resetZoom}
+                    title="1x Orijinal ölçüyə sıfırla"
+                    style={{
+                      cursor: 'pointer',
+                      border: 'none',
+                      borderRadius: '6px',
+                      padding: '4px 8px',
+                      backgroundColor: 'rgba(220, 38, 38, 0.12)',
+                      color: '#dc2626',
+                      fontWeight: 800,
+                      fontSize: '11px',
+                    }}
+                  >
+                    1x Sıfırla
+                  </button>
+                )}
+              </div>
+
+              {/* Close Button Right */}
               <button
                 onClick={() => setIsFullscreenImage(false)}
                 className="sahara-soft-red-action"
@@ -1515,7 +1658,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                   backgroundColor: theme.primary,
                   border: 'none',
                   color: '#ffffff',
-                  padding: '8px 16px',
+                  padding: '7px 14px',
                   borderRadius: '8px',
                   cursor: 'pointer',
                   display: 'flex',
@@ -1523,78 +1666,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                   gap: '6px',
                   fontSize: '13px',
                   fontWeight: 800,
+                  boxShadow: 'none',
                 }}
               >
-                <X size={18} /> <span>Bağla</span>
+                <X size={16} /> <span>Bağla</span>
               </button>
-            </div>
-
-            {/* Floating Zoom Controls */}
-            <div
-              className="zoom-floating-controls"
-              style={{
-                position: 'absolute',
-                top: '80px',
-                right: '20px',
-                zIndex: 40,
-                display: 'flex',
-                gap: '8px',
-              }}
-            >
-              <button
-                type="button"
-                className="zoom-btn"
-                onClick={() => setRotation((value) => value - 90)}
-                title="Sola fırlat"
-                aria-label="Şəkli sola fırlat"
-              >
-                <RotateCcw size={16} />
-              </button>
-              <button
-                type="button"
-                className="zoom-btn"
-                onClick={() => setRotation((value) => value + 90)}
-                title="Sağa fırlat"
-                aria-label="Şəkli sağa fırlat"
-              >
-                <RotateCw size={16} />
-              </button>
-              <button
-                type="button"
-                className="zoom-btn"
-                onClick={zoomOut}
-                disabled={zoomScale <= 1}
-                title="Kiçilt (-)"
-              >
-                <ZoomOut size={16} />
-              </button>
-              <span style={{ color: '#fff', fontSize: '12px', fontWeight: 700 }}>
-                {Math.round(zoomScale * 100)}%
-              </span>
-              <button
-                type="button"
-                className="zoom-btn"
-                onClick={zoomIn}
-                disabled={zoomScale >= 4}
-                title="Böyüt (+)"
-              >
-                <ZoomIn size={16} />
-              </button>
-              {zoomScale > 1 && (
-                <button
-                  type="button"
-                  onClick={resetZoom}
-                  title="1x Orijinal ölçüyə sıfırla"
-                  style={{
-                    cursor: 'pointer',
-                    border: 'none',
-                    borderRadius: '8px',
-                    padding: '4px 8px',
-                  }}
-                >
-                  1x Sıfırla
-                </button>
-              )}
             </div>
 
             {/* Left & Right Fullscreen Navigation Buttons */}

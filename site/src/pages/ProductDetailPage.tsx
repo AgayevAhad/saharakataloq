@@ -2984,11 +2984,11 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               justifyContent: 'space-between',
               color: '#0f172a',
               zIndex: 10,
-              padding: '6px 12px',
+              padding: '8px 14px',
               backgroundColor: 'rgba(255, 255, 255, 0.95)',
               borderRadius: '16px',
-              border: '1px solid #e2e8f0',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.05)',
+              border: 'none',
+              boxShadow: 'none',
               backdropFilter: 'blur(10px)',
             }}
             onClick={(e) => e.stopPropagation()}
@@ -3018,6 +3018,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 className="product-lightbox-icon-btn"
                 title="Sola fırlat"
                 aria-label="Şəkli sola fırlat"
+                style={{ border: 'none' }}
               >
                 <RotateCcw size={17} />
               </button>
@@ -3028,6 +3029,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 className="product-lightbox-icon-btn"
                 title="Sağa fırlat"
                 aria-label="Şəkli sağa fırlat"
+                style={{ border: 'none' }}
               >
                 <RotateCw size={17} />
               </button>
@@ -3047,7 +3049,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   borderRadius: '10px',
                   backgroundColor: '#f1f5f9',
                   color: '#0f172a',
-                  border: '1px solid #e2e8f0',
+                  border: 'none',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -3071,7 +3073,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   borderRadius: '10px',
                   backgroundColor: zoomScale > 1 ? '#fee2e2' : '#f1f5f9',
                   color: zoomScale > 1 ? '#dc2626' : '#475569',
-                  border: `1px solid ${zoomScale > 1 ? '#fca5a5' : '#e2e8f0'}`,
+                  border: 'none',
                   fontSize: '12px',
                   fontWeight: 800,
                   cursor: 'pointer',
@@ -3095,7 +3097,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   borderRadius: '10px',
                   backgroundColor: '#f1f5f9',
                   color: '#0f172a',
-                  border: '1px solid #e2e8f0',
+                  border: 'none',
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
