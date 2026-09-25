@@ -3,6 +3,7 @@ import { AdminPayload, catalogApi } from '../services/catalogApi';
 import { normalizeCatalog } from '../data/catalog';
 import { Product, TechnologyArticle } from '../types/product';
 import { filterCatalogProducts } from '../utils/filter';
+import { phoneHref, whatsappHref } from '../utils/contact';
 import {
   CatalogSortOption,
   filterCatalogPageProducts,
