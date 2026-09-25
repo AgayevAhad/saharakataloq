@@ -965,6 +965,7 @@ export const SiteApp: React.FC<SiteAppProps> = ({ initialRoute: _initialRoute, i
         favoritesCount={favoriteIds.length}
         authUser={authUser}
         onOpenSaharaMatch={() => setIsSaharaMatchOpen(true)}
+        mobileMenuOpenSignal={mobileMenuOpenSignal}
       />
 
       <main className="site-main-content">

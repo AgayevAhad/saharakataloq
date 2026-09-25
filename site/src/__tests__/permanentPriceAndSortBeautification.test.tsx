@@ -245,5 +245,29 @@ describe('Permanent Price & Modernized Sort Filter Tests', () => {
     expect(searchField).toBeDefined();
     expect(searchField.placeholder).toBe('Məhsul axtar...');
   });
+
+  it('10. ShareModal renders borderless layout, close button in light red, and Sahara logo in catalog share', () => {
+    const { container } = render(
+      <ShareModal
+        product={null}
+        theme={lightTheme}
+        visible={true}
+        onClose={() => {}}
+        onCopyLink={() => {}}
+        onWhatsAppShare={() => {}}
+        onTelegramShare={() => {}}
+      />
+    );
+
+    const logoImg = container.querySelector('img[alt="Sahara Electronics"]') as HTMLImageElement;
+    expect(logoImg).toBeDefined();
+    expect(logoImg.getAttribute('src')).toBe('/media/SaharaLogo.png');
+
+    const closeBtn = container.querySelector('button[title="Bağla"]') as HTMLButtonElement;
+    expect(closeBtn).toBeDefined();
+    expect(closeBtn.style.backgroundColor).toBe('rgba(220, 38, 38, 0.12)');
+    expect(closeBtn.style.color).toBe('#dc2626');
+  });
 });
+
 

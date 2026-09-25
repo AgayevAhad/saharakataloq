@@ -92,4 +92,25 @@ describe('useContact', () => {
     expect(writeTextSpy).toHaveBeenCalledWith('https://saharaelectronics.az/product/test');
     expect(showToast).toHaveBeenCalledWith('Link kopyalandı!');
   });
+
+  it('copyLink navigator.clipboard rədd etdikdə execCommand fallback-indən istifadə edir', async () => {
+    Object.defineProperty(navigator, 'clipboard', {
+      value: {
+        writeText: vi.fn().mockRejectedValue(new Error('Permission denied')),
+      },
+      configurable: true,
+      writable: true,
+    });
+    const execCommandSpy = vi.fn().mockReturnValue(true);
+    (document as any).execCommand = execCommandSpy;
+
+    const { result } = renderHook(() =>
+      useContact({ settings: mockSettings as CatalogSettings, getProductUrl, showToast })
+    );
+    await act(async () => {
+      await result.current.copyLink('https://example.com/item');
+    });
+    expect(execCommandSpy).toHaveBeenCalledWith('copy');
+    expect(showToast).toHaveBeenCalledWith('Link kopyalandı!');
+  });
 });

@@ -76,10 +76,62 @@ export function useContact({
             : typeof window !== 'undefined'
               ? window.location.href
               : '';
-      try {
-        await navigator.clipboard.writeText(value);
+      if (!value) return;
+
+      let copied = false;
+
+      // 1. Try modern Async Clipboard API
+      if (
+        typeof navigator !== 'undefined' &&
+        navigator.clipboard &&
+        typeof navigator.clipboard.writeText === 'function'
+      ) {
+        try {
+          await navigator.clipboard.writeText(value);
+          copied = true;
+        } catch {
+          copied = false;
+        }
+      }
+
+      // 2. Cross-platform mobile fallback (iOS Safari, Android Chrome, webviews)
+      if (!copied && typeof document !== 'undefined') {
+        try {
+          const textArea = document.createElement('textarea');
+          textArea.value = value;
+          textArea.setAttribute('readonly', '');
+          textArea.style.position = 'fixed';
+          textArea.style.top = '0';
+          textArea.style.left = '0';
+          textArea.style.width = '2em';
+          textArea.style.height = '2em';
+          textArea.style.padding = '0';
+          textArea.style.border = 'none';
+          textArea.style.outline = 'none';
+          textArea.style.boxShadow = 'none';
+          textArea.style.background = 'transparent';
+          textArea.style.fontSize = '16px'; // Prevents auto-zoom in iOS Safari
+          textArea.style.opacity = '0';
+          textArea.style.zIndex = '-1';
+          document.body.appendChild(textArea);
+
+          textArea.focus();
+          textArea.select();
+          textArea.setSelectionRange(0, value.length);
+
+          const successful = document.execCommand('copy');
+          document.body.removeChild(textArea);
+          if (successful) {
+            copied = true;
+          }
+        } catch {
+          copied = false;
+        }
+      }
+
+      if (copied) {
         showToast('Link kopyalandı!');
-      } catch {
+      } else {
         showToast('Linki kopyalamaq mümkün olmadı.', 'warning');
       }
     },

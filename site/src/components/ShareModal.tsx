@@ -111,9 +111,9 @@ export const ShareModal: React.FC<ShareModalProps> = ({
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            padding: '16px 20px',
-            backgroundColor: theme.bgSecondary,
-            borderBottom: `1px solid ${theme.border}`,
+            padding: '18px 20px 0',
+            backgroundColor: 'transparent',
+            borderBottom: 'none',
           }}
         >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -134,12 +134,12 @@ export const ShareModal: React.FC<ShareModalProps> = ({
           <button
             onClick={onClose}
             style={{
-              background: theme.bgCard,
-              border: `1px solid ${theme.border}`,
+              background: 'rgba(220, 38, 38, 0.12)',
+              border: 'none',
               padding: '6px',
               borderRadius: '8px',
               cursor: 'pointer',
-              color: theme.text,
+              color: '#dc2626',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'center',
@@ -158,16 +158,49 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               padding: '14px 16px',
               borderRadius: '12px',
               backgroundColor: theme.bgSecondary,
-              border: `1px solid ${theme.border}`,
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '14px',
             }}
           >
             <div
-              style={{ fontSize: '14px', fontWeight: 750, color: theme.text, marginBottom: '4px' }}
+              style={{
+                flexShrink: 0,
+                width: '52px',
+                height: '52px',
+                borderRadius: '10px',
+                backgroundColor: theme.bgCard,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                overflow: 'hidden',
+                padding: '4px',
+              }}
             >
-              {title}
+              {isSingleProduct && product.image ? (
+                <img
+                  src={product.image}
+                  alt={product.title}
+                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                />
+              ) : (
+                <img
+                  src="/media/SaharaLogo.png"
+                  alt="Sahara Electronics"
+                  style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                />
+              )}
             </div>
-            <div style={{ fontSize: '12px', color: theme.textMuted, lineHeight: '18px' }}>
-              {desc}
+            <div style={{ flex: 1, minWidth: 0 }}>
+              <div
+                style={{ fontSize: '14px', fontWeight: 750, color: theme.text, marginBottom: '4px' }}
+              >
+                {title}
+              </div>
+              <div style={{ fontSize: '12px', color: theme.textMuted, lineHeight: '18px' }}>
+                {desc}
+              </div>
             </div>
           </div>
 
@@ -180,7 +213,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
               padding: '10px 14px',
               borderRadius: '10px',
               backgroundColor: theme.bg,
-              border: `1px solid ${theme.border}`,
+              border: 'none',
               overflow: 'hidden',
             }}
           >
