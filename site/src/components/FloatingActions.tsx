@@ -128,7 +128,7 @@ export const FloatingActions: React.FC<FloatingActionsProps> = ({
           borderRadius: '30px',
           backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.88)' : 'rgba(15, 23, 42, 0.86)',
           color: '#ffffff',
-          border: '1px solid rgba(255, 255, 255, 0.16)',
+          border: 'none',
           boxShadow: '0 4px 16px rgba(0, 0, 0, 0.20)',
           fontFamily: 'Outfit, sans-serif',
           fontWeight: 700,
@@ -167,9 +167,7 @@ export const FloatingActions: React.FC<FloatingActionsProps> = ({
             justifyContent: 'center',
             backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.88)' : 'rgba(255, 255, 255, 0.88)',
             color: isDarkMode ? '#f8fafc' : '#1e293b',
-            border: isDarkMode
-              ? '1px solid rgba(255, 255, 255, 0.16)'
-              : '1px solid rgba(203, 213, 225, 0.85)',
+            border: 'none',
             boxShadow: isDarkMode
               ? '0 10px 30px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.2)'
               : '0 10px 26px rgba(15, 23, 42, 0.12), 0 2px 6px rgba(0, 0, 0, 0.04)',
@@ -216,7 +214,7 @@ export const FloatingActions: React.FC<FloatingActionsProps> = ({
           </span>
         </button>
 
-        {/* WhatsApp Action Button - Light Green Round Circle with Green Icon */}
+        {/* WhatsApp Action Button - Light Green Round Circle with Green Icon (No Border) */}
         <button
           type="button"
           onClick={handleWhatsApp}
@@ -227,7 +225,7 @@ export const FloatingActions: React.FC<FloatingActionsProps> = ({
             justifyContent: 'center',
             backgroundColor: isDarkMode ? 'rgba(34, 197, 94, 0.18)' : 'rgba(34, 197, 94, 0.14)',
             color: '#16a34a',
-            border: '1px solid rgba(34, 197, 94, 0.35)',
+            border: 'none',
             boxShadow: isDarkMode
               ? '0 8px 24px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(34, 197, 94, 0.15)'
               : '0 6px 20px rgba(34, 197, 94, 0.18), 0 2px 6px rgba(0, 0, 0, 0.04)',
@@ -267,7 +265,7 @@ export const FloatingActions: React.FC<FloatingActionsProps> = ({
           </span>
         </button>
 
-        {/* Call Action Button - Light Red Round Circle with Red Icon */}
+        {/* Call Action Button - Light Red Round Circle with Red Icon (No Border) */}
         <button
           type="button"
           onClick={handleCall}
@@ -278,7 +276,7 @@ export const FloatingActions: React.FC<FloatingActionsProps> = ({
             justifyContent: 'center',
             backgroundColor: isDarkMode ? 'rgba(220, 38, 38, 0.18)' : 'rgba(220, 38, 38, 0.14)',
             color: '#dc2626',
-            border: '1px solid rgba(220, 38, 38, 0.35)',
+            border: 'none',
             boxShadow: isDarkMode
               ? '0 8px 24px rgba(0, 0, 0, 0.35), 0 2px 6px rgba(220, 38, 38, 0.15)'
               : '0 6px 20px rgba(220, 38, 38, 0.18), 0 2px 6px rgba(0, 0, 0, 0.04)',
