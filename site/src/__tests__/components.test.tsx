@@ -41,18 +41,18 @@ describe('Sahara Electronic - UI Komponentləri və İstifadəçi Qarşılıqlı
     expect(screen.queryByText(/Məişət Texnikası və İqlim Sistemləri/i)).toBeNull();
   });
 
-  it('Lotus və Artel bölmələrini Tezliklə statusu ilə göstərməlidir', () => {
+  it('Artel bölməsini Tezliklə statusu ilə göstərməlidir', () => {
     render(
       <BrandShowcase
         brands={DEFAULT_BRANDS}
-        products={[TEST_PRODUCT]}
+        products={[TEST_PRODUCT, { ...TEST_PRODUCT, id: 'lotus-oven-1', brandId: 'lotus', brand: 'lotus' }]}
         theme={lightTheme}
         onSelect={vi.fn()}
       />
     );
     expect(screen.getByText('LOTUS')).toBeDefined();
     expect(screen.getByText('ARTEL')).toBeDefined();
-    expect(screen.getAllByText('TEZLİKLƏ')).toHaveLength(2);
+    expect(screen.getAllByText('TEZLİKLƏ')).toHaveLength(1);
     expect(screen.getByAltText('ARDO loqosu').getAttribute('src')).toBe(
       '/media/brands/ardo-logo.png'
     );

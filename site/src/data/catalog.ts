@@ -51,7 +51,7 @@ export const DEFAULT_BRANDS: Brand[] = [
     description: '',
     logo: '/media/brands/lotus-logo.png',
     active: true,
-    comingSoon: true,
+    comingSoon: false,
   },
   { id: 'artel', name: 'ARTEL', slug: 'artel', originCountry: 'Özbəkistan', manufacturingCountries: ['Özbəkistan'], logo: '/media/brands/artel-logo.svg', active: true, comingSoon: true },
 ];

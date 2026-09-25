@@ -7,12 +7,12 @@ import { join } from 'node:path';
 import { mkdtempSync, copyFileSync, rmSync } from 'node:fs';
 
 describe('Public Coming Soon Brands & Draft Preservation Isolation Suite', () => {
-  it('marks Lotus and Artel brands with comingSoon=true in default and normalized catalog', () => {
+  it('marks Artel brand with comingSoon=true and Lotus/Ardo as active in default and normalized catalog', () => {
     const catalog = normalizeCatalog(DEFAULT_CATALOG);
 
     const lotusBrand = catalog.brands.find((b) => b.id === 'lotus');
     expect(lotusBrand).toBeDefined();
-    expect(lotusBrand?.comingSoon).toBe(true);
+    expect(lotusBrand?.comingSoon).toBe(false);
 
     const artelBrand = catalog.brands.find((b) => b.id === 'artel');
     expect(artelBrand).toBeDefined();
@@ -42,22 +42,17 @@ describe('Public Coming Soon Brands & Draft Preservation Isolation Suite', () =>
       process.env.ALLOW_TEMP_DATA_DIR = prevAllow;
 
       // In public catalog:
-      // Lotus and Artel brands are comingSoon=true
+      // Artel brand is comingSoon=true, Lotus is active
       const pubLotus = publicCatalog.brands.find((b: any) => b.id === 'lotus');
-      expect(pubLotus?.comingSoon).toBe(true);
+      expect(pubLotus?.comingSoon).toBe(false);
 
       const pubArtel = publicCatalog.brands.find((b: any) => b.id === 'artel');
       expect(pubArtel?.comingSoon).toBe(true);
 
-      // Public catalog products must ONLY include active brands (ARDO), not coming soon brands
-      const publicLotusProducts = publicCatalog.products.filter(
-        (p: any) => p.brandId === 'lotus' || p.brand === 'lotus'
-      );
-      expect(publicLotusProducts.length).toBe(0);
-
       const publicArtelProducts = publicCatalog.products.filter(
         (p: any) => p.brandId === 'artel' || p.brand === 'artel'
       );
+      expect(publicArtelProducts.length).toBe(0);
       expect(publicArtelProducts.length).toBe(0);
 
       const publicArdoProducts = publicCatalog.products.filter(

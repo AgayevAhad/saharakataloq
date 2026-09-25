@@ -63,12 +63,12 @@ describe('BrandShowcase Card Full-Surface Click Interaction Suite', () => {
     fireEvent.click(ardoCard);
     expect(onSelect).toHaveBeenCalledWith('ardo');
 
-    // Lotus and Artel cards are in coming soon state with TEZLİKLƏ badge
-    const lotusCard = screen.getByLabelText(/LOTUS - Tezliklə/i);
-    expect(lotusCard).toBeDefined();
-    fireEvent.click(lotusCard);
+    // Artel card is in coming soon state with TEZLİKLƏ badge
+    const artelCard = screen.getByLabelText(/ARTEL - Tezliklə/i);
+    expect(artelCard).toBeDefined();
+    fireEvent.click(artelCard);
     // Should not trigger navigation for coming soon brand
-    expect(onSelect).not.toHaveBeenCalledWith('lotus');
+    expect(onSelect).not.toHaveBeenCalledWith('artel');
   });
 
   it('triggers onSelect when pressing Enter or Space key on an active brand card', () => {
