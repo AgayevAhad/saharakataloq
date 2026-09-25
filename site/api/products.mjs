@@ -475,52 +475,47 @@ export function createProductsRouter({
       }
     }
 
-    // POST catalog toggle status
+    // POST catalog / site toggle status
     if (path === '/api/admin/catalog/toggle-status' && req.method === 'POST') {
       const session = requireAdmin(req, res, sessions, true);
       if (!session) return true;
       const body = await readBody(req);
       const active = body.active !== false;
-      const message =
-        safeText(body.message, 500) ||
-        'Kataloqda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';
-      const draftCat = draftDatabase.getAdminData
-        ? draftDatabase.getAdminData()
-        : draftDatabase.getCatalog({ includeAll: true });
-      const updatedDraft = {
-        ...draftCat,
-        settings: {
-          ...draftCat.settings,
-          catalogActive: active,
-          maintenanceMessage: message,
-        },
-      };
-      draftDatabase.saveCatalog(updatedDraft);
-      const pubCat = catalogDatabase.getAdminData
-        ? catalogDatabase.getAdminData()
-        : catalogDatabase.getCatalog({ includeAll: true });
-      const updatedPub = {
-        ...pubCat,
-        settings: {
-          ...pubCat.settings,
-          catalogActive: active,
-          maintenanceMessage: message,
-        },
-      };
-      catalogDatabase.saveCatalog(updatedPub);
+      const scope = body.scope || 'catalog';
+      const defaultMsg =
+        scope === 'site'
+          ? 'Saytda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.'
+          : 'Kataloqda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';
+      const message = safeText(body.message, 500) || defaultMsg;
+
+      if (scope === 'site') {
+        draftDatabase.updateSiteStatus(active, message);
+        catalogDatabase.updateSiteStatus(active, message);
+      } else {
+        draftDatabase.updateCatalogStatus(active, message);
+        catalogDatabase.updateCatalogStatus(active, message);
+      }
+
       const userAgent = safeText(req.headers['user-agent'] || '', 300);
       draftDatabase.logAction({
-        category: 'catalog_status',
-        action: active ? 'catalog_resumed' : 'catalog_paused',
-        title: active
-          ? 'Kataloq fəaliyyəti bərpa edildi (Yayımda)'
-          : 'Kataloq fəaliyyəti dayandırıldı (Profilaktika)',
-        details: active ? 'Ziyarətçilər kataloqa normal baxa bilər' : `Mesaj: ${message}`,
+        category: scope === 'site' ? 'site_status' : 'catalog_status',
+        action: active ? `${scope}_resumed` : `${scope}_paused`,
+        title:
+          scope === 'site'
+            ? active
+              ? 'Sayt fəaliyyəti bərpa edildi (Yayımda)'
+              : 'Sayt fəaliyyəti dayandırıldı (Profilaktika)'
+            : active
+              ? 'Kataloq fəaliyyəti bərpa edildi (Yayımda)'
+              : 'Kataloq fəaliyyəti dayandırıldı (Profilaktika)',
+        details: active
+          ? `${scope === 'site' ? 'Sayt' : 'Kataloq'} aktivdir`
+          : `Mesaj: ${message}`,
         ipAddress: session.ip,
         userAgent,
-        status: active ? 'success' : 'warning',
+        status: active ? 'info' : 'warning',
       });
-      send(res, 200, { ok: true, active, message });
+      send(res, 200, { ok: true, active, message, scope });
       return true;
     }
 
@@ -528,19 +523,26 @@ export function createProductsRouter({
     if (path === '/api/admin/catalog' && req.method === 'PUT') {
       const session = requireAdmin(req, res, sessions, true);
       if (!session) return true;
-      const catalog = validateCatalog(await readBody(req));
-      draftDatabase.saveCatalog(catalog);
+      const body = await readBody(req);
+      if (!validateCatalog(body)) {
+        send(res, 400, {
+          error: 'INVALID_CATALOG_PAYLOAD',
+          message: 'Kataloq məlumat strukturu natamam və ya etibarsızdır.',
+        });
+        return true;
+      }
+      draftDatabase.saveCatalog(body);
       const userAgent = safeText(req.headers['user-agent'] || '', 300);
       draftDatabase.logAction({
         category: 'product',
         action: 'draft_save',
         title: 'Qaralama kataloq yeniləndi',
-        details: `${catalog.products.length} məhsul, ${catalog.categories.length} kateqoriya, ${catalog.brands.length} brend`,
+        details: `${body.products.length} məhsul, ${body.categories.length} kateqoriya, ${body.brands.length} brend`,
         ipAddress: session.ip,
         userAgent,
         status: 'info',
       });
-      send(res, 200, { ok: true, updatedAt: catalog.updatedAt });
+      send(res, 200, { ok: true, updatedAt: body.updatedAt });
       return true;
     }
 
@@ -556,17 +558,22 @@ export function createProductsRouter({
         });
         return true;
       }
-      const catalog = validateCatalog(
-        draftDatabase.getAdminData
-          ? draftDatabase.getAdminData()
-          : draftDatabase.getCatalog({ includeAll: true })
-      );
+      const rawCatalog = draftDatabase.getAdminData
+        ? draftDatabase.getAdminData()
+        : draftDatabase.getCatalog({ includeAll: true });
+      if (!validateCatalog(rawCatalog)) {
+        send(res, 400, {
+          error: 'INVALID_DRAFT_CATALOG',
+          message: 'Qaralama kataloq məlumatları natamamdır.',
+        });
+        return true;
+      }
       catalogDatabase.createSnapshot({
         name: `Canlı yayımdan əvvəlki avtomatik nüsxə (${new Date().toLocaleTimeString('az-AZ')})`,
         createdBy: 'auto-publish',
       });
       try {
-        catalogDatabase.publishAtomic(catalog, draftDatabase.db);
+        catalogDatabase.publishAtomic(rawCatalog, draftDatabase.db);
         if (
           isPhase4NavigationReady(draftDatabase.db) &&
           isPhase4NavigationReady(catalogDatabase.db)

@@ -107,6 +107,8 @@ export const DEFAULT_SETTINGS: CatalogSettings = {
   callButtonText: 'Zəng et',
   shareButtonText: 'Paylaş',
   scrollTopButtonText: 'Yuxarı',
+  siteActive: true,
+  siteMaintenanceMessage: 'Saytda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.',
   catalogActive: true,
   maintenanceMessage: 'Kataloqda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.',
 };
@@ -221,6 +223,8 @@ export const normalizeCatalog = (data?: Partial<CatalogData> | null): CatalogDat
       callButtonText: data?.settings?.callButtonText || DEFAULT_SETTINGS.callButtonText,
       shareButtonText: data?.settings?.shareButtonText || DEFAULT_SETTINGS.shareButtonText,
       scrollTopButtonText: data?.settings?.scrollTopButtonText || DEFAULT_SETTINGS.scrollTopButtonText,
+      siteActive: data?.settings?.siteActive !== undefined ? data.settings.siteActive : true,
+      siteMaintenanceMessage: data?.settings?.siteMaintenanceMessage || DEFAULT_SETTINGS.siteMaintenanceMessage,
       catalogActive: data?.settings?.catalogActive !== undefined ? data.settings.catalogActive : true,
       maintenanceMessage: data?.settings?.maintenanceMessage || DEFAULT_SETTINGS.maintenanceMessage,
     },

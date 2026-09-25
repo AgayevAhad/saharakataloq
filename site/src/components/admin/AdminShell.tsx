@@ -1,4 +1,4 @@
-import React, { useCallback, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import {
   AlertTriangle,
   BarChart3,
@@ -327,33 +327,54 @@ export const AdminShell: React.FC<AdminShellProps> = ({
 
   // Catalog Status (Active / Maintenance) state
   const [statusModalOpen, setStatusModalOpen] = useState(false);
-  const [maintenanceInputMessage, setMaintenanceInputMessage] = useState(
-    catalog.settings?.maintenanceMessage ||
-      'Kataloqda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.'
-  );
+  const isCurrentScopeActive =
+    activeMode === 'site'
+      ? catalog.settings?.siteActive !== false
+      : catalog.settings?.catalogActive !== false;
+
+  const currentScopeMessage =
+    activeMode === 'site'
+      ? catalog.settings?.siteMaintenanceMessage ||
+        'Saytda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.'
+      : catalog.settings?.maintenanceMessage ||
+        'Kataloqda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';
+
+  const [maintenanceInputMessage, setMaintenanceInputMessage] = useState(currentScopeMessage);
   const [statusUpdating, setStatusUpdating] = useState(false);
+
+  // Synchronize input message when switching modes
+  useEffect(() => {
+    setMaintenanceInputMessage(currentScopeMessage);
+  }, [activeMode, currentScopeMessage]);
 
   const handleToggleCatalogStatus = async (newActive: boolean) => {
     setStatusUpdating(true);
+    const scope = activeMode === 'site' ? 'site' : 'catalog';
     try {
       const res = await catalogApi.toggleCatalogStatus(
         newActive,
         maintenanceInputMessage,
-        initial.csrfToken
+        initial.csrfToken,
+        scope
       );
       setCatalog((prev) => ({
         ...prev,
         settings: {
           ...prev.settings,
-          catalogActive: res.active,
-          maintenanceMessage: res.message,
+          ...(scope === 'site'
+            ? { siteActive: res.active, siteMaintenanceMessage: res.message }
+            : { catalogActive: res.active, maintenanceMessage: res.message }),
         },
       }));
       setStatusModalOpen(false);
       showToast(
-        res.active
-          ? 'Kataloq ictimai yayıma açıldı (Aktiv).'
-          : 'Kataloq fəaliyyəti dayandırıldı (Profilaktika).'
+        scope === 'site'
+          ? res.active
+            ? 'Sayt ictimai yayıma açıldı (Aktiv).'
+            : 'Sayt fəaliyyəti dayandırıldı (Profilaktika).'
+          : res.active
+            ? 'Kataloq ictimai yayıma açıldı (Aktiv).'
+            : 'Kataloq fəaliyyəti dayandırıldı (Profilaktika).'
       );
     } catch (err) {
       showToast(`Status xətası: ${err instanceof Error ? err.message : 'Uğursuz oldu'}`);
@@ -1192,13 +1213,17 @@ export const AdminShell: React.FC<AdminShellProps> = ({
           </div>
           <div className="admin-toolbar-actions">
             <button
-              className={`catalog-status-toggle-btn ${catalog.settings?.catalogActive !== false ? 'is-active' : 'is-paused'}`}
+              className={`catalog-status-toggle-btn ${isCurrentScopeActive ? 'is-active' : 'is-paused'}`}
               onClick={() => setStatusModalOpen(true)}
-              title="Kataloqun fəaliyyət statusunu dəyiş"
+              title={
+                activeMode === 'site'
+                  ? 'Saytın fəaliyyət statusunu dəyiş'
+                  : 'Kataloqun fəaliyyət statusunu dəyiş'
+              }
             >
               <Power size={15} />
               <span>
-                {catalog.settings?.catalogActive !== false
+                {isCurrentScopeActive
                   ? activeMode === 'site'
                     ? 'Sayt: Aktiv'
                     : 'Kataloq: Yayımda'
@@ -1449,21 +1474,24 @@ export const AdminShell: React.FC<AdminShellProps> = ({
                   style={{
                     padding: '8px',
                     borderRadius: '8px',
-                    background:
-                      catalog.settings?.catalogActive !== false
-                        ? 'rgba(22, 163, 74, 0.12)'
-                        : 'rgba(217, 119, 6, 0.12)',
-                    color: catalog.settings?.catalogActive !== false ? '#16a34a' : '#d97706',
+                    background: isCurrentScopeActive
+                      ? 'rgba(22, 163, 74, 0.12)'
+                      : 'rgba(217, 119, 6, 0.12)',
+                    color: isCurrentScopeActive ? '#16a34a' : '#d97706',
                   }}
                 >
                   <Power size={20} />
                 </div>
                 <div>
                   <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 800 }}>
-                    Kataloq Fəaliyyət Statusu
+                    {activeMode === 'site'
+                      ? 'Sayt Fəaliyyət Statusu'
+                      : 'Kataloq Fəaliyyət Statusu'}
                   </h3>
                   <span style={{ fontSize: '12px', color: theme.textMuted }}>
-                    Kataloqu ictimai yayımda saxlayın və ya profilaktikaya keçirin
+                    {activeMode === 'site'
+                      ? 'Saytı ictimai yayımda saxlayın və ya profilaktikaya keçirin'
+                      : 'Kataloqu ictimai yayımda saxlayın və ya profilaktikaya keçirin'}
                   </span>
                 </div>
               </div>
@@ -1484,7 +1512,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
               <div className="status-choice-grid">
                 <button
                   type="button"
-                  className={`status-choice-card ${catalog.settings?.catalogActive !== false ? 'selected active-choice' : ''}`}
+                  className={`status-choice-card ${isCurrentScopeActive ? 'selected active-choice' : ''}`}
                   onClick={() => handleToggleCatalogStatus(true)}
                   disabled={statusUpdating}
                 >
@@ -1496,13 +1524,17 @@ export const AdminShell: React.FC<AdminShellProps> = ({
                   </div>
                   <div className="status-choice-text">
                     <strong>🟢 Yayımda (Aktiv)</strong>
-                    <p>Bütün ziyarətçilər və müştərilər kataloqu normal izləyə bilər.</p>
+                    <p>
+                      {activeMode === 'site'
+                        ? 'Bütün ziyarətçilər saytı normal izləyə bilər.'
+                        : 'Bütün ziyarətçilər və müştərilər kataloqu normal izləyə bilər.'}
+                    </p>
                   </div>
                 </button>
 
                 <button
                   type="button"
-                  className={`status-choice-card ${catalog.settings?.catalogActive === false ? 'selected paused-choice' : ''}`}
+                  className={`status-choice-card ${!isCurrentScopeActive ? 'selected paused-choice' : ''}`}
                   onClick={() => handleToggleCatalogStatus(false)}
                   disabled={statusUpdating}
                 >
@@ -1515,7 +1547,9 @@ export const AdminShell: React.FC<AdminShellProps> = ({
                   <div className="status-choice-text">
                     <strong>🟡 Dayandırılıb (Profilaktika)</strong>
                     <p>
-                      Müştərilərə profilaktik yenilənmə ekranı göstərilir. Admin panel işlək qalır.
+                      {activeMode === 'site'
+                        ? 'Ziyarətçilərə profilaktik yenilənmə ekranı göstərilir. Admin panel işlək qalır.'
+                        : 'Müştərilərə profilaktik yenilənmə ekranı göstərilir. Admin panel işlək qalır.'}
                     </p>
                   </div>
                 </button>
@@ -1546,7 +1580,11 @@ export const AdminShell: React.FC<AdminShellProps> = ({
                     fontSize: '13px',
                     boxSizing: 'border-box',
                   }}
-                  placeholder="Kataloqda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik."
+                  placeholder={
+                    activeMode === 'site'
+                      ? 'Saytda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.'
+                      : 'Kataloqda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.'
+                  }
                 />
               </div>
             </div>
@@ -1565,11 +1603,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
               </button>
               <button
                 type="button"
-                onClick={() =>
-                  handleToggleCatalogStatus(
-                    catalog.settings?.catalogActive === false ? false : true
-                  )
-                }
+                onClick={() => handleToggleCatalogStatus(isCurrentScopeActive)}
                 disabled={statusUpdating}
                 style={{ background: theme.primary, color: '#fff', border: 'none' }}
               >

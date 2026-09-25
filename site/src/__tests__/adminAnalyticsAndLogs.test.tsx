@@ -192,11 +192,16 @@ describe('Catalog Status Switch and Maintenance Mode', () => {
     // Click paused choice card
     fireEvent.click(screen.getByText('🟡 Dayandırılıb (Profilaktika)'));
     await waitFor(() => {
-      expect(toggleSpy).toHaveBeenCalledWith(false, expect.any(String), 'mock-csrf-token');
+      expect(toggleSpy).toHaveBeenCalledWith(
+        false,
+        expect.any(String),
+        'mock-csrf-token',
+        expect.any(String)
+      );
     });
   });
 
-  it('renders sleek maintenance screen in customer App when catalogActive is false', async () => {
+  it('renders sleek maintenance screen in customer App when siteActive is false', async () => {
     vi.spyOn(catalogApi, 'getCatalog').mockResolvedValue({
       brands: DEFAULT_BRANDS,
       categories: DEFAULT_CATEGORIES,
@@ -204,8 +209,8 @@ describe('Catalog Status Switch and Maintenance Mode', () => {
       articles: DEFAULT_ARTICLES,
       settings: {
         ...DEFAULT_SETTINGS,
-        catalogActive: false,
-        maintenanceMessage: 'Kataloq hazırda yenilənir.',
+        siteActive: false,
+        siteMaintenanceMessage: 'Sayt hazırda yenilənir.',
         whatsappNumber: '994501234567',
         phoneNumber: '994121234567',
       },
@@ -214,9 +219,9 @@ describe('Catalog Status Switch and Maintenance Mode', () => {
     render(<App />);
 
     await waitFor(() => {
-      expect(screen.getByText('Kataloqda Profilaktik Yenilənmə')).toBeTruthy();
+      expect(screen.getByText('Saytda Profilaktik Yenilənmə')).toBeTruthy();
       expect(screen.getByText('Tezliklə Xidmətinizdəyik')).toBeTruthy();
-      expect(screen.getByText('Kataloq hazırda yenilənir.')).toBeTruthy();
+      expect(screen.getByText('Sayt hazırda yenilənir.')).toBeTruthy();
       expect(screen.getByText('WhatsApp ilə Əlaqə')).toBeTruthy();
       expect(screen.getByText('Admin Girişi')).toBeTruthy();
     });

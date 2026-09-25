@@ -156,6 +156,8 @@ export interface CatalogSettings {
   callButtonText?: string;
   shareButtonText?: string;
   scrollTopButtonText?: string;
+  siteActive?: boolean;
+  siteMaintenanceMessage?: string;
   catalogActive?: boolean;
   maintenanceMessage?: string;
 }

@@ -879,7 +879,7 @@ export const SiteApp: React.FC<SiteAppProps> = ({ initialRoute: _initialRoute, i
   }
 
   // Public Maintenance Mode (Paused by Admin)
-  if (catalog.settings?.catalogActive === false) {
+  if (catalog.settings?.siteActive === false) {
     const waNumber = catalog.settings.whatsappNumber || '';
     const phNumber = catalog.settings.phoneNumber || '';
     return (
@@ -905,7 +905,7 @@ export const SiteApp: React.FC<SiteAppProps> = ({ initialRoute: _initialRoute, i
 
           <div className="maintenance-badge">
             <Sparkles size={14} color="#d97706" />
-            <span>Kataloqda Profilaktik Yenilənmə</span>
+            <span>Saytda Profilaktik Yenilənmə</span>
           </div>
 
           <h1 className="maintenance-title" style={{ color: activeTheme.text }}>
@@ -913,8 +913,8 @@ export const SiteApp: React.FC<SiteAppProps> = ({ initialRoute: _initialRoute, i
           </h1>
 
           <p className="maintenance-desc" style={{ color: activeTheme.textSecondary }}>
-            {catalog.settings.maintenanceMessage ||
-              'Kataloqda profilaktik yenilənmə aparılır. Tezliklə yeni məhsul və qiymətlərlə xidmətinizdəyik.'}
+            {catalog.settings.siteMaintenanceMessage ||
+              'Saytda profilaktik yenilənmə aparılır. Tezliklə yeni məlumatlarla xidmətinizdəyik.'}
           </p>
 
           <div className="maintenance-contacts">

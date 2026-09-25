@@ -257,6 +257,12 @@ export const createCatalogDatabase = (databasePath) => {
   if (!settingsColumns.includes('maintenance_message')) {
     db.exec("ALTER TABLE catalog_settings ADD COLUMN maintenance_message TEXT NOT NULL DEFAULT 'Kataloqda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';");
   }
+  if (!settingsColumns.includes('site_active')) {
+    db.exec('ALTER TABLE catalog_settings ADD COLUMN site_active INTEGER NOT NULL DEFAULT 1 CHECK(site_active IN (0, 1));');
+  }
+  if (!settingsColumns.includes('site_maintenance_message')) {
+    db.exec("ALTER TABLE catalog_settings ADD COLUMN site_maintenance_message TEXT NOT NULL DEFAULT 'Saytda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';");
+  }
 
   const newSettingCols = [
     ['company_name', "TEXT NOT NULL DEFAULT 'Sahara Electronics'"],
@@ -473,6 +479,8 @@ export const createCatalogDatabase = (databasePath) => {
       callButtonText: settingsRow?.call_button_text || 'Zəng et',
       shareButtonText: settingsRow?.share_button_text || 'Paylaş',
       scrollTopButtonText: settingsRow?.scroll_top_button_text || 'Yuxarı',
+      siteActive: settingsRow?.site_active !== undefined ? Boolean(settingsRow.site_active) : true,
+      siteMaintenanceMessage: settingsRow?.site_maintenance_message || 'Saytda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.',
       catalogActive: settingsRow?.catalog_active !== undefined ? Boolean(settingsRow.catalog_active) : true,
       maintenanceMessage: settingsRow?.maintenance_message || 'Kataloqda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.',
     };
@@ -593,12 +601,14 @@ export const createCatalogDatabase = (databasePath) => {
         const addressesJson = JSON.stringify(addressesToSave);
         const articlesJson = JSON.stringify(catalog.articles || defaultArticlesList);
         const primaryPhone = catalog.settings.phoneNumber || (catalog.settings.phoneNumbers && catalog.settings.phoneNumbers[0]) || '';
+        const siteActiveVal = catalog.settings.siteActive !== undefined ? bool(catalog.settings.siteActive) : 1;
+        const siteMaintenanceMsg = catalog.settings.siteMaintenanceMessage || 'Saytda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';
         const catalogActiveVal = catalog.settings.catalogActive !== undefined ? bool(catalog.settings.catalogActive) : 1;
         const maintenanceMsg = catalog.settings.maintenanceMessage || 'Kataloqda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';
 
         db.prepare(`
           UPDATE catalog_settings
-          SET whatsapp_number = ?, phone_number = ?, phone_numbers = ?, company_name = ?, address = ?, addresses = ?, email = ?, working_hours = ?, map_url = ?, location_note = ?, countries = ?, instagram_username = ?, instagram_url = ?, facebook_username = ?, facebook_url = ?, articles = ?, site_title = ?, site_subtitle = ?, header_caption = ?, catalog_heading = ?, catalog_subheading = ?, hero_banner_title = ?, hero_banner_subtitle = ?, footer_about = ?, footer_copyright = ?, primary_color = ?, font_family = ?, whatsapp_button_text = ?, call_button_text = ?, share_button_text = ?, scroll_top_button_text = ?, catalog_active = ?, maintenance_message = ?, updated_at = ?
+          SET whatsapp_number = ?, phone_number = ?, phone_numbers = ?, company_name = ?, address = ?, addresses = ?, email = ?, working_hours = ?, map_url = ?, location_note = ?, countries = ?, instagram_username = ?, instagram_url = ?, facebook_username = ?, facebook_url = ?, articles = ?, site_title = ?, site_subtitle = ?, header_caption = ?, catalog_heading = ?, catalog_subheading = ?, hero_banner_title = ?, hero_banner_subtitle = ?, footer_about = ?, footer_copyright = ?, primary_color = ?, font_family = ?, whatsapp_button_text = ?, call_button_text = ?, share_button_text = ?, scroll_top_button_text = ?, site_active = ?, site_maintenance_message = ?, catalog_active = ?, maintenance_message = ?, updated_at = ?
           WHERE id = 1
         `).run(
           catalog.settings.whatsappNumber || '',
@@ -636,6 +646,8 @@ export const createCatalogDatabase = (databasePath) => {
           catalog.settings.callButtonText || 'Zəng et',
           catalog.settings.shareButtonText || 'Paylaş',
           catalog.settings.scrollTopButtonText || 'Yuxarı',
+          siteActiveVal,
+          siteMaintenanceMsg,
           catalogActiveVal,
           maintenanceMsg,
           now
@@ -763,12 +775,14 @@ export const createCatalogDatabase = (databasePath) => {
         const addressesJson = JSON.stringify(addressesToSave);
         const articlesJson = JSON.stringify(catalog.articles || defaultArticlesList);
         const primaryPhone = catalog.settings.phoneNumber || (catalog.settings.phoneNumbers && catalog.settings.phoneNumbers[0]) || '';
+        const siteActiveVal = catalog.settings.siteActive !== undefined ? bool(catalog.settings.siteActive) : 1;
+        const siteMaintenanceMsg = catalog.settings.siteMaintenanceMessage || 'Saytda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';
         const catalogActiveVal = catalog.settings.catalogActive !== undefined ? bool(catalog.settings.catalogActive) : 1;
         const maintenanceMsg = catalog.settings.maintenanceMessage || 'Kataloqda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';
 
         db.prepare(`
           UPDATE catalog_settings
-          SET whatsapp_number = ?, phone_number = ?, phone_numbers = ?, company_name = ?, address = ?, addresses = ?, email = ?, working_hours = ?, map_url = ?, location_note = ?, countries = ?, instagram_username = ?, instagram_url = ?, facebook_username = ?, facebook_url = ?, articles = ?, site_title = ?, site_subtitle = ?, header_caption = ?, catalog_heading = ?, catalog_subheading = ?, hero_banner_title = ?, hero_banner_subtitle = ?, footer_about = ?, footer_copyright = ?, primary_color = ?, font_family = ?, whatsapp_button_text = ?, call_button_text = ?, share_button_text = ?, scroll_top_button_text = ?, catalog_active = ?, maintenance_message = ?, updated_at = ?
+          SET whatsapp_number = ?, phone_number = ?, phone_numbers = ?, company_name = ?, address = ?, addresses = ?, email = ?, working_hours = ?, map_url = ?, location_note = ?, countries = ?, instagram_username = ?, instagram_url = ?, facebook_username = ?, facebook_url = ?, articles = ?, site_title = ?, site_subtitle = ?, header_caption = ?, catalog_heading = ?, catalog_subheading = ?, hero_banner_title = ?, hero_banner_subtitle = ?, footer_about = ?, footer_copyright = ?, primary_color = ?, font_family = ?, whatsapp_button_text = ?, call_button_text = ?, share_button_text = ?, scroll_top_button_text = ?, site_active = ?, site_maintenance_message = ?, catalog_active = ?, maintenance_message = ?, updated_at = ?
           WHERE id = 1
         `).run(
           catalog.settings.whatsappNumber || '',
@@ -806,6 +820,8 @@ export const createCatalogDatabase = (databasePath) => {
           catalog.settings.callButtonText || 'Zəng et',
           catalog.settings.shareButtonText || 'Paylaş',
           catalog.settings.scrollTopButtonText || 'Yuxarı',
+          siteActiveVal,
+          siteMaintenanceMsg,
           catalogActiveVal,
           maintenanceMsg,
           now
@@ -1189,6 +1205,30 @@ export const createCatalogDatabase = (databasePath) => {
     }
   };
 
+  const updateCatalogStatus = (active, message) => {
+    const isAct = active ? 1 : 0;
+    const msg =
+      message || 'Kataloqda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';
+    db.prepare(`
+      UPDATE catalog_settings
+      SET catalog_active = ?, maintenance_message = ?, updated_at = datetime('now')
+      WHERE id = 1
+    `).run(isAct, msg);
+    return { active: Boolean(isAct), message: msg };
+  };
+
+  const updateSiteStatus = (active, message) => {
+    const isAct = active ? 1 : 0;
+    const msg =
+      message || 'Saytda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';
+    db.prepare(`
+      UPDATE catalog_settings
+      SET site_active = ?, site_maintenance_message = ?, updated_at = datetime('now')
+      WHERE id = 1
+    `).run(isAct, msg);
+    return { active: Boolean(isAct), message: msg };
+  };
+
   const close = () => {
     try {
       checkpoint();
@@ -1202,6 +1242,8 @@ export const createCatalogDatabase = (databasePath) => {
     getAdminData: () => getCatalog({ includeAll: true }),
     saveCatalog,
     publishAtomic,
+    updateCatalogStatus,
+    updateSiteStatus,
     createSnapshot,
     getSnapshots,
     getSnapshot,

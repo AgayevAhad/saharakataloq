@@ -192,10 +192,15 @@ export const catalogApi = {
     });
   },
 
-  toggleCatalogStatus(active: boolean, message: string, csrfToken: string) {
-    return apiClient.post<{ ok: true; active: boolean; message: string }>(
+  toggleCatalogStatus(
+    active: boolean,
+    message: string,
+    csrfToken: string,
+    scope: 'site' | 'catalog' = 'catalog'
+  ) {
+    return apiClient.post<{ ok: true; active: boolean; message: string; scope: string }>(
       '/api/admin/catalog/toggle-status',
-      { active, message },
+      { active, message, scope },
       { headers: { 'X-CSRF-Token': csrfToken } }
     );
   },
