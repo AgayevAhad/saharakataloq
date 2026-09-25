@@ -696,7 +696,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
               <div className="product-detail-modal-layout">
                 {/* Sol Tərəf: Geniş və Ön Planda Olan Şəkil Kartı */}
                 <div className="product-modal-image-col">
-                  {/* Original Brand Logo (Positioned cleanly ABOVE the image stage) */}
+                  {/* Original Brand Logo (Positioned cleanly ABOVE the image stage with persistent light background) */}
                   {brandLogoSrc ? (
                     <div
                       style={{
@@ -710,11 +710,12 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
-                          backgroundColor: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
-                          border: `1px solid ${theme.border}`,
+                          backgroundColor: '#ffffff',
+                          border: '1px solid rgba(226, 232, 240, 0.9)',
                           padding: '6px 14px',
                           borderRadius: '10px',
                           minHeight: '36px',
+                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
                         }}
                       >
                         <img
@@ -741,7 +742,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                     onTouchMove={handleStageTouchMove}
                     onTouchEnd={handleStageTouchEnd}
                     style={{
-                      backgroundColor: theme.mode === 'dark' ? '#131926' : '#ffffff',
+                      backgroundColor: activeMedia?.type === 'video' ? '#000000' : '#ffffff',
                       border: 'none',
                       boxShadow: 'none',
                       cursor: activeMedia?.type === 'image' ? 'zoom-in' : 'default',
@@ -939,7 +940,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                           }}
                           style={{
                             borderColor: activeMediaIndex === index ? theme.primary : theme.border,
-                            background: theme.bgSecondary,
+                            background: '#ffffff',
                           }}
                         >
                           {media.type === 'video' ? (

@@ -112,4 +112,61 @@ describe('Item 54 Dark Mode Refinements & Contrast Verification', () => {
       expect(current?.textContent).toContain('Quraşdırılan Texnika');
     });
   });
+
+  describe('ProductDetailModal Dark Mode Image Stage & Light Logo Styling', () => {
+    it('renders image stage with pure white background and light logo in dark mode', async () => {
+      const { ProductDetailModal } = await import('../components/ProductDetailModal');
+      const testProduct = {
+        id: 'test-ardo-1',
+        title: 'ARDO Soba',
+        modelCode: 'ARDO-SOBA-1',
+        code: 'ARDO-SOBA-1',
+        brandId: 'ardo',
+        brandName: 'ARDO',
+        category: 'oven',
+        categoryName: 'Sobalar',
+        images: ['/media/ardo-soba.jpg'],
+        image: '/media/ardo-soba.jpg',
+        price: 900,
+        status: 'published' as const,
+        specs: [],
+        highlights: [],
+      };
+
+      const testBrand = {
+        id: 'ardo',
+        name: 'ARDO',
+        slug: 'ardo',
+        originCountry: 'İtaliya',
+        manufacturingCountries: ['İtaliya'],
+        logo: '/media/brands/ardo-logo.png',
+        active: true,
+      };
+
+      const { container } = render(
+        <ProductDetailModal
+          product={testProduct}
+          brand={testBrand}
+          theme={darkTheme}
+          visible={true}
+          onClose={vi.fn()}
+          onWhatsApp={vi.fn()}
+          onCall={vi.fn()}
+          onShare={vi.fn()}
+          onCopyLink={vi.fn()}
+        />
+      );
+
+      const stage = container.querySelector('.product-detail-image-stage') as HTMLElement;
+      expect(stage).not.toBeNull();
+      expect(stage.style.backgroundColor).toMatch(/rgb\(255, 255, 255\)|#ffffff/);
+
+      // Logo container above stage should have light/white background
+      const logoImg = container.querySelector('img[alt="ARDO"]') as HTMLElement;
+      expect(logoImg).not.toBeNull();
+      const logoBox = logoImg.parentElement as HTMLElement;
+      expect(logoBox.style.backgroundColor).toMatch(/rgb\(255, 255, 255\)|#ffffff/);
+    });
+  });
 });
+
