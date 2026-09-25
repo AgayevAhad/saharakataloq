@@ -822,8 +822,8 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
       <div
         ref={modalRef}
         className="smart-search-overlay smart-search-inline-dropdown smart-search-embedded-panel"
-        role="region"
-        aria-label="Axtarış paneli"
+        role="dialog"
+        aria-label="Ağıllı axtarış paneli"
         style={{
           position: 'relative',
           width: '100%',

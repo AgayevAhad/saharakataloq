@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Info, Moon, Search, Share2, Sun, X, MapPin, Heart, ShoppingCart } from 'lucide-react';
 import {
   Brand,
@@ -78,6 +78,7 @@ export const Header: React.FC<HeaderProps> = ({
   currentView = 'catalog',
 }) => {
   const [searchFocused, setSearchFocused] = useState(false);
+  const searchInputRef = useRef<HTMLInputElement>(null);
 
   const {
     containerRef: filterRowRef,
@@ -91,288 +92,368 @@ export const Header: React.FC<HeaderProps> = ({
 
   const isQueryActive = searchQuery.trim().length > 0;
 
+  // Escape key & Ctrl+K / Cmd+K listener
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
+        e.preventDefault();
+        setSearchFocused(true);
+        setTimeout(() => searchInputRef.current?.focus(), 50);
+      } else if (e.key === 'Escape' && searchFocused) {
+        e.preventDefault();
+        setSearchFocused(false);
+        searchInputRef.current?.blur();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [searchFocused]);
+
+  const handleCloseSearch = () => {
+    setSearchFocused(false);
+    searchInputRef.current?.blur();
+  };
+
   return (
-    <header
-      className="catalog-header"
-      style={{
-        position: 'sticky',
-        top: 0,
-        zIndex: DESIGN_TOKENS.zIndex.sticky,
-        backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.96)' : 'rgba(255, 255, 255, 0.97)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        borderBottom: `1px solid ${theme.border}`,
-        boxShadow: isDarkMode ? '0 4px 24px rgba(0, 0, 0, 0.45)' : '0 4px 20px rgba(0, 0, 0, 0.06)',
-      }}
-    >
-      <div className="catalog-header-inner">
-        {/* 1. Yuxarı Sətir: Böyüdülmüş Sol Logo - Mərkəzdə Axtarış - Sağda İkonlar */}
-        <div className="header-top-row">
-          <a href="/" className="brand-lockup" aria-label="Sahara Electronics kataloqu">
-            <SaharaLogo className="header-sahara-logo" isDark={isDarkMode} />
-            {settings?.headerCaption && (
-              <span className="brand-caption" style={{ color: theme.textMuted }}>
-                {settings.headerCaption}
-              </span>
-            )}
-          </a>
+    <>
+      <header
+        className={`catalog-header ${searchFocused ? 'has-search-expanded' : ''}`}
+        style={{
+          position: 'sticky',
+          top: 0,
+          zIndex: searchFocused ? DESIGN_TOKENS.zIndex.modal + 15 : DESIGN_TOKENS.zIndex.sticky,
+          backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.96)' : 'rgba(255, 255, 255, 0.97)',
+          backdropFilter: 'blur(20px)',
+          WebkitBackdropFilter: 'blur(20px)',
+          borderBottom: `1px solid ${theme.border}`,
+          boxShadow: searchFocused
+            ? isDarkMode
+              ? '0 24px 50px rgba(0, 0, 0, 0.7)'
+              : '0 20px 40px rgba(0, 0, 0, 0.12)'
+            : isDarkMode
+              ? '0 4px 24px rgba(0, 0, 0, 0.45)'
+              : '0 4px 20px rgba(0, 0, 0, 0.06)',
+          transition: 'box-shadow 0.2s ease, z-index 0.2s ease',
+        }}
+      >
+        <div className="catalog-header-inner">
+          {/* 1. Yuxarı Sətir: Böyüdülmüş Sol Logo - Mərkəzdə Axtarış - Sağda İkonlar */}
+          <div className="header-top-row">
+            <a href="/" className="brand-lockup" aria-label="Sahara Electronics kataloqu">
+              <SaharaLogo className="header-sahara-logo" isDark={isDarkMode} />
+              {settings?.headerCaption && (
+                <span className="brand-caption" style={{ color: theme.textMuted }}>
+                  {settings.headerCaption}
+                </span>
+              )}
+            </a>
 
-          {/* Mərkəzi Geniş Axtarış */}
-          <div
-            className={`catalog-search ${searchFocused ? 'is-focused' : ''} ${searchQuery ? 'has-query' : ''}`}
-            style={{
-              background: theme.bgSecondary,
-              borderColor: theme.border,
-            }}
-            onFocus={() => setSearchFocused(true)}
-          >
-            <Search
-              className="catalog-search-icon"
-              size={18}
-              color={isQueryActive ? theme.primary : theme.textMuted}
-              style={{ transition: 'color 0.2s ease', flexShrink: 0 }}
-            />
-            <input
-              aria-label="Məhsul axtarışı"
-              value={searchQuery}
-              onChange={(event) => onSearchChange(event.target.value)}
-              placeholder="Məhsul, model, brend və ya xüsusiyyət axtar..."
-              style={{ color: theme.text }}
-            />
-            {searchQuery && (
-              <button
-                type="button"
-                aria-label="Axtarışı təmizlə"
-                onClick={() => onSearchChange('')}
-                className="search-clear-btn"
-              >
-                <X size={16} />
-              </button>
-            )}
-            <span className="result-count" style={{ color: theme.textMuted, borderColor: theme.border }}>
-              <b style={{ color: theme.primary }}>{filteredCount}</b>/{totalCount}
-            </span>
-
-            {/* Smart Search Overlay */}
-            <SmartSearchOverlay
-              visible={searchFocused}
-              searchQuery={searchQuery}
-              onSearchChange={(query) => {
-                onSearchChange(query);
-                setSearchFocused(false);
-              }}
-              onClose={() => setSearchFocused(false)}
-              products={products}
-              categories={categories}
-              brands={brands}
-              theme={theme}
-              isDarkMode={isDarkMode}
-              onSelectCategory={onSelectCategory}
-              onSelectBrand={onSelectBrand}
-              onSelectProduct={onSelectProduct}
-            />
-          </div>
-
-          {/* Sağ İdarəetmə Paneli (Arxa plansız və çərçivəsiz təmiz ikonlar) */}
-          <div className="header-actions">
-            {/* Seçilmişlər / Favorites ❤️ */}
-            {onOpenFavorites && (
-              <button
-                type="button"
-                className="icon-action favorite-header-btn"
-                data-favorite-target
-                onClick={onOpenFavorites}
-                style={{
-                  position: 'relative',
-                  color: currentView === 'favorites' || favoritesCount > 0 ? '#ef4444' : theme.text,
-                  border: 'none',
-                  background: 'transparent',
-                }}
-                title={favoritesCount > 0 ? `Seçilmişlər (${favoritesCount})` : 'Seçilmişlər'}
-                aria-label={favoritesCount > 0 ? `Seçilmişlər (${favoritesCount})` : 'Seçilmişlər'}
-              >
-                <Heart
-                  size={20}
-                  fill={favoritesCount > 0 || currentView === 'favorites' ? '#ef4444' : 'none'}
-                  color={favoritesCount > 0 || currentView === 'favorites' ? '#ef4444' : 'currentColor'}
-                />
-                {favoritesCount > 0 && (
-                  <span
-                    className="header-badge header-favorite-badge"
-                    style={{
-                      position: 'absolute',
-                      top: '-4px',
-                      right: '-4px',
-                      backgroundColor: '#ef4444',
-                      color: '#ffffff',
-                      fontSize: '10px',
-                      fontWeight: 800,
-                      minWidth: '18px',
-                      height: '18px',
-                      borderRadius: '9px',
-                      padding: '0 4px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: '0 2px 6px rgba(239, 68, 68, 0.4)',
-                    }}
-                  >
-                    {favoritesCount}
-                  </span>
-                )}
-              </button>
-            )}
-
-            {/* Səbət / Cart 🛒 */}
-            {onOpenCart && (
-              <button
-                type="button"
-                className="icon-action cart-header-btn"
-                data-cart-target
-                onClick={onOpenCart}
-                style={{
-                  position: 'relative',
-                  color: currentView === 'cart' || cartCount > 0 ? '#dc2626' : theme.text,
-                  border: 'none',
-                  background: 'transparent',
-                }}
-                title={cartCount > 0 ? `Səbət (${cartCount})` : 'Səbət'}
-                aria-label={cartCount > 0 ? `Səbət (${cartCount})` : 'Səbət'}
-              >
-                <ShoppingCart size={20} color={currentView === 'cart' || cartCount > 0 ? '#dc2626' : 'currentColor'} />
-                {cartCount > 0 && (
-                  <span
-                    className="header-badge header-cart-badge"
-                    style={{
-                      position: 'absolute',
-                      top: '-4px',
-                      right: '-4px',
-                      backgroundColor: '#dc2626',
-                      color: '#ffffff',
-                      fontSize: '10px',
-                      fontWeight: 800,
-                      minWidth: '18px',
-                      height: '18px',
-                      borderRadius: '9px',
-                      padding: '0 4px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      boxShadow: '0 2px 6px rgba(220, 38, 38, 0.4)',
-                    }}
-                  >
-                    {cartCount}
-                  </span>
-                )}
-              </button>
-            )}
-
-            {settings?.instagramUrl && (
-              <SocialPopoverButton
-                platform="instagram"
-                url={settings.instagramUrl}
-                username={settings.instagramUsername}
-                theme={theme}
-                position="bottom"
-              />
-            )}
-            {settings?.facebookUrl && (
-              <SocialPopoverButton
-                platform="facebook"
-                url={settings.facebookUrl}
-                username={settings.facebookUsername}
-                theme={theme}
-                position="bottom"
-              />
-            )}
-            <button
-              className="icon-action"
-              onClick={onOpenInverterInfo}
+            {/* Mərkəzi Geniş Axtarış */}
+            <div
+              className={`catalog-search ${searchFocused ? 'is-focused' : ''} ${searchQuery ? 'has-query' : ''}`}
               style={{
-                color: theme.primary,
-                border: 'none',
-                background: 'transparent',
+                background: theme.bgSecondary,
+                borderColor: theme.border,
               }}
-              title="Texnologiyalar və bələdçi haqqında"
+              onClick={() => {
+                setSearchFocused(true);
+                searchInputRef.current?.focus();
+              }}
             >
-              <Info size={20} />
-            </button>
-            {onOpenDrawer && (
+              <Search
+                className="catalog-search-icon"
+                size={18}
+                color={isQueryActive ? theme.primary : theme.textMuted}
+                style={{ transition: 'color 0.2s ease', flexShrink: 0 }}
+              />
+              <input
+                ref={searchInputRef}
+                aria-label="Məhsul axtarışı"
+                value={searchQuery}
+                onFocus={() => setSearchFocused(true)}
+                onChange={(event) => onSearchChange(event.target.value)}
+                placeholder="Məhsul, model, brend və ya xüsusiyyət axtar..."
+                style={{ color: theme.text }}
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  aria-label="Axtarışı təmizlə"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSearchChange('');
+                    searchInputRef.current?.focus();
+                  }}
+                  className="search-clear-btn"
+                >
+                  <X size={16} />
+                </button>
+              )}
+              <span className="result-count" style={{ color: theme.textMuted, borderColor: theme.border }}>
+                <b style={{ color: theme.primary }}>{filteredCount}</b>/{totalCount}
+              </span>
+            </div>
+
+            {/* Sağ İdarəetmə Paneli (Arxa plansız və çərçivəsiz təmiz ikonlar) */}
+            <div className="header-actions">
+              {/* Seçilmişlər / Favorites ❤️ */}
+              {onOpenFavorites && (
+                <button
+                  type="button"
+                  className="icon-action favorite-header-btn"
+                  data-favorite-target
+                  onClick={onOpenFavorites}
+                  style={{
+                    position: 'relative',
+                    color: currentView === 'favorites' || favoritesCount > 0 ? '#ef4444' : theme.text,
+                    border: 'none',
+                    background: 'transparent',
+                  }}
+                  title={favoritesCount > 0 ? `Seçilmişlər (${favoritesCount})` : 'Seçilmişlər'}
+                  aria-label={favoritesCount > 0 ? `Seçilmişlər (${favoritesCount})` : 'Seçilmişlər'}
+                >
+                  <Heart
+                    size={20}
+                    fill={favoritesCount > 0 || currentView === 'favorites' ? '#ef4444' : 'none'}
+                    color={favoritesCount > 0 || currentView === 'favorites' ? '#ef4444' : 'currentColor'}
+                  />
+                  {favoritesCount > 0 && (
+                    <span
+                      className="header-badge header-favorite-badge"
+                      style={{
+                        position: 'absolute',
+                        top: '-4px',
+                        right: '-4px',
+                        backgroundColor: '#ef4444',
+                        color: '#ffffff',
+                        fontSize: '10px',
+                        fontWeight: 800,
+                        minWidth: '18px',
+                        height: '18px',
+                        borderRadius: '9px',
+                        padding: '0 4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 2px 6px rgba(239, 68, 68, 0.4)',
+                      }}
+                    >
+                      {favoritesCount}
+                    </span>
+                  )}
+                </button>
+              )}
+
+              {/* Səbət / Cart 🛒 */}
+              {onOpenCart && (
+                <button
+                  type="button"
+                  className="icon-action cart-header-btn"
+                  data-cart-target
+                  onClick={onOpenCart}
+                  style={{
+                    position: 'relative',
+                    color: currentView === 'cart' || cartCount > 0 ? '#dc2626' : theme.text,
+                    border: 'none',
+                    background: 'transparent',
+                  }}
+                  title={cartCount > 0 ? `Səbət (${cartCount})` : 'Səbət'}
+                  aria-label={cartCount > 0 ? `Səbət (${cartCount})` : 'Səbət'}
+                >
+                  <ShoppingCart size={20} color={currentView === 'cart' || cartCount > 0 ? '#dc2626' : 'currentColor'} />
+                  {cartCount > 0 && (
+                    <span
+                      className="header-badge header-cart-badge"
+                      style={{
+                        position: 'absolute',
+                        top: '-4px',
+                        right: '-4px',
+                        backgroundColor: '#dc2626',
+                        color: '#ffffff',
+                        fontSize: '10px',
+                        fontWeight: 800,
+                        minWidth: '18px',
+                        height: '18px',
+                        borderRadius: '9px',
+                        padding: '0 4px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        boxShadow: '0 2px 6px rgba(220, 38, 38, 0.4)',
+                      }}
+                    >
+                      {cartCount}
+                    </span>
+                  )}
+                </button>
+              )}
+
+              {settings?.instagramUrl && (
+                <SocialPopoverButton
+                  platform="instagram"
+                  url={settings.instagramUrl}
+                  username={settings.instagramUsername}
+                  theme={theme}
+                  position="bottom"
+                />
+              )}
+              {settings?.facebookUrl && (
+                <SocialPopoverButton
+                  platform="facebook"
+                  url={settings.facebookUrl}
+                  username={settings.facebookUsername}
+                  theme={theme}
+                  position="bottom"
+                />
+              )}
               <button
-                className="icon-action drawer-trigger-btn"
-                data-testid="drawer-trigger"
-                onClick={onOpenDrawer}
+                className="icon-action"
+                onClick={onOpenInverterInfo}
                 style={{
                   color: theme.primary,
                   border: 'none',
                   background: 'transparent',
                 }}
-                title="Sərgi salonları və ünvanlar"
-                aria-label="Sərgi salonları və ünvanlar"
+                title="Texnologiyalar və bələdçi haqqında"
               >
-                <MapPin size={20} />
+                <Info size={20} />
               </button>
-            )}
-            <button
-              className="share-action"
-              onClick={onOpenCatalogShare}
-              style={{ background: theme.primary }}
-            >
-              <Share2 size={17} />
-              <span>{settings?.shareButtonText || 'Paylaş'}</span>
-            </button>
-            <button
-              className="icon-action"
-              onClick={onToggleTheme}
-              style={{
-                color: isDarkMode ? '#f59e0b' : '#475569',
-                border: 'none',
-                background: 'transparent',
-              }}
-              title="Görünüşü dəyiş"
-            >
-              {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
-            </button>
+              {onOpenDrawer && (
+                <button
+                  className="icon-action drawer-trigger-btn"
+                  data-testid="drawer-trigger"
+                  onClick={onOpenDrawer}
+                  style={{
+                    color: theme.primary,
+                    border: 'none',
+                    background: 'transparent',
+                  }}
+                  title="Sərgi salonları və ünvanlar"
+                  aria-label="Sərgi salonları və ünvanlar"
+                >
+                  <MapPin size={20} />
+                </button>
+              )}
+              <button
+                className="share-action"
+                onClick={onOpenCatalogShare}
+                style={{ background: theme.primary }}
+              >
+                <Share2 size={17} />
+                <span>{settings?.shareButtonText || 'Paylaş'}</span>
+              </button>
+              <button
+                className="icon-action"
+                onClick={onToggleTheme}
+                style={{
+                  color: isDarkMode ? '#f59e0b' : '#475569',
+                  border: 'none',
+                  background: 'transparent',
+                }}
+                title="Görünüşü dəyiş"
+              >
+                {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+              </button>
+            </div>
           </div>
-        </div>
 
-        {/* 2. Alt Sətir: Panel daxilində yerləşən Kateqoriya Seçimləri */}
-        <div
-          ref={filterRowRef}
-          {...dragProps}
-          className="filter-row category-filter-row no-scrollbar"
-          aria-label="Kateqoriya filtri"
-          style={{ cursor: 'grab' }}
-        >
-          <button
-            className={selectedCategory === 'all' ? 'filter-pill active' : 'filter-pill'}
-            onClick={(e) => {
-              if (hasMoved()) return;
-              scrollItemIntoView(e);
-              onSelectCategory('all');
-            }}
-            style={pillStyle(theme)}
+          {/* Expanded Smart Search Section inside panel */}
+          {searchFocused && (
+            <div
+              className="catalog-header-search-expand-wrap"
+              style={{
+                width: '100%',
+                maxHeight: 'calc(100vh - 160px)',
+                overflowY: 'auto',
+                padding: '4px 0 16px',
+                position: 'relative',
+                animation: 'smartSearchSlideDown 0.22s cubic-bezier(0.16, 1, 0.3, 1)',
+              }}
+            >
+              <SmartSearchOverlay
+                visible={true}
+                inline={true}
+                embeddedInHeader={true}
+                searchQuery={searchQuery}
+                onSearchChange={(query) => {
+                  onSearchChange(query);
+                }}
+                onClose={handleCloseSearch}
+                products={products}
+                categories={categories}
+                brands={brands}
+                theme={theme}
+                isDarkMode={isDarkMode}
+                onSelectCategory={(cat) => {
+                  onSelectCategory(cat as ProductCategory);
+                  handleCloseSearch();
+                }}
+                onSelectBrand={(brand) => {
+                  onSelectBrand(brand);
+                  handleCloseSearch();
+                }}
+                onSelectProduct={(prod) => {
+                  onSelectProduct?.(prod);
+                  handleCloseSearch();
+                }}
+              />
+            </div>
+          )}
+
+          {/* 2. Alt Sətir: Panel daxilində yerləşən Kateqoriya Seçimləri */}
+          <div
+            ref={filterRowRef}
+            {...dragProps}
+            className="filter-row category-filter-row no-scrollbar"
+            aria-label="Kateqoriya filtri"
+            style={{ cursor: 'grab' }}
           >
-            <CategoryGlyph id="all" compact plain />
-            <span>Bütün məhsullar</span>
-          </button>
-          {categories.map((category) => (
             <button
-              key={category.id}
-              className={selectedCategory === category.id ? 'filter-pill active' : 'filter-pill'}
+              className={selectedCategory === 'all' ? 'filter-pill active' : 'filter-pill'}
               onClick={(e) => {
                 if (hasMoved()) return;
                 scrollItemIntoView(e);
-                onSelectCategory(category.id);
+                onSelectCategory('all');
               }}
               style={pillStyle(theme)}
             >
-              <CategoryGlyph id={category.id} slug={category.slug || category.id} compact plain />
-              <span>{category.name}</span>
+              <CategoryGlyph id="all" compact plain />
+              <span>Bütün məhsullar</span>
             </button>
-          ))}
+            {categories.map((category) => (
+              <button
+                key={category.id}
+                className={selectedCategory === category.id ? 'filter-pill active' : 'filter-pill'}
+                onClick={(e) => {
+                  if (hasMoved()) return;
+                  scrollItemIntoView(e);
+                  onSelectCategory(category.id);
+                }}
+                style={pillStyle(theme)}
+              >
+                <CategoryGlyph id={category.id} slug={category.slug || category.id} compact plain />
+                <span>{category.name}</span>
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+
+      {/* Search Clickaway Backdrop */}
+      {searchFocused && (
+        <div
+          className="header-search-clickaway"
+          onClick={handleCloseSearch}
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: DESIGN_TOKENS.zIndex.modal,
+            backgroundColor: 'rgba(0, 0, 0, 0.35)',
+            backdropFilter: 'blur(3px)',
+            WebkitBackdropFilter: 'blur(3px)',
+          }}
+        />
+      )}
+    </>
   );
 };
