@@ -3,6 +3,7 @@ import React from 'react';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { ProductCard } from '../components/ProductCard';
 import { ProductDetailModal } from '../components/ProductDetailModal';
+import { FloatingActions } from '../components/FloatingActions';
 import { CatalogApp } from '../apps/CatalogApp';
 import { lightTheme } from '../types/theme';
 import { Product } from '../types/product';
@@ -141,5 +142,58 @@ describe('Permanent Price & Modernized Sort Filter Tests', () => {
     expect(screen.getByText('Yeni modellər')).toBeDefined();
     expect(screen.queryByText('Endirimli')).toBeNull();
     expect(screen.queryByText('Ən böyük endirim')).toBeNull();
+  });
+
+  it('6. FloatingActions renders Sayta keçid link above WA and Call buttons with correct color scheme', () => {
+    const mockSettings = {
+      phoneNumber: '+994124445566',
+      whatsappNumber: '994501234567',
+      catalogActive: true,
+      siteName: 'Sahara Electronics',
+    };
+
+    const { container } = render(
+      <FloatingActions
+        settings={mockSettings as any}
+        theme={lightTheme}
+        showToast={() => {}}
+      />
+    );
+
+    const siteLink = container.querySelector('.floating-site-btn') as HTMLAnchorElement;
+    expect(siteLink).toBeDefined();
+    expect(siteLink.getAttribute('href')).toBe('/');
+    expect(siteLink.textContent).toContain('Sayta keçid');
+
+    const waBtn = container.querySelector('.floating-wa') as HTMLButtonElement;
+    const callBtn = container.querySelector('.floating-call') as HTMLButtonElement;
+    expect(waBtn).toBeDefined();
+    expect(callBtn).toBeDefined();
+  });
+
+  it('7. Mobile filter drawer has zero blur on its backdrop', () => {
+    const mockCatalogData = {
+      catalog: {
+        brands: [{ id: 'ardo', name: 'ARDO', active: true }],
+        categories: [{ id: 'cooktops', name: 'Bişirmə panelləri', active: true }],
+        products: [mockProductWithPrice],
+        settings: { catalogActive: true },
+      },
+    };
+
+    const { container } = render(<CatalogApp initialData={mockCatalogData} />);
+
+    // Click ARDO brand card
+    const ardoCard = container.querySelector('.brand-showcase-card.brand-ardo') as HTMLElement;
+    fireEvent.click(ardoCard);
+
+    // Click mobile filter button
+    const mobileFilterBtn = container.querySelector('.catalog-mobile-filter-btn') as HTMLElement;
+    expect(mobileFilterBtn).toBeDefined();
+    fireEvent.click(mobileFilterBtn);
+
+    const backdrop = container.querySelector('.catalog-mobile-filter-backdrop') as HTMLElement;
+    expect(backdrop).toBeDefined();
+    expect(backdrop.style.backdropFilter).toBe('none');
   });
 });

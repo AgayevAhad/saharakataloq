@@ -1136,8 +1136,9 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                       position: 'fixed',
                       inset: 0,
                       zIndex: 200,
-                      backgroundColor: 'rgba(0, 0, 0, 0.65)',
-                      backdropFilter: 'blur(4px)',
+                      backgroundColor: 'rgba(0, 0, 0, 0.45)',
+                      backdropFilter: 'none',
+                      WebkitBackdropFilter: 'none',
                       display: 'flex',
                       justifyContent: 'flex-start',
                     }}

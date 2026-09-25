@@ -269,19 +269,26 @@
   transform: scale(0.93);
 }
 .floating-wa:hover {
+  background-color: rgba(34, 197, 94, 0.24) !important;
   box-shadow:
-    0 12px 30px rgba(34, 197, 94, 0.55),
-    0 2px 8px rgba(0, 0, 0, 0.15) !important;
+    0 10px 28px rgba(34, 197, 94, 0.35),
+    0 2px 8px rgba(0, 0, 0, 0.1) !important;
 }
 .floating-call:hover {
+  background-color: rgba(220, 38, 38, 0.24) !important;
   box-shadow:
-    0 12px 30px rgba(220, 38, 38, 0.55),
-    0 2px 8px rgba(0, 0, 0, 0.15) !important;
+    0 10px 28px rgba(220, 38, 38, 0.35),
+    0 2px 8px rgba(0, 0, 0, 0.1) !important;
 }
 .floating-top:hover {
   box-shadow:
     0 12px 30px rgba(15, 23, 42, 0.25),
     0 2px 8px rgba(0, 0, 0, 0.08) !important;
+}
+.floating-site-btn:hover {
+  opacity: 1 !important;
+  transform: scale(1.05) translateY(-2px) !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
 }
 
 

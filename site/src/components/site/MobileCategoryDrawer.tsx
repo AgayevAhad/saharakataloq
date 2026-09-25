@@ -138,9 +138,9 @@ export const MobileCategoryDrawer: React.FC<MobileCategoryDrawerProps> = ({
         style={{
           position: 'fixed',
           inset: 0,
-          backgroundColor: 'rgba(0, 0, 0, 0.65)',
-          backdropFilter: 'blur(4px)',
-          WebkitBackdropFilter: 'blur(4px)',
+          backgroundColor: 'rgba(0, 0, 0, 0.45)',
+          backdropFilter: 'none',
+          WebkitBackdropFilter: 'none',
           animation: 'fadeIn 0.2s ease forwards',
         }}
         aria-hidden="true"
