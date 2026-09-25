@@ -13,6 +13,8 @@ export interface ShimmerImageProps extends React.ImgHTMLAttributes<HTMLImageElem
   spinnerSize?: number;
 }
 
+const globalLoadedImageUrls = new Set<string>();
+
 export const ShimmerImage = React.forwardRef<HTMLImageElement, ShimmerImageProps>(
   (
     {
@@ -34,23 +36,24 @@ export const ShimmerImage = React.forwardRef<HTMLImageElement, ShimmerImageProps
     },
     ref
   ) => {
-    const [loadedSrc, setLoadedSrc] = useState<string | null>(null);
+    const [loadedSrc, setLoadedSrc] = useState<string | null>(() => {
+      if (src && globalLoadedImageUrls.has(src)) return src;
+      return null;
+    });
     const [failedSrc, setFailedSrc] = useState<string | null>(null);
     const isLoaded = loadedSrc === src;
     const hasError = failedSrc === src;
     const internalImgRef = useRef<HTMLImageElement | null>(null);
 
-    const checkComplete = (img: HTMLImageElement | null) => {
-      if (img && img.complete && img.naturalWidth > 0) {
-        setLoadedSrc(src);
+    const markLoaded = (url: string) => {
+      if (url) {
+        globalLoadedImageUrls.add(url);
+        setLoadedSrc(url);
       }
     };
 
     const setRefs = (node: HTMLImageElement | null) => {
       internalImgRef.current = node;
-      if (node) {
-        checkComplete(node);
-      }
       if (typeof ref === 'function') {
         ref(node);
       } else if (ref) {
@@ -59,33 +62,56 @@ export const ShimmerImage = React.forwardRef<HTMLImageElement, ShimmerImageProps
     };
 
     useEffect(() => {
-      const img = internalImgRef.current;
-      if (!img) return;
-
-      // If image is already complete (from cache or fast load)
-      if (img.complete && img.naturalWidth > 0) {
+      if (!src) return;
+      if (globalLoadedImageUrls.has(src)) {
         setLoadedSrc(src);
         return;
       }
 
+      let isCancelled = false;
+      const img = internalImgRef.current;
+      if (!img) return;
+
+      // If image is already complete with natural dimensions (cached)
+      if (img.complete && img.naturalWidth > 0) {
+        markLoaded(src);
+        return;
+      }
+
+      if (img.decode) {
+        img
+          .decode()
+          .then(() => {
+            if (!isCancelled && (img.complete || img.naturalWidth > 0)) {
+              markLoaded(src);
+            }
+          })
+          .catch(() => {
+            if (!isCancelled && img.complete && img.naturalWidth > 0) {
+              markLoaded(src);
+            }
+          });
+      }
+
       const onNativeLoad = () => {
-        setLoadedSrc(src);
+        if (!isCancelled) markLoaded(src);
       };
       const onNativeError = () => {
-        setFailedSrc(src);
+        if (!isCancelled) setFailedSrc(src);
       };
 
       img.addEventListener('load', onNativeLoad);
       img.addEventListener('error', onNativeError);
 
       return () => {
+        isCancelled = true;
         img.removeEventListener('load', onNativeLoad);
         img.removeEventListener('error', onNativeError);
       };
     }, [src]);
 
     const handleLoad = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
-      setLoadedSrc(src);
+      markLoaded(src);
       if (onLoad) onLoad(e);
     };
 
