@@ -150,4 +150,62 @@ describe('Admin Panel Mode Separation (Site CMS vs Catalog PIM)', () => {
     window.location = new URL('http://localhost:5174/AdministratorNT') as any;
     expect(getAppMode()).toBe('site');
   });
+
+  it('filters out site products and isolates catalog brands (ARDO, ARTEL, LOTUS) in Catalog mode', () => {
+    const mixedPayload = {
+      ...mockAdminPayload,
+      brands: [
+        { id: 'ardo', name: 'ARDO', slug: 'ardo', active: true },
+        { id: 'artel', name: 'ARTEL', slug: 'artel', active: true },
+        { id: 'bosch', name: 'Bosch', slug: 'bosch', active: true },
+        { id: 'samsung', name: 'Samsung', slug: 'samsung', active: true },
+      ],
+      products: [
+        {
+          id: 'p-ardo-1',
+          code: 'ARDO-100',
+          title: 'ARDO Soyuducu',
+          brandId: 'ardo',
+          category: 'fridge',
+          status: 'published' as const,
+          createdAt: '2026-01-01',
+          updatedAt: '2026-01-01',
+        },
+        {
+          id: 'p-bosch-1',
+          code: 'BOSCH-900',
+          title: 'Bosch Paltaryuyan',
+          brandId: 'bosch',
+          category: 'washing',
+          status: 'published' as const,
+          createdAt: '2026-01-01',
+          updatedAt: '2026-01-01',
+        },
+      ],
+    };
+
+    render(
+      <AdminShell
+        initial={mixedPayload}
+        theme={lightTheme}
+        mode="catalog"
+        onSave={onSave}
+        onPublish={onPublish}
+        onUpload={onUpload}
+        onLogout={onLogout}
+        showToast={showToast}
+      />
+    );
+
+    // Click on products tab
+    fireEvent.click(screen.getByRole('button', { name: /Məhsullar \(Modellər\)/i }));
+
+    // ARDO product must be present
+    expect(screen.getByText('ARDO Soyuducu')).toBeDefined();
+    expect(screen.getByText('ARDO-100')).toBeDefined();
+
+    // Bosch site product must NOT be present in Catalog mode
+    expect(screen.queryByText('Bosch Paltaryuyan')).toBeNull();
+    expect(screen.queryByText('BOSCH-900')).toBeNull();
+  });
 });

@@ -362,22 +362,51 @@ export const AdminShell: React.FC<AdminShellProps> = ({
     }
   };
 
+  const SUPPORTED_CATALOG_BRAND_IDS = useMemo(() => ['ardo', 'artel', 'lotus'], []);
+
+  const modeCatalog = useMemo(() => {
+    if (activeMode === 'catalog') {
+      const catProducts = catalog.products.filter((p) =>
+        SUPPORTED_CATALOG_BRAND_IDS.includes((p.brandId || '').toLowerCase())
+      );
+      const catBrands = catalog.brands.filter((b) =>
+        SUPPORTED_CATALOG_BRAND_IDS.includes(b.id.toLowerCase())
+      );
+      const catCategoryIds = new Set(catProducts.map((p) => p.category));
+      const catCategories = catalog.categories.filter((c) => catCategoryIds.has(c.id));
+      return {
+        ...catalog,
+        products: catProducts,
+        brands: catBrands.length ? catBrands : catalog.brands,
+        categories: catCategories.length ? catCategories : catalog.categories,
+      };
+    }
+    return catalog;
+  }, [catalog, activeMode, SUPPORTED_CATALOG_BRAND_IDS]);
+
   const availableCountries = useMemo(() => {
     const list = new Set<string>();
-    (catalog.settings?.countries || DEFAULT_COUNTRIES).forEach((c) => list.add(c));
-    catalog.brands.forEach((b) => {
+    (modeCatalog.settings?.countries || DEFAULT_COUNTRIES).forEach((c) => list.add(c));
+    modeCatalog.brands.forEach((b) => {
       if (b.originCountry) list.add(b.originCountry);
-      b.manufacturingCountries.forEach((c) => list.add(c));
+      (b.manufacturingCountries || []).forEach((c) => list.add(c));
     });
-    catalog.products.forEach((p) => {
+    modeCatalog.products.forEach((p) => {
       if (p.manufacturingCountry) list.add(p.manufacturingCountry);
     });
     return Array.from(list);
-  }, [catalog]);
+  }, [modeCatalog]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return catalog.products.filter((p) => {
+    const sourceProducts =
+      activeMode === 'catalog'
+        ? catalog.products.filter((p) =>
+            SUPPORTED_CATALOG_BRAND_IDS.includes((p.brandId || '').toLowerCase())
+          )
+        : catalog.products;
+
+    return sourceProducts.filter((p) => {
       const matchQuery =
         !q ||
         p.code.toLowerCase().includes(q) ||
@@ -440,6 +469,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
       );
     });
   }, [
+    activeMode,
     adminBrand,
     adminCategory,
     adminMediaFilter,
@@ -451,6 +481,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
     completeness,
     initial.products,
     query,
+    SUPPORTED_CATALOG_BRAND_IDS,
   ]);
 
   // Executive Dashboard Stats
@@ -827,12 +858,12 @@ export const AdminShell: React.FC<AdminShellProps> = ({
   // CSV Export
   const handleExportCsv = () => {
     try {
-      const csvContent = exportProductsToCsv(catalog.products, catalog.categories, catalog.brands);
+      const csvContent = exportProductsToCsv(modeCatalog.products, modeCatalog.categories, modeCatalog.brands);
       downloadFile(
         csvContent,
-        `sahara-kataloq-mehsullar-${new Date().toISOString().slice(0, 10)}.csv`
+        `sahara-${activeMode === 'catalog' ? 'kataloq' : 'sayt'}-mehsullar-${new Date().toISOString().slice(0, 10)}.csv`
       );
-      showToast('Bütün məhsullar CSV formatında endirildi.');
+      showToast('Məhsullar CSV formatında endirildi.');
     } catch (e) {
       showToast(`İxrac xətası: ${e instanceof Error ? e.message : 'Uğursuz oldu'}`);
     }
@@ -841,12 +872,12 @@ export const AdminShell: React.FC<AdminShellProps> = ({
   // Excel Export (.xlsx)
   const handleExportExcel = () => {
     try {
-      const buffer = exportProductsToExcel(catalog.products, catalog.categories, catalog.brands);
+      const buffer = exportProductsToExcel(modeCatalog.products, modeCatalog.categories, modeCatalog.brands);
       downloadExcelFile(
         buffer,
-        `sahara-kataloq-mehsullar-${new Date().toISOString().slice(0, 10)}.xlsx`
+        `sahara-${activeMode === 'catalog' ? 'kataloq' : 'sayt'}-mehsullar-${new Date().toISOString().slice(0, 10)}.xlsx`
       );
-      showToast('Bütün məhsullar Excel (.xlsx) formatında endirildi.');
+      showToast('Məhsullar Excel (.xlsx) formatında endirildi.');
     } catch (e) {
       showToast(`İxrac xətası: ${e instanceof Error ? e.message : 'Uğursuz oldu'}`);
     }
@@ -1218,7 +1249,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
         {tab === 'dashboard' && (
           <AnalyticsSection
             theme={theme}
-            catalog={catalog}
+            catalog={modeCatalog}
             analyticsRange={analyticsRange}
             customStartDate={customStartDate}
             customEndDate={customEndDate}
@@ -1249,7 +1280,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
         {tab === 'products' && (
           <ProductsSection
             theme={theme}
-            catalog={catalog}
+            catalog={modeCatalog}
             initialProducts={initial.products}
             query={query}
             setQuery={setQuery}
@@ -1277,7 +1308,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
             handleDownloadExcelTemplate={handleDownloadExcelTemplate}
             handleDownloadCsvTemplate={handleDownloadCsvTemplate}
             handleBulkSetStatus={handleBulkSetStatus}
-            onNewProduct={() => setEditing(emptyProduct(catalog.brands, catalog.categories))}
+            onNewProduct={() => setEditing(emptyProduct(modeCatalog.brands, modeCatalog.categories))}
             onOpenEditProduct={(p) => handleOpenEditProduct(p)}
             onRevertSingleProduct={handleRevertSingleProduct}
             onDuplicateProduct={duplicateProduct}
