@@ -587,12 +587,12 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                   : '0 20px 40px -10px rgba(0, 0, 0, 0.25)',
             }}
           >
-            {/* Modal Sticky Header */}
+            {/* Modal Sticky Header (Clean borderless header with Category Glyph & Text Actions) */}
             <div
               className="modal-header-sticky"
               style={{
-                backgroundColor: theme.bgSecondary,
-                borderBottom: `1px solid ${theme.border}`,
+                backgroundColor: 'transparent',
+                borderBottom: 'none',
               }}
             >
               <div
@@ -602,8 +602,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                 <span
                   style={{
                     color: theme.text,
-                    fontSize: '13px',
-                    fontWeight: 700,
+                    fontSize: '14px',
+                    fontWeight: 750,
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -613,46 +613,57 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                 </span>
               </div>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flexShrink: 0 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexShrink: 0 }}>
                 <button
                   onClick={handlePrint}
+                  className="modal-header-action-btn"
                   style={{
-                    background: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+                    background: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
                     border: 'none',
-                    padding: '6px 8px',
+                    padding: '7px 12px',
                     borderRadius: '8px',
                     cursor: 'pointer',
                     color: theme.text,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    gap: '6px',
+                    fontSize: '13px',
+                    fontWeight: 650,
                     boxShadow: 'none',
+                    transition: 'all 0.15s ease',
                   }}
                   title="Çap et / PDF Saxla"
                 >
-                  <Printer size={16} />
+                  <Printer size={15} />
+                  <span>Çap</span>
                 </button>
 
                 <button
                   type="button"
-                  className="modal-share-btn"
+                  className="modal-share-btn modal-header-action-btn"
                   onClick={() => onShare(product)}
                   style={{
-                    background: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+                    background: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
                     border: 'none',
-                    padding: '6px 8px',
+                    padding: '7px 12px',
                     borderRadius: '8px',
                     cursor: 'pointer',
                     color: theme.primary,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    gap: '6px',
+                    fontSize: '13px',
+                    fontWeight: 650,
                     boxShadow: 'none',
+                    transition: 'all 0.15s ease',
                   }}
                   title="Paylaş"
                   aria-label="Paylaş"
                 >
-                  <Share2 size={16} />
+                  <Share2 size={15} />
+                  <span>Paylaş</span>
                 </button>
 
                 <button
@@ -661,7 +672,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                   style={{
                     backgroundColor: theme.primary,
                     border: 'none',
-                    padding: '7px 12px',
+                    padding: '7px 14px',
                     borderRadius: '8px',
                     cursor: 'pointer',
                     color: '#ffffff',
@@ -669,7 +680,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                     alignItems: 'center',
                     justifyContent: 'center',
                     fontWeight: 800,
-                    gap: '5px',
+                    gap: '6px',
                     fontSize: '13px',
                     boxShadow: '0 2px 8px rgba(220, 38, 38, 0.35)',
                   }}
@@ -685,6 +696,40 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
               <div className="product-detail-modal-layout">
                 {/* Sol Tərəf: Geniş və Ön Planda Olan Şəkil Kartı */}
                 <div className="product-modal-image-col">
+                  {/* Original Brand Logo (Positioned cleanly ABOVE the image stage) */}
+                  {brandLogoSrc ? (
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'flex-start',
+                        marginBottom: '4px',
+                      }}
+                    >
+                      <div
+                        style={{
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          backgroundColor: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                          border: `1px solid ${theme.border}`,
+                          padding: '6px 14px',
+                          borderRadius: '10px',
+                          minHeight: '36px',
+                        }}
+                      >
+                        <img
+                          src={brandLogoSrc}
+                          alt={brand?.name || product.brandId || ''}
+                          style={{
+                            maxHeight: '26px',
+                            maxWidth: '110px',
+                            objectFit: 'contain',
+                          }}
+                        />
+                      </div>
+                    </div>
+                  ) : null}
+
                   <div
                     className="product-detail-image-stage"
                     onClick={() => {
@@ -927,32 +972,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                       ))}
                     </div>
                   )}
-
-                  {/* Original Brand Logo */}
-                  {brandLogoSrc ? (
-                    <div
-                      style={{
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        backgroundColor: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.02)',
-                        border: 'none',
-                        padding: '8px 16px',
-                        borderRadius: '12px',
-                        minHeight: '44px',
-                      }}
-                    >
-                      <img
-                        src={brandLogoSrc}
-                        alt={brand?.name || product.brandId || ''}
-                        style={{
-                          maxHeight: '30px',
-                          maxWidth: '120px',
-                          objectFit: 'contain',
-                        }}
-                      />
-                    </div>
-                  ) : null}
                 </div>
 
                 {/* Sağ Tərəf: İncə və Aydın Detal & Əlaqə Paneli */}
@@ -971,7 +990,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                       {product.title}
                     </h2>
 
-                    {/* Overview & Description Preview Section (DIRECTLY UNDER TITLE: Max 3 lines with 'Davamını oxu...' and Video Overview Preview) */}
+                    {/* Overview & Description Preview Section */}
                     {(Boolean(displayDescription) || Boolean(overviewVideo)) && (
                       <div
                         className="modal-overview-card"
@@ -1031,132 +1050,132 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                           </div>
                         ) : null}
 
-                      {/* Video Overview Preview Card (Displayed ONLY if video is attached) */}
-                      {overviewVideo && (
-                        <div
-                          onClick={() => {
-                            const vIdx = mediaItems.findIndex((m) => m.type === 'video');
-                            if (vIdx !== -1) setActiveMediaIndex(vIdx);
-                            setIsFullscreenImage(true);
-                          }}
-                          style={{
-                            position: 'relative',
-                            borderRadius: '10px',
-                            overflow: 'hidden',
-                            backgroundColor: '#0f172a',
-                            cursor: 'pointer',
-                            border: '1px solid rgba(255, 255, 255, 0.12)',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: '12px',
-                            padding: '8px 12px',
-                            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                            transition: 'transform 0.2s ease',
-                          }}
-                        >
+                        {/* Video Overview Preview Card (Displayed ONLY if video is attached) */}
+                        {overviewVideo && (
                           <div
+                            onClick={() => {
+                              const vIdx = mediaItems.findIndex((m) => m.type === 'video');
+                              if (vIdx !== -1) setActiveMediaIndex(vIdx);
+                              setIsFullscreenImage(true);
+                            }}
                             style={{
                               position: 'relative',
-                              width: '56px',
-                              height: '42px',
-                              borderRadius: '6px',
+                              borderRadius: '10px',
                               overflow: 'hidden',
-                              backgroundColor: '#1e293b',
+                              backgroundColor: '#0f172a',
+                              cursor: 'pointer',
+                              border: '1px solid rgba(255, 255, 255, 0.12)',
                               display: 'flex',
                               alignItems: 'center',
-                              justifyContent: 'center',
-                              flexShrink: 0,
+                              gap: '12px',
+                              padding: '8px 12px',
+                              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
+                              transition: 'transform 0.2s ease',
                             }}
                           >
-                            {overviewVideo.poster ? (
-                              <img
-                                src={overviewVideo.poster}
-                                alt=""
-                                style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                              />
-                            ) : (
-                              <video
-                                src={overviewVideo.url}
-                                muted
-                                playsInline
-                                style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }}
-                              />
-                            )}
                             <div
                               style={{
-                                position: 'absolute',
-                                inset: 0,
-                                backgroundColor: 'rgba(0, 0, 0, 0.35)',
+                                position: 'relative',
+                                width: '56px',
+                                height: '42px',
+                                borderRadius: '6px',
+                                overflow: 'hidden',
+                                backgroundColor: '#1e293b',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
+                                flexShrink: 0,
                               }}
                             >
+                              {overviewVideo.poster ? (
+                                <img
+                                  src={overviewVideo.poster}
+                                  alt=""
+                                  style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
+                              ) : (
+                                <video
+                                  src={overviewVideo.url}
+                                  muted
+                                  playsInline
+                                  style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }}
+                                />
+                              )}
                               <div
                                 style={{
-                                  width: '20px',
-                                  height: '20px',
-                                  borderRadius: '50%',
-                                  backgroundColor: '#dc2626',
-                                  color: '#ffffff',
+                                  position: 'absolute',
+                                  inset: 0,
+                                  backgroundColor: 'rgba(0, 0, 0, 0.35)',
                                   display: 'flex',
                                   alignItems: 'center',
                                   justifyContent: 'center',
                                 }}
                               >
-                                <Play size={10} fill="#ffffff" color="#ffffff" style={{ marginLeft: '1px' }} />
+                                <div
+                                  style={{
+                                    width: '20px',
+                                    height: '20px',
+                                    borderRadius: '50%',
+                                    backgroundColor: '#dc2626',
+                                    color: '#ffffff',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center',
+                                  }}
+                                >
+                                  <Play size={10} fill="#ffffff" color="#ffffff" style={{ marginLeft: '1px' }} />
+                                </div>
                               </div>
                             </div>
-                          </div>
 
-                          <div style={{ flex: 1, minWidth: 0 }}>
-                            <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '1px' }}>
-                              <span
+                            <div style={{ flex: 1, minWidth: 0 }}>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '1px' }}>
+                                <span
+                                  style={{
+                                    backgroundColor: 'rgba(220, 38, 38, 0.2)',
+                                    color: '#f87171',
+                                    fontSize: '9.5px',
+                                    fontWeight: 800,
+                                    padding: '1px 5px',
+                                    borderRadius: '3px',
+                                    textTransform: 'uppercase',
+                                  }}
+                                >
+                                  Video İcmal
+                                </span>
+                              </div>
+                              <div
                                 style={{
-                                  backgroundColor: 'rgba(220, 38, 38, 0.2)',
-                                  color: '#f87171',
-                                  fontSize: '9.5px',
-                                  fontWeight: 800,
-                                  padding: '1px 5px',
-                                  borderRadius: '3px',
-                                  textTransform: 'uppercase',
+                                  fontSize: '12px',
+                                  fontWeight: 700,
+                                  color: '#ffffff',
+                                  overflow: 'hidden',
+                                  textOverflow: 'ellipsis',
+                                  whiteSpace: 'nowrap',
                                 }}
                               >
-                                Video İcmal
-                              </span>
+                                Video icmalı izləyin
+                              </div>
                             </div>
+
                             <div
                               style={{
-                                fontSize: '12px',
-                                fontWeight: 700,
-                                color: '#ffffff',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                whiteSpace: 'nowrap',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '3px',
+                                color: '#38bdf8',
+                                fontSize: '11.5px',
+                                fontWeight: 800,
+                                flexShrink: 0,
                               }}
                             >
-                              Video icmalı izləyin
+                              <span>İzlə</span>
+                              <ChevronRight size={13} />
                             </div>
                           </div>
-
-                          <div
-                            style={{
-                              display: 'flex',
-                              alignItems: 'center',
-                              gap: '3px',
-                              color: '#38bdf8',
-                              fontSize: '11.5px',
-                              fontWeight: 800,
-                              flexShrink: 0,
-                            }}
-                          >
-                            <span>İzlə</span>
-                            <ChevronRight size={13} />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-                  )}
+                        )}
+                      </div>
+                    )}
 
                     {product.price !== undefined && (
                       <div
@@ -1215,96 +1234,48 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                     )}
                   </div>
 
+                  {/* Compact Side-by-Side Action Rows */}
                   <div
                     style={{
                       display: 'flex',
                       flexDirection: 'column',
-                      gap: '10px',
+                      gap: '8px',
                       marginTop: 'auto',
                     }}
                   >
-                    {/* Səbətə Əlavə Et */}
-                    {onAddToCart && (
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          animateProductToCart(e.currentTarget, product.image);
-                          onAddToCart(product);
-                        }}
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '8px',
-                          backgroundColor: '#dc2626',
-                          color: '#ffffff',
-                          border: 'none',
-                          padding: '12px',
-                          borderRadius: '12px',
-                          fontSize: '14px',
-                          fontWeight: 800,
-                          cursor: 'pointer',
-                          boxShadow: '0 4px 14px rgba(220, 38, 38, 0.35)',
-                          transition: 'background-color 0.15s ease, transform 0.15s ease',
-                        }}
-                      >
-                        <ShoppingCart size={18} color="#ffffff" />
-                        <span>Səbətə əlavə et</span>
-                      </button>
-                    )}
+                    {/* Row 1: Səbətə Əlavə Et (Açıq Qırmızı Fon / Qırmızı Mətn) & Seçilmişlər (Seç) Yanaşı */}
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'stretch' }}>
+                      {onAddToCart && (
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            animateProductToCart(e.currentTarget, product.image);
+                            onAddToCart(product);
+                          }}
+                          style={{
+                            flex: 1,
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px',
+                            backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                            color: '#dc2626',
+                            border: '1px solid rgba(220, 38, 38, 0.25)',
+                            padding: '10px 12px',
+                            borderRadius: '10px',
+                            fontSize: '13px',
+                            fontWeight: 800,
+                            cursor: 'pointer',
+                            boxShadow: 'none',
+                            transition: 'all 0.15s ease',
+                          }}
+                          title="Səbətə əlavə et"
+                        >
+                          <ShoppingCart size={16} color="#dc2626" />
+                          <span>Səbətə əlavə et</span>
+                        </button>
+                      )}
 
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button
-                        onClick={() => onWhatsApp(product)}
-                        style={{
-                          flex: 1,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '8px',
-                          backgroundColor: 'rgba(34, 197, 94, 0.12)',
-                          color: '#16a34a',
-                          border: 'none',
-                          padding: '12px',
-                          borderRadius: '12px',
-                          fontSize: '13.5px',
-                          fontWeight: 800,
-                          cursor: 'pointer',
-                          boxShadow: 'none',
-                          transition: 'background-color 0.15s ease, transform 0.15s ease',
-                        }}
-                      >
-                        <WhatsAppIcon size={18} color="#16a34a" />
-                        <span>{whatsappButtonText}</span>
-                      </button>
-
-                      <button
-                        onClick={() => onCall(product)}
-                        className="modal-call-button"
-                        style={{
-                          flex: 1,
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          gap: '8px',
-                          backgroundColor: 'rgba(220, 38, 38, 0.10)',
-                          color: '#dc2626',
-                          border: 'none',
-                          padding: '12px',
-                          borderRadius: '12px',
-                          fontSize: '13.5px',
-                          fontWeight: 800,
-                          cursor: 'pointer',
-                          boxShadow: 'none',
-                          transition: 'background-color 0.15s ease, transform 0.15s ease',
-                        }}
-                      >
-                        <Phone size={17} color="#dc2626" />
-                        <span>{callButtonText}</span>
-                      </button>
-                    </div>
-
-                    <div style={{ display: 'flex', gap: '8px' }}>
                       {onToggleFavorite && (
                         <button
                           type="button"
@@ -1313,46 +1284,125 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                             onToggleFavorite(product);
                           }}
                           style={{
-                            flex: 1,
+                            flex: onAddToCart ? 1 : 'unset',
+                            width: onAddToCart ? 'auto' : '100%',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
                             gap: '6px',
-                            backgroundColor: isFavorite ? 'rgba(239, 68, 68, 0.12)' : theme.bgSecondary,
+                            backgroundColor: isFavorite
+                              ? 'rgba(239, 68, 68, 0.12)'
+                              : theme.mode === 'dark'
+                                ? 'rgba(255, 255, 255, 0.05)'
+                                : 'rgba(0, 0, 0, 0.03)',
                             border: `1px solid ${isFavorite ? '#ef4444' : theme.border}`,
                             color: isFavorite ? '#dc2626' : theme.text,
-                            padding: '10px',
-                            borderRadius: '12px',
-                            fontSize: '12.5px',
-                            fontWeight: 700,
+                            padding: '10px 12px',
+                            borderRadius: '10px',
+                            fontSize: '13px',
+                            fontWeight: 750,
                             cursor: 'pointer',
+                            transition: 'all 0.15s ease',
                           }}
+                          title={isFavorite ? 'Seçilmişlərdən çıxart' : 'Seçilmişlərə əlavə et'}
                         >
-                          <Heart size={15} fill={isFavorite ? '#dc2626' : 'none'} color={isFavorite ? '#dc2626' : 'currentColor'} />
-                          <span>{isFavorite ? 'Seçilmişlərdən çıxart' : 'Seçilmişlərə əlavə et'}</span>
+                          <Heart
+                            size={16}
+                            fill={isFavorite ? '#dc2626' : 'none'}
+                            color={isFavorite ? '#dc2626' : 'currentColor'}
+                          />
+                          <span>{isFavorite ? 'Seçildi' : 'Seç'}</span>
                         </button>
                       )}
+                    </div>
+
+                    {/* Row 2: WhatsApp, Zəng və Link Kopyalamaq Yanaşı (Bir Cərgədə) */}
+                    <div style={{ display: 'flex', gap: '6px', alignItems: 'stretch' }}>
+                      <button
+                        onClick={() => onWhatsApp(product)}
+                        style={{
+                          flex: 1,
+                          minWidth: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '5px',
+                          backgroundColor: 'rgba(34, 197, 94, 0.12)',
+                          color: '#16a34a',
+                          border: 'none',
+                          padding: '10px 6px',
+                          borderRadius: '10px',
+                          fontSize: '12px',
+                          fontWeight: 750,
+                          cursor: 'pointer',
+                          boxShadow: 'none',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          transition: 'all 0.15s ease',
+                        }}
+                        title="WhatsApp ilə əlaqə"
+                      >
+                        <WhatsAppIcon size={15} color="#16a34a" />
+                        <span>WhatsApp</span>
+                      </button>
+
+                      <button
+                        onClick={() => onCall(product)}
+                        className="modal-call-button"
+                        style={{
+                          flex: 1,
+                          minWidth: 0,
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          gap: '5px',
+                          backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                          color: '#dc2626',
+                          border: 'none',
+                          padding: '10px 6px',
+                          borderRadius: '10px',
+                          fontSize: '12px',
+                          fontWeight: 750,
+                          cursor: 'pointer',
+                          boxShadow: 'none',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          transition: 'all 0.15s ease',
+                        }}
+                        title="Zəng et"
+                      >
+                        <Phone size={14} color="#dc2626" />
+                        <span>Zəng et</span>
+                      </button>
 
                       <button
                         onClick={() => onCopyLink(product)}
                         style={{
                           flex: 1,
+                          minWidth: 0,
                           display: 'flex',
                           alignItems: 'center',
                           justifyContent: 'center',
-                          gap: '6px',
-                          backgroundColor: theme.bgSecondary,
+                          gap: '5px',
+                          backgroundColor: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
                           border: `1px solid ${theme.border}`,
                           color: theme.mode === 'dark' ? '#f87171' : '#b91c1c',
-                          padding: '10px',
-                          borderRadius: '12px',
+                          padding: '10px 6px',
+                          borderRadius: '10px',
                           fontSize: '12px',
-                          fontWeight: 700,
+                          fontWeight: 750,
                           cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                          overflow: 'hidden',
+                          textOverflow: 'ellipsis',
+                          transition: 'all 0.15s ease',
                         }}
+                        title="Məhsul linkini kopyala"
                       >
-                        <Copy size={14} />
-                        <span>Məhsul linki kopyala</span>
+                        <Copy size={13} />
+                        <span>Linki kopyala</span>
                       </button>
                     </div>
                   </div>

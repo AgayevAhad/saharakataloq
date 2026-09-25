@@ -55,20 +55,33 @@ describe('ProductDetailModal Lightbox White Background & Integrated Top Header C
       />
     );
 
-    // Modal Sticky Header should render category glyph and category name without redundant model code
+    // Modal Sticky Header should render category glyph and category name without redundant model code and with transparent background
     const modalHeader = document.querySelector('.modal-header-sticky') as HTMLDivElement;
     expect(modalHeader).toBeTruthy();
     expect(modalHeader.textContent).toContain('Aspirator');
     expect(modalHeader.querySelector('.category-glyph')).toBeTruthy();
+    expect(['transparent', 'rgba(0, 0, 0, 0)']).toContain(modalHeader.style.backgroundColor);
+    expect(modalHeader.style.borderBottom).toMatch(/none|^$/);
+
+    // Verify text labels in sticky header action buttons: Çap, Paylaş, Bağla
+    expect(modalHeader.textContent).toContain('Çap');
+    expect(modalHeader.textContent).toContain('Paylaş');
+    expect(modalHeader.textContent).toContain('Bağla');
 
     // Stage should be borderless
     const stage = document.querySelector('.product-detail-image-stage') as HTMLDivElement;
     expect(stage).toBeTruthy();
     expect(stage.style.border).toMatch(/none|^$/);
 
-    // Brand logo should be rendered under stage
+    // Brand logo should be rendered above stage
     const brandImg = document.querySelector('img[src="/media/brands/ardo-logo.png"]');
     expect(brandImg).toBeTruthy();
+
+    // Stage navigation buttons (prev / next) should exist for multi-media
+    const prevStageBtn = document.querySelector('.modal-stage-nav-btn.prev');
+    const nextStageBtn = document.querySelector('.modal-stage-nav-btn.next');
+    expect(prevStageBtn).toBeTruthy();
+    expect(nextStageBtn).toBeTruthy();
 
     // Open fullscreen lightbox
     fireEvent.click(stage);
