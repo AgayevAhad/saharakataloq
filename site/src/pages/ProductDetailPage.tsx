@@ -246,6 +246,45 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     return list;
   }, [product]);
 
+  const [fsTouchStartX, setFsTouchStartX] = useState<number | null>(null);
+  const [fsTouchStartY, setFsTouchStartY] = useState<number | null>(null);
+
+  const nextMedia = useCallback(
+    (e?: React.MouseEvent | React.TouchEvent) => {
+      if (e) e.stopPropagation();
+      if (mediaList.length <= 1) return;
+      setActiveMediaIndex((prev) => (prev + 1) % mediaList.length);
+      setPanPosition({ x: 0, y: 0 });
+      setZoomScale(1);
+      setRotation(0);
+    },
+    [mediaList.length]
+  );
+
+  const prevMedia = useCallback(
+    (e?: React.MouseEvent | React.TouchEvent) => {
+      if (e) e.stopPropagation();
+      if (mediaList.length <= 1) return;
+      setActiveMediaIndex((prev) => (prev - 1 + mediaList.length) % mediaList.length);
+      setPanPosition({ x: 0, y: 0 });
+      setZoomScale(1);
+      setRotation(0);
+    },
+    [mediaList.length]
+  );
+
+  // Keyboard navigation for Fullscreen Lightbox
+  useEffect(() => {
+    if (!isFullscreenGallery) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') nextMedia();
+      else if (e.key === 'ArrowLeft') prevMedia();
+      else if (e.key === 'Escape') setIsFullscreenGallery(false);
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [isFullscreenGallery, nextMedia, prevMedia]);
+
   const activeMedia = mediaList[activeMediaIndex] || mediaList[0];
   const overviewVideo = useMemo(() => mediaList.find((m) => m.type === 'video'), [mediaList]);
 
@@ -392,23 +431,23 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     }
   };
 
-  // Lightbox Drag and Pan handlers
+  // Lightbox Drag and Pan handlers (Matching ProductDetailModal)
   const handleMouseDown = useCallback(
     (e: React.MouseEvent) => {
       if (zoomScale <= 1) return;
       setIsDragging(true);
-      setDragStart({ x: e.clientX - panPosition.x, y: e.clientY - panPosition.y });
+      setDragStart({ x: e.clientX, y: e.clientY });
     },
-    [zoomScale, panPosition]
+    [zoomScale]
   );
 
   const handleMouseMove = useCallback(
     (e: React.MouseEvent) => {
       if (!isDragging || zoomScale <= 1) return;
-      setPanPosition({
-        x: e.clientX - dragStart.x,
-        y: e.clientY - dragStart.y,
-      });
+      const dx = e.clientX - dragStart.x;
+      const dy = e.clientY - dragStart.y;
+      setPanPosition((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
+      setDragStart({ x: e.clientX, y: e.clientY });
     },
     [isDragging, zoomScale, dragStart]
   );
@@ -419,52 +458,60 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
   const handleTouchStart = useCallback(
     (e: React.TouchEvent) => {
-      if (e.touches.length === 2) {
-        const distance = Math.hypot(
-          e.touches[0].clientX - e.touches[1].clientX,
-          e.touches[0].clientY - e.touches[1].clientY
-        );
-        pinchStartRef.current = { distance, scale: zoomScale };
-        return;
+      if (e.touches.length !== 1) return;
+      if (zoomScale > 1) {
+        setIsDragging(true);
+        setDragStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
+      } else {
+        setFsTouchStartX(e.touches[0].clientX);
+        setFsTouchStartY(e.touches[0].clientY);
       }
-      if (zoomScale <= 1 || e.touches.length !== 1) return;
-      const touch = e.touches[0];
-      setIsDragging(true);
-      setDragStart({ x: touch.clientX - panPosition.x, y: touch.clientY - panPosition.y });
     },
-    [zoomScale, panPosition]
+    [zoomScale]
   );
 
   const handleTouchMove = useCallback(
     (e: React.TouchEvent) => {
-      if (e.touches.length === 2 && pinchStartRef.current) {
-        e.preventDefault();
-        const distance = Math.hypot(
-          e.touches[0].clientX - e.touches[1].clientX,
-          e.touches[0].clientY - e.touches[1].clientY
-        );
-        const next = Math.min(
-          4,
-          Math.max(1, pinchStartRef.current.scale * (distance / pinchStartRef.current.distance))
-        );
-        setZoomScale(Number(next.toFixed(2)));
-        if (next === 1) setPanPosition({ x: 0, y: 0 });
-        return;
+      if (zoomScale > 1) {
+        if (!isDragging) return;
+        const dx = e.touches[0].clientX - dragStart.x;
+        const dy = e.touches[0].clientY - dragStart.y;
+        setPanPosition((prev) => ({ x: prev.x + dx, y: prev.y + dy }));
+        setDragStart({ x: e.touches[0].clientX, y: e.touches[0].clientY });
       }
-      if (!isDragging || zoomScale <= 1 || e.touches.length !== 1) return;
-      const touch = e.touches[0];
-      setPanPosition({
-        x: touch.clientX - dragStart.x,
-        y: touch.clientY - dragStart.y,
-      });
     },
     [isDragging, zoomScale, dragStart]
   );
 
-  const handleTouchEnd = useCallback(() => {
-    pinchStartRef.current = null;
-    setIsDragging(false);
-  }, []);
+  const handleTouchEnd = useCallback(
+    (e: React.TouchEvent) => {
+      if (zoomScale > 1) {
+        setIsDragging(false);
+      } else {
+        if (fsTouchStartX !== null && fsTouchStartY !== null) {
+          const touchEndX = e.changedTouches[0].clientX;
+          const touchEndY = e.changedTouches[0].clientY;
+          const diffX = touchEndX - fsTouchStartX;
+          const diffY = touchEndY - fsTouchStartY;
+
+          if (
+            Math.abs(diffX) > 35 &&
+            Math.abs(diffX) > Math.abs(diffY) * 1.2 &&
+            mediaList.length > 1
+          ) {
+            if (diffX < 0) {
+              nextMedia();
+            } else {
+              prevMedia();
+            }
+          }
+        }
+        setFsTouchStartX(null);
+        setFsTouchStartY(null);
+      }
+    },
+    [zoomScale, fsTouchStartX, fsTouchStartY, mediaList.length, nextMedia, prevMedia]
+  );
 
   // Lightbox Click-to-Zoom Toggle
   const handleImageClick = (e: React.MouseEvent) => {
@@ -2978,18 +3025,20 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
         >
           {/* Lightbox Top Header (Clean Light Design) */}
           <div
+            className="lightbox-top-header"
             style={{
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
+              flexWrap: 'wrap',
+              gap: '12px',
               color: '#0f172a',
-              zIndex: 10,
-              padding: '8px 14px',
+              zIndex: 30,
+              padding: '12px 20px',
               backgroundColor: 'rgba(255, 255, 255, 0.95)',
-              borderRadius: '16px',
               border: 'none',
               boxShadow: 'none',
-              backdropFilter: 'blur(10px)',
+              backdropFilter: 'blur(12px)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -3003,138 +3052,173 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 whiteSpace: 'nowrap',
               }}
             >
-              {product.title}{' '}
-              {mediaList.length > 1 && `(${activeMediaIndex + 1} / ${mediaList.length})`}
+              {product.title}
             </div>
 
             <div
-              className="product-lightbox-controls"
-              style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+              className="product-lightbox-controls zoom-floating-controls"
+              style={{ position: 'static', display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(0, 0, 0, 0.04)', padding: '4px 8px', borderRadius: '10px', border: 'none', boxShadow: 'none' }}
             >
               <button
                 type="button"
                 data-testid="rotate-left"
                 onClick={() => setRotation((value) => value - 90)}
-                className="product-lightbox-icon-btn"
+                className="product-lightbox-icon-btn zoom-btn"
                 title="Sola fırlat"
                 aria-label="Şəkli sola fırlat"
-                style={{ border: 'none' }}
+                style={{ border: 'none', background: 'transparent', color: '#0f172a', cursor: 'pointer' }}
               >
-                <RotateCcw size={17} />
+                <RotateCcw size={16} />
               </button>
               <button
                 type="button"
                 data-testid="rotate-right"
                 onClick={() => setRotation((value) => value + 90)}
-                className="product-lightbox-icon-btn"
+                className="product-lightbox-icon-btn zoom-btn"
                 title="Sağa fırlat"
                 aria-label="Şəkli sağa fırlat"
-                style={{ border: 'none' }}
+                style={{ border: 'none', background: 'transparent', color: '#0f172a', cursor: 'pointer' }}
               >
-                <RotateCw size={17} />
+                <RotateCw size={16} />
               </button>
               {/* Zoom Out Button */}
               <button
                 type="button"
+                className="zoom-btn"
                 onClick={() => {
                   setZoomScale((z) => {
-                    const next = Math.max(z - 0.4, 1);
+                    const next = Math.max(Number((z - 0.4).toFixed(1)), 1);
                     if (next === 1) setPanPosition({ x: 0, y: 0 });
                     return next;
                   });
                 }}
+                disabled={zoomScale <= 1}
                 style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '10px',
-                  backgroundColor: '#f1f5f9',
-                  color: '#0f172a',
                   border: 'none',
-                  cursor: 'pointer',
+                  background: 'transparent',
+                  color: '#0f172a',
+                  cursor: zoomScale <= 1 ? 'not-allowed' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
                 title="Uzaqlaşdır"
+                aria-label="Uzaqlaşdır"
               >
-                <ZoomOut size={17} />
+                <ZoomOut size={16} />
               </button>
 
               {/* Zoom Level Indicator / Reset Button */}
-              <button
-                type="button"
-                onClick={() => {
-                  setZoomScale(1);
-                  setPanPosition({ x: 0, y: 0 });
-                  setRotation(0);
-                }}
+              <span
                 style={{
-                  padding: '6px 10px',
-                  borderRadius: '10px',
-                  backgroundColor: zoomScale > 1 ? '#fee2e2' : '#f1f5f9',
-                  color: zoomScale > 1 ? '#dc2626' : '#475569',
-                  border: 'none',
+                  color: '#0284c7',
                   fontSize: '12px',
                   fontWeight: 800,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '4px',
+                  minWidth: '40px',
+                  textAlign: 'center',
                 }}
-                title="Zoom-u sıfırla (100%)"
               >
-                <RefreshCw size={12} />
-                <span>{Math.round(zoomScale * 100)}%</span>
-              </button>
+                {Math.round(zoomScale * 100)}%
+              </span>
 
               {/* Zoom In Button */}
               <button
                 type="button"
-                onClick={() => setZoomScale((z) => Math.min(z + 0.4, 3.5))}
+                className="zoom-btn"
+                onClick={() => setZoomScale((z) => Math.min(Number((z + 0.4).toFixed(1)), 4))}
+                disabled={zoomScale >= 4}
                 style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '10px',
-                  backgroundColor: '#f1f5f9',
-                  color: '#0f172a',
                   border: 'none',
-                  cursor: 'pointer',
+                  background: 'transparent',
+                  color: '#0f172a',
+                  cursor: zoomScale >= 4 ? 'not-allowed' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                 }}
                 title="Böyüt (Kliklə yaxınlaşdır)"
+                aria-label="Böyüt"
               >
-                <ZoomIn size={17} />
+                <ZoomIn size={16} />
               </button>
 
-              {/* Close Button */}
+              {zoomScale > 1 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setZoomScale(1);
+                    setPanPosition({ x: 0, y: 0 });
+                    setRotation(0);
+                  }}
+                  title="1x Orijinal ölçüyə sıfırla"
+                  style={{
+                    cursor: 'pointer',
+                    border: 'none',
+                    borderRadius: '6px',
+                    padding: '4px 8px',
+                    backgroundColor: 'rgba(220, 38, 38, 0.12)',
+                    color: '#dc2626',
+                    fontWeight: 800,
+                    fontSize: '11px',
+                  }}
+                >
+                  1x Sıfırla
+                </button>
+              )}
+            </div>
+
+            {/* Close Button */}
+            <button
+              type="button"
+              onClick={() => setIsFullscreenGallery(false)}
+              className="sahara-soft-red-action"
+              style={{
+                backgroundColor: '#dc2626',
+                color: '#ffffff',
+                border: 'none',
+                padding: '7px 14px',
+                borderRadius: '8px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontSize: '13px',
+                fontWeight: 800,
+                boxShadow: 'none',
+              }}
+              title="Bağla"
+            >
+              <X size={16} /> <span>Bağla</span>
+            </button>
+          </div>
+
+          {/* Left & Right Fullscreen Navigation Buttons */}
+          {mediaList.length > 1 && (
+            <>
               <button
                 type="button"
-                onClick={() => setIsFullscreenGallery(false)}
-                className="sahara-soft-red-action"
-                style={{
-                  width: '38px',
-                  height: '38px',
-                  borderRadius: '10px',
-                  backgroundColor: '#dc2626',
-                  color: '#ffffff',
-                  border: 'none',
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  boxShadow: '0 4px 14px rgba(220, 38, 38, 0.35)',
-                }}
-                title="Bağla"
+                className="fs-lightbox-nav-btn prev"
+                onClick={prevMedia}
+                title="Əvvəlki şəkil"
+                aria-label="Əvvəlki şəkil"
               >
-                <X size={20} />
+                <ChevronLeft size={26} />
               </button>
-            </div>
-          </div>
+              <button
+                type="button"
+                className="fs-lightbox-nav-btn next"
+                onClick={nextMedia}
+                title="Növbəti şəkil"
+                aria-label="Növbəti şəkil"
+              >
+                <ChevronRight size={26} />
+              </button>
+            </>
+          )}
 
           {/* Lightbox Center Content with Click-to-Zoom and Pan & Drag */}
           <div
+            className={`zoom-pan-container ${zoomScale > 1 ? 'is-zoomed' : ''} ${isDragging ? 'is-dragging' : ''}`}
             style={{
               flex: 1,
               display: 'flex',
@@ -3142,7 +3226,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               justifyContent: 'center',
               overflow: 'hidden',
               position: 'relative',
-              cursor: zoomScale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'zoom-in',
+              cursor: zoomScale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
               backgroundColor: '#ffffff',
             }}
             onClick={activeMedia?.type === 'image' ? handleImageClick : (e) => e.stopPropagation()}
@@ -3183,55 +3267,57 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             )}
           </div>
 
-          {/* Lightbox Bottom Thumbnails */}
+          {/* Lightbox Bottom Indicator Bar */}
           {mediaList.length > 1 && (
             <div
+              className="fs-lightbox-bottom-bar"
               style={{
-                display: 'flex',
-                justifyContent: 'center',
-                gap: '10px',
-                zIndex: 10,
-                padding: '8px 0',
-                backgroundColor: 'rgba(255, 255, 255, 0.95)',
-                borderRadius: '16px',
-                border: '1px solid #e2e8f0',
-                maxWidth: 'fit-content',
-                margin: '0 auto',
-                paddingLeft: '14px',
-                paddingRight: '14px',
+                backgroundColor:
+                  themeMode === 'dark'
+                    ? 'rgba(15, 23, 42, 0.85)'
+                    : 'rgba(241, 245, 249, 0.95)',
+                border: 'none',
+                boxShadow:
+                  themeMode === 'dark'
+                    ? '0 4px 16px rgba(0, 0, 0, 0.4)'
+                    : '0 4px 16px rgba(0, 0, 0, 0.08)',
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              {mediaList.map((m, idx) => (
-                <button
-                  key={m.id}
-                  type="button"
-                  onClick={() => {
-                    setActiveMediaIndex(idx);
-                    setZoomScale(1);
-                    setPanPosition({ x: 0, y: 0 });
-                    setRotation(0);
-                  }}
-                  style={{
-                    width: '56px',
-                    height: '56px',
-                    borderRadius: '10px',
-                    backgroundColor: '#ffffff',
-                    border: `2px solid ${idx === activeMediaIndex ? '#dc2626' : '#e2e8f0'}`,
-                    overflow: 'hidden',
-                    cursor: 'pointer',
-                    padding: 0,
-                    boxShadow:
-                      idx === activeMediaIndex ? '0 2px 8px rgba(220, 38, 38, 0.25)' : 'none',
-                  }}
-                >
-                  <img
-                    src={m.url}
-                    alt=""
-                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+              <div className="fs-lightbox-dots">
+                {mediaList.map((m, idx) => (
+                  <button
+                    key={m.id || idx}
+                    type="button"
+                    className={`fs-lightbox-dot ${activeMediaIndex === idx ? 'active' : ''}`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActiveMediaIndex(idx);
+                      setPanPosition({ x: 0, y: 0 });
+                      setZoomScale(1);
+                      setRotation(0);
+                    }}
+                    style={{
+                      backgroundColor:
+                        activeMediaIndex === idx
+                          ? '#dc2626'
+                          : themeMode === 'dark'
+                            ? 'rgba(255, 255, 255, 0.35)'
+                            : 'rgba(0, 0, 0, 0.2)',
+                    }}
+                    aria-label={`Şəkil ${idx + 1}`}
                   />
-                </button>
-              ))}
+                ))}
+              </div>
+              <span
+                className="fs-lightbox-counter-text"
+                style={{
+                  color: themeMode === 'dark' ? '#ffffff' : '#0f172a',
+                  fontWeight: 800,
+                }}
+              >
+                {activeMediaIndex + 1} / {mediaList.length}
+              </span>
             </div>
           )}
         </div>

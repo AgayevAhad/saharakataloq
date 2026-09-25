@@ -51,9 +51,22 @@ describe('ProductDetailModal Lightbox White Background & Integrated Top Header C
       />
     );
 
-    // Open fullscreen lightbox
+    // Modal Sticky Header should render category glyph and category name without redundant model code
+    const modalHeader = document.querySelector('.modal-header-sticky') as HTMLDivElement;
+    expect(modalHeader).toBeTruthy();
+    expect(modalHeader.textContent).toContain('Aspirator');
+    expect(modalHeader.querySelector('.category-glyph')).toBeTruthy();
+
+    // Stage should be borderless
     const stage = document.querySelector('.product-detail-image-stage') as HTMLDivElement;
     expect(stage).toBeTruthy();
+    expect(stage.style.border).toMatch(/none|^$/);
+
+    // Brand logo should be rendered under stage
+    const brandImg = document.querySelector('img[src="/media/brands/ardo-logo.png"]');
+    expect(brandImg).toBeTruthy();
+
+    // Open fullscreen lightbox
     fireEvent.click(stage);
 
     // Lightbox container should have white background (#ffffff) in light theme
@@ -61,10 +74,9 @@ describe('ProductDetailModal Lightbox White Background & Integrated Top Header C
     expect(lightboxModal).toBeTruthy();
     expect(['#ffffff', 'rgb(255, 255, 255)']).toContain(lightboxModal.style.backgroundColor);
 
-    // Top header should contain product code and title
+    // Top header should contain clean product title
     const topHeader = document.querySelector('.lightbox-top-header') as HTMLDivElement;
     expect(topHeader).toBeTruthy();
-    expect(topHeader.textContent).toContain('AR6120');
     expect(topHeader.textContent).toContain('Aspirator Ardo AR6120 White');
 
     // Zoom controls should be integrated INSIDE the top header panel

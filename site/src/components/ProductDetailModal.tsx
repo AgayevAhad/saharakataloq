@@ -32,6 +32,7 @@ import { pushOverlay, popOverlay, isTopOverlay } from '../utils/backgroundIsolat
 import { verifiedManufacturingCountry } from '../utils/manufacturingCountry';
 import { getVisibleBadgeText } from './productCardVisuals';
 import { animateProductToCart, animateProductToFavorites } from '../utils/cartFlight';
+import { CategoryGlyph } from './CategoryGlyph';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -343,6 +344,16 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
       return '';
     }, [product]);
 
+    const brandLogoSrc = useMemo(() => {
+      if (brand?.logo) return brand.logo;
+      const bId = (product?.brandId || (product as any)?.brand || '').toLowerCase();
+      if (bId === 'ardo') return '/media/brands/ardo-logo.png';
+      if (bId === 'lotus') return '/media/brands/lotus-logo.png';
+      if (bId === 'artel') return '/media/brands/artel-logo.svg';
+      if (bId === 'yoshiro') return '/media/brands/yoshiro-logo.png';
+      return bId ? `/media/brands/${bId}-logo.svg` : '';
+    }, [brand?.logo, product]);
+
     const activeObjectPosition =
       (activeMedia as any)?.objectPosition || (product as any)?.imagePosition || 'center';
     const activeFitMode = (activeMedia as any)?.fitMode || (product as any)?.imageFit || 'contain';
@@ -587,25 +598,12 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
               <div
                 style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}
               >
+                <CategoryGlyph id={product.category || ''} slug={product.categoryName} compact />
                 <span
                   style={{
-                    backgroundColor: theme.primary,
-                    color: '#ffffff',
-                    fontSize: '12px',
-                    fontWeight: 800,
-                    padding: '4px 8px',
-                    borderRadius: '6px',
-                    whiteSpace: 'nowrap',
-                    flexShrink: 0,
-                  }}
-                >
-                  {product.code}
-                </span>
-                <span
-                  style={{
-                    color: theme.textMuted,
-                    fontSize: '12px',
-                    fontWeight: 600,
+                    color: theme.text,
+                    fontSize: '13px',
+                    fontWeight: 700,
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -699,7 +697,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                     onTouchEnd={handleStageTouchEnd}
                     style={{
                       backgroundColor: theme.mode === 'dark' ? '#131926' : '#ffffff',
-                      borderColor: theme.border,
+                      border: 'none',
+                      boxShadow: 'none',
                       cursor: activeMedia?.type === 'image' ? 'zoom-in' : 'default',
                     }}
                     title="Tam ekranda böyütmək və sürüşdürmək üçün klikləyin"
@@ -929,30 +928,31 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                     </div>
                   )}
 
-                  {/* Origin & Warranty Banner */}
-                  <div
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      gap: '10px',
-                      backgroundColor: theme.bgSecondary,
-                      border: `1px solid ${theme.border}`,
-                      padding: '10px 14px',
-                      borderRadius: '12px',
-                    }}
-                  >
-                    <Globe2 size={22} aria-hidden="true" />
-                    <div style={{ flex: 1 }}>
-                      <div style={{ color: theme.text, fontSize: '13px', fontWeight: 700 }}>
-                        {brand?.name || (product.brandId || (product as any).brand || '').toUpperCase()}
-                      </div>
-                      <div style={{ color: theme.textMuted, fontSize: '11px' }}>
-                        {verifiedManufacturingCountry(product)
-                          ? `İstehsal: ${verifiedManufacturingCountry(product)}`
-                          : 'Kataloq Modeli'}
-                      </div>
+                  {/* Original Brand Logo */}
+                  {brandLogoSrc ? (
+                    <div
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 0, 0, 0.02)',
+                        border: 'none',
+                        padding: '8px 16px',
+                        borderRadius: '12px',
+                        minHeight: '44px',
+                      }}
+                    >
+                      <img
+                        src={brandLogoSrc}
+                        alt={brand?.name || product.brandId || ''}
+                        style={{
+                          maxHeight: '30px',
+                          maxWidth: '120px',
+                          objectFit: 'contain',
+                        }}
+                      />
                     </div>
-                  </div>
+                  ) : null}
                 </div>
 
                 {/* Sağ Tərəf: İncə və Aydın Detal & Əlaqə Paneli */}
@@ -1507,35 +1507,19 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
               {/* Product Info Left */}
               <div
                 style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '8px',
-                  maxWidth: '45%',
+                  maxWidth: '55%',
                   overflow: 'hidden',
                 }}
               >
                 <span
                   style={{
-                    backgroundColor: theme.primary,
-                    color: '#ffffff',
-                    padding: '4px 8px',
-                    borderRadius: '6px',
-                    fontSize: '12px',
-                    fontWeight: 800,
-                    whiteSpace: 'nowrap',
-                    flexShrink: 0,
-                  }}
-                >
-                  {product.code}
-                </span>
-                <span
-                  style={{
                     color: theme.mode === 'dark' ? '#ffffff' : '#0f172a',
-                    fontSize: '14px',
+                    fontSize: '15px',
                     fontWeight: 800,
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
+                    display: 'block',
                   }}
                 >
                   {product.title}
@@ -1792,7 +1776,20 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
 
             {/* Bottom Thumbnail / Indicator Bar in Fullscreen */}
             {mediaItems.length > 1 && (
-              <div className="fs-lightbox-bottom-bar">
+              <div
+                className="fs-lightbox-bottom-bar"
+                style={{
+                  backgroundColor:
+                    theme.mode === 'dark'
+                      ? 'rgba(15, 23, 42, 0.85)'
+                      : 'rgba(241, 245, 249, 0.95)',
+                  border: 'none',
+                  boxShadow:
+                    theme.mode === 'dark'
+                      ? '0 4px 16px rgba(0, 0, 0, 0.4)'
+                      : '0 4px 16px rgba(0, 0, 0, 0.08)',
+                }}
+              >
                 <div className="fs-lightbox-dots">
                   {mediaItems.map((m, idx) => (
                     <button
@@ -1805,11 +1802,25 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                         setPanPosition({ x: 0, y: 0 });
                         setZoomScale(1);
                       }}
+                      style={{
+                        backgroundColor:
+                          activeMediaIndex === idx
+                            ? theme.primary
+                            : theme.mode === 'dark'
+                              ? 'rgba(255, 255, 255, 0.35)'
+                              : 'rgba(0, 0, 0, 0.2)',
+                      }}
                       aria-label={`Şəkil ${idx + 1}`}
                     />
                   ))}
                 </div>
-                <span className="fs-lightbox-counter-text">
+                <span
+                  className="fs-lightbox-counter-text"
+                  style={{
+                    color: theme.mode === 'dark' ? '#ffffff' : '#0f172a',
+                    fontWeight: 800,
+                  }}
+                >
                   {activeMediaIndex + 1} / {mediaItems.length}
                 </span>
               </div>
