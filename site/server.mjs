@@ -120,7 +120,7 @@ const baseBrands = [
     originCountry: 'Özbəkistan',
     manufacturingCountries: ['Özbəkistan'],
     description: '',
-    logo: '/media/brands/artel-logo.png',
+    logo: '/media/brands/artel-logo.svg',
     active: true,
     comingSoon: false,
   },
