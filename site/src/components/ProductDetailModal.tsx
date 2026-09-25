@@ -1258,7 +1258,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                           }}
                           title="Səbətə əlavə et"
                         >
-                          <ShoppingCart size={16} color="#dc2626" />
+                          <ShoppingCart size={16} color="currentColor" />
                           <span>Səbətə əlavə et</span>
                         </button>
                       )}
@@ -1332,7 +1332,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                         }}
                         title="WhatsApp ilə əlaqə"
                       >
-                        <WhatsAppIcon size={15} color="#16a34a" />
+                        <WhatsAppIcon size={15} color="currentColor" />
                         <span>WhatsApp</span>
                       </button>
 
@@ -1362,7 +1362,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                         }}
                         title="Zəng et"
                       >
-                        <Phone size={14} color="#dc2626" />
+                        <Phone size={14} color="currentColor" />
                         <span>Zəng et</span>
                       </button>
 
@@ -1391,7 +1391,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                         }}
                         title="Məhsul linkini kopyala"
                       >
-                        <Copy size={13} />
+                        <Copy size={13} color="currentColor" />
                         <span>Linki kopyala</span>
                       </button>
                     </div>

@@ -1071,11 +1071,24 @@
   transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
+.modal-action-btn-wa svg,
+.modal-action-btn-wa svg path {
+  fill: currentColor !important;
+  color: currentColor !important;
+  transition: fill 0.2s ease, color 0.2s ease;
+}
+
 .modal-action-btn-wa:hover {
   background-color: #16a34a !important;
   color: #ffffff !important;
   transform: translateY(-2px);
   box-shadow: 0 6px 18px rgba(22, 163, 74, 0.35) !important;
+}
+
+.modal-action-btn-wa:hover svg,
+.modal-action-btn-wa:hover svg path {
+  fill: #ffffff !important;
+  color: #ffffff !important;
 }
 
 .modal-action-btn-call {
