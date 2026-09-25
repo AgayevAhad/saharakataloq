@@ -79,9 +79,12 @@ import {
   importProductsFromExcel,
 } from '../../utils/excel';
 
+export type AdminMode = 'site' | 'catalog' | 'all';
+
 export interface AdminShellProps {
   initial: AdminPayload;
   theme: ThemeColors;
+  mode?: AdminMode;
   onSave: (catalog: CatalogData) => Promise<void>;
   onPublish: (catalog: CatalogData) => Promise<void>;
   onUpload: (file: File) => Promise<ProductMedia>;
@@ -107,6 +110,7 @@ export type Tab =
 export const AdminShell: React.FC<AdminShellProps> = ({
   initial,
   theme,
+  mode: initialMode,
   onSave,
   onPublish,
   onUpload,
@@ -114,7 +118,31 @@ export const AdminShell: React.FC<AdminShellProps> = ({
   showToast,
 }) => {
   const [catalog, setCatalog] = useState<CatalogData>(initial);
-  const [tab, setTab] = useState<Tab>('dashboard');
+  const [activeMode, setActiveMode] = useState<AdminMode>(() => {
+    if (initialMode) return initialMode;
+    if (typeof window !== 'undefined') {
+      const search = window.location.search || '';
+      const path = window.location.pathname || '';
+      if (search.includes('mode=catalog') || path.includes('mode=catalog') || search.includes('catalog')) {
+        return 'catalog';
+      }
+      if (search.includes('mode=site') || path.includes('mode=site')) {
+        return 'site';
+      }
+    }
+    return 'all';
+  });
+  const [tab, setTab] = useState<Tab>(() => {
+    if (initialMode === 'catalog') return 'products';
+    if (typeof window !== 'undefined') {
+      const search = window.location.search || '';
+      const path = window.location.pathname || '';
+      if (search.includes('mode=catalog') || path.includes('mode=catalog') || search.includes('catalog')) {
+        return 'products';
+      }
+    }
+    return 'dashboard';
+  });
   const [query, setQuery] = useState('');
   const [adminBrand, setAdminBrand] = useState<string>('all');
   const [adminCategory, setAdminCategory] = useState<string>('all');
@@ -913,21 +941,70 @@ export const AdminShell: React.FC<AdminShellProps> = ({
     }
   };
 
-  const tabs: Array<[Tab, string, React.ReactNode]> = [
-    ['dashboard', 'Statistika', <BarChart3 size={17} />],
-    ['products', 'Məhsullar', <Boxes size={17} />],
+  const catalogTabs: Array<[Tab, string, React.ReactNode]> = [
+    ['products', 'Məhsullar (Modellər)', <Boxes size={17} />],
+    ['categories', 'Kateqoriyalar', <FolderPlus size={17} />],
+    ['brands', 'Brendlər', <Building2 size={17} />],
+    ['brand_rail', 'Brend Lenti', <Sparkles size={17} />],
+    ['articles', 'Texnologiyalar (i)', <Zap size={17} />],
+    ['snapshots', 'Bərpa & Nüsxələr', <RotateCcw size={17} />],
+  ];
+
+  const siteTabs: Array<[Tab, string, React.ReactNode]> = [
+    ['dashboard', 'Sayt Statistikası', <BarChart3 size={17} />],
+    ['navigation', 'Naviqasiya (CMS)', <Compass size={17} />],
+    ['appearance', 'Görünüş & Mətnlər', <Palette size={17} />],
+    ['contact', 'Əlaqə & Filiallar', <Phone size={17} />],
+    ['support_chat', 'Müştəri Çatı', <MessageCircle size={17} />],
+    ['logs', 'Loglama (Audit)', <FileText size={17} />],
+    ['security', 'Təhlükəsizlik & Şifrə', <Lock size={17} />],
+  ];
+
+  const allTabs: Array<[Tab, string, React.ReactNode]> = [
+    ['dashboard', 'Sayt Statistikası', <BarChart3 size={17} />],
+    ['products', 'Məhsullar (Modellər)', <Boxes size={17} />],
     ['brands', 'Brendlər', <Building2 size={17} />],
     ['brand_rail', 'Brend Lenti', <Sparkles size={17} />],
     ['categories', 'Kateqoriyalar', <FolderPlus size={17} />],
     ['navigation', 'Naviqasiya (CMS)', <Compass size={17} />],
     ['appearance', 'Görünüş & Mətnlər', <Palette size={17} />],
     ['articles', 'Texnologiyalar (i)', <Zap size={17} />],
-    ['contact', 'Əlaqə & Sosial', <Phone size={17} />],
-    ['support_chat', 'Müştəri çatı', <MessageCircle size={17} />],
+    ['contact', 'Əlaqə & Filiallar', <Phone size={17} />],
+    ['support_chat', 'Müştəri Çatı', <MessageCircle size={17} />],
     ['snapshots', 'Bərpa & Nüsxələr', <RotateCcw size={17} />],
     ['logs', 'Loglama (Audit)', <FileText size={17} />],
-    ['security', 'Təhlükəsizlik', <Lock size={17} />],
+    ['security', 'Təhlükəsizlik & Şifrə', <Lock size={17} />],
   ];
+
+  const handleSwitchMode = (newMode: 'site' | 'catalog') => {
+    setActiveMode(newMode);
+    if (newMode === 'catalog') {
+      if (!catalogTabs.some(([id]) => id === tab)) {
+        setTab('products');
+      }
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href);
+        url.searchParams.set('mode', 'catalog');
+        window.history.pushState({}, '', url.toString());
+      }
+    } else {
+      if (!siteTabs.some(([id]) => id === tab)) {
+        setTab('dashboard');
+      }
+      if (typeof window !== 'undefined') {
+        const url = new URL(window.location.href);
+        url.searchParams.delete('mode');
+        window.history.pushState({}, '', url.toString());
+      }
+    }
+  };
+
+  const currentTabs =
+    activeMode === 'catalog'
+      ? catalogTabs
+      : activeMode === 'site'
+        ? siteTabs
+        : allTabs;
 
   return (
     <div className="admin-shell" style={{ color: theme.text, background: theme.bg }}>
@@ -935,11 +1012,79 @@ export const AdminShell: React.FC<AdminShellProps> = ({
         className="admin-sidebar"
         style={{ background: theme.bgCard, borderColor: theme.border }}
       >
-        <a href="/" className="admin-brand">
+        <a href={activeMode === 'catalog' ? '/?mode=catalog' : '/'} className="admin-brand" title={activeMode === 'catalog' ? 'Kataloqa qayıt' : 'Sayta qayıt'}>
           <SaharaLogo className="admin-login-logo" isDark={theme.mode === 'dark'} />
         </a>
+
+        {/* MODE SWITCHER (Sayt CMS vs Kataloq PIM) */}
+        <div
+          className="admin-mode-switch-box"
+          style={{
+            margin: '10px 12px 14px',
+            background: theme.mode === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.04)',
+            padding: '4px',
+            borderRadius: '12px',
+            display: 'flex',
+            gap: '4px',
+            border: `1px solid ${theme.border}`,
+          }}
+        >
+          <button
+            type="button"
+            className={`admin-mode-btn ${activeMode === 'site' ? 'is-active' : ''}`}
+            onClick={() => handleSwitchMode('site')}
+            style={{
+              flex: 1,
+              padding: '8px 4px',
+              fontSize: '11.5px',
+              fontWeight: activeMode === 'site' ? '700' : '600',
+              borderRadius: '8px',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '5px',
+              background: activeMode === 'site' ? (theme.primary || '#dc2626') : 'transparent',
+              color: activeMode === 'site' ? '#ffffff' : theme.textMuted,
+              boxShadow: activeMode === 'site' ? '0 2px 8px rgba(0,0,0,0.15)' : 'none',
+              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+            title="Rəsmi Sayt və CMS İdarəetməsi (/AdministratorNT)"
+          >
+            <Compass size={14} />
+            <span>Sayt (CMS)</span>
+          </button>
+          <button
+            type="button"
+            className={`admin-mode-btn ${activeMode === 'catalog' ? 'is-active' : ''}`}
+            onClick={() => handleSwitchMode('catalog')}
+            style={{
+              flex: 1,
+              padding: '8px 4px',
+              fontSize: '11.5px',
+              fontWeight: activeMode === 'catalog' ? '700' : '600',
+              borderRadius: '8px',
+              border: 'none',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '5px',
+              background: activeMode === 'catalog' ? (theme.primary || '#dc2626') : 'transparent',
+              color: activeMode === 'catalog' ? '#ffffff' : theme.textMuted,
+              boxShadow: activeMode === 'catalog' ? '0 2px 8px rgba(0,0,0,0.15)' : 'none',
+              transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
+            }}
+            title="Məhsul Kataloqu və PIM İdarəetməsi (/?mode=catalog/AdministratorNT)"
+          >
+            <Boxes size={14} />
+            <span>Kataloq (PIM)</span>
+          </button>
+        </div>
+
         <nav>
-          {tabs.map(([id, label, icon]) => {
+          {currentTabs.map(([id, label, icon]) => {
             const isActive = tab === id;
             return (
               <button
@@ -973,10 +1118,45 @@ export const AdminShell: React.FC<AdminShellProps> = ({
 
       <main className="admin-main">
         <header className="admin-toolbar" style={{ borderColor: theme.border }}>
-          <div>
-            <h1>Admin İdarəetmə Paneli</h1>
+          <div className="admin-toolbar-title-wrap">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+              <span
+                className="admin-mode-badge"
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '5px',
+                  padding: '3px 10px',
+                  borderRadius: '20px',
+                  fontSize: '11px',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  backgroundColor:
+                    activeMode === 'catalog'
+                      ? 'rgba(16, 185, 129, 0.15)'
+                      : 'rgba(239, 68, 68, 0.15)',
+                  color: activeMode === 'catalog' ? '#10b981' : theme.primary || '#ef4444',
+                  border: `1px solid ${
+                    activeMode === 'catalog'
+                      ? 'rgba(16, 185, 129, 0.3)'
+                      : 'rgba(239, 68, 68, 0.3)'
+                  }`,
+                }}
+              >
+                {activeMode === 'catalog' ? <Boxes size={13} /> : <Compass size={13} />}
+                {activeMode === 'catalog' ? 'Məhsul Kataloqu (PIM)' : 'Rəsmi Sayt (CMS)'}
+              </span>
+            </div>
+            <h1>
+              {activeMode === 'catalog'
+                ? 'Məhsul Kataloqu İdarəetmə Paneli'
+                : 'Rəsmi Sayt İdarəetmə Paneli'}
+            </h1>
             <p style={{ color: theme.textMuted }}>
-              Kataloqun bütün məlumatlarını, görünüşünü və məhsullarını birbaşa buradan idarə edin
+              {activeMode === 'catalog'
+                ? 'Məhsul modellərini, şəkilləri, kateqoriyaları, brendləri və texniki xüsusiyyətləri idarə edin'
+                : 'Saytın menyularını, görünüş və rənglərini, mağaza filiallarını, müştəri çatını və təhlükəsizliyi idarə edin'}
             </p>
           </div>
           <div className="admin-toolbar-actions">
@@ -988,22 +1168,32 @@ export const AdminShell: React.FC<AdminShellProps> = ({
               <Power size={15} />
               <span>
                 {catalog.settings?.catalogActive !== false
-                  ? 'Kataloq: Yayımda'
-                  : 'Kataloq: Dayandırılıb'}
+                  ? activeMode === 'site'
+                    ? 'Sayt: Aktiv'
+                    : 'Kataloq: Yayımda'
+                  : activeMode === 'site'
+                    ? 'Sayt: Profilaktika'
+                    : 'Kataloq: Profilaktika'}
               </span>
             </button>
             <button
               className="admin-preview-btn"
-              onClick={() => setPreviewOpen(true)}
+              onClick={() => {
+                if (activeMode === 'catalog') {
+                  setPreviewOpen(true);
+                } else {
+                  window.open('/', '_blank', 'noopener,noreferrer');
+                }
+              }}
               style={{
                 background: theme.bgSecondary,
                 borderColor: theme.border,
                 color: theme.text,
               }}
-              title="Kataloqu müştəri gözü ilə canlı önbaxışda aç"
+              title={activeMode === 'catalog' ? 'Kataloqu canlı önbaxışda aç' : 'Rəsmi saytı yeni tabda aç'}
             >
               <Eye size={16} />
-              <span>Canlı Önbaxış</span>
+              <span>{activeMode === 'catalog' ? 'Kataloq Önbaxış' : 'Canlı Sayta Bax'}</span>
             </button>
             <button
               onClick={persist}

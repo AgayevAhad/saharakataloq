@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState, lazy, Suspense } from 'react';
-import { catalogApi } from '../services/catalogApi';
+import { AdminPayload, catalogApi } from '../services/catalogApi';
+import { normalizeCatalog } from '../data/catalog';
 import { Product, TechnologyArticle } from '../types/product';
 import { filterCatalogProducts } from '../utils/filter';
 import {
@@ -46,6 +47,12 @@ import {
 } from '../hooks';
 
 // Lazy Loaded Pages & Modals
+const CatalogAdmin = lazy(() =>
+  import('../components/CatalogAdmin').then((m) => ({ default: m.CatalogAdmin }))
+);
+const AdminLogin = lazy(() =>
+  import('../components/AdminLogin').then((m) => ({ default: m.AdminLogin }))
+);
 const CartPage = lazy(() =>
   import('../pages/CartPage').then((m) => ({ default: m.CartPage }))
 );
@@ -71,7 +78,37 @@ export interface CatalogAppProps {
   isSsr?: boolean;
 }
 
+const isAdminPath = () => {
+  if (typeof window === 'undefined') return false;
+  return (
+    window.location.pathname.startsWith('/AdministratorNT') ||
+    window.location.search.includes('/AdministratorNT')
+  );
+};
+
 export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = false }) => {
+  const [adminChecked, setAdminChecked] = useState(false);
+  const [adminData, setAdminData] = useState<AdminPayload | null>(null);
+
+  useEffect(() => {
+    if (!isAdminPath()) return;
+    let isMounted = true;
+    const checkAdmin = async () => {
+      try {
+        const session = await catalogApi.getAdminSessionStatus();
+        if (session?.authenticated) {
+          const data = await catalogApi.getAdminData();
+          if (isMounted) setAdminData(data);
+        }
+      } catch {}
+      if (isMounted) setAdminChecked(true);
+    };
+    checkAdmin();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
@@ -488,6 +525,75 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
       document.documentElement.style.setProperty('--primary-color', catalog.settings.primaryColor);
     }
   }, [catalog.settings?.primaryColor, catalog.settings?.siteTitle]);
+
+  if (isAdminPath()) {
+    if (!adminChecked)
+      return (
+        <div
+          className="app-loading"
+          style={{ background: activeTheme.bg, color: activeTheme.text }}
+        >
+          Kataloq admin paneli hazırlanır...
+        </div>
+      );
+    if (!adminData)
+      return (
+        <AdminLogin
+          theme={activeTheme}
+          onLogin={async (password) => {
+            await catalogApi.login(password);
+            setAdminData(await catalogApi.getAdminData());
+          }}
+        />
+      );
+    return (
+      <>
+        <Suspense
+          fallback={
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                minHeight: '100vh',
+                backgroundColor: activeTheme.bg,
+                color: activeTheme.text,
+              }}
+            >
+              <RotateCcw className="img-spin" size={36} color={activeTheme.primary} />
+            </div>
+          }
+        >
+          <CatalogAdmin
+            initial={adminData}
+            theme={activeTheme}
+            mode="catalog"
+            showToast={showToast}
+            onSave={async (data) => {
+              await catalogApi.saveCatalog(data, adminData.csrfToken);
+            }}
+            onPublish={async (data) => {
+              await catalogApi.saveCatalog(data, adminData.csrfToken);
+              await catalogApi.publishCatalog(adminData.csrfToken);
+              const updated = await catalogApi.getCatalog();
+              // update local catalog
+            }}
+            onUpload={(file) => catalogApi.uploadMedia(file, adminData.csrfToken)}
+            onLogout={async () => {
+              await catalogApi.logout(adminData.csrfToken);
+              setAdminData(null);
+            }}
+          />
+        </Suspense>
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          visible={toast.visible}
+          theme={activeTheme}
+        />
+      </>
+    );
+  }
 
   // Public Maintenance Mode
   if (catalog.settings?.catalogActive === false) {

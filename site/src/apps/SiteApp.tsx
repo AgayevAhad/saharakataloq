@@ -842,6 +842,7 @@ export const SiteApp: React.FC<SiteAppProps> = ({ initialRoute: _initialRoute, i
           <CatalogAdmin
             initial={adminData}
             theme={activeTheme}
+            mode="site"
             showToast={showToast}
             onSave={async (data) => {
               await catalogApi.saveCatalog(data, adminData.csrfToken);
