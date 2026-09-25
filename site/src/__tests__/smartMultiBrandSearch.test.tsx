@@ -7,7 +7,7 @@ afterEach(() => {
   cleanup();
 });
 import { SmartSearchOverlay } from '../components/SmartSearchOverlay';
-import { Header } from '../components/Header';
+import { SiteHeader } from '../components/site/SiteHeader';
 import { lightTheme } from '../types/theme';
 import { Brand, CatalogCategory, Product } from '../types/product';
 
@@ -251,36 +251,33 @@ describe('SmartSearchOverlay & Multi-Brand Search Tests', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('Header component renders and opens SmartSearchOverlay on input focus', () => {
+  it('SiteHeader component renders and opens SmartSearchOverlay on input focus', () => {
     const onSearchChange = vi.fn();
 
     render(
-      <Header
+      <SiteHeader
+        currentRoute="home"
+        onNavigate={vi.fn()}
         theme={lightTheme}
-        isDarkMode={false}
+        themeMode="light"
         onToggleTheme={vi.fn()}
-        selectedCategory="all"
-        onSelectCategory={vi.fn()}
-        selectedBrand="all"
-        onSelectBrand={vi.fn()}
         brands={mockBrands}
         categories={mockCategories}
         products={mockProducts}
         searchQuery=""
         onSearchChange={onSearchChange}
-        onOpenInverterInfo={vi.fn()}
-        onOpenCatalogShare={vi.fn()}
-        totalCount={mockProducts.length}
-        filteredCount={mockProducts.length}
+        onOpenSearchModal={vi.fn()}
+        comparisonCount={0}
+        favoritesCount={0}
       />
     );
 
-    const searchInput = screen.getByLabelText('Məhsul axtarışı');
+    const searchInput = screen.getByTestId('header-search-input');
     fireEvent.focus(searchInput);
 
     // SmartSearchOverlay should appear with its section titles
-    expect(screen.getByText('Axtarış üzrə nəticə')).toBeDefined();
-    expect(screen.getByText('Populyar məhsullar')).toBeDefined();
+    expect(screen.getAllByText('Axtarış üzrə nəticə')[0]).toBeDefined();
+    expect(screen.getAllByText('Populyar məhsullar')[0]).toBeDefined();
   });
 
   it('updates the right preview images and title dynamically when hovering with mouse over suggestions or categories', () => {

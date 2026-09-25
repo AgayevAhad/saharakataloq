@@ -93,7 +93,8 @@ describe('Sahara Electronic - UI Komponentləri və İstifadəçi Qarşılıqlı
     expect(onOpen).toHaveBeenCalled();
   });
 
-  it('axtarış fokusunda ağıllı alternativ və populyar məhsul təkliflərini göstərir', () => {
+  it('Header komponenti axtarış inputunu və nəticə sayğacını göstərir', () => {
+    const handleSearchChange = vi.fn();
     render(
       <Header
         theme={lightTheme}
@@ -108,7 +109,7 @@ describe('Sahara Electronic - UI Komponentləri və İstifadəçi Qarşılıqlı
         products={[TEST_PRODUCT]}
         settings={DEFAULT_SETTINGS}
         searchQuery=""
-        onSearchChange={vi.fn()}
+        onSearchChange={handleSearchChange}
         onOpenInverterInfo={vi.fn()}
         onOpenCatalogShare={vi.fn()}
         totalCount={1}
@@ -116,10 +117,9 @@ describe('Sahara Electronic - UI Komponentləri və İstifadəçi Qarşılıqlı
       />
     );
     const input = screen.getByLabelText('Məhsul axtarışı');
-    fireEvent.focus(input);
-    expect(screen.getByRole('dialog', { name: 'Ağıllı axtarış paneli' })).toBeDefined();
-    expect(screen.getByText('Axtarış üzrə nəticə')).toBeDefined();
-    expect(screen.getByText('Populyar məhsullar')).toBeDefined();
+    expect(input).toBeDefined();
+    fireEvent.change(input, { target: { value: 'Ardo' } });
+    expect(handleSearchChange).toHaveBeenCalledWith('Ardo');
   });
 
   it('Header-də Instagram və Facebook keçid düymələri göstərilir', () => {

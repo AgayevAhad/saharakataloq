@@ -9,7 +9,7 @@ afterEach(() => {
   cleanup();
 });
 
-describe('Header Search Expansion in Catalog Mode', () => {
+describe('Header Simple Search in Catalog Mode', () => {
   const mockProps = {
     theme: lightTheme,
     isDarkMode: false,
@@ -35,62 +35,47 @@ describe('Header Search Expansion in Catalog Mode', () => {
     currentView: 'catalog' as const,
   };
 
-  it('initially does not render the expanded search wrap or backdrop', () => {
-    const { container } = render(<Header {...mockProps} />);
-    const expandedWrap = container.querySelector('.catalog-header-search-expand-wrap');
-    const backdrop = container.querySelector('.header-search-clickaway');
-    expect(expandedWrap).toBeNull();
-    expect(backdrop).toBeNull();
-  });
-
-  it('expands search panel smoothly when search input is focused or clicked', () => {
+  it('renders a simple and clean instant search input with result counter', () => {
     const { container } = render(<Header {...mockProps} />);
     const input = screen.getByLabelText('Məhsul axtarışı');
+    expect(input).toBeTruthy();
 
-    fireEvent.focus(input);
+    const searchBox = container.querySelector('.catalog-search');
+    expect(searchBox).toBeTruthy();
 
-    const expandedWrap = container.querySelector('.catalog-header-search-expand-wrap');
-    const backdrop = container.querySelector('.header-search-clickaway');
-    const header = container.querySelector('.catalog-header');
-
-    expect(expandedWrap).toBeTruthy();
-    expect(backdrop).toBeTruthy();
-    expect(header?.classList.contains('has-search-expanded')).toBe(true);
-    expect(screen.getByRole('dialog', { name: 'Ağıllı axtarış paneli' })).toBeTruthy();
+    const resultCount = container.querySelector('.result-count');
+    expect(resultCount?.textContent).toContain(String(DEFAULT_CATALOG.products.length));
   });
 
-  it('closes expanded search panel when backdrop is clicked', () => {
-    const { container } = render(<Header {...mockProps} />);
+  it('triggers onSearchChange immediately when typing in the search bar', () => {
+    const onSearchChange = vi.fn();
+    render(<Header {...mockProps} onSearchChange={onSearchChange} />);
     const input = screen.getByLabelText('Məhsul axtarışı');
 
-    fireEvent.focus(input);
-    expect(container.querySelector('.catalog-header-search-expand-wrap')).toBeTruthy();
-
-    const backdrop = container.querySelector('.header-search-clickaway') as HTMLElement;
-    fireEvent.click(backdrop);
-
-    expect(container.querySelector('.catalog-header-search-expand-wrap')).toBeNull();
-    expect(container.querySelector('.header-search-clickaway')).toBeNull();
+    fireEvent.change(input, { target: { value: 'SABAF' } });
+    expect(onSearchChange).toHaveBeenCalledWith('SABAF');
   });
 
-  it('closes expanded search panel when Escape key is pressed', () => {
+  it('shows clear button and clears search query when clicked', () => {
+    const onSearchChange = vi.fn();
+    render(<Header {...mockProps} searchQuery="ardo" onSearchChange={onSearchChange} />);
+
+    const clearBtn = screen.getByLabelText('Axtarışı təmizlə');
+    expect(clearBtn).toBeTruthy();
+
+    fireEvent.click(clearBtn);
+    expect(onSearchChange).toHaveBeenCalledWith('');
+  });
+
+  it('toggles focus style on input focus and blur', () => {
     const { container } = render(<Header {...mockProps} />);
     const input = screen.getByLabelText('Məhsul axtarışı');
+    const searchBox = container.querySelector('.catalog-search');
 
     fireEvent.focus(input);
-    expect(container.querySelector('.catalog-header-search-expand-wrap')).toBeTruthy();
+    expect(searchBox?.classList.contains('is-focused')).toBe(true);
 
-    fireEvent.keyDown(window, { key: 'Escape' });
-
-    expect(container.querySelector('.catalog-header-search-expand-wrap')).toBeNull();
-  });
-
-  it('opens search panel when Ctrl+K / Cmd+K is pressed', () => {
-    const { container } = render(<Header {...mockProps} />);
-    expect(container.querySelector('.catalog-header-search-expand-wrap')).toBeNull();
-
-    fireEvent.keyDown(window, { key: 'k', ctrlKey: true });
-
-    expect(container.querySelector('.catalog-header-search-expand-wrap')).toBeTruthy();
+    fireEvent.blur(input);
+    expect(searchBox?.classList.contains('is-focused')).toBe(false);
   });
 });
