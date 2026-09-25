@@ -1,6 +1,6 @@
 import React from 'react';
-import { describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { ProductDetailModal } from '../components/ProductDetailModal';
 import { ThemeColors } from '../types/theme';
 import { Product } from '../types/product';
@@ -36,6 +36,10 @@ const mockProduct: Product = {
 };
 
 describe('ProductDetailModal Lightbox White Background & Integrated Top Header Controls', () => {
+  beforeEach(() => {
+    cleanup();
+  });
+
   it('renders fullscreen lightbox with clean studio white canvas in light mode and integrated borderless top controls', () => {
     const onClose = vi.fn();
     render(
@@ -120,5 +124,53 @@ describe('ProductDetailModal Lightbox White Background & Integrated Top Header C
 
     // Fullscreen lightbox should be closed
     expect(document.querySelector('.lightbox-top-header')).toBeNull();
+  });
+
+  it('retains zoom scale in ProductDetailPage when dragging and releasing mouse without accidental reset', async () => {
+    const { ProductDetailPage } = await import('../pages/ProductDetailPage');
+    render(
+      <ProductDetailPage
+        product={mockProduct}
+        allProducts={[mockProduct]}
+        categories={[]}
+        brands={[]}
+        settings={{}}
+        theme={lightTheme}
+        themeMode="light"
+        onNavigate={vi.fn()}
+        onSelectProduct={vi.fn()}
+        onWhatsApp={vi.fn()}
+        onCall={vi.fn()}
+      />
+    );
+
+    // Open lightbox
+    const maximizeBtn = screen.getByTitle('Böyük ekranda bax');
+    fireEvent.click(maximizeBtn);
+
+    const topHeader = document.querySelector('.lightbox-top-header') as HTMLDivElement;
+    expect(topHeader).toBeTruthy();
+
+    // Zoom in to 140%
+    const zoomInBtn = topHeader.querySelector('button[title*="Böyüt"]') as HTMLButtonElement;
+    expect(zoomInBtn).toBeTruthy();
+    fireEvent.click(zoomInBtn);
+    expect(screen.getByText('140%')).toBeTruthy();
+
+    const zoomContainer = document.querySelector('.zoom-pan-container') as HTMLDivElement;
+    expect(zoomContainer).toBeTruthy();
+
+    // Mouse drag across container
+    fireEvent.mouseDown(zoomContainer, { clientX: 200, clientY: 200 });
+    fireEvent.mouseMove(zoomContainer, { clientX: 250, clientY: 220 });
+    fireEvent.mouseUp(zoomContainer);
+    fireEvent.click(zoomContainer);
+
+    // Crucial: Zoom scale must REMAIN 140% and NOT reset to 100% on release
+    expect(screen.getByText('140%')).toBeTruthy();
+
+    // Double-click should toggle zoom
+    fireEvent.doubleClick(zoomContainer);
+    expect(screen.getByText('100%')).toBeTruthy();
   });
 });

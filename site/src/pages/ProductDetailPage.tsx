@@ -513,26 +513,13 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     [zoomScale, fsTouchStartX, fsTouchStartY, mediaList.length, nextMedia, prevMedia]
   );
 
-  // Lightbox Click-to-Zoom Toggle
-  const handleImageClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (zoomScale === 1) {
-      setZoomScale(2);
-    } else {
-      setZoomScale(1);
+  // Lightbox Double Click Zoom / Toggle Zoom
+  const toggleZoom = () => {
+    setZoomScale((prev) => {
+      if (prev === 1) return 2;
       setPanPosition({ x: 0, y: 0 });
-    }
-  };
-
-  // Lightbox Double Click Zoom
-  const handleImageDoubleClick = (e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (zoomScale > 1) {
-      setZoomScale(1);
-      setPanPosition({ x: 0, y: 0 });
-    } else {
-      setZoomScale(2.5);
-    }
+      return 1;
+    });
   };
 
   // Mouse wheel zoom in lightbox
@@ -540,7 +527,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     e.stopPropagation();
     const delta = e.deltaY < 0 ? 0.25 : -0.25;
     setZoomScale((prev) => {
-      const next = Math.min(4, Math.max(1, prev + delta));
+      const next = Math.min(4, Math.max(1, Number((prev + delta).toFixed(2))));
       if (next === 1) setPanPosition({ x: 0, y: 0 });
       return next;
     });
@@ -3020,7 +3007,9 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             padding: '16px 20px',
             boxSizing: 'border-box',
           }}
-          onClick={() => setIsFullscreenGallery(false)}
+          onClick={(e) => {
+            if (e.target === e.currentTarget && !isDragging) setIsFullscreenGallery(false);
+          }}
           onWheel={handleLightboxWheel}
         >
           {/* Lightbox Top Header (Clean Light Design) */}
@@ -3229,11 +3218,11 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               cursor: zoomScale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
               backgroundColor: '#ffffff',
             }}
-            onClick={activeMedia?.type === 'image' ? handleImageClick : (e) => e.stopPropagation()}
-            onDoubleClick={activeMedia?.type === 'image' ? handleImageDoubleClick : undefined}
+            onDoubleClick={activeMedia?.type === 'image' ? toggleZoom : undefined}
             onMouseDown={handleMouseDown}
             onMouseMove={handleMouseMove}
             onMouseUp={handleMouseUp}
+            onMouseLeave={handleMouseUp}
             onTouchStart={handleTouchStart}
             onTouchMove={handleTouchMove}
             onTouchEnd={handleTouchEnd}
