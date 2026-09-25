@@ -8,7 +8,8 @@ import { CategoryGlyph } from './CategoryGlyph';
 import { useHorizontalScroll } from '../hooks/useHorizontalScroll';
 
 interface BrandCategoryFilterProps {
-  brand: Brand;
+  brand?: Brand;
+  brands?: Brand[];
   categories: CatalogCategory[];
   products: Product[];
   selectedCategory: string;
@@ -24,6 +25,7 @@ const brandCoverImages: Record<string, string> = {
 
 export const BrandCategoryFilter: React.FC<BrandCategoryFilterProps> = ({
   brand,
+  brands,
   categories,
   products,
   selectedCategory,
@@ -31,7 +33,26 @@ export const BrandCategoryFilter: React.FC<BrandCategoryFilterProps> = ({
   onBackToBrands,
   theme,
 }) => {
-  const brandProducts = products.filter((p) => p.brandId === brand.id && p.status !== 'draft');
+  const activeBrandsList = React.useMemo(() => {
+    if (brands && brands.length > 0) return brands;
+    if (brand) return [brand];
+    return [];
+  }, [brands, brand]);
+
+  const activeBrandIds = React.useMemo(
+    () => activeBrandsList.map((b) => b.id.toLowerCase()),
+    [activeBrandsList]
+  );
+
+  const brandProducts = React.useMemo(
+    () =>
+      products.filter(
+        (p) =>
+          activeBrandIds.includes((p.brandId || '').toLowerCase()) &&
+          p.status !== 'draft'
+      ),
+    [products, activeBrandIds]
+  );
   const totalCount = brandProducts.length;
 
   const {
@@ -44,15 +65,27 @@ export const BrandCategoryFilter: React.FC<BrandCategoryFilterProps> = ({
     activeDependency: selectedCategory,
   });
 
-  // Calculate only categories that actually have products for this brand
-  const availableCategories = categories
-    .map((cat) => {
-      const count = brandProducts.filter((p) => p.category === cat.id).length;
-      return { ...cat, count };
-    })
-    .filter((cat) => cat.count > 0);
+  // Calculate only categories that actually have products for the selected brands
+  const availableCategories = React.useMemo(
+    () =>
+      categories
+        .map((cat) => {
+          const count = brandProducts.filter((p) => p.category === cat.id).length;
+          return { ...cat, count };
+        })
+        .filter((cat) => cat.count > 0),
+    [categories, brandProducts]
+  );
 
-  const coverImage = brandCoverImages[brand.id];
+  const primaryBrand = activeBrandsList[0];
+  const coverImage = primaryBrand ? brandCoverImages[primaryBrand.id.toLowerCase()] : undefined;
+
+  const originsText = activeBrandsList
+    .map((b) => b.originCountry)
+    .filter(Boolean)
+    .join(' / ');
+
+  const brandsLabel = activeBrandsList.map((b) => b.name).join(', ');
 
   return (
     <div
@@ -88,18 +121,34 @@ export const BrandCategoryFilter: React.FC<BrandCategoryFilterProps> = ({
             <span>Brendlər</span>
           </button>
 
-          <div className="brand-title-badge">
-            {brand.logo ? (
-              <ShimmerImage
-                src={brand.logo}
-                alt={brand.name}
-                spinnerSize={14}
-                className="brand-filter-logo"
-                containerStyle={{ width: '80px', height: '32px' }}
-              />
-            ) : (
-              <span className="brand-filter-name-text">{brand.name}</span>
-            )}
+          <div
+            className="brand-title-badge"
+            style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}
+          >
+            {activeBrandsList.map((b) => (
+              <div
+                key={b.id}
+                style={{
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  padding: '2px 4px',
+                  borderRadius: '6px',
+                  backgroundColor: 'transparent',
+                }}
+              >
+                {b.logo ? (
+                  <ShimmerImage
+                    src={b.logo}
+                    alt={b.name}
+                    spinnerSize={14}
+                    className="brand-filter-logo"
+                    containerStyle={{ width: '80px', height: '32px' }}
+                  />
+                ) : (
+                  <span className="brand-filter-name-text">{b.name}</span>
+                )}
+              </div>
+            ))}
             <span
               className="brand-filter-count-badge"
               style={{
@@ -113,9 +162,9 @@ export const BrandCategoryFilter: React.FC<BrandCategoryFilterProps> = ({
           </div>
         </div>
 
-        {brand.originCountry && (
+        {originsText && (
           <span className="brand-origin-badge" style={{ color: theme.textMuted }}>
-            {brand.originCountry} brendi
+            {originsText} {activeBrandsList.length > 1 ? 'brendləri' : 'brendi'}
           </span>
         )}
       </div>
@@ -125,7 +174,7 @@ export const BrandCategoryFilter: React.FC<BrandCategoryFilterProps> = ({
         {...dragProps}
         className="brand-category-pills-wrap no-scrollbar"
         role="tablist"
-        aria-label={`${brand.name} kateqoriyaları`}
+        aria-label={`${brandsLabel || 'Brend'} kateqoriyaları`}
         style={{ cursor: 'grab' }}
       >
         <button

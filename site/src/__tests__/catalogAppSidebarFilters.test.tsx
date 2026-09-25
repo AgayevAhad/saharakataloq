@@ -117,4 +117,53 @@ describe('CatalogSidebarFilter Component Suite', () => {
     fireEvent.click(resetBtn);
     expect(onResetFilters).toHaveBeenCalled();
   });
+
+  it('renders brand checkboxes without border boxes and supports multiple brand logos in BrandCategoryFilter', () => {
+    const onToggleBrand = vi.fn();
+    const brands: Brand[] = [
+      { id: 'ardo', name: 'ARDO', slug: 'ardo', originCountry: 'İtaliya', manufacturingCountries: [], logo: '/media/brands/ardo-logo.png', active: true },
+      { id: 'lotus', name: 'LOTUS', slug: 'lotus', originCountry: 'İngiltərə', manufacturingCountries: [], logo: '/media/brands/lotus-logo.png', active: true },
+    ];
+
+    const { container, getAllByRole } = render(
+      <CatalogSidebarFilter
+        categories={DEFAULT_CATALOG.categories}
+        brands={brands}
+        selectedBrands={['ardo', 'lotus']}
+        onToggleBrand={onToggleBrand}
+        showBrandSection={true}
+        activeProducts={DEFAULT_CATALOG.products}
+        selectedCategory="all"
+        onSelectCategory={vi.fn()}
+        minPrice={null}
+        maxPrice={null}
+        minAvailablePrice={100}
+        maxAvailablePrice={2000}
+        onMinPriceChange={vi.fn()}
+        onMaxPriceChange={vi.fn()}
+        onlyDiscounted={false}
+        onToggleDiscounted={vi.fn()}
+        onlyWithVideo={false}
+        onToggleWithVideo={vi.fn()}
+        selectedEnergyClass="all"
+        onSelectEnergyClass={vi.fn()}
+        selectedMotorType="all"
+        onSelectMotorType={vi.fn()}
+        selectedColor="all"
+        onSelectColor={vi.fn()}
+        hasActiveFilters={false}
+        onResetFilters={vi.fn()}
+        theme={lightTheme}
+        isDarkMode={false}
+      />
+    );
+
+    const checkboxes = getAllByRole('checkbox');
+    expect(checkboxes.length).toBeGreaterThanOrEqual(2);
+    checkboxes.forEach((cb) => {
+      // Must not have an explicit 1px solid card box border
+      expect(cb.style.border).toMatch(/none/);
+    });
+  });
 });
+

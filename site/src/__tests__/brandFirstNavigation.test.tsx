@@ -176,6 +176,35 @@ describe('Brand-First Interactive Navigation & Contextual Filter Suite', () => {
     expect(onBackToBrands).toHaveBeenCalled();
   });
 
+  it('BrandCategoryFilter renders multiple brand logos and combined categories when 2+ brands are selected', () => {
+    const ardoBrand = DEFAULT_BRANDS.find((b) => b.id === 'ardo')!;
+    const lotusBrand = DEFAULT_BRANDS.find((b) => b.id === 'lotus')!;
+    const products = [TEST_ARDO_PRODUCT, TEST_LOTUS_PRODUCT, TEST_LOTUS_AIRFRYER];
+
+    const { getByText, getAllByRole } = render(
+      <BrandCategoryFilter
+        brands={[ardoBrand, lotusBrand]}
+        categories={DEFAULT_CATEGORIES}
+        products={products}
+        selectedCategory="all"
+        onSelectCategory={vi.fn()}
+        onBackToBrands={vi.fn()}
+        theme={lightTheme}
+      />
+    );
+
+    // Check combined total count (3 models: 1 ARDO + 2 Lotus)
+    expect(getByText(/3 model/i)).toBeDefined();
+
+    // Check origin badge for multi-brand
+    expect(getByText(/İtaliya \/ İngiltərə brendləri/i)).toBeDefined();
+
+    // Check category pills rendered for both brands: "Hamısı (3)", "Aspiratorlar (2)", "Fritözlər & Airfryer (1)"
+    expect(getByText('Hamısı')).toBeDefined();
+    expect(getByText('Aspiratorlar')).toBeDefined();
+    expect(getByText('Fritözlər & Airfryer')).toBeDefined();
+  });
+
   it('Initial landing view renders curated home structure without legacy brand family dock', async () => {
     const { queryByText } = render(<App />);
 

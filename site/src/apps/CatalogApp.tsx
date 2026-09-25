@@ -421,10 +421,31 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
     sortBy,
   ]);
 
-  const activeBrandObj =
-    selectedBrand && selectedBrand !== 'all'
-      ? catalog.brands.find((b) => b.id.toLowerCase() === selectedBrand.toLowerCase())
-      : null;
+  const activeSelectedBrands = useMemo(() => {
+    const list =
+      selectedBrands.length > 0
+        ? selectedBrands
+        : selectedBrand && selectedBrand !== 'all'
+          ? [selectedBrand]
+          : [];
+    return supportedBrands.filter((b) =>
+      list.map((s) => s.toLowerCase()).includes(b.id.toLowerCase())
+    );
+  }, [selectedBrands, selectedBrand, supportedBrands]);
+
+  const brandFilteredProducts = useMemo(() => {
+    if (activeSelectedBrands.length === 0) return activeCatalogProducts;
+    const ids = activeSelectedBrands.map((b) => b.id.toLowerCase());
+    return activeCatalogProducts.filter((p) => ids.includes((p.brandId || '').toLowerCase()));
+  }, [activeSelectedBrands, activeCatalogProducts]);
+
+  const activeCategoriesForSidebar = useMemo(() => {
+    return catalog.categories.filter((cat) =>
+      brandFilteredProducts.some((p) => p.category === cat.id && p.status !== 'draft')
+    );
+  }, [catalog.categories, brandFilteredProducts]);
+
+  const activeBrandObj = activeSelectedBrands[0] || null;
 
   useEffect(() => {
     if (catalog.settings?.siteTitle) {
@@ -668,9 +689,9 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
 
             {isCatalogActive && (
               <section className="catalog-section">
-                {activeBrandObj ? (
+                {activeSelectedBrands.length > 0 ? (
                   <BrandCategoryFilter
-                    brand={activeBrandObj}
+                    brands={activeSelectedBrands}
                     categories={catalog.categories}
                     products={activeCatalogProducts}
                     selectedCategory={selectedCategory || 'all'}
@@ -734,19 +755,7 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                   {/* Desktop Left Sidebar Filters */}
                   <aside className="catalog-desktop-sidebar">
                     <CatalogSidebarFilter
-                      categories={
-                        activeBrandObj
-                          ? catalog.categories.filter((cat) =>
-                              activeCatalogProducts.some(
-                                (p) =>
-                                  p.brandId?.toLowerCase() === activeBrandObj.id.toLowerCase() &&
-                                  p.category === cat.id
-                              )
-                            )
-                          : catalog.categories.filter((cat) =>
-                              activeCatalogProducts.some((p) => p.category === cat.id)
-                            )
-                      }
+                      categories={activeCategoriesForSidebar}
                       brands={supportedBrands}
                       selectedBrands={
                         selectedBrands.length > 0
@@ -757,13 +766,7 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                       }
                       onToggleBrand={handleToggleBrand}
                       showBrandSection={true}
-                      activeProducts={
-                        activeBrandObj
-                          ? activeCatalogProducts.filter(
-                              (p) => p.brandId?.toLowerCase() === activeBrandObj.id.toLowerCase()
-                            )
-                          : activeCatalogProducts
-                      }
+                      activeProducts={brandFilteredProducts}
                       selectedCategory={selectedCategory || 'all'}
                       onSelectCategory={(catId) => setSelectedCategory(catId)}
                       minPrice={selectedMinPrice}
@@ -1009,19 +1012,7 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                       </div>
 
                       <CatalogSidebarFilter
-                        categories={
-                          activeBrandObj
-                            ? catalog.categories.filter((cat) =>
-                                activeCatalogProducts.some(
-                                  (p) =>
-                                    p.brandId?.toLowerCase() === activeBrandObj.id.toLowerCase() &&
-                                    p.category === cat.id
-                                )
-                              )
-                            : catalog.categories.filter((cat) =>
-                                activeCatalogProducts.some((p) => p.category === cat.id)
-                              )
-                        }
+                        categories={activeCategoriesForSidebar}
                         brands={supportedBrands}
                         selectedBrands={
                           selectedBrands.length > 0
@@ -1032,13 +1023,7 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                         }
                         onToggleBrand={handleToggleBrand}
                         showBrandSection={true}
-                        activeProducts={
-                          activeBrandObj
-                            ? activeCatalogProducts.filter(
-                                (p) => p.brandId?.toLowerCase() === activeBrandObj.id.toLowerCase()
-                              )
-                            : activeCatalogProducts
-                        }
+                        activeProducts={brandFilteredProducts}
                         selectedCategory={selectedCategory || 'all'}
                         onSelectCategory={(catId) => setSelectedCategory(catId)}
                         minPrice={selectedMinPrice}

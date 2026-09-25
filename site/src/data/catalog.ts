@@ -46,7 +46,7 @@ export const DEFAULT_BRANDS: Brand[] = [
     id: 'lotus',
     name: 'LOTUS',
     slug: 'lotus',
-    originCountry: 'Türkiyə',
+    originCountry: 'İngiltərə',
     manufacturingCountries: ['Türkiyə', 'Çin'],
     description: '',
     logo: '/media/brands/lotus-logo.png',

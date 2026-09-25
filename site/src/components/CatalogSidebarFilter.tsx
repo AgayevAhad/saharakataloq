@@ -357,12 +357,8 @@ export const CatalogSidebarFilter: React.FC<CatalogSidebarFilterProps> = ({
                         ? isDarkMode
                           ? 'rgba(220, 38, 38, 0.16)'
                           : 'rgba(220, 38, 38, 0.08)'
-                        : isDarkMode
-                          ? 'rgba(255, 255, 255, 0.02)'
-                          : '#f8fafc',
-                      border: isChecked
-                        ? `1px solid ${theme.primary}`
-                        : `1px solid ${isDarkMode ? 'rgba(255, 255, 255, 0.05)' : '#e2e8f0'}`,
+                        : 'transparent',
+                      border: 'none',
                       transition: 'all 0.18s ease',
                     }}
                   >
