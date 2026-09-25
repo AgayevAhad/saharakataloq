@@ -988,6 +988,133 @@
   transform: translateY(-1px);
 }
 
+/* Stage Multi-Media Counter Badge */
+.modal-stage-counter-badge {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #ffffff;
+  border: none !important;
+  padding: 5px 10px;
+  border-radius: 20px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11.5px;
+  font-weight: 750;
+  letter-spacing: 0.3px;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 8;
+  pointer-events: none;
+}
+
+/* Stage Fullscreen Pill Button */
+.modal-stage-fs-pill {
+  position: absolute;
+  bottom: 12px;
+  right: 12px;
+  background: rgba(15, 23, 42, 0.75);
+  color: #ffffff;
+  border: none !important;
+  padding: 5px 10px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  z-index: 8;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.modal-stage-fs-pill:hover {
+  background: var(--primary, #dc2626);
+  transform: translateY(-1px) scale(1.03);
+  box-shadow: 0 4px 14px rgba(220, 38, 38, 0.4);
+}
+
+/* Modal Right Column Action Buttons with Micro-Interactions & Hover Lift */
+.modal-action-btn-cart {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.modal-action-btn-cart:hover {
+  background-color: var(--primary, #dc2626) !important;
+  color: #ffffff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(220, 38, 38, 0.35) !important;
+}
+
+.modal-action-btn-cart:hover svg {
+  stroke: #ffffff !important;
+  color: #ffffff !important;
+}
+
+.modal-action-btn-fav {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.modal-action-btn-fav:hover {
+  background-color: rgba(220, 38, 38, 0.12) !important;
+  color: #dc2626 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08) !important;
+}
+
+.modal-action-btn-wa {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.modal-action-btn-wa:hover {
+  background-color: #16a34a !important;
+  color: #ffffff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(22, 163, 74, 0.35) !important;
+}
+
+.modal-action-btn-call {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.modal-action-btn-call:hover {
+  background-color: #dc2626 !important;
+  color: #ffffff !important;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 18px rgba(220, 38, 38, 0.35) !important;
+}
+
+.modal-action-btn-call:hover svg {
+  stroke: #ffffff !important;
+  color: #ffffff !important;
+}
+
+.modal-action-btn-copy {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.modal-action-btn-copy:hover {
+  background-color: rgba(220, 38, 38, 0.12) !important;
+  color: #dc2626 !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.08) !important;
+}
+
+.modal-header-action-btn {
+  transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.modal-header-action-btn:hover {
+  background-color: rgba(220, 38, 38, 0.12) !important;
+  color: var(--primary, #dc2626) !important;
+  transform: translateY(-1px);
+}
+
 /* Fullscreen Lightbox Nav Buttons and Bottom Bar */
 .fs-lightbox-nav-btn {
   position: absolute;

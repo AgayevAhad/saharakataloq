@@ -912,22 +912,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
 
                     {activeMedia?.type === 'image' && activeMedia.url && (
                       <div
-                        style={{
-                          position: 'absolute',
-                          bottom: '12px',
-                          right: '12px',
-                          backgroundColor: 'rgba(0, 0, 0, 0.72)',
-                          color: '#ffffff',
-                          padding: '5px 10px',
-                          borderRadius: '8px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '5px',
-                          fontSize: '11px',
-                          fontWeight: 700,
-                          backdropFilter: 'blur(6px)',
-                          zIndex: 8,
-                        }}
+                        className="modal-stage-fs-pill"
+                        title="Tam ekranda bax"
                       >
                         <Maximize2 size={13} />
                         <span>Tam Ekran Bax</span>
@@ -1234,7 +1220,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                     )}
                   </div>
 
-                  {/* Compact Side-by-Side Action Rows */}
+                  {/* Compact Side-by-Side Action Rows (Borderless with Rich Hover Micro-Interactions) */}
                   <div
                     style={{
                       display: 'flex',
@@ -1243,11 +1229,12 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                       marginTop: 'auto',
                     }}
                   >
-                    {/* Row 1: Səbətə Əlavə Et (Açıq Qırmızı Fon / Qırmızı Mətn) & Seçilmişlər (Seç) Yanaşı */}
+                    {/* Row 1: Səbətə Əlavə Et (Açıq Qırmızı Fon / Qırmızı Mətn / Çərçivəsiz) & Seçilmişlər (Seç) Yanaşı */}
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'stretch' }}>
                       {onAddToCart && (
                         <button
                           type="button"
+                          className="modal-action-btn-cart"
                           onClick={(e) => {
                             animateProductToCart(e.currentTarget, product.image);
                             onAddToCart(product);
@@ -1260,14 +1247,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                             gap: '6px',
                             backgroundColor: 'rgba(220, 38, 38, 0.10)',
                             color: '#dc2626',
-                            border: '1px solid rgba(220, 38, 38, 0.25)',
+                            border: 'none',
+                            outline: 'none',
                             padding: '10px 12px',
                             borderRadius: '10px',
                             fontSize: '13px',
                             fontWeight: 800,
                             cursor: 'pointer',
                             boxShadow: 'none',
-                            transition: 'all 0.15s ease',
                           }}
                           title="Səbətə əlavə et"
                         >
@@ -1279,6 +1266,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                       {onToggleFavorite && (
                         <button
                           type="button"
+                          className="modal-action-btn-fav"
                           onClick={(e) => {
                             if (!isFavorite) animateProductToFavorites(e.currentTarget, product.image);
                             onToggleFavorite(product);
@@ -1295,14 +1283,14 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                               : theme.mode === 'dark'
                                 ? 'rgba(255, 255, 255, 0.05)'
                                 : 'rgba(0, 0, 0, 0.03)',
-                            border: `1px solid ${isFavorite ? '#ef4444' : theme.border}`,
+                            border: 'none',
+                            outline: 'none',
                             color: isFavorite ? '#dc2626' : theme.text,
                             padding: '10px 12px',
                             borderRadius: '10px',
                             fontSize: '13px',
                             fontWeight: 750,
                             cursor: 'pointer',
-                            transition: 'all 0.15s ease',
                           }}
                           title={isFavorite ? 'Seçilmişlərdən çıxart' : 'Seçilmişlərə əlavə et'}
                         >
@@ -1316,10 +1304,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                       )}
                     </div>
 
-                    {/* Row 2: WhatsApp, Zəng və Link Kopyalamaq Yanaşı (Bir Cərgədə) */}
+                    {/* Row 2: WhatsApp, Zəng və Link Kopyalamaq Yanaşı (Bir Cərgədə Çərçivəsiz) */}
                     <div style={{ display: 'flex', gap: '6px', alignItems: 'stretch' }}>
                       <button
                         onClick={() => onWhatsApp(product)}
+                        className="modal-action-btn-wa"
                         style={{
                           flex: 1,
                           minWidth: 0,
@@ -1330,6 +1319,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                           backgroundColor: 'rgba(34, 197, 94, 0.12)',
                           color: '#16a34a',
                           border: 'none',
+                          outline: 'none',
                           padding: '10px 6px',
                           borderRadius: '10px',
                           fontSize: '12px',
@@ -1339,7 +1329,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
-                          transition: 'all 0.15s ease',
                         }}
                         title="WhatsApp ilə əlaqə"
                       >
@@ -1349,7 +1338,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
 
                       <button
                         onClick={() => onCall(product)}
-                        className="modal-call-button"
+                        className="modal-call-button modal-action-btn-call"
                         style={{
                           flex: 1,
                           minWidth: 0,
@@ -1360,6 +1349,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                           backgroundColor: 'rgba(220, 38, 38, 0.10)',
                           color: '#dc2626',
                           border: 'none',
+                          outline: 'none',
                           padding: '10px 6px',
                           borderRadius: '10px',
                           fontSize: '12px',
@@ -1369,7 +1359,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
-                          transition: 'all 0.15s ease',
                         }}
                         title="Zəng et"
                       >
@@ -1379,6 +1368,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
 
                       <button
                         onClick={() => onCopyLink(product)}
+                        className="modal-action-btn-copy"
                         style={{
                           flex: 1,
                           minWidth: 0,
@@ -1387,7 +1377,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                           justifyContent: 'center',
                           gap: '5px',
                           backgroundColor: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
-                          border: `1px solid ${theme.border}`,
+                          border: 'none',
+                          outline: 'none',
                           color: theme.mode === 'dark' ? '#f87171' : '#b91c1c',
                           padding: '10px 6px',
                           borderRadius: '10px',
@@ -1397,7 +1388,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                           whiteSpace: 'nowrap',
                           overflow: 'hidden',
                           textOverflow: 'ellipsis',
-                          transition: 'all 0.15s ease',
                         }}
                         title="Məhsul linkini kopyala"
                       >

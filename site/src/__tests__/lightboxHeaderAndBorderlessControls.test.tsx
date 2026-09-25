@@ -83,6 +83,29 @@ describe('ProductDetailModal Lightbox White Background & Integrated Top Header C
     expect(prevStageBtn).toBeTruthy();
     expect(nextStageBtn).toBeTruthy();
 
+    // Multi-media counter badge should be rendered on stage
+    const counterBadge = document.querySelector('.modal-stage-counter-badge');
+    expect(counterBadge).toBeTruthy();
+    expect(counterBadge?.textContent).toContain('1 / 2');
+
+    // Stage fullscreen pill should be rendered on stage
+    const stageFsPill = document.querySelector('.modal-stage-fs-pill');
+    expect(stageFsPill).toBeTruthy();
+
+    // Verify borderless action buttons
+    const cartBtn = document.querySelector('.modal-action-btn-cart') as HTMLButtonElement | null;
+    const copyBtn = document.querySelector('.modal-action-btn-copy') as HTMLButtonElement;
+    const waBtn = document.querySelector('.modal-action-btn-wa') as HTMLButtonElement;
+    const callBtn = document.querySelector('.modal-action-btn-call') as HTMLButtonElement;
+
+    if (cartBtn) expect(cartBtn.style.border).toMatch(/none|^$/);
+    expect(copyBtn).toBeTruthy();
+    expect(copyBtn.style.border).toMatch(/none|^$/);
+    expect(waBtn).toBeTruthy();
+    expect(waBtn.style.border).toMatch(/none|^$/);
+    expect(callBtn).toBeTruthy();
+    expect(callBtn.style.border).toMatch(/none|^$/);
+
     // Open fullscreen lightbox
     fireEvent.click(stage);
 
