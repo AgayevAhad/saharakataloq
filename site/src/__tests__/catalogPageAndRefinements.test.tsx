@@ -279,7 +279,7 @@ describe('CatalogPage Rich Filters & Navigation', () => {
     expect(screen.queryByText('Lotus Dual Zone Airfryer')).toBeNull();
   });
 
-  it('filters by discount switch correctly', () => {
+  it('filters by motor type inverter correctly', () => {
     render(
       <CatalogPage
         products={mockProducts}
@@ -297,11 +297,11 @@ describe('CatalogPage Rich Filters & Navigation', () => {
       />
     );
 
-    const discountCheckboxes = screen.getAllByLabelText(/Yalnız endirimli modellər/i);
-    fireEvent.click(discountCheckboxes[0]);
+    const inverterBtn = screen.getByRole('button', { name: 'Inverter' });
+    fireEvent.click(inverterBtn);
 
-    // Only ARDO has oldPrice > price
+    // Only ARDO has inverter
     expect(screen.getAllByText(/ARDO 9kq Paltaryuyan İnverter/i).length).toBeGreaterThan(0);
-    expect(screen.queryByText('Artel NoFrost Soyuducu')).toBeNull();
+    expect(screen.queryByText('Lotus Dual Zone Airfryer')).toBeNull();
   });
 });

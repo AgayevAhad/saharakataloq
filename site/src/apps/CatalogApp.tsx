@@ -58,6 +58,7 @@ export interface CatalogAppProps {
 export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = false }) => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
+  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [minPrice, setMinPrice] = useState<number | null>(null);
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
@@ -282,9 +283,40 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
     setIsInverterModalOpen(true);
   };
 
+  const SUPPORTED_CATALOG_BRAND_IDS = useMemo(() => ['ardo', 'artel', 'lotus'], []);
+
+  const supportedBrands = useMemo(() => {
+    return catalog.brands.filter((b) =>
+      SUPPORTED_CATALOG_BRAND_IDS.includes(b.id.toLowerCase())
+    );
+  }, [catalog.brands, SUPPORTED_CATALOG_BRAND_IDS]);
+
   const activeCatalogProducts = useMemo(() => {
-    return catalog.products.filter((p) => p.status !== 'draft');
-  }, [catalog.products]);
+    return catalog.products.filter(
+      (p) =>
+        p.status !== 'draft' &&
+        p.brandId &&
+        SUPPORTED_CATALOG_BRAND_IDS.includes(p.brandId.toLowerCase())
+    );
+  }, [catalog.products, SUPPORTED_CATALOG_BRAND_IDS]);
+
+  const handleToggleBrand = useCallback((brandId: string) => {
+    setSelectedBrands((prev) => {
+      const lower = brandId.toLowerCase();
+      let next: string[];
+      if (prev.map((b) => b.toLowerCase()).includes(lower)) {
+        next = prev.filter((b) => b.toLowerCase() !== lower);
+      } else {
+        next = [...prev, brandId];
+      }
+      if (next.length === 1) {
+        setSelectedBrand(next[0]);
+      } else {
+        setSelectedBrand(null);
+      }
+      return next;
+    });
+  }, []);
 
   const { minAvailablePrice, maxAvailablePrice } = useMemo(() => {
     const prices = activeCatalogProducts
@@ -303,6 +335,7 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
 
   const isCatalogActive =
     selectedBrand !== null ||
+    selectedBrands.length > 0 ||
     (selectedCategory !== null && selectedCategory !== 'all') ||
     searchQuery.trim().length > 0 ||
     priceFilterActive ||
@@ -313,6 +346,8 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
     selectedColor !== 'all';
 
   const resetFilters = useCallback(() => {
+    setSelectedBrand(null);
+    setSelectedBrands([]);
     setSelectedCategory('all');
     setMinPrice(null);
     setMaxPrice(null);
@@ -325,6 +360,8 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
   }, []);
 
   const hasActiveFilters =
+    selectedBrand !== null ||
+    selectedBrands.length > 0 ||
     (selectedCategory !== null && selectedCategory !== 'all') ||
     priceFilterActive ||
     onlyDiscounted ||
@@ -335,6 +372,7 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
     Boolean(searchQuery.trim());
 
   const activeFiltersCount =
+    Number(selectedBrand !== null || selectedBrands.length > 0) +
     Number(selectedCategory !== null && selectedCategory !== 'all') +
     Number(priceFilterActive) +
     Number(onlyDiscounted) +
@@ -345,8 +383,13 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
 
   const filteredProducts = useMemo(() => {
     if (!isCatalogActive) return [];
-    const brandsFilter = selectedBrand && selectedBrand !== 'all' ? [selectedBrand] : [];
-    const filtered = filterCatalogPageProducts(catalog.products, {
+    const brandsFilter =
+      selectedBrands.length > 0
+        ? selectedBrands
+        : selectedBrand && selectedBrand !== 'all'
+          ? [selectedBrand]
+          : [];
+    const filtered = filterCatalogPageProducts(activeCatalogProducts, {
       query: searchQuery,
       category: selectedCategory || 'all',
       brands: brandsFilter,
@@ -361,11 +404,12 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
     });
     return sortCatalogPageProducts(filtered, sortBy);
   }, [
-    catalog.products,
+    activeCatalogProducts,
     isCatalogActive,
     searchQuery,
     selectedCategory,
     selectedBrand,
+    selectedBrands,
     selectedMinPrice,
     selectedMaxPrice,
     priceFilterActive,
@@ -379,7 +423,7 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
 
   const activeBrandObj =
     selectedBrand && selectedBrand !== 'all'
-      ? catalog.brands.find((b) => b.id === selectedBrand)
+      ? catalog.brands.find((b) => b.id.toLowerCase() === selectedBrand.toLowerCase())
       : null;
 
   useEffect(() => {
@@ -475,13 +519,13 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
     <div className="catalog-shell" style={{ backgroundColor: activeTheme.bg, minHeight: '100vh' }}>
       <Header
         categories={catalog.categories}
-        brands={catalog.brands}
-        products={catalog.products}
+        brands={supportedBrands}
+        products={activeCatalogProducts}
         selectedCategory={selectedCategory || 'all'}
         selectedBrand={selectedBrand || 'all'}
         searchQuery={searchQuery}
         filteredCount={filteredProducts.length}
-        totalCount={catalog.products.length}
+        totalCount={activeCatalogProducts.length}
         favoritesCount={favoriteIds.length}
         cartCount={cartItems.reduce((acc, i) => acc + i.quantity, 0)}
         onOpenFavorites={() => {
@@ -506,6 +550,7 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
         onSelectBrand={(brandId) => {
           setActiveView('catalog');
           setSelectedBrand(brandId);
+          setSelectedBrands(brandId ? [brandId] : []);
           setTimeout(() => {
             document.querySelector('.catalog-section')?.scrollIntoView({ behavior: 'smooth' });
           }, 50);
@@ -605,18 +650,21 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
           </Suspense>
         ) : (
           <div className="catalog-loaded-wrap">
-            <BrandShowcase
-              brands={catalog.brands}
-              products={catalog.products}
-              theme={activeTheme}
-              onSelect={(brandId) => {
-                setSelectedBrand(brandId);
-                setSelectedCategory('all');
-                setTimeout(() => {
-                  document.querySelector('.catalog-section')?.scrollIntoView({ behavior: 'smooth' });
-                }, 60);
-              }}
-            />
+            {!selectedBrand && selectedBrands.length === 0 && (
+              <BrandShowcase
+                brands={supportedBrands}
+                products={activeCatalogProducts}
+                theme={activeTheme}
+                onSelect={(brandId) => {
+                  setSelectedBrand(brandId);
+                  setSelectedBrands([brandId]);
+                  setSelectedCategory('all');
+                  setTimeout(() => {
+                    document.querySelector('.catalog-section')?.scrollIntoView({ behavior: 'smooth' });
+                  }, 60);
+                }}
+              />
+            )}
 
             {isCatalogActive && (
               <section className="catalog-section">
@@ -624,11 +672,12 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                   <BrandCategoryFilter
                     brand={activeBrandObj}
                     categories={catalog.categories}
-                    products={catalog.products}
+                    products={activeCatalogProducts}
                     selectedCategory={selectedCategory || 'all'}
                     onSelectCategory={(catId) => setSelectedCategory(catId)}
                     onBackToBrands={() => {
                       setSelectedBrand(null);
+                      setSelectedBrands([]);
                       setSelectedCategory(null);
                       setSearchQuery('');
                       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -654,6 +703,7 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                       type="button"
                       onClick={() => {
                         setSelectedBrand(null);
+                        setSelectedBrands([]);
                         setSelectedCategory(null);
                         setSearchQuery('');
                         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -687,19 +737,30 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                       categories={
                         activeBrandObj
                           ? catalog.categories.filter((cat) =>
-                              catalog.products.some(
+                              activeCatalogProducts.some(
                                 (p) =>
-                                  p.brandId === activeBrandObj.id &&
-                                  p.category === cat.id &&
-                                  p.status !== 'draft'
+                                  p.brandId?.toLowerCase() === activeBrandObj.id.toLowerCase() &&
+                                  p.category === cat.id
                               )
                             )
-                          : catalog.categories
+                          : catalog.categories.filter((cat) =>
+                              activeCatalogProducts.some((p) => p.category === cat.id)
+                            )
                       }
+                      brands={supportedBrands}
+                      selectedBrands={
+                        selectedBrands.length > 0
+                          ? selectedBrands
+                          : selectedBrand
+                            ? [selectedBrand]
+                            : []
+                      }
+                      onToggleBrand={handleToggleBrand}
+                      showBrandSection={true}
                       activeProducts={
                         activeBrandObj
-                          ? catalog.products.filter(
-                              (p) => p.brandId === activeBrandObj.id && p.status !== 'draft'
+                          ? activeCatalogProducts.filter(
+                              (p) => p.brandId?.toLowerCase() === activeBrandObj.id.toLowerCase()
                             )
                           : activeCatalogProducts
                       }
@@ -951,19 +1012,30 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                         categories={
                           activeBrandObj
                             ? catalog.categories.filter((cat) =>
-                                catalog.products.some(
+                                activeCatalogProducts.some(
                                   (p) =>
-                                    p.brandId === activeBrandObj.id &&
-                                    p.category === cat.id &&
-                                    p.status !== 'draft'
+                                    p.brandId?.toLowerCase() === activeBrandObj.id.toLowerCase() &&
+                                    p.category === cat.id
                                 )
                               )
-                            : catalog.categories
+                            : catalog.categories.filter((cat) =>
+                                activeCatalogProducts.some((p) => p.category === cat.id)
+                              )
                         }
+                        brands={supportedBrands}
+                        selectedBrands={
+                          selectedBrands.length > 0
+                            ? selectedBrands
+                            : selectedBrand
+                              ? [selectedBrand]
+                              : []
+                        }
+                        onToggleBrand={handleToggleBrand}
+                        showBrandSection={true}
                         activeProducts={
                           activeBrandObj
-                            ? catalog.products.filter(
-                                (p) => p.brandId === activeBrandObj.id && p.status !== 'draft'
+                            ? activeCatalogProducts.filter(
+                                (p) => p.brandId?.toLowerCase() === activeBrandObj.id.toLowerCase()
                               )
                             : activeCatalogProducts
                         }

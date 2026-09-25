@@ -173,13 +173,15 @@ select {
 }
 .share-action {
   gap: 8px;
-  color: white;
+  color: #dc2626;
+  background: rgba(220, 38, 38, 0.10);
   border: 0;
   padding: 0 18px;
   font-weight: 750;
   font-size: 13px;
 }
 .share-action:hover {
+  background: rgba(220, 38, 38, 0.18);
   opacity: 0.94;
   transform: translateY(-1px);
 }
@@ -323,7 +325,7 @@ select {
 }
 .brand-showcase-card {
   min-height: 148px;
-  border: 1px solid;
+  border: none;
   border-radius: 17px;
   padding: 17px;
   display: flex;
@@ -437,13 +439,11 @@ select {
   user-select: none;
   transition:
     transform 0.22s cubic-bezier(0.16, 1, 0.3, 1),
-    box-shadow 0.22s ease,
-    border-color 0.22s ease;
+    box-shadow 0.22s ease;
 }
 .brand-showcase-card.ready:hover {
   transform: translateY(-4px);
   box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
-  border-color: color-mix(in srgb, var(--brand-accent) 55%, transparent) !important;
 }
 .brand-showcase-card.ready:hover .brand-card-copy button {
   color: var(--brand-accent);

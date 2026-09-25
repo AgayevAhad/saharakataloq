@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo } from 'react';
 import { Info, Moon, Search, Share2, Sun, X, MapPin, Heart, ShoppingCart } from 'lucide-react';
 import {
   Brand,
@@ -60,7 +60,7 @@ export const Header: React.FC<HeaderProps> = ({
   onSelectBrand: _onSelectBrand,
   brands: _brands,
   categories,
-  products: _products,
+  products = [],
   settings,
   searchQuery,
   onSearchChange,
@@ -78,6 +78,20 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const [searchFocused, setSearchFocused] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
+
+  const availableCategories = useMemo(() => {
+    if (!products || products.length === 0) {
+      return categories.map((cat) => ({ ...cat, count: 0 }));
+    }
+    return categories
+      .map((cat) => {
+        const count = products.filter(
+          (p) => p.category === cat.id && p.status !== 'draft'
+        ).length;
+        return { ...cat, count };
+      })
+      .filter((cat) => cat.count > 0);
+  }, [categories, products]);
 
   const {
     containerRef: filterRowRef,
@@ -302,10 +316,14 @@ export const Header: React.FC<HeaderProps> = ({
             <button
               className="share-action"
               onClick={onOpenCatalogShare}
-              style={{ background: theme.primary }}
+              style={{
+                backgroundColor: 'rgba(220, 38, 38, 0.10)',
+                color: '#dc2626',
+                border: 'none',
+              }}
             >
-              <Share2 size={17} />
-              <span>{settings?.shareButtonText || 'Paylaş'}</span>
+              <Share2 size={17} color="#dc2626" />
+              <span style={{ color: '#dc2626' }}>{settings?.shareButtonText || 'Paylaş'}</span>
             </button>
             <button
               className="icon-action"
@@ -341,8 +359,11 @@ export const Header: React.FC<HeaderProps> = ({
           >
             <CategoryGlyph id="all" compact plain />
             <span>Bütün məhsullar</span>
+            <small style={{ opacity: 0.85, fontSize: '11px', marginLeft: '4px', fontWeight: 700 }}>
+              ({products.filter((p) => p.status !== 'draft').length || totalCount})
+            </small>
           </button>
-          {categories.map((category) => (
+          {availableCategories.map((category) => (
             <button
               key={category.id}
               className={selectedCategory === category.id ? 'filter-pill active' : 'filter-pill'}
@@ -355,6 +376,9 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <CategoryGlyph id={category.id} slug={category.slug || category.id} compact plain />
               <span>{category.name}</span>
+              <small style={{ opacity: 0.85, fontSize: '11px', marginLeft: '4px', fontWeight: 700 }}>
+                ({category.count})
+              </small>
             </button>
           ))}
         </div>

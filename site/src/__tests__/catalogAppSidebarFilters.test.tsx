@@ -18,12 +18,18 @@ describe('CatalogSidebarFilter Component Suite', () => {
     const onSelectColor = vi.fn();
     const onResetFilters = vi.fn();
 
+    const onToggleBrand = vi.fn();
+
     const { getByText, getAllByText } = render(
       <CatalogSidebarFilter
         categories={DEFAULT_CATALOG.categories}
+        brands={DEFAULT_CATALOG.brands}
         activeProducts={DEFAULT_CATALOG.products}
         selectedCategory="all"
         onSelectCategory={onSelectCategory}
+        selectedBrands={['ardo']}
+        onToggleBrand={onToggleBrand}
+        showBrandSection={true}
         minPrice={100}
         maxPrice={2000}
         minAvailablePrice={50}
@@ -49,8 +55,8 @@ describe('CatalogSidebarFilter Component Suite', () => {
 
     // Verify filter section headings
     expect(getByText('Bölmələr')).toBeDefined();
+    expect(getByText('Brendlər')).toBeDefined();
     expect(getByText('Qiymət Aralığı (₼)')).toBeDefined();
-    expect(getByText('Xüsusi Təkliflər')).toBeDefined();
     expect(getByText('Funksiya & Xüsusiyyətlər')).toBeDefined();
 
     // Verify category selection
@@ -63,10 +69,10 @@ describe('CatalogSidebarFilter Component Suite', () => {
     expect(onMinPriceChange).toHaveBeenCalledWith(500);
     expect(onMaxPriceChange).toHaveBeenCalledWith(1000);
 
-    // Toggle discounted
-    const discountCheckbox = getByText('Yalnız endirimli modellər');
-    fireEvent.click(discountCheckbox);
-    expect(onToggleDiscounted).toHaveBeenCalledWith(true);
+    // Toggle brand
+    const ardoBrand = getByText('ARDO');
+    fireEvent.click(ardoBrand);
+    expect(onToggleBrand).toHaveBeenCalledWith('ardo');
 
     // Select inverter motor
     const inverterBtn = getByText('İnverter');

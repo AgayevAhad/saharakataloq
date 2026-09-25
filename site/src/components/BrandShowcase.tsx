@@ -72,7 +72,7 @@ export const BrandShowcase: React.FC<{
               soon ? `${brand.name} - Tezliklə` : `${brand.name} məhsullarına bax (${count} model)`
             }
             className={`brand-showcase-card brand-${brand.id} brand-tone-${index % 3} ${soon ? 'coming-soon' : 'ready'}`}
-            style={{ borderColor: theme.border, background: theme.bgCard }}
+            style={{ border: 'none', background: theme.bgCard }}
           >
             {backdrops.length > 0 && (
               <div className="brand-card-backdrops" aria-hidden="true">

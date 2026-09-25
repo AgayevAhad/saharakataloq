@@ -19,7 +19,10 @@ export interface CatalogSelection {
 const normalize = (value: string | undefined) =>
   String(value || '')
     .trim()
-    .toLocaleLowerCase('az');
+    .replace(/İ/g, 'i')
+    .replace(/I/g, 'i')
+    .replace(/ı/g, 'i')
+    .toLowerCase();
 
 const specValues = (product: Product, names: string[]) => {
   const accepted = new Set(names.map(normalize));
