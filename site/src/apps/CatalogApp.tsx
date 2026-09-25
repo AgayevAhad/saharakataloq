@@ -20,6 +20,7 @@ import {
   Moon,
   Phone,
   RotateCcw,
+  Search,
   Sparkles,
   Sun,
   X,
@@ -638,7 +639,7 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
           >
             <CartPage
               cartItems={cartItems}
-              allProducts={catalog.products}
+              allProducts={activeCatalogProducts}
               settings={catalog.settings}
               theme={activeTheme}
               themeMode={themeMode}
@@ -677,7 +678,7 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
           >
             <FavoritesPage
               favoriteIds={favoriteIds}
-              allProducts={catalog.products}
+              allProducts={activeCatalogProducts}
               categories={catalog.categories}
               settings={catalog.settings}
               theme={activeTheme}
@@ -798,6 +799,11 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                       }
                       onToggleBrand={handleToggleBrand}
                       showBrandSection={true}
+                      searchQuery={searchQuery}
+                      onSearchChange={(query) => {
+                        if (activeView !== 'catalog') setActiveView('catalog');
+                        setSearchQuery(query);
+                      }}
                       activeProducts={brandFilteredProducts}
                       selectedCategory={selectedCategory || 'all'}
                       onSelectCategory={(catId) => setSelectedCategory(catId)}
@@ -842,7 +848,7 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                         marginBottom: '16px',
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', flex: 1, minWidth: '200px' }}>
                         <button
                           type="button"
                           onClick={() => setIsMobileFilterDrawerOpen(true)}
@@ -882,6 +888,63 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                             </span>
                           )}
                         </button>
+
+                        {/* Responsive Search Input in Top Controls */}
+                        <div
+                          className="catalog-top-search-field"
+                          style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            backgroundColor: activeTheme.bgSecondary,
+                            borderRadius: '10px',
+                            padding: '0 10px',
+                            height: '36px',
+                            flex: 1,
+                            minWidth: '140px',
+                            maxWidth: '300px',
+                          }}
+                        >
+                          <Search
+                            size={14}
+                            color={searchQuery ? activeTheme.primary : activeTheme.textMuted}
+                            style={{ flexShrink: 0 }}
+                          />
+                          <input
+                            type="text"
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            placeholder="Məhsul axtar..."
+                            aria-label="Kataloqda axtar"
+                            style={{
+                              border: 'none',
+                              background: 'transparent',
+                              outline: 'none',
+                              color: activeTheme.text,
+                              fontSize: '12.5px',
+                              fontWeight: 500,
+                              width: '100%',
+                            }}
+                          />
+                          {searchQuery && (
+                            <button
+                              type="button"
+                              onClick={() => setSearchQuery('')}
+                              style={{
+                                border: 'none',
+                                background: 'transparent',
+                                color: activeTheme.textMuted,
+                                cursor: 'pointer',
+                                padding: '2px',
+                                display: 'flex',
+                                alignItems: 'center',
+                              }}
+                              aria-label="Axtarışı təmizlə"
+                            >
+                              <X size={12} />
+                            </button>
+                          )}
+                        </div>
 
                         <span style={{ fontSize: '13px', fontWeight: 700, color: activeTheme.textMuted }}>
                           Tapılan: <b style={{ color: activeTheme.text }}>{filteredProducts.length}</b> model
@@ -1190,6 +1253,11 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                         }
                         onToggleBrand={handleToggleBrand}
                         showBrandSection={true}
+                        searchQuery={searchQuery}
+                        onSearchChange={(query) => {
+                          if (activeView !== 'catalog') setActiveView('catalog');
+                          setSearchQuery(query);
+                        }}
                         activeProducts={brandFilteredProducts}
                         selectedCategory={selectedCategory || 'all'}
                         onSelectCategory={(catId) => setSelectedCategory(catId)}

@@ -68,7 +68,7 @@ export const ShareModal: React.FC<ShareModalProps> = ({
     : 'SAHARA ELECTRONICS – Məhsul Kataloqu';
   const desc = isSingleProduct
     ? `${product.title} | ${product.categoryName}`
-    : 'Məişət texnikası modelləri və təsdiqlənmiş texniki göstəricilər.';
+    : 'Məişət texnikası modelləri';
 
   return (
     <div
@@ -211,18 +211,18 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
-                backgroundColor: '#16a34a',
-                color: '#ffffff',
+                backgroundColor: 'rgba(34, 197, 94, 0.14)',
+                color: '#16a34a',
                 border: 'none',
                 padding: '12px',
                 borderRadius: '10px',
                 fontSize: '14px',
                 fontWeight: 750,
                 cursor: 'pointer',
-                boxShadow: '0 4px 12px rgba(22, 163, 74, 0.25)',
+                boxShadow: '0 2px 8px rgba(22, 163, 74, 0.15)',
               }}
             >
-              <WhatsAppIcon size={20} color="#ffffff" />
+              <WhatsAppIcon size={20} color="#16a34a" />
               <span>WhatsApp ilə Göndər</span>
             </button>
 
@@ -235,18 +235,18 @@ export const ShareModal: React.FC<ShareModalProps> = ({
                 alignItems: 'center',
                 justifyContent: 'center',
                 gap: '8px',
-                backgroundColor: '#0284c7',
-                color: '#ffffff',
+                backgroundColor: 'rgba(2, 132, 199, 0.14)',
+                color: '#0284c7',
                 border: 'none',
                 padding: '12px',
                 borderRadius: '10px',
                 fontSize: '14px',
                 fontWeight: 750,
                 cursor: 'pointer',
-                boxShadow: '0 4px 12px rgba(2, 132, 199, 0.25)',
+                boxShadow: '0 2px 8px rgba(2, 132, 199, 0.15)',
               }}
             >
-              <Send size={18} color="#ffffff" />
+              <Send size={18} color="#0284c7" />
               <span>Telegram ilə Göndər</span>
             </button>
 

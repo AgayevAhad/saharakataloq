@@ -4,6 +4,7 @@ import { render, screen, fireEvent } from '@testing-library/react';
 import { ProductCard } from '../components/ProductCard';
 import { ProductDetailModal } from '../components/ProductDetailModal';
 import { FloatingActions } from '../components/FloatingActions';
+import { ShareModal } from '../components/ShareModal';
 import { CatalogApp } from '../apps/CatalogApp';
 import { lightTheme } from '../types/theme';
 import { Product } from '../types/product';
@@ -196,4 +197,53 @@ describe('Permanent Price & Modernized Sort Filter Tests', () => {
     expect(backdrop).toBeDefined();
     expect(backdrop.style.backdropFilter).toBe('none');
   });
+
+  it('8. ShareModal renders "Məişət texnikası modelləri" without extra text and has styled WA and Telegram buttons', () => {
+    const { container } = render(
+      <ShareModal
+        product={null}
+        theme={lightTheme}
+        visible={true}
+        onClose={() => {}}
+        onCopyLink={() => {}}
+        onWhatsAppShare={() => {}}
+        onTelegramShare={() => {}}
+      />
+    );
+
+    expect(screen.getByText('Məişət texnikası modelləri')).toBeDefined();
+    expect(screen.queryByText(/və təsdiqlənmiş texniki göstəricilər/i)).toBeNull();
+
+    const waBtn = container.querySelector('.share-btn-wa') as HTMLButtonElement;
+    expect(waBtn).toBeDefined();
+    expect(waBtn.style.backgroundColor).toBe('rgba(34, 197, 94, 0.14)');
+    expect(waBtn.style.color).toBe('#16a34a');
+
+    const tgBtn = container.querySelector('.share-btn-tg') as HTMLButtonElement;
+    expect(tgBtn).toBeDefined();
+    expect(tgBtn.style.backgroundColor).toBe('rgba(2, 132, 199, 0.14)');
+    expect(tgBtn.style.color).toBe('#0284c7');
+  });
+
+  it('9. Top controls toolbar includes responsive search field', () => {
+    const mockCatalogData = {
+      catalog: {
+        brands: [{ id: 'ardo', name: 'ARDO', active: true }],
+        categories: [{ id: 'cooktops', name: 'Bişirmə panelləri', active: true }],
+        products: [mockProductWithPrice],
+        settings: { catalogActive: true },
+      },
+    };
+
+    const { container } = render(<CatalogApp initialData={mockCatalogData} />);
+
+    // Click ARDO brand card
+    const ardoCard = container.querySelector('.brand-showcase-card.brand-ardo') as HTMLElement;
+    fireEvent.click(ardoCard);
+
+    const searchField = container.querySelector('.catalog-top-search-field input') as HTMLInputElement;
+    expect(searchField).toBeDefined();
+    expect(searchField.placeholder).toBe('Məhsul axtar...');
+  });
 });
+

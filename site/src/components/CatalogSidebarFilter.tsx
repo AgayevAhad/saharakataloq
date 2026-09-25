@@ -10,6 +10,8 @@ import {
   ChevronUp,
   LayoutGrid,
   Check,
+  Search,
+  X,
 } from 'lucide-react';
 import { Brand, CatalogCategory, Product } from '../types/product';
 import { ThemeColors } from '../types/theme';
@@ -25,6 +27,8 @@ export interface CatalogSidebarFilterProps {
   selectedBrands?: string[];
   onToggleBrand?: (brandId: string) => void;
   showBrandSection?: boolean;
+  searchQuery?: string;
+  onSearchChange?: (query: string) => void;
   minPrice: number;
   maxPrice: number;
   minAvailablePrice: number;
@@ -62,6 +66,8 @@ export const CatalogSidebarFilter: React.FC<CatalogSidebarFilterProps> = ({
   selectedBrands = [],
   onToggleBrand,
   showBrandSection = true,
+  searchQuery,
+  onSearchChange,
   minPrice,
   maxPrice,
   minAvailablePrice,
@@ -109,6 +115,59 @@ export const CatalogSidebarFilter: React.FC<CatalogSidebarFilterProps> = ({
         width: '100%',
       }}
     >
+      {/* Search Input in Sidebar / Mobile Filter */}
+      {onSearchChange && (
+        <div
+          style={{
+            position: 'relative',
+            display: 'flex',
+            alignItems: 'center',
+            backgroundColor: inputBg,
+            border: `1px solid ${inputBorder}`,
+            borderRadius: '12px',
+            padding: '0 12px',
+            minHeight: '42px',
+            gap: '8px',
+          }}
+        >
+          <Search size={16} color={searchQuery ? theme.primary : theme.textMuted} style={{ flexShrink: 0 }} />
+          <input
+            type="text"
+            value={searchQuery || ''}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder="Axtarış..."
+            style={{
+              background: 'transparent',
+              border: 'none',
+              outline: 'none',
+              color: theme.text,
+              fontSize: '13px',
+              fontWeight: 500,
+              width: '100%',
+            }}
+          />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => onSearchChange('')}
+              style={{
+                background: 'transparent',
+                border: 'none',
+                color: theme.textMuted,
+                cursor: 'pointer',
+                padding: '2px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
+              title="Təmizlə"
+            >
+              <X size={14} />
+            </button>
+          )}
+        </div>
+      )}
+
       {/* Header with Active Filters & Reset */}
       {hasActiveFilters && (
         <div
