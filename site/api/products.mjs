@@ -568,6 +568,7 @@ export function createProductsRouter({
         });
         return true;
       }
+      const catalog = rawCatalog;
       catalogDatabase.createSnapshot({
         name: `Canlı yayımdan əvvəlki avtomatik nüsxə (${new Date().toLocaleTimeString('az-AZ')})`,
         createdBy: 'auto-publish',

@@ -6,6 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createCatalogDatabase } from '../backend/catalogDatabase.mjs';
 import { createProductsRouter } from '../api/products.mjs';
+import { applyPhase3Migration } from '../backend/phase3Migration.mjs';
 
 describe('Catalog & Site Status Atomic Toggle & Zero-Data-Loss Suite', () => {
   let tempDir: string;
@@ -22,6 +23,9 @@ describe('Catalog & Site Status Atomic Toggle & Zero-Data-Loss Suite', () => {
 
     pubDb = createCatalogDatabase(pubDbPath);
     draftDb = createCatalogDatabase(draftDbPath);
+
+    applyPhase3Migration(pubDb.db);
+    applyPhase3Migration(draftDb.db);
 
     // Seed dummy product
     const sampleCatalog = {
@@ -186,6 +190,63 @@ describe('Catalog & Site Status Atomic Toggle & Zero-Data-Loss Suite', () => {
     expect(draftDb.getCatalog({ includeAll: true }).settings.catalogActive).toBe(false);
     expect(draftDb.getCatalog({ includeAll: true }).products.length).toBe(2);
     expect(pubDb.getCatalog({ includeAll: true }).settings.catalogActive).toBe(false);
+    expect(pubDb.getCatalog({ includeAll: true }).products.length).toBe(2);
+  });
+
+  it('handles /api/admin/publish endpoint smoothly without throwing 500 ReferenceError', async () => {
+    const sessions = new Map();
+    const mockToken = 'mock-admin-token-publish';
+    sessions.set(mockToken, {
+      user: 'admin',
+      role: 'admin',
+      ip: '127.0.0.1',
+      csrfToken: 'valid-csrf-publish',
+      expiresAt: Date.now() + 100000,
+    });
+
+    const handler = createProductsRouter({
+      getCatalogDatabase: () => pubDb,
+      getDraftDatabase: () => draftDb,
+      setCatalogDatabase: () => {},
+      setDraftDatabase: () => {},
+      getPubWorker: () => null,
+      setPubWorker: () => {},
+      sessions,
+      DATA_DIR: tempDir,
+      DATABASE_FILE: pubDbPath,
+      DRAFT_DATABASE_FILE: draftDbPath,
+      STAGING_DIR: tempDir,
+      clearIsrCache: () => {},
+      waitForActiveRequestsDrain: async () => {},
+    });
+
+    // Simulate POST /api/admin/publish
+    const req = Object.assign(Readable.from([]), {
+      method: 'POST',
+      socket: { remoteAddress: '127.0.0.1' },
+      headers: {
+        cookie: `sahara_admin=${mockToken}`,
+        'x-csrf-token': 'valid-csrf-publish',
+      },
+    });
+
+    let statusCode = 0;
+    let responseData = '';
+    const res = {
+      writeHead: (code: number, headers?: any) => {
+        statusCode = code;
+      },
+      end: (data?: string) => {
+        if (data) responseData = data;
+      },
+    };
+
+    const handled = await handler(req, res, '/api/admin/publish');
+    expect(handled).toBe(true);
+    expect(statusCode).toBe(200);
+
+    const parsed = JSON.parse(responseData);
+    expect(parsed.ok).toBe(true);
     expect(pubDb.getCatalog({ includeAll: true }).products.length).toBe(2);
   });
 });
