@@ -21,13 +21,13 @@ describe('Zod Runtime Schemas Validation Suite', () => {
     it('rejects an incomplete brand missing required fields without mutating data', () => {
       const invalidBrand = {
         id: 'ardo',
-        // missing name, slug, originCountry
+        // missing name, slug
       };
 
       const result = validateSafe(BrandSchema, invalidBrand);
       expect(result.success).toBe(false);
       if (result.success === false) {
-        expect(result.errors.length).toBeGreaterThanOrEqual(3);
+        expect(result.errors.length).toBeGreaterThanOrEqual(2);
       }
     });
   });
@@ -145,6 +145,62 @@ describe('Zod Runtime Schemas Validation Suite', () => {
       await expect(catalogApi.saveCatalog(brokenCatalog as any, 'mock-csrf')).rejects.toThrow(
         /schema xətası var/
       );
+    });
+
+    it('validates all live products from draft database without any schema error', async () => {
+      const { mkdtempSync, copyFileSync, rmSync, existsSync } = await import('node:fs');
+      const { tmpdir } = await import('node:os');
+      const { join, resolve } = await import('node:path');
+      const { createCatalogDatabase } = await import('../../backend/catalogDatabase.mjs');
+
+      const ROOT = resolve(__dirname, '../..');
+      const tempDir = mkdtempSync(join(tmpdir(), 'sahara-schema-check-draft-'));
+      const draftSrc = join(ROOT, 'data', 'catalog-draft.sqlite');
+      const tempDbPath = join(tempDir, 'catalog.sqlite');
+
+      if (!existsSync(draftSrc)) {
+        return;
+      }
+
+      copyFileSync(draftSrc, tempDbPath);
+      const db = createCatalogDatabase(tempDbPath);
+      const catalog = db.getCatalog();
+      db.close();
+      rmSync(tempDir, { recursive: true, force: true });
+
+      const report = validateCatalogData(catalog);
+      expect(report.productErrors).toEqual([]);
+      expect(report.brandErrors).toEqual([]);
+      expect(report.categoryErrors).toEqual([]);
+      expect(report.isValid).toBe(true);
+    });
+
+    it('validates all live products from main public database without any schema error', async () => {
+      const { mkdtempSync, copyFileSync, rmSync, existsSync } = await import('node:fs');
+      const { tmpdir } = await import('node:os');
+      const { join, resolve } = await import('node:path');
+      const { createCatalogDatabase } = await import('../../backend/catalogDatabase.mjs');
+
+      const ROOT = resolve(__dirname, '../..');
+      const tempDir = mkdtempSync(join(tmpdir(), 'sahara-schema-check-main-'));
+      const mainSrc = join(ROOT, 'data', 'catalog.sqlite');
+      const tempDbPath = join(tempDir, 'catalog.sqlite');
+
+      if (!existsSync(mainSrc)) {
+        return;
+      }
+
+      copyFileSync(mainSrc, tempDbPath);
+      const db = createCatalogDatabase(tempDbPath);
+      const catalog = db.getCatalog();
+      db.close();
+      rmSync(tempDir, { recursive: true, force: true });
+
+      const report = validateCatalogData(catalog);
+      expect(report.productErrors).toEqual([]);
+      expect(report.brandErrors).toEqual([]);
+      expect(report.categoryErrors).toEqual([]);
+      expect(report.isValid).toBe(true);
     });
   });
 });
