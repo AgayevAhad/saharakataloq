@@ -179,7 +179,7 @@ describe('Item 20: Catalog Refinements & Comparison System Tests', () => {
     expect(screen.getByText('Qiymət: Ucuzdan bahaya')).toBeDefined();
     expect(screen.getByText('Qiymət: Bahadan ucuza')).toBeDefined();
     expect(screen.getByText('Yeni modellər')).toBeDefined();
-    expect(screen.getByText('Ən böyük endirim')).toBeDefined();
+    expect(screen.queryByText('Ən böyük endirim')).toBeNull();
 
     // Select "Qiymət: Ucuzdan bahaya"
     fireEvent.click(screen.getByText('Qiymət: Ucuzdan bahaya'));

@@ -1,19 +1,18 @@
 /* Product Card, Media Stages, Rank Badges & Interactive Hovers */
 
-/* CARD 339px x 339px CONTAINER */
+/* CARD 339px x 356px CONTAINER */
 .product-card {
   width: 339px;
   max-width: 339px;
   min-width: 339px;
-  height: 339px;
-  min-height: 339px;
-  max-height: 339px;
+  height: 356px;
+  min-height: 356px;
   box-sizing: border-box;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   position: relative;
-  overflow: hidden;
+  overflow: visible;
 }
 
 @media (max-width: 720px) {
@@ -21,9 +20,8 @@
     width: 100%;
     max-width: 339px;
     min-width: 0;
-    height: 339px;
-    min-height: 339px;
-    max-height: 339px;
+    height: 356px;
+    min-height: 356px;
   }
 }
 

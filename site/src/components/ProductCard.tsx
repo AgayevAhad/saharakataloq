@@ -192,10 +192,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   };
 
   const rawPrice = product.price ?? (product as any).priceCash;
-  const displayPrice =
-    rawPrice !== undefined && rawPrice !== null && Number(rawPrice) > 0
-      ? `${Number(rawPrice).toLocaleString('az-AZ')} ₼`
-      : null;
+  const hasPrice = rawPrice !== undefined && rawPrice !== null && Number(rawPrice) > 0;
+  const displayPrice = hasPrice
+    ? `${Number(rawPrice).toLocaleString('az-AZ')} ₼`
+    : 'Qiymət: Sorğu ilə';
 
   return (
     <div
@@ -266,7 +266,7 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         width: '100%',
         maxWidth: '100%',
         height: '100%',
-        minHeight: isActive ? '374px' : '339px',
+        minHeight: isActive ? '386px' : '356px',
         boxSizing: 'border-box',
         display: 'flex',
         flexDirection: 'column',
@@ -650,10 +650,10 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </span>
         <div
           style={{
-            fontSize: '13px',
+            fontSize: '13.5px',
             fontWeight: 700,
             color: '#0f172a',
-            lineHeight: 1.2,
+            lineHeight: 1.25,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',
@@ -663,20 +663,60 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           {product.title}
         </div>
 
-        {displayPrice && (
-          <div
-            style={{
-              fontSize: '14.5px',
-              fontWeight: 900,
-              color: '#0f172a',
-              lineHeight: 1.2,
-              marginBottom: '1px',
-              fontFamily: 'Outfit, -apple-system, sans-serif',
-            }}
-          >
-            {displayPrice}
-          </div>
-        )}
+        {/* Permanent Price Row */}
+        <div
+          className="product-card-price-row"
+          style={{
+            display: 'flex',
+            alignItems: 'baseline',
+            gap: '6px',
+            marginTop: '2px',
+            marginBottom: '1px',
+            minHeight: '20px',
+          }}
+        >
+          {hasPrice ? (
+            <>
+              <span
+                style={{
+                  fontSize: '15px',
+                  fontWeight: 900,
+                  color: '#dc2626',
+                  lineHeight: 1.2,
+                  fontFamily: 'Outfit, -apple-system, sans-serif',
+                  letterSpacing: '-0.2px',
+                }}
+              >
+                {displayPrice}
+              </span>
+              {product.oldPrice && product.oldPrice > Number(rawPrice) && (
+                <span
+                  style={{
+                    fontSize: '12px',
+                    color: '#94a3b8',
+                    textDecoration: 'line-through',
+                    fontWeight: 500,
+                    fontFamily: 'Outfit, -apple-system, sans-serif',
+                  }}
+                >
+                  {Number(product.oldPrice).toLocaleString('az-AZ')} {product.currency || '₼'}
+                </span>
+              )}
+            </>
+          ) : (
+            <span
+              style={{
+                fontSize: '12.5px',
+                fontWeight: 700,
+                color: '#64748b',
+                lineHeight: 1.2,
+                fontFamily: 'Outfit, -apple-system, sans-serif',
+              }}
+            >
+              Qiymət: Sorğu ilə
+            </span>
+          )}
+        </div>
 
         {/* Action Cluster at Bottom: WhatsApp, Call, Cart, Ətraflı, Share (Smooth Expansion on Hover/Active) */}
         <div

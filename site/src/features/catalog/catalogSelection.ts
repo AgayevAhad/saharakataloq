@@ -1,6 +1,6 @@
 import { Product } from '../../types/product';
 
-export type CatalogSortOption = 'recommended' | 'price-asc' | 'price-desc' | 'newest' | 'discount';
+export type CatalogSortOption = 'recommended' | 'price-asc' | 'price-desc' | 'newest';
 
 export interface CatalogSelection {
   query: string;
@@ -131,10 +131,6 @@ export function sortCatalogPageProducts(products: Product[], sortBy: CatalogSort
         (a, b) =>
           (Date.parse(b.createdAt || b.updatedAt || '') || 0) -
           (Date.parse(a.createdAt || a.updatedAt || '') || 0)
-      );
-    case 'discount':
-      return list.sort(
-        (a, b) => (b.oldPrice || 0) - (b.price || 0) - ((a.oldPrice || 0) - (a.price || 0))
       );
     default:
       return list;

@@ -1168,13 +1168,11 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                       {sortBy === 'price-asc' && <ArrowDownNarrowWide size={14} color="#10b981" />}
                       {sortBy === 'price-desc' && <ArrowUpNarrowWide size={14} color="#3b82f6" />}
                       {sortBy === 'newest' && <Flame size={14} color="#f97316" />}
-                      {sortBy === 'discount' && <Tag size={14} color="#ec4899" />}
                       <span>
                         {sortBy === 'recommended' && 'Tövsiyə olunan'}
                         {sortBy === 'price-asc' && 'Qiymət: Ucuzdan bahaya'}
                         {sortBy === 'price-desc' && 'Qiymət: Bahadan ucuza'}
                         {sortBy === 'newest' && 'Yeni modellər'}
-                        {sortBy === 'discount' && 'Ən böyük endirim'}
                       </span>
                     </div>
                     <ChevronDown
@@ -1228,11 +1226,6 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                           value: 'newest' as CatalogSortOption,
                           label: 'Yeni modellər',
                           icon: <Flame size={14} color="#f97316" />,
-                        },
-                        {
-                          value: 'discount' as CatalogSortOption,
-                          label: 'Ən böyük endirim',
-                          icon: <Tag size={14} color="#ec4899" />,
                         },
                       ].map((opt) => {
                         const isSelected = sortBy === opt.value;

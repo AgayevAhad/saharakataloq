@@ -7,8 +7,23 @@ import {
   filterCatalogPageProducts,
   sortCatalogPageProducts,
 } from '../features/catalog/catalogSelection';
-import { phoneHref, whatsappHref } from '../utils/contact';
-import { ArrowLeft, Filter, Lock, MessageCircle, Moon, Phone, RotateCcw, Sparkles, Sun, X } from 'lucide-react';
+import {
+  ArrowDownNarrowWide,
+  ArrowLeft,
+  ArrowUpNarrowWide,
+  Check,
+  ChevronDown,
+  Filter,
+  Flame,
+  Lock,
+  MessageCircle,
+  Moon,
+  Phone,
+  RotateCcw,
+  Sparkles,
+  Sun,
+  X,
+} from 'lucide-react';
 import { Header } from '../components/Header';
 import { SaharaLogo } from '../components/SaharaLogo';
 import { BrandShowcase } from '../components/BrandShowcase';
@@ -68,6 +83,23 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
   const [selectedMotorType, setSelectedMotorType] = useState('all');
   const [selectedColor, setSelectedColor] = useState('all');
   const [sortBy, setSortBy] = useState<CatalogSortOption>('recommended');
+  const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
+  const sortDropdownRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (sortDropdownRef.current && !sortDropdownRef.current.contains(e.target as Node)) {
+        setIsSortDropdownOpen(false);
+      }
+    };
+    if (isSortDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isSortDropdownOpen]);
+
   const [isMobileFilterDrawerOpen, setIsMobileFilterDrawerOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [isInverterModalOpen, setIsInverterModalOpen] = useState(false);
@@ -879,31 +911,165 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                         )}
                       </div>
 
-                      {/* Sort Selector */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <span style={{ fontSize: '12px', color: activeTheme.textMuted, fontWeight: 600 }}>
+                      {/* Modern Sort Popover */}
+                      <div
+                        ref={sortDropdownRef}
+                        style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px' }}
+                      >
+                        <span
+                          style={{
+                            fontSize: '12.5px',
+                            color: activeTheme.textMuted,
+                            fontWeight: 600,
+                          }}
+                        >
                           Sırala:
                         </span>
-                        <select
-                          value={sortBy}
-                          onChange={(e) => setSortBy(e.target.value as CatalogSortOption)}
+
+                        <button
+                          type="button"
+                          className="catalog-sort-btn"
+                          onClick={() => setIsSortDropdownOpen((prev) => !prev)}
                           style={{
-                            padding: '6px 10px',
-                            borderRadius: '8px',
-                            backgroundColor: activeTheme.bgSecondary,
-                            border: 'none',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '8px',
+                            padding: '6px 12px',
+                            borderRadius: '10px',
+                            backgroundColor:
+                              themeMode === 'dark'
+                                ? 'rgba(30, 41, 59, 0.7)'
+                                : 'rgba(241, 245, 249, 0.95)',
+                            border: `1px solid ${
+                              isSortDropdownOpen
+                                ? activeTheme.primary
+                                : themeMode === 'dark'
+                                  ? 'rgba(255, 255, 255, 0.1)'
+                                  : 'rgba(226, 232, 240, 0.9)'
+                            }`,
                             color: activeTheme.text,
                             fontSize: '12.5px',
                             fontWeight: 600,
                             cursor: 'pointer',
+                            backdropFilter: 'blur(8px)',
+                            boxShadow: '0 2px 6px rgba(0, 0, 0, 0.04)',
+                            transition: 'all 0.18s ease',
                           }}
+                          aria-haspopup="listbox"
+                          aria-expanded={isSortDropdownOpen}
                         >
-                          <option value="recommended">Tövsiyə olunan</option>
-                          <option value="price-asc">Əvvəlcə ucuz</option>
-                          <option value="price-desc">Əvvəlcə baha</option>
-                          <option value="newest">Ən yenilər</option>
-                          <option value="discount">Endirimli</option>
-                        </select>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            {sortBy === 'recommended' && <Sparkles size={14} color="#e31e24" />}
+                            {sortBy === 'price-asc' && (
+                              <ArrowDownNarrowWide size={14} color="#10b981" />
+                            )}
+                            {sortBy === 'price-desc' && (
+                              <ArrowUpNarrowWide size={14} color="#3b82f6" />
+                            )}
+                            {sortBy === 'newest' && <Flame size={14} color="#f97316" />}
+                            <span>
+                              {sortBy === 'recommended' && 'Tövsiyə olunan'}
+                              {sortBy === 'price-asc' && 'Qiymət: Ucuzdan bahaya'}
+                              {sortBy === 'price-desc' && 'Qiymət: Bahadan ucuza'}
+                              {sortBy === 'newest' && 'Yeni modellər'}
+                            </span>
+                          </div>
+                          <ChevronDown
+                            size={14}
+                            style={{
+                              transform: isSortDropdownOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                              transition: 'transform 0.2s ease',
+                              color: activeTheme.textMuted,
+                            }}
+                          />
+                        </button>
+
+                        {/* Popover Menu */}
+                        {isSortDropdownOpen && (
+                          <div
+                            className="catalog-sort-popover"
+                            style={{
+                              position: 'absolute',
+                              top: 'calc(100% + 6px)',
+                              right: 0,
+                              minWidth: '220px',
+                              backgroundColor: themeMode === 'dark' ? '#0f172a' : '#ffffff',
+                              border: `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : '#e2e8f0'}`,
+                              borderRadius: '14px',
+                              boxShadow: '0 12px 32px rgba(0, 0, 0, 0.18)',
+                              padding: '6px',
+                              zIndex: 50,
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '2px',
+                              backdropFilter: 'blur(12px)',
+                            }}
+                          >
+                            {[
+                              {
+                                value: 'recommended' as CatalogSortOption,
+                                label: 'Tövsiyə olunan',
+                                icon: <Sparkles size={14} color="#e31e24" />,
+                              },
+                              {
+                                value: 'price-asc' as CatalogSortOption,
+                                label: 'Qiymət: Ucuzdan bahaya',
+                                icon: <ArrowDownNarrowWide size={14} color="#10b981" />,
+                              },
+                              {
+                                value: 'price-desc' as CatalogSortOption,
+                                label: 'Qiymət: Bahadan ucuza',
+                                icon: <ArrowUpNarrowWide size={14} color="#3b82f6" />,
+                              },
+                              {
+                                value: 'newest' as CatalogSortOption,
+                                label: 'Yeni modellər',
+                                icon: <Flame size={14} color="#f97316" />,
+                              },
+                            ].map((opt) => {
+                              const isSelected = sortBy === opt.value;
+                              return (
+                                <button
+                                  key={opt.value}
+                                  type="button"
+                                  onClick={() => {
+                                    setSortBy(opt.value);
+                                    setIsSortDropdownOpen(false);
+                                  }}
+                                  style={{
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'space-between',
+                                    padding: '9px 12px',
+                                    borderRadius: '8px',
+                                    backgroundColor: isSelected
+                                      ? themeMode === 'dark'
+                                        ? 'rgba(227, 30, 36, 0.15)'
+                                        : 'rgba(227, 30, 36, 0.08)'
+                                      : 'transparent',
+                                    color: isSelected ? '#e31e24' : activeTheme.text,
+                                    border: 'none',
+                                    fontSize: '13px',
+                                    fontWeight: isSelected ? 700 : 500,
+                                    cursor: 'pointer',
+                                    textAlign: 'left',
+                                    transition: 'background-color 0.15s ease',
+                                  }}
+                                >
+                                  <div
+                                    style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+                                  >
+                                    {opt.icon}
+                                    <span>{opt.label}</span>
+                                  </div>
+                                  {isSelected && (
+                                    <Check size={14} color="#e31e24" strokeWidth={2.5} />
+                                  )}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        )}
                       </div>
                     </div>
 

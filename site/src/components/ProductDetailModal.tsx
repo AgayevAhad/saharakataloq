@@ -1164,31 +1164,57 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                       </div>
                     )}
 
-                    {product.price !== undefined && (
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'baseline',
-                          gap: '10px',
-                          marginBottom: '12px',
-                        }}
-                      >
-                        <span style={{ fontSize: '24px', fontWeight: 900, color: theme.text }}>
-                          {product.price} {product.currency || '₼'}
-                        </span>
-                        {product.oldPrice && product.oldPrice > product.price && (
+                    {/* Permanent Clean Price Section */}
+                    <div
+                      className="product-detail-price-row"
+                      style={{
+                        display: 'flex',
+                        alignItems: 'baseline',
+                        gap: '10px',
+                        marginBottom: '14px',
+                        flexWrap: 'wrap',
+                      }}
+                    >
+                      {product.price !== undefined && product.price !== null && Number(product.price) > 0 ? (
+                        <>
                           <span
                             style={{
-                              fontSize: '15px',
-                              color: theme.textMuted,
-                              textDecoration: 'line-through',
+                              fontSize: '26px',
+                              fontWeight: 900,
+                              color: '#dc2626',
+                              fontFamily: 'Outfit, -apple-system, sans-serif',
+                              letterSpacing: '-0.3px',
                             }}
                           >
-                            {product.oldPrice} {product.currency || '₼'}
+                            {Number(product.price).toLocaleString('az-AZ')} {product.currency || '₼'}
                           </span>
-                        )}
-                      </div>
-                    )}
+                          {product.oldPrice && product.oldPrice > product.price && (
+                            <span
+                              style={{
+                                fontSize: '16px',
+                                color: theme.textMuted,
+                                textDecoration: 'line-through',
+                                fontFamily: 'Outfit, -apple-system, sans-serif',
+                                fontWeight: 500,
+                              }}
+                            >
+                              {Number(product.oldPrice).toLocaleString('az-AZ')} {product.currency || '₼'}
+                            </span>
+                          )}
+                        </>
+                      ) : (
+                        <span
+                          style={{
+                            fontSize: '18px',
+                            fontWeight: 800,
+                            color: '#dc2626',
+                            fontFamily: 'Outfit, -apple-system, sans-serif',
+                          }}
+                        >
+                          Qiymət: Sorğu ilə
+                        </span>
+                      )}
+                    </div>
 
                     {product.highlights && product.highlights.length > 0 && (
                       <div
