@@ -209,4 +209,47 @@ describe('ProductDetailModal Lightbox White Background & Integrated Top Header C
     fireEvent.doubleClick(zoomContainer);
     expect(screen.getByText('100%')).toBeTruthy();
   });
+
+  it('renders fullscreen lightbox in dark mode with white background surround and light aesthetics', () => {
+    const darkTheme: ThemeColors = {
+      mode: 'dark',
+      primary: '#dc2626',
+      primaryHover: '#b91c1c',
+      bg: '#0f172a',
+      bgSecondary: '#1e293b',
+      bgCard: '#1e293b',
+      text: '#f8fafc',
+      textSecondary: '#94a3b8',
+      textMuted: '#64748b',
+      border: '#334155',
+    };
+
+    render(
+      <ProductDetailModal
+        product={mockProduct}
+        theme={darkTheme}
+        visible={true}
+        onClose={vi.fn()}
+        onShare={vi.fn()}
+        onWhatsApp={vi.fn()}
+        onCall={vi.fn()}
+        onCopyLink={vi.fn()}
+      />
+    );
+
+    const stage = document.querySelector('.product-detail-image-stage') as HTMLDivElement;
+    expect(stage).toBeTruthy();
+    expect(['#ffffff', 'rgb(255, 255, 255)']).toContain(stage.style.backgroundColor);
+
+    // Open fullscreen lightbox
+    fireEvent.click(stage);
+
+    const lightboxModal = document.querySelector('.zoom-pan-container')?.parentElement as HTMLDivElement;
+    expect(lightboxModal).toBeTruthy();
+    expect(['#ffffff', 'rgb(255, 255, 255)']).toContain(lightboxModal.style.backgroundColor);
+
+    const zoomStage = document.querySelector('.zoom-pan-container') as HTMLDivElement;
+    expect(zoomStage).toBeTruthy();
+    expect(['#ffffff', 'rgb(255, 255, 255)']).toContain(zoomStage.style.backgroundColor);
+  });
 });

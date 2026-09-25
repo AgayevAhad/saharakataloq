@@ -1517,8 +1517,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
               position: 'fixed',
               inset: 0,
               zIndex: 120,
-              backgroundColor: theme.mode === 'dark' ? '#0b0f19' : '#ffffff',
-              backdropFilter: 'blur(16px)',
+              backgroundColor: '#ffffff',
               display: 'flex',
               flexDirection: 'column',
               boxSizing: 'border-box',
@@ -1538,8 +1537,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                 gap: '12px',
                 padding: '12px 20px',
                 border: 'none',
-                background:
-                  theme.mode === 'dark' ? 'rgba(15, 23, 42, 0.85)' : 'rgba(248, 250, 252, 0.95)',
+                background: 'rgba(255, 255, 255, 0.95)',
                 backdropFilter: 'blur(12px)',
                 zIndex: 30,
               }}
@@ -1554,7 +1552,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
               >
                 <span
                   style={{
-                    color: theme.mode === 'dark' ? '#ffffff' : '#0f172a',
+                    color: '#0f172a',
                     fontSize: '15px',
                     fontWeight: 800,
                     whiteSpace: 'nowrap',
@@ -1575,8 +1573,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  background:
-                    theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.04)',
+                  background: 'rgba(0, 0, 0, 0.04)',
                   padding: '4px 8px',
                   borderRadius: '10px',
                   border: 'none',
@@ -1592,7 +1589,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                   style={{
                     border: 'none',
                     background: 'transparent',
-                    color: theme.mode === 'dark' ? '#ffffff' : '#0f172a',
+                    color: '#0f172a',
                     cursor: 'pointer',
                   }}
                 >
@@ -1607,7 +1604,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                   style={{
                     border: 'none',
                     background: 'transparent',
-                    color: theme.mode === 'dark' ? '#ffffff' : '#0f172a',
+                    color: '#0f172a',
                     cursor: 'pointer',
                   }}
                 >
@@ -1622,7 +1619,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                   style={{
                     border: 'none',
                     background: 'transparent',
-                    color: theme.mode === 'dark' ? '#ffffff' : '#0f172a',
+                    color: '#0f172a',
                     cursor: zoomScale <= 1 ? 'not-allowed' : 'pointer',
                   }}
                 >
@@ -1630,7 +1627,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                 </button>
                 <span
                   style={{
-                    color: theme.mode === 'dark' ? '#38bdf8' : '#0284c7',
+                    color: '#0284c7',
                     fontSize: '12px',
                     fontWeight: 800,
                     minWidth: '40px',
@@ -1648,7 +1645,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                   style={{
                     border: 'none',
                     background: 'transparent',
-                    color: theme.mode === 'dark' ? '#ffffff' : '#0f172a',
+                    color: '#0f172a',
                     cursor: zoomScale >= 4 ? 'not-allowed' : 'pointer',
                   }}
                 >
@@ -1740,6 +1737,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                 alignItems: 'center',
                 justifyContent: 'center',
                 overflow: 'hidden',
+                backgroundColor: '#ffffff',
                 cursor: zoomScale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
               }}
             >
@@ -1752,6 +1750,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    backgroundColor: '#000000',
                   }}
                   onClick={(e) => e.stopPropagation()}
                 >
@@ -1820,15 +1819,9 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
               <div
                 className="fs-lightbox-bottom-bar"
                 style={{
-                  backgroundColor:
-                    theme.mode === 'dark'
-                      ? 'rgba(15, 23, 42, 0.85)'
-                      : 'rgba(241, 245, 249, 0.95)',
+                  backgroundColor: 'rgba(241, 245, 249, 0.95)',
                   border: 'none',
-                  boxShadow:
-                    theme.mode === 'dark'
-                      ? '0 4px 16px rgba(0, 0, 0, 0.4)'
-                      : '0 4px 16px rgba(0, 0, 0, 0.08)',
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
                 }}
               >
                 <div className="fs-lightbox-dots">
@@ -1847,9 +1840,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                         backgroundColor:
                           activeMediaIndex === idx
                             ? theme.primary
-                            : theme.mode === 'dark'
-                              ? 'rgba(255, 255, 255, 0.35)'
-                              : 'rgba(0, 0, 0, 0.2)',
+                            : 'rgba(0, 0, 0, 0.2)',
                       }}
                       aria-label={`Şəkil ${idx + 1}`}
                     />
@@ -1858,7 +1849,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                 <span
                   className="fs-lightbox-counter-text"
                   style={{
-                    color: theme.mode === 'dark' ? '#ffffff' : '#0f172a',
+                    color: '#0f172a',
                     fontWeight: 800,
                   }}
                 >
