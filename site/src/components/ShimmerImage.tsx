@@ -40,8 +40,17 @@ export const ShimmerImage = React.forwardRef<HTMLImageElement, ShimmerImageProps
     const hasError = failedSrc === src;
     const internalImgRef = useRef<HTMLImageElement | null>(null);
 
+    const checkComplete = (img: HTMLImageElement | null) => {
+      if (img && img.complete && img.naturalWidth > 0) {
+        setLoadedSrc(src);
+      }
+    };
+
     const setRefs = (node: HTMLImageElement | null) => {
       internalImgRef.current = node;
+      if (node) {
+        checkComplete(node);
+      }
       if (typeof ref === 'function') {
         ref(node);
       } else if (ref) {
@@ -50,14 +59,29 @@ export const ShimmerImage = React.forwardRef<HTMLImageElement, ShimmerImageProps
     };
 
     useEffect(() => {
-      // If image is already cached and loaded by the browser
-      if (
-        internalImgRef.current &&
-        internalImgRef.current.complete &&
-        internalImgRef.current.naturalWidth > 0
-      ) {
+      const img = internalImgRef.current;
+      if (!img) return;
+
+      // If image is already complete (from cache or fast load)
+      if (img.complete && img.naturalWidth > 0) {
         setLoadedSrc(src);
+        return;
       }
+
+      const onNativeLoad = () => {
+        setLoadedSrc(src);
+      };
+      const onNativeError = () => {
+        setFailedSrc(src);
+      };
+
+      img.addEventListener('load', onNativeLoad);
+      img.addEventListener('error', onNativeError);
+
+      return () => {
+        img.removeEventListener('load', onNativeLoad);
+        img.removeEventListener('error', onNativeError);
+      };
     }, [src]);
 
     const handleLoad = (e: React.SyntheticEvent<HTMLImageElement, Event>) => {
