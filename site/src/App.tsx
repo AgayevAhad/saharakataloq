@@ -18,8 +18,27 @@ export const getAppMode = (): 'catalog' | 'site' => {
   if (typeof window !== 'undefined') {
     const params = new URLSearchParams(window.location.search);
     const modeParam = params.get('mode') || params.get('app_mode');
-    if (modeParam === 'catalog' || modeParam === 'site') {
-      return modeParam;
+    if (modeParam) {
+      const lower = modeParam.toLowerCase();
+      if (lower.startsWith('catalog') || lower.includes('catalog')) {
+        return 'catalog';
+      }
+      if (lower.startsWith('site') || lower.includes('site')) {
+        return 'site';
+      }
+    }
+
+    const fullSearch = window.location.search.toLowerCase();
+    const fullPath = window.location.pathname.toLowerCase();
+    const fullHash = window.location.hash.toLowerCase();
+    if (
+      fullSearch.includes('mode=catalog') ||
+      fullPath.includes('mode=catalog') ||
+      fullSearch.includes('catalog') ||
+      fullPath.startsWith('/catalog') ||
+      fullHash.includes('catalog')
+    ) {
+      return 'catalog';
     }
   }
 

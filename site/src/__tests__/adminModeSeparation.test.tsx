@@ -133,4 +133,21 @@ describe('Admin Panel Mode Separation (Site CMS vs Catalog PIM)', () => {
     expect(screen.getByRole('heading', { level: 1, name: /Rəsmi Sayt İdarəetmə Paneli/i })).toBeDefined();
     expect(screen.getByRole('button', { name: /Naviqasiya \(CMS\)/i })).toBeDefined();
   });
+
+  it('correctly resolves getAppMode for various URL query formats including ?mode=catalog/AdministratorNT', async () => {
+    const { getAppMode } = await import('../App');
+
+    // Scenario 1: ?mode=catalog/AdministratorNT
+    delete (window as any).location;
+    window.location = new URL('http://localhost:5174/?mode=catalog/AdministratorNT') as any;
+    expect(getAppMode()).toBe('catalog');
+
+    // Scenario 2: /AdministratorNT?mode=catalog
+    window.location = new URL('http://localhost:5174/AdministratorNT?mode=catalog') as any;
+    expect(getAppMode()).toBe('catalog');
+
+    // Scenario 3: /AdministratorNT (Site mode)
+    window.location = new URL('http://localhost:5174/AdministratorNT') as any;
+    expect(getAppMode()).toBe('site');
+  });
 });

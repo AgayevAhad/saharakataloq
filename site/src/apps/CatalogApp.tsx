@@ -80,9 +80,14 @@ export interface CatalogAppProps {
 
 const isAdminPath = () => {
   if (typeof window === 'undefined') return false;
+  const path = window.location.pathname.toLowerCase();
+  const search = window.location.search.toLowerCase();
+  const hash = window.location.hash.toLowerCase();
   return (
-    window.location.pathname.startsWith('/AdministratorNT') ||
-    window.location.search.includes('/AdministratorNT')
+    path.startsWith('/administratornt') ||
+    path.includes('administratornt') ||
+    search.includes('administratornt') ||
+    hash.includes('administratornt')
   );
 };
 
