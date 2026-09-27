@@ -1,11 +1,12 @@
 // @vitest-environment happy-dom
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import React from 'react';
-import { cleanup, render, screen, fireEvent } from '@testing-library/react';
+import { cleanup, render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { ProductEditor } from '../components/CatalogAdmin';
 import { ProductDetailModal } from '../components/ProductDetailModal';
 import { ProductCard } from '../components/ProductCard';
 import { ImageCropStudioModal } from '../components/ImageCropStudioModal';
+import { ShimmerImage } from '../components/ShimmerImage';
 import { lightTheme } from '../types/theme';
 import { Product, Brand, CatalogCategory } from '../types/product';
 
@@ -63,7 +64,7 @@ describe('Image Positioning (Focal Point / Alignment) & Pan-Zoom & Visual Crop S
     { id: 'hood', name: 'Aspiratorlar', slug: 'hood', icon: 'Wind', active: true },
   ];
 
-  it('renders 9-dot focal picker and Crop Studio buttons in ProductEditor', () => {
+  it('renders Visual Crop button in ProductEditor without positioning & fit selects', () => {
     const handleSave = vi.fn();
     render(
       <ProductEditor
@@ -78,46 +79,107 @@ describe('Image Positioning (Focal Point / Alignment) & Pan-Zoom & Visual Crop S
       />
     );
 
-    // Verify 9-dot pickers and position dropdowns are rendered
-    const positionSelects = screen.getAllByTitle(/Duruş mövqeyini dəqiqləşdirin/i);
-    expect(positionSelects.length).toBe(2);
+    // Verify position dropdowns and fit mode selects are completely removed
+    const positionSelects = screen.queryAllByTitle(/Duruş mövqeyini dəqiqləşdirin/i);
+    expect(positionSelects.length).toBe(0);
 
-    const fitSelects = screen.getAllByTitle(/Kəsim \/ sığışdırma rejimi/i);
-    expect(fitSelects.length).toBe(2);
+    const fitSelects = screen.queryAllByTitle(/Kəsim \/ sığışdırma rejimi/i);
+    expect(fitSelects.length).toBe(0);
 
-    // Verify Visual Crop Studio buttons exist
+    // Verify Visual Crop/Framing button exists on images
     const cropStudioBtns = screen.getAllByTitle(
-      /Şəkli vizual kəsin, nisbətini seçin və fokusunu interaktiv studiyada tənzimləyin/i
+      /Şəkildə görünəcək hissəni və fokus sahəsini interaktiv studiyada düzənləyin/i
     );
-    expect(cropStudioBtns.length).toBe(2);
+    expect(cropStudioBtns.length).toBeGreaterThan(0);
+
+    // Clicking Visual Framing opens ImageCropStudioModal
+    fireEvent.click(cropStudioBtns[0]);
+    expect(
+      screen.getByRole('heading', { level: 3, name: /Aspirator Ardo AR6120 White/i })
+    ).toBeTruthy();
   });
 
-  it('opens Visual Crop & Focal Studio modal from ProductEditor', () => {
+  it('synchronizes top-level image fields when the cropped primary media is removed', async () => {
+    const handleSave = vi.fn().mockResolvedValue(undefined);
     render(
+      <ProductEditor
+        product={{
+          ...mockProduct,
+          originalImage: mockProduct.media![0].url,
+          cropRect: { x: 0.1, y: 0.1, w: 0.7, h: 0.7 },
+          media: [
+            {
+              ...mockProduct.media![0],
+              originalUrl: mockProduct.media![0].url,
+              cropRect: { x: 0.1, y: 0.1, w: 0.7, h: 0.7 },
+            },
+            {
+              ...mockProduct.media![1],
+              originalUrl: mockProduct.media![1].url,
+              cropRect: undefined,
+            },
+          ],
+        }}
+        brands={mockBrands}
+        categories={mockCategories}
+        availableCountries={['İtaliya']}
+        theme={lightTheme}
+        onUpload={vi.fn()}
+        onClose={vi.fn()}
+        onSave={handleSave}
+      />
+    );
+
+    fireEvent.click(screen.getAllByTitle('Bu media faylını sil')[0]);
+    fireEvent.click(screen.getByRole('button', { name: 'Yadda saxla' }));
+
+    await waitFor(() => expect(handleSave).toHaveBeenCalledTimes(1));
+    expect(handleSave.mock.calls[0][0]).toMatchObject({
+      image: '/media/products/ardo-ar6120-white-2.jpg',
+      originalImage: '/media/products/ardo-ar6120-white-2.jpg',
+      imagePosition: 'bottom',
+      imageFit: 'cover',
+      gallery: ['/media/products/ardo-ar6120-white-2.jpg'],
+    });
+    expect(handleSave.mock.calls[0][0].cropRect).toBeUndefined();
+  });
+
+  it('deletes a newly uploaded file that is removed before the product is saved', async () => {
+    const uploadedUrl = '/uploads/mnew1234-0123456789abcdef.jpg';
+    const handleSave = vi.fn().mockResolvedValue(undefined);
+    const handleDiscardUpload = vi.fn().mockResolvedValue(undefined);
+    const { container } = render(
       <ProductEditor
         product={mockProduct}
         brands={mockBrands}
         categories={mockCategories}
-        availableCountries={['İtaliya', 'Türkiyə']}
+        availableCountries={['İtaliya']}
         theme={lightTheme}
-        onUpload={vi.fn()}
+        onUpload={vi.fn().mockResolvedValue({
+          id: 'uploaded-media',
+          type: 'image',
+          url: uploadedUrl,
+          originalName: 'new-photo.jpg',
+        })}
+        onDiscardUpload={handleDiscardUpload}
         onClose={vi.fn()}
-        onSave={vi.fn()}
+        onSave={handleSave}
       />
     );
 
-    const cropStudioBtns = screen.getAllByTitle(
-      /Şəkli vizual kəsin, nisbətini seçin və fokusunu interaktiv studiyada tənzimləyin/i
-    );
-    fireEvent.click(cropStudioBtns[0]);
+    const fileInput = container.querySelector('input[type="file"]') as HTMLInputElement;
+    fireEvent.change(fileInput, {
+      target: { files: [new File(['image'], 'new-photo.jpg', { type: 'image/jpeg' })] },
+    });
+    await waitFor(() => expect(screen.getAllByTitle('Bu media faylını sil')).toHaveLength(3));
+    fireEvent.click(screen.getAllByTitle('Bu media faylını sil')[2]);
+    fireEvent.click(screen.getByRole('button', { name: 'Yadda saxla' }));
 
-    // Studio modal header should appear
-    expect(screen.getByText(/Dəqiq Şəkil Kəsmə & Çərçivələmə Studiyası/i)).toBeTruthy();
-    expect(screen.getByText(/🪄 Ağ Sahələri Avtomatik Kəs/i)).toBeTruthy();
-    expect(screen.getByText(/✂️ Sərbəst Kəsim/i)).toBeTruthy();
+    await waitFor(() => expect(handleSave).toHaveBeenCalledTimes(1));
+    expect(handleDiscardUpload).toHaveBeenCalledWith(uploadedUrl);
   });
 
-  it('interactively applies aspect ratios and triggers crop save in ImageCropStudioModal', () => {
+  it('interactively applies aspect ratios and triggers non-destructive framing save in ImageCropStudioModal', () => {
     const handleSaveCropped = vi.fn();
     render(
       <ImageCropStudioModal
@@ -134,14 +196,14 @@ describe('Image Positioning (Focal Point / Alignment) & Pan-Zoom & Visual Crop S
     );
 
     // Click on 1:1 Aspect Ratio button
-    const ratioBtn = screen.getByRole('button', { name: '1:1' });
+    const ratioBtn = screen.getByRole('button', { name: /1:1/i });
     fireEvent.click(ratioBtn);
 
-    // Click on Auto Trim button
-    const autoTrimBtn = screen.getByRole('button', { name: /🪄 Ağ Sahələri Avtomatik Kəs/i });
+    // Click on Auto Trim / Focus button
+    const autoTrimBtn = screen.getByRole('button', { name: /🪄 Avtomatik Fokusla/i });
     fireEvent.click(autoTrimBtn);
 
-    expect(screen.getByText(/✂️ Kəsilmiş Şəkli Saxla & Məhsula Tətbiq Et/i)).toBeTruthy();
+    expect(screen.getByText(/✓ Düzənləməni Saxla & Məhsula Tətbiq Et/i)).toBeTruthy();
   });
 
   it('renders ProductCard with custom objectPosition and fitMode styling', () => {
@@ -368,5 +430,85 @@ describe('Image Positioning (Focal Point / Alignment) & Pan-Zoom & Visual Crop S
     expect(fsDots.length).toBe(2);
     fireEvent.click(fsDots[1]);
     expect(fsImg.src).toContain('ardo-ar6120-white-2.jpg');
+  });
+
+  it('renders ShimmerImage with accurate CSS transform/offsets when cropRect is provided', () => {
+    const customCrop = { x: 0.2, y: 0.1, w: 0.5, h: 0.4 };
+    const { container } = render(
+      <ProductCard
+        product={{
+          ...mockProduct,
+          cropRect: customCrop,
+          media: [
+            {
+              ...mockProduct.media![0],
+              cropRect: customCrop,
+            },
+          ],
+        }}
+        theme={lightTheme}
+        onSelect={vi.fn()}
+        onShare={vi.fn()}
+        onWhatsApp={vi.fn()}
+        onCall={vi.fn()}
+        onCopyLink={vi.fn()}
+      />
+    );
+
+    const img = container.querySelector('.shimmer-img') as HTMLImageElement;
+    expect(img).toBeTruthy();
+    // width: (1/0.5)*100% = 200%, height: (1/0.4)*100% = 250%
+    // left: -(0.2/0.5)*100% = -40%, top: -(0.1/0.4)*100% = -25%
+    expect(img.style.position).toBe('absolute');
+    expect(img.style.width).toBe('200%');
+    expect(img.style.height).toBe('250%');
+    expect(img.style.left).toBe('-40%');
+    expect(img.style.top).toBe('-25%');
+  });
+
+  it('preserves initial cropRect when re-opening ImageCropStudioModal', () => {
+    const savedCrop = { x: 0.15, y: 0.25, w: 0.6, h: 0.5 };
+    const { container } = render(
+      <ImageCropStudioModal
+        isOpen={true}
+        imageUrl="/media/products/ardo-ar6120-white.jpg"
+        initialCropRect={savedCrop}
+        initialObjectPosition="45% 50%"
+        initialFitMode="cover"
+        productTitle="ARDO Aspirator"
+        theme={lightTheme}
+        onClose={vi.fn()}
+        onSavePosition={vi.fn()}
+        onSaveCroppedImage={vi.fn()}
+      />
+    );
+
+    const studioModal = container.querySelector('.crop-studio-modal');
+    expect(studioModal).toBeTruthy();
+    expect(screen.getByText('ARDO Aspirator')).toBeTruthy();
+  });
+
+  it('renders crop-inner-viewport wrapper with aspect-ratio to prevent distortion and clipping', () => {
+    const wideCrop = { x: 0.1, y: 0.2, w: 0.8, h: 0.4 };
+    const { container } = render(
+      <ShimmerImage
+        src="/media/products/ardo-ar6120-white.jpg"
+        alt="Crop Test"
+        cropRect={wideCrop}
+      />
+    );
+
+    const viewport = container.querySelector('.crop-inner-viewport') as HTMLElement;
+    expect(viewport).toBeTruthy();
+    expect(viewport.style.position).toBe('relative');
+    expect(viewport.style.aspectRatio).toBeTruthy();
+    expect(viewport.style.overflow).toBe('hidden');
+
+    const img = container.querySelector('.shimmer-img') as HTMLImageElement;
+    expect(img).toBeTruthy();
+    expect(img.style.position).toBe('absolute');
+    // width: (1/0.8)*100% = 125%, height: (1/0.4)*100% = 250%
+    expect(img.style.width).toBe('125%');
+    expect(img.style.height).toBe('250%');
   });
 });

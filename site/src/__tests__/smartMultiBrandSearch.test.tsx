@@ -267,6 +267,7 @@ describe('SmartSearchOverlay & Multi-Brand Search Tests', () => {
         searchQuery=""
         onSearchChange={onSearchChange}
         onOpenSearchModal={vi.fn()}
+        onOpenSaharaMatch={vi.fn()}
         comparisonCount={0}
         favoritesCount={0}
       />

@@ -5,6 +5,7 @@ import { render, fireEvent } from '@testing-library/react';
 import { CatalogSidebarFilter } from '../components/CatalogSidebarFilter';
 import { DEFAULT_CATALOG } from '../data/catalog';
 import { lightTheme } from '../types/theme';
+import type { Brand } from '../types/product';
 
 describe('CatalogSidebarFilter Component Suite', () => {
   it('renders all filter sections properly (bölmələr, qiymət, xüsusi, texniki xüsusiyyətlər)', () => {
@@ -20,7 +21,7 @@ describe('CatalogSidebarFilter Component Suite', () => {
 
     const onToggleBrand = vi.fn();
 
-    const { getByText, getAllByText } = render(
+    const { getByText } = render(
       <CatalogSidebarFilter
         categories={DEFAULT_CATALOG.categories}
         brands={DEFAULT_CATALOG.brands}
@@ -121,11 +122,27 @@ describe('CatalogSidebarFilter Component Suite', () => {
   it('renders brand checkboxes without border boxes and supports multiple brand logos in BrandCategoryFilter', () => {
     const onToggleBrand = vi.fn();
     const brands: Brand[] = [
-      { id: 'ardo', name: 'ARDO', slug: 'ardo', originCountry: 'İtaliya', manufacturingCountries: [], logo: '/media/brands/ardo-logo.png', active: true },
-      { id: 'lotus', name: 'LOTUS', slug: 'lotus', originCountry: 'İngiltərə', manufacturingCountries: [], logo: '/media/brands/lotus-logo.png', active: true },
+      {
+        id: 'ardo',
+        name: 'ARDO',
+        slug: 'ardo',
+        originCountry: 'İtaliya',
+        manufacturingCountries: [],
+        logo: '/media/brands/ardo-logo.png',
+        active: true,
+      },
+      {
+        id: 'lotus',
+        name: 'LOTUS',
+        slug: 'lotus',
+        originCountry: 'İngiltərə',
+        manufacturingCountries: [],
+        logo: '/media/brands/lotus-logo.png',
+        active: true,
+      },
     ];
 
-    const { container, getAllByRole } = render(
+    const { getAllByRole } = render(
       <CatalogSidebarFilter
         categories={DEFAULT_CATALOG.categories}
         brands={brands}
@@ -165,5 +182,124 @@ describe('CatalogSidebarFilter Component Suite', () => {
       expect(cb.style.border).toMatch(/none/);
     });
   });
-});
 
+  it('accurately displays product counts for unselected brands and categories when allProducts is provided', () => {
+    const brands = [
+      {
+        id: 'ardo',
+        name: 'ARDO',
+        slug: 'ardo',
+        originCountry: 'İtaliya',
+        manufacturingCountries: [],
+        logo: '',
+        active: true,
+      },
+      {
+        id: 'artel',
+        name: 'ARTEL',
+        slug: 'artel',
+        originCountry: 'Özbəkistan',
+        manufacturingCountries: [],
+        logo: '',
+        active: true,
+      },
+      {
+        id: 'lotus',
+        name: 'LOTUS',
+        slug: 'lotus',
+        originCountry: 'İngiltərə',
+        manufacturingCountries: [],
+        logo: '',
+        active: true,
+      },
+    ];
+
+    const mockCategories = [
+      { id: 'soba', name: 'Sobalar', slug: 'soba', active: true },
+      { id: 'soyuducu', name: 'Soyuducular', slug: 'soyuducu', active: true },
+    ];
+
+    const mockAllProducts = [
+      {
+        id: 'p1',
+        brandId: 'ardo',
+        name: 'ARDO Oven',
+        category: 'soba',
+        status: 'published',
+        price: 100,
+      },
+      {
+        id: 'p2',
+        brandId: 'ardo',
+        name: 'ARDO Cooktop',
+        category: 'soba',
+        status: 'published',
+        price: 120,
+      },
+      {
+        id: 'p3',
+        brandId: 'artel',
+        name: 'Artel Fridge',
+        category: 'soyuducu',
+        status: 'published',
+        price: 200,
+      },
+      {
+        id: 'p4',
+        brandId: 'lotus',
+        name: 'Lotus Hood',
+        category: 'soba',
+        status: 'published',
+        price: 150,
+      },
+    ] as any;
+
+    // activeProducts is only ARDO products because ARDO is selected
+    const mockActiveProducts = [mockAllProducts[0], mockAllProducts[1]];
+
+    const { getAllByText, getByText } = render(
+      <CatalogSidebarFilter
+        categories={mockCategories}
+        brands={brands}
+        selectedBrands={['ardo']}
+        onToggleBrand={vi.fn()}
+        showBrandSection={true}
+        allProducts={mockAllProducts}
+        activeProducts={mockActiveProducts}
+        selectedCategory="all"
+        onSelectCategory={vi.fn()}
+        minPrice={100}
+        maxPrice={2000}
+        minAvailablePrice={100}
+        maxAvailablePrice={2000}
+        onMinPriceChange={vi.fn()}
+        onMaxPriceChange={vi.fn()}
+        onlyDiscounted={false}
+        onToggleDiscounted={vi.fn()}
+        onlyWithVideo={false}
+        onToggleWithVideo={vi.fn()}
+        selectedEnergyClass="all"
+        onSelectEnergyClass={vi.fn()}
+        selectedMotorType="all"
+        onSelectMotorType={vi.fn()}
+        selectedColor="all"
+        onSelectColor={vi.fn()}
+        hasActiveFilters={true}
+        onResetFilters={vi.fn()}
+        theme={lightTheme}
+        isDarkMode={false}
+      />
+    );
+
+    // Verify brand presence
+    expect(getAllByText('ARTEL').length).toBeGreaterThanOrEqual(1);
+    expect(getAllByText('LOTUS').length).toBeGreaterThanOrEqual(1);
+
+    // Total products count in "Bütün Bölmələr" should show 4
+    expect(getByText('4')).toBeDefined();
+
+    // Category Sobalar has 3 products, Soyuducular has 1 product
+    expect(getByText('Sobalar')).toBeDefined();
+    expect(getByText('3')).toBeDefined();
+  });
+});

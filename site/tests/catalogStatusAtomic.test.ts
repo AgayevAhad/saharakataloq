@@ -168,7 +168,7 @@ describe('Catalog & Site Status Atomic Toggle & Zero-Data-Loss Suite', () => {
     let statusCode = 0;
     let responseData = '';
     const res = {
-      writeHead: (code: number, headers?: any) => {
+      writeHead: (code: number, _headers?: any) => {
         statusCode = code;
       },
       end: (data?: string) => {
@@ -233,7 +233,7 @@ describe('Catalog & Site Status Atomic Toggle & Zero-Data-Loss Suite', () => {
     let statusCode = 0;
     let responseData = '';
     const res = {
-      writeHead: (code: number, headers?: any) => {
+      writeHead: (code: number, _headers?: any) => {
         statusCode = code;
       },
       end: (data?: string) => {

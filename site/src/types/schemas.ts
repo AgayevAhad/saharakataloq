@@ -31,6 +31,17 @@ export const MediaVerificationStatusEnum = z.enum([
   'needs_review',
 ]);
 
+const NormalizedCropRectSchema = z
+  .object({
+    x: z.number().min(0).max(1),
+    y: z.number().min(0).max(1),
+    w: z.number().positive().max(1),
+    h: z.number().positive().max(1),
+  })
+  .refine((rect) => rect.x + rect.w <= 1.000001 && rect.y + rect.h <= 1.000001, {
+    message: 'Crop sahəsi şəkil sərhədlərindən kənara çıxa bilməz',
+  });
+
 export const SpecNormalizationStatusEnum = z.enum(['valid', 'needs_review', 'raw_only']);
 
 export const BrandSchema = z.object({
@@ -121,6 +132,8 @@ export const MediaAssetSchema = z.object({
   rightsStatus: z.string().nullable().optional(),
   verificationStatus: MediaVerificationStatusEnum.default('legacy_unverified'),
   exactMatchKey: z.string().nullable().optional(),
+  originalUrl: z.string().nullable().optional(),
+  cropRect: NormalizedCropRectSchema.nullable().optional(),
 });
 
 export type MediaAssetSchemaType = z.infer<typeof MediaAssetSchema>;
@@ -197,6 +210,8 @@ export const ProductSchema = z.object({
   category: z.string().min(1, 'Kateqoriya mütləqdir'),
   categoryName: z.string().default(''),
   image: z.string().default(''),
+  originalImage: z.string().nullable().optional(),
+  cropRect: NormalizedCropRectSchema.nullable().optional(),
   imagePosition: z.string().nullable().optional(),
   imageFit: z.string().nullable().optional(),
   gallery: z.array(z.string()).default([]),

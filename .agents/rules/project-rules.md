@@ -37,4 +37,7 @@ trigger: always_on
 - If data does not exist in the database or has not been authored by an administrator, the interface MUST present clean, authentic empty states.
 - All reviews must be authored strictly by authenticated, registered users with zero automated or fake test seeds in production.
 
-
+## 9. Strict Catalog-to-Site Isolation & Zero Unintended Redirection
+- In Catalog mode (`CatalogApp`), footer links, bottom components, category items, and modal actions MUST strictly remain within the Catalog app and NEVER navigate or redirect the user to the Site storefront (e.g. `/site`, `/about`, `/haqqimizda`, etc.).
+- The ONLY authorized action permitted to navigate to the site storefront is the explicit 'Sayta keç' / 'Sayta keçid' button.
+- All informational footer actions (stores, support, about, terms, privacy) within catalog mode must open in-catalog modals or drawers without altering browser routing to site pages.

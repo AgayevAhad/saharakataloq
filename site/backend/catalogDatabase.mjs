@@ -40,7 +40,9 @@ export const createCatalogDatabase = (databasePath) => {
   }
 
   const db = new DatabaseSync(safePath);
-  db.exec('PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL; PRAGMA synchronous = NORMAL; PRAGMA busy_timeout = 5000;');
+  db.exec(
+    'PRAGMA foreign_keys = ON; PRAGMA journal_mode = WAL; PRAGMA synchronous = NORMAL; PRAGMA busy_timeout = 5000;'
+  );
   db.exec(`
     CREATE TABLE IF NOT EXISTS schema_migrations (
       version INTEGER PRIMARY KEY,
@@ -124,6 +126,7 @@ export const createCatalogDatabase = (databasePath) => {
       currency TEXT NOT NULL DEFAULT '₼',
       stock_status TEXT NOT NULL DEFAULT 'in_stock',
       short_description TEXT NOT NULL DEFAULT '',
+      description TEXT NOT NULL DEFAULT '',
       manufacturing_country TEXT NOT NULL DEFAULT '',
       status TEXT NOT NULL DEFAULT 'draft' CHECK(status IN ('published', 'draft')),
       created_at TEXT NOT NULL,
@@ -205,18 +208,32 @@ export const createCatalogDatabase = (databasePath) => {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
     CREATE INDEX IF NOT EXISTS catalog_snapshots_date_idx ON catalog_snapshots(created_at DESC);
+    CREATE TABLE IF NOT EXISTS admin_credentials (
+      id INTEGER PRIMARY KEY CHECK (id = 1),
+      password_hash TEXT NOT NULL,
+      password_salt TEXT NOT NULL,
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
     INSERT OR IGNORE INTO schema_migrations(version, applied_at) VALUES (1, datetime('now'));
     INSERT OR IGNORE INTO catalog_analytics(id, catalog_views) VALUES (1, 0);
     INSERT OR IGNORE INTO catalog_settings(id, whatsapp_number, phone_number, updated_at) VALUES (1, '', '', datetime('now'));
   `);
 
   // Column migrations for dynamic extensions
-  const brandColumns = db.prepare('PRAGMA table_info(brands)').all().map((row) => row.name);
+  const brandColumns = db
+    .prepare('PRAGMA table_info(brands)')
+    .all()
+    .map((row) => row.name);
   if (!brandColumns.includes('coming_soon')) {
-    db.exec('ALTER TABLE brands ADD COLUMN coming_soon INTEGER NOT NULL DEFAULT 0 CHECK(coming_soon IN (0, 1));');
+    db.exec(
+      'ALTER TABLE brands ADD COLUMN coming_soon INTEGER NOT NULL DEFAULT 0 CHECK(coming_soon IN (0, 1));'
+    );
   }
 
-  const productColumns = db.prepare('PRAGMA table_info(products)').all().map((row) => row.name);
+  const productColumns = db
+    .prepare('PRAGMA table_info(products)')
+    .all()
+    .map((row) => row.name);
   if (!productColumns.includes('badge_color')) {
     db.exec("ALTER TABLE products ADD COLUMN badge_color TEXT NOT NULL DEFAULT 'red';");
   }
@@ -232,14 +249,26 @@ export const createCatalogDatabase = (databasePath) => {
   if (!productColumns.includes('stock_status')) {
     db.exec("ALTER TABLE products ADD COLUMN stock_status TEXT NOT NULL DEFAULT 'in_stock';");
   }
+  if (!productColumns.includes('description')) {
+    db.exec("ALTER TABLE products ADD COLUMN description TEXT NOT NULL DEFAULT '';");
+  }
   if (!productColumns.includes('image_position')) {
     db.exec("ALTER TABLE products ADD COLUMN image_position TEXT NOT NULL DEFAULT 'center';");
   }
   if (!productColumns.includes('image_fit')) {
     db.exec("ALTER TABLE products ADD COLUMN image_fit TEXT NOT NULL DEFAULT 'contain';");
   }
+  if (!productColumns.includes('crop_rect')) {
+    db.exec('ALTER TABLE products ADD COLUMN crop_rect TEXT DEFAULT NULL;');
+  }
+  if (!productColumns.includes('original_image')) {
+    db.exec('ALTER TABLE products ADD COLUMN original_image TEXT DEFAULT NULL;');
+  }
 
-  const productMediaColumns = db.prepare('PRAGMA table_info(product_media)').all().map((row) => row.name);
+  const productMediaColumns = db
+    .prepare('PRAGMA table_info(product_media)')
+    .all()
+    .map((row) => row.name);
   if (!productMediaColumns.includes('original_name')) {
     db.exec("ALTER TABLE product_media ADD COLUMN original_name TEXT NOT NULL DEFAULT '';");
   }
@@ -249,19 +278,36 @@ export const createCatalogDatabase = (databasePath) => {
   if (!productMediaColumns.includes('fit_mode')) {
     db.exec("ALTER TABLE product_media ADD COLUMN fit_mode TEXT NOT NULL DEFAULT 'contain';");
   }
+  if (!productMediaColumns.includes('crop_rect')) {
+    db.exec('ALTER TABLE product_media ADD COLUMN crop_rect TEXT DEFAULT NULL;');
+  }
+  if (!productMediaColumns.includes('original_url')) {
+    db.exec('ALTER TABLE product_media ADD COLUMN original_url TEXT DEFAULT NULL;');
+  }
 
-  const settingsColumns = db.prepare('PRAGMA table_info(catalog_settings)').all().map((row) => row.name);
+  const settingsColumns = db
+    .prepare('PRAGMA table_info(catalog_settings)')
+    .all()
+    .map((row) => row.name);
   if (!settingsColumns.includes('catalog_active')) {
-    db.exec('ALTER TABLE catalog_settings ADD COLUMN catalog_active INTEGER NOT NULL DEFAULT 1 CHECK(catalog_active IN (0, 1));');
+    db.exec(
+      'ALTER TABLE catalog_settings ADD COLUMN catalog_active INTEGER NOT NULL DEFAULT 1 CHECK(catalog_active IN (0, 1));'
+    );
   }
   if (!settingsColumns.includes('maintenance_message')) {
-    db.exec("ALTER TABLE catalog_settings ADD COLUMN maintenance_message TEXT NOT NULL DEFAULT 'Kataloqda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';");
+    db.exec(
+      "ALTER TABLE catalog_settings ADD COLUMN maintenance_message TEXT NOT NULL DEFAULT 'Kataloqda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';"
+    );
   }
   if (!settingsColumns.includes('site_active')) {
-    db.exec('ALTER TABLE catalog_settings ADD COLUMN site_active INTEGER NOT NULL DEFAULT 1 CHECK(site_active IN (0, 1));');
+    db.exec(
+      'ALTER TABLE catalog_settings ADD COLUMN site_active INTEGER NOT NULL DEFAULT 1 CHECK(site_active IN (0, 1));'
+    );
   }
   if (!settingsColumns.includes('site_maintenance_message')) {
-    db.exec("ALTER TABLE catalog_settings ADD COLUMN site_maintenance_message TEXT NOT NULL DEFAULT 'Saytda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';");
+    db.exec(
+      "ALTER TABLE catalog_settings ADD COLUMN site_maintenance_message TEXT NOT NULL DEFAULT 'Saytda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';"
+    );
   }
 
   const newSettingCols = [
@@ -271,7 +317,10 @@ export const createCatalogDatabase = (databasePath) => {
     ['working_hours', "TEXT NOT NULL DEFAULT 'Bazar ertəsi - Bazar: 09:00 - 18:00'"],
     ['map_url', "TEXT NOT NULL DEFAULT ''"],
     ['location_note', "TEXT NOT NULL DEFAULT ''"],
-    ['countries', "TEXT NOT NULL DEFAULT '[\"Türkiyə\",\"Çin\",\"İtaliya\",\"Almaniya\",\"Polşa\",\"Özbəkistan\"]'"],
+    [
+      'countries',
+      'TEXT NOT NULL DEFAULT \'["Türkiyə","Çin","İtaliya","Almaniya","Polşa","Özbəkistan"]\'',
+    ],
     ['instagram_username', "TEXT NOT NULL DEFAULT '@sahara.electronics'"],
     ['instagram_url', "TEXT NOT NULL DEFAULT 'https://instagram.com/sahara.electronics'"],
     ['facebook_username', "TEXT NOT NULL DEFAULT 'Sahara Electronics'"],
@@ -283,10 +332,19 @@ export const createCatalogDatabase = (databasePath) => {
     ['site_subtitle', "TEXT NOT NULL DEFAULT 'Məişət texnikası modelləri və kataloq məlumatları'"],
     ['header_caption', "TEXT NOT NULL DEFAULT 'Məhsul kataloqu'"],
     ['catalog_heading', "TEXT NOT NULL DEFAULT 'Bütün məhsullar'"],
-    ['catalog_subheading', "TEXT NOT NULL DEFAULT 'Modellərə və texniki xüsusiyyət sahələrinə baxın'"],
+    [
+      'catalog_subheading',
+      "TEXT NOT NULL DEFAULT 'Modellərə və texniki xüsusiyyət sahələrinə baxın'",
+    ],
     ['hero_banner_title', "TEXT NOT NULL DEFAULT 'Sahara Electronics — Məhsul Kataloqu'"],
-    ['hero_banner_subtitle', "TEXT NOT NULL DEFAULT 'Məişət və mətbəx texnikası modelləri, texniki parametrlər və rəsmi məhsul seçimi.'"],
-    ['footer_about', "TEXT NOT NULL DEFAULT 'Sahara Electronics ARDO, Lotus və Artel məhsullarının kataloqunu təqdim edir.'"],
+    [
+      'hero_banner_subtitle',
+      "TEXT NOT NULL DEFAULT 'Məişət və mətbəx texnikası modelləri, texniki parametrlər və rəsmi məhsul seçimi.'",
+    ],
+    [
+      'footer_about',
+      "TEXT NOT NULL DEFAULT 'Sahara Electronics ARDO, Lotus və Artel məhsullarının kataloqunu təqdim edir.'",
+    ],
     ['footer_copyright', "TEXT NOT NULL DEFAULT 'Bütün hüquqlar qorunur.'"],
     ['primary_color', "TEXT NOT NULL DEFAULT '#dc2626'"],
     ['font_family', "TEXT NOT NULL DEFAULT 'Inter'"],
@@ -294,6 +352,15 @@ export const createCatalogDatabase = (databasePath) => {
     ['call_button_text', "TEXT NOT NULL DEFAULT 'Zəng et'"],
     ['share_button_text', "TEXT NOT NULL DEFAULT 'Paylaş'"],
     ['scroll_top_button_text', "TEXT NOT NULL DEFAULT 'Yuxarı'"],
+    ['developer_name', "TEXT NOT NULL DEFAULT ''"],
+    ['developer_role', "TEXT NOT NULL DEFAULT 'Veb-tərtibatçı'"],
+    ['developer_phone', "TEXT NOT NULL DEFAULT ''"],
+    ['developer_instagram', "TEXT NOT NULL DEFAULT ''"],
+    ['developer_website', "TEXT NOT NULL DEFAULT ''"],
+    ['about_text', "TEXT NOT NULL DEFAULT ''"],
+    ['terms_text', "TEXT NOT NULL DEFAULT ''"],
+    ['privacy_text', "TEXT NOT NULL DEFAULT ''"],
+    ['support_text', "TEXT NOT NULL DEFAULT ''"],
   ];
 
   for (const [colName, colDef] of newSettingCols) {
@@ -306,86 +373,122 @@ export const createCatalogDatabase = (databasePath) => {
 
   const getCatalog = (options = {}) => {
     const includeAll = Boolean(options?.includeAll || options?.includeComingSoon);
-    const brands = db.prepare('SELECT * FROM brands ORDER BY name').all().map((row) => ({
-      id: row.id,
-      name: row.name,
-      slug: row.slug,
-      originCountry: row.origin_country,
-      manufacturingCountries: db.prepare('SELECT country FROM brand_manufacturing_countries WHERE brand_id = ? ORDER BY sort_order').all(row.id).map((item) => item.country),
-      description: row.description || undefined,
-      logo: row.logo || defaultBrandLogos[row.id] || undefined,
-      active: Boolean(row.active),
-      comingSoon: Boolean(row.coming_soon),
-      verificationStatus: row.verification_status || 'legacy_unreviewed',
-    }));
+    const brands = db
+      .prepare('SELECT * FROM brands ORDER BY name')
+      .all()
+      .map((row) => ({
+        id: row.id,
+        name: row.name,
+        slug: row.slug,
+        originCountry: row.origin_country,
+        manufacturingCountries: db
+          .prepare(
+            'SELECT country FROM brand_manufacturing_countries WHERE brand_id = ? ORDER BY sort_order'
+          )
+          .all(row.id)
+          .map((item) => item.country),
+        description: row.description || undefined,
+        logo: row.logo || defaultBrandLogos[row.id] || undefined,
+        active: Boolean(row.active),
+        comingSoon: Boolean(row.coming_soon),
+        verificationStatus: row.verification_status || 'legacy_unreviewed',
+      }));
 
-    const categories = db.prepare('SELECT * FROM categories ORDER BY sort_order, name').all().map((row) => ({
-      id: row.id,
-      name: row.name,
-      slug: row.slug,
-      icon: row.icon || undefined,
-      active: Boolean(row.active),
-      isArchived: Boolean(row.is_archived),
-      parentId: row.parent_id || null,
-      sortOrder: row.sort_order,
-    }));
+    const categories = db
+      .prepare('SELECT * FROM categories ORDER BY sort_order, name')
+      .all()
+      .map((row) => ({
+        id: row.id,
+        name: row.name,
+        slug: row.slug,
+        icon: row.icon || undefined,
+        active: Boolean(row.active),
+        isArchived: Boolean(row.is_archived),
+        parentId: row.parent_id || null,
+        sortOrder: row.sort_order,
+      }));
 
-    const mediaStatement = db.prepare('SELECT * FROM product_media WHERE product_id = ? ORDER BY sort_order');
-    const highlightStatement = db.prepare('SELECT value FROM product_highlights WHERE product_id = ? ORDER BY sort_order');
-    const specStatement = db.prepare('SELECT * FROM product_specs WHERE product_id = ? ORDER BY sort_order');
+    const mediaStatement = db.prepare(
+      'SELECT * FROM product_media WHERE product_id = ? ORDER BY sort_order'
+    );
+    const highlightStatement = db.prepare(
+      'SELECT value FROM product_highlights WHERE product_id = ? ORDER BY sort_order'
+    );
+    const specStatement = db.prepare(
+      'SELECT * FROM product_specs WHERE product_id = ? ORDER BY sort_order'
+    );
 
     const productQuery = includeAll
       ? `SELECT products.*, categories.name AS category_name FROM products JOIN categories ON categories.id = products.category_id ORDER BY products.created_at, products.id`
       : `SELECT products.*, categories.name AS category_name FROM products JOIN categories ON categories.id = products.category_id JOIN brands ON brands.id = products.brand_id WHERE brands.coming_soon = 0 ORDER BY products.created_at, products.id`;
 
-    const products = db.prepare(productQuery).all().map((row) => {
-      const media = mediaStatement.all(row.id).map((item) => ({
-        id: item.id,
-        type: item.media_type,
-        url: item.url,
-        alt: item.alt_text || undefined,
-        originalName: item.original_name || undefined,
-        poster: item.poster || undefined,
-        objectPosition: item.object_position || 'center',
-        fitMode: item.fit_mode || 'contain',
-      }));
-
-      return {
-        id: row.id,
-        code: row.code,
-        title: row.title,
-        brandId: row.brand_id,
-        category: row.category_id,
-        categoryName: row.category_name,
-        image: row.primary_image,
-        imagePosition: row.image_position || 'center',
-        imageFit: row.image_fit || 'contain',
-        gallery: media.filter((item) => item.type === 'image').map((item) => item.url),
-        media,
-        isFeatured: Boolean(row.is_featured),
-        isNew: Boolean(row.is_new),
-        badgeText: row.badge_text || undefined,
-        badgeColor: row.badge_color || 'red',
-        price: row.price !== null && row.price !== undefined ? Number(row.price) : undefined,
-        oldPrice: row.old_price !== null && row.old_price !== undefined ? Number(row.old_price) : undefined,
-        currency: row.currency || '₼',
-        stockStatus: row.stock_status || 'in_stock',
-        shortDesc: row.short_description,
-        manufacturingCountry: row.manufacturing_country,
-        status: row.status,
-        createdAt: row.created_at,
-        updatedAt: row.updated_at,
-        highlights: highlightStatement.all(row.id).map((item) => item.value),
-        specs: specStatement.all(row.id).map((item) => ({
+    const products = db
+      .prepare(productQuery)
+      .all()
+      .map((row) => {
+        const media = mediaStatement.all(row.id).map((item) => ({
           id: item.id,
-          name: item.name,
-          value: item.value,
-          description: item.description || undefined,
-          icon: item.icon || undefined,
-          group: item.spec_group,
-        })),
-      };
-    });
+          type: item.media_type,
+          url: item.url,
+          alt: item.alt_text || undefined,
+          originalName: item.original_name || undefined,
+          poster: item.poster || undefined,
+          objectPosition: item.object_position || 'center',
+          fitMode: item.fit_mode || 'contain',
+          cropRect: item.crop_rect
+            ? typeof item.crop_rect === 'string'
+              ? JSON.parse(item.crop_rect)
+              : item.crop_rect
+            : undefined,
+          originalUrl: item.original_url || undefined,
+        }));
+
+        return {
+          id: row.id,
+          code: row.code,
+          title: row.title,
+          brandId: row.brand_id,
+          category: row.category_id,
+          categoryName: row.category_name,
+          image: row.primary_image,
+          originalImage: row.original_image || undefined,
+          cropRect: row.crop_rect
+            ? typeof row.crop_rect === 'string'
+              ? JSON.parse(row.crop_rect)
+              : row.crop_rect
+            : undefined,
+          imagePosition: row.image_position || 'center',
+          imageFit: row.image_fit || 'contain',
+          gallery: media.filter((item) => item.type === 'image').map((item) => item.url),
+          media,
+          isFeatured: Boolean(row.is_featured),
+          isNew: Boolean(row.is_new),
+          badgeText: row.badge_text || undefined,
+          badgeColor: row.badge_color || 'red',
+          price: row.price !== null && row.price !== undefined ? Number(row.price) : undefined,
+          oldPrice:
+            row.old_price !== null && row.old_price !== undefined
+              ? Number(row.old_price)
+              : undefined,
+          currency: row.currency || '₼',
+          stockStatus: row.stock_status || 'in_stock',
+          shortDesc: row.short_description,
+          description: row.description || '',
+          manufacturingCountry: row.manufacturing_country,
+          status: row.status,
+          createdAt: row.created_at,
+          updatedAt: row.updated_at,
+          highlights: highlightStatement.all(row.id).map((item) => item.value),
+          specs: specStatement.all(row.id).map((item) => ({
+            id: item.id,
+            name: item.name,
+            value: item.value,
+            description: item.description || undefined,
+            icon: item.icon || undefined,
+            group: item.spec_group,
+          })),
+        };
+      });
 
     const meta = db.prepare("SELECT value FROM catalog_meta WHERE key = 'updated_at'").get();
     const settingsRow = db.prepare('SELECT * FROM catalog_settings WHERE id = 1').get();
@@ -458,20 +561,26 @@ export const createCatalogDatabase = (databasePath) => {
       facebookUsername: settingsRow?.facebook_username || 'Sahara Electronics',
       facebookUrl: settingsRow?.facebook_url || 'https://facebook.com/saharaelectronics',
       siteTitle: settingsRow?.site_title || 'Sahara Electronic – Məhsul Kataloqu',
-      siteSubtitle: settingsRow?.site_subtitle || 'Məişət texnikası modelləri və kataloq məlumatları',
+      siteSubtitle:
+        settingsRow?.site_subtitle || 'Məişət texnikası modelləri və kataloq məlumatları',
       headerCaption: settingsRow?.header_caption || 'Məhsul kataloqu',
       catalogHeading: settingsRow?.catalog_heading || 'Bütün məhsullar',
-      catalogSubheading: settingsRow?.catalog_subheading || 'Modellərə və texniki xüsusiyyət sahələrinə baxın',
+      catalogSubheading:
+        settingsRow?.catalog_subheading || 'Modellərə və texniki xüsusiyyət sahələrinə baxın',
       heroBannerTitle:
-        settingsRow?.hero_banner_title && settingsRow.hero_banner_title !== 'İtalyan ARDO & Məişət Texnikası'
+        settingsRow?.hero_banner_title &&
+        settingsRow.hero_banner_title !== 'İtalyan ARDO & Məişət Texnikası'
           ? settingsRow.hero_banner_title
           : 'Sahara Electronics — Məhsul Kataloqu',
       heroBannerSubtitle:
         settingsRow?.hero_banner_subtitle &&
-        settingsRow.hero_banner_subtitle !== 'Eleqant dizayn və yüksək enerji səmərəliliyi ilə məişət texnikası modelləri'
+        settingsRow.hero_banner_subtitle !==
+          'Eleqant dizayn və yüksək enerji səmərəliliyi ilə məişət texnikası modelləri'
           ? settingsRow.hero_banner_subtitle
           : 'Məişət və mətbəx texnikası modelləri, texniki parametrlər və rəsmi məhsul seçimi.',
-      footerAbout: settingsRow?.footer_about || 'Sahara Electronics ARDO, Lotus və Artel məhsullarının kataloqunu təqdim edir.',
+      footerAbout:
+        settingsRow?.footer_about ||
+        'Sahara Electronics ARDO, Lotus və Artel məhsullarının kataloqunu təqdim edir.',
       footerCopyright: settingsRow?.footer_copyright || 'Bütün hüquqlar qorunur.',
       primaryColor: settingsRow?.primary_color || '#dc2626',
       fontFamily: settingsRow?.font_family || 'Inter',
@@ -480,34 +589,85 @@ export const createCatalogDatabase = (databasePath) => {
       shareButtonText: settingsRow?.share_button_text || 'Paylaş',
       scrollTopButtonText: settingsRow?.scroll_top_button_text || 'Yuxarı',
       siteActive: settingsRow?.site_active !== undefined ? Boolean(settingsRow.site_active) : true,
-      siteMaintenanceMessage: settingsRow?.site_maintenance_message || 'Saytda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.',
-      catalogActive: settingsRow?.catalog_active !== undefined ? Boolean(settingsRow.catalog_active) : true,
-      maintenanceMessage: settingsRow?.maintenance_message || 'Kataloqda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.',
+      siteMaintenanceMessage:
+        settingsRow?.site_maintenance_message ||
+        'Saytda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.',
+      catalogActive:
+        settingsRow?.catalog_active !== undefined ? Boolean(settingsRow.catalog_active) : true,
+      maintenanceMessage:
+        settingsRow?.maintenance_message ||
+        'Kataloqda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.',
+      developerName: settingsRow?.developer_name || '',
+      developerRole: settingsRow?.developer_role || 'Veb-tərtibatçı',
+      developerPhone: settingsRow?.developer_phone || '',
+      developerInstagram: settingsRow?.developer_instagram || '',
+      developerWebsite: settingsRow?.developer_website || '',
+      aboutText: settingsRow?.about_text || '',
+      termsText: settingsRow?.terms_text || '',
+      privacyText: settingsRow?.privacy_text || '',
+      supportText: settingsRow?.support_text || '',
     };
 
     const brandRail = isPhase5BrandRailReady(db)
       ? new BrandRailService(db).getPublicRail()
       : { enabled: false, settings: null, items: [] };
 
-    return { brands, categories, products, settings, countries, articles, brandRail, updatedAt: meta?.value };
+    return {
+      brands,
+      categories,
+      products,
+      settings,
+      countries,
+      articles,
+      brandRail,
+      updatedAt: meta?.value,
+    };
   };
 
   const saveCatalog = (catalog) => {
     const now = catalog.updatedAt || new Date().toISOString();
-    const upsertBrand = db.prepare(`INSERT INTO brands(id,name,slug,origin_country,description,logo,coming_soon,active) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,slug=excluded.slug,origin_country=excluded.origin_country,description=excluded.description,logo=excluded.logo,coming_soon=excluded.coming_soon,active=excluded.active`);
-    const upsertCategory = db.prepare(`INSERT INTO categories(id,name,slug,icon,active,sort_order) VALUES(?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,slug=excluded.slug,icon=excluded.icon,active=excluded.active,sort_order=excluded.sort_order`);
-    const upsertProduct = db.prepare(`INSERT INTO products(id,code,title,brand_id,category_id,primary_image,is_featured,is_new,badge_text,badge_color,price,old_price,currency,stock_status,short_description,manufacturing_country,status,image_position,image_fit,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET code=excluded.code,title=excluded.title,brand_id=excluded.brand_id,category_id=excluded.category_id,primary_image=excluded.primary_image,is_featured=excluded.is_featured,is_new=excluded.is_new,badge_text=excluded.badge_text,badge_color=excluded.badge_color,price=excluded.price,old_price=excluded.old_price,currency=excluded.currency,stock_status=excluded.stock_status,short_description=excluded.short_description,manufacturing_country=excluded.manufacturing_country,status=excluded.status,image_position=excluded.image_position,image_fit=excluded.image_fit,updated_at=excluded.updated_at`);
+    const upsertBrand = db.prepare(
+      `INSERT INTO brands(id,name,slug,origin_country,description,logo,coming_soon,active) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,slug=excluded.slug,origin_country=excluded.origin_country,description=excluded.description,logo=excluded.logo,coming_soon=excluded.coming_soon,active=excluded.active`
+    );
+    const upsertCategory = db.prepare(
+      `INSERT INTO categories(id,name,slug,icon,active,sort_order) VALUES(?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,slug=excluded.slug,icon=excluded.icon,active=excluded.active,sort_order=excluded.sort_order`
+    );
+    const upsertProduct = db.prepare(
+      `INSERT INTO products(id,code,title,brand_id,category_id,primary_image,is_featured,is_new,badge_text,badge_color,price,old_price,currency,stock_status,short_description,description,manufacturing_country,status,image_position,image_fit,crop_rect,original_image,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET code=excluded.code,title=excluded.title,brand_id=excluded.brand_id,category_id=excluded.category_id,primary_image=excluded.primary_image,is_featured=excluded.is_featured,is_new=excluded.is_new,badge_text=excluded.badge_text,badge_color=excluded.badge_color,price=excluded.price,old_price=excluded.old_price,currency=excluded.currency,stock_status=excluded.stock_status,short_description=excluded.short_description,description=excluded.description,manufacturing_country=excluded.manufacturing_country,status=excluded.status,image_position=excluded.image_position,image_fit=excluded.image_fit,crop_rect=excluded.crop_rect,original_image=excluded.original_image,updated_at=excluded.updated_at`
+    );
 
     db.exec('BEGIN IMMEDIATE');
     try {
       for (const brand of catalog.brands || []) {
-        upsertBrand.run(brand.id, brand.name, brand.slug, brand.originCountry || '', brand.description || '', brand.logo || '', bool(brand.comingSoon), bool(brand.active));
+        upsertBrand.run(
+          brand.id,
+          brand.name,
+          brand.slug,
+          brand.originCountry || '',
+          brand.description || '',
+          brand.logo || '',
+          bool(brand.comingSoon),
+          bool(brand.active)
+        );
         db.prepare('DELETE FROM brand_manufacturing_countries WHERE brand_id = ?').run(brand.id);
-        (brand.manufacturingCountries || []).forEach((country, index) => db.prepare('INSERT INTO brand_manufacturing_countries(brand_id,country,sort_order) VALUES(?,?,?)').run(brand.id, country, index));
+        (brand.manufacturingCountries || []).forEach((country, index) =>
+          db
+            .prepare(
+              'INSERT INTO brand_manufacturing_countries(brand_id,country,sort_order) VALUES(?,?,?)'
+            )
+            .run(brand.id, country, index)
+        );
       }
 
       for (const category of catalog.categories || []) {
-        upsertCategory.run(category.id, category.name, category.slug, category.icon || '', bool(category.active), category.sortOrder || 0);
+        upsertCategory.run(
+          category.id,
+          category.name,
+          category.slug,
+          category.icon || '',
+          bool(category.active),
+          category.sortOrder || 0
+        );
       }
 
       for (const product of catalog.products || []) {
@@ -528,10 +688,13 @@ export const createCatalogDatabase = (databasePath) => {
           product.currency || '₼',
           product.stockStatus || 'in_stock',
           product.shortDesc || '',
+          product.description || '',
           product.manufacturingCountry || '',
           product.status === 'published' ? 'published' : 'draft',
           product.imagePosition || 'center',
           product.imageFit || 'contain',
+          product.cropRect ? JSON.stringify(product.cropRect) : null,
+          product.originalImage || null,
           createdAt,
           now
         );
@@ -543,7 +706,7 @@ export const createCatalogDatabase = (databasePath) => {
         (product.media || []).forEach((item, index) =>
           db
             .prepare(
-              'INSERT INTO product_media(id,product_id,media_type,url,alt_text,original_name,poster,object_position,fit_mode,sort_order) VALUES(?,?,?,?,?,?,?,?,?,?)'
+              'INSERT INTO product_media(id,product_id,media_type,url,alt_text,original_name,poster,object_position,fit_mode,crop_rect,original_url,sort_order) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)'
             )
             .run(
               item.id,
@@ -555,33 +718,75 @@ export const createCatalogDatabase = (databasePath) => {
               item.poster || '',
               item.objectPosition || 'center',
               item.fitMode || 'contain',
+              item.cropRect ? JSON.stringify(item.cropRect) : null,
+              item.originalUrl || null,
               index
             )
         );
-        (product.highlights || []).forEach((value, index) => db.prepare('INSERT INTO product_highlights(product_id,value,sort_order) VALUES(?,?,?)').run(product.id, value, index));
-        (product.specs || []).forEach((item, index) => db.prepare('INSERT INTO product_specs(id,product_id,name,value,description,icon,spec_group,sort_order) VALUES(?,?,?,?,?,?,?,?)').run(item.id, product.id, item.name, item.value || '', item.description || '', item.icon || '', item.group || 'Əsas', index));
+        (product.highlights || []).forEach((value, index) =>
+          db
+            .prepare('INSERT INTO product_highlights(product_id,value,sort_order) VALUES(?,?,?)')
+            .run(product.id, value, index)
+        );
+        (product.specs || []).forEach((item, index) =>
+          db
+            .prepare(
+              'INSERT INTO product_specs(id,product_id,name,value,description,icon,spec_group,sort_order) VALUES(?,?,?,?,?,?,?,?)'
+            )
+            .run(
+              item.id,
+              product.id,
+              item.name,
+              item.value || '',
+              item.description || '',
+              item.icon || '',
+              item.group || 'Əsas',
+              index
+            )
+        );
       }
 
       const productIds = (catalog.products || []).map((item) => item.id);
       const categoryIds = (catalog.categories || []).map((item) => item.id);
       const brandIds = (catalog.brands || []).map((item) => item.id);
 
-      if (productIds.length) db.prepare(`DELETE FROM products WHERE id NOT IN (${placeholders(productIds)})`).run(...productIds);
+      if (productIds.length)
+        db.prepare(`DELETE FROM products WHERE id NOT IN (${placeholders(productIds)})`).run(
+          ...productIds
+        );
       else db.exec('DELETE FROM products');
 
-      if (categoryIds.length) db.prepare(`DELETE FROM categories WHERE id NOT IN (${placeholders(categoryIds)})`).run(...categoryIds);
+      if (categoryIds.length)
+        db.prepare(`DELETE FROM categories WHERE id NOT IN (${placeholders(categoryIds)})`).run(
+          ...categoryIds
+        );
       else db.exec('DELETE FROM categories');
 
-      if (brandIds.length) db.prepare(`DELETE FROM brands WHERE id NOT IN (${placeholders(brandIds)})`).run(...brandIds);
+      if (brandIds.length)
+        db.prepare(`DELETE FROM brands WHERE id NOT IN (${placeholders(brandIds)})`).run(
+          ...brandIds
+        );
       else db.exec('DELETE FROM brands');
 
       if (catalog.settings) {
-        const countriesJson = JSON.stringify(catalog.settings.countries || catalog.countries || defaultCountriesList);
-        const phoneNumbersJson = JSON.stringify(catalog.settings.phoneNumbers || (catalog.settings.phoneNumber ? [catalog.settings.phoneNumber] : []));
-        const primaryAddress = catalog.settings.address || (catalog.settings.addresses && catalog.settings.addresses[0]?.address) || '';
+        const countriesJson = JSON.stringify(
+          catalog.settings.countries || catalog.countries || defaultCountriesList
+        );
+        const phoneNumbersJson = JSON.stringify(
+          catalog.settings.phoneNumbers ||
+            (catalog.settings.phoneNumber ? [catalog.settings.phoneNumber] : [])
+        );
+        const primaryAddress =
+          catalog.settings.address ||
+          (catalog.settings.addresses && catalog.settings.addresses[0]?.address) ||
+          '';
         let addressesToSave = catalog.settings.addresses;
         if (Array.isArray(addressesToSave) && addressesToSave.length) {
-          if (catalog.settings.address && addressesToSave.length === 1 && addressesToSave[0].address !== catalog.settings.address) {
+          if (
+            catalog.settings.address &&
+            addressesToSave.length === 1 &&
+            addressesToSave[0].address !== catalog.settings.address
+          ) {
             addressesToSave = [{ ...addressesToSave[0], address: catalog.settings.address }];
           }
         } else if (catalog.settings.address) {
@@ -600,17 +805,28 @@ export const createCatalogDatabase = (databasePath) => {
         }
         const addressesJson = JSON.stringify(addressesToSave);
         const articlesJson = JSON.stringify(catalog.articles || defaultArticlesList);
-        const primaryPhone = catalog.settings.phoneNumber || (catalog.settings.phoneNumbers && catalog.settings.phoneNumbers[0]) || '';
-        const siteActiveVal = catalog.settings.siteActive !== undefined ? bool(catalog.settings.siteActive) : 1;
-        const siteMaintenanceMsg = catalog.settings.siteMaintenanceMessage || 'Saytda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';
-        const catalogActiveVal = catalog.settings.catalogActive !== undefined ? bool(catalog.settings.catalogActive) : 1;
-        const maintenanceMsg = catalog.settings.maintenanceMessage || 'Kataloqda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';
+        const primaryPhone =
+          catalog.settings.phoneNumber ||
+          (catalog.settings.phoneNumbers && catalog.settings.phoneNumbers[0]) ||
+          '';
+        const siteActiveVal =
+          catalog.settings.siteActive !== undefined ? bool(catalog.settings.siteActive) : 1;
+        const siteMaintenanceMsg =
+          catalog.settings.siteMaintenanceMessage ||
+          'Saytda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';
+        const catalogActiveVal =
+          catalog.settings.catalogActive !== undefined ? bool(catalog.settings.catalogActive) : 1;
+        const maintenanceMsg =
+          catalog.settings.maintenanceMessage ||
+          'Kataloqda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';
 
-        db.prepare(`
+        db.prepare(
+          `
           UPDATE catalog_settings
-          SET whatsapp_number = ?, phone_number = ?, phone_numbers = ?, company_name = ?, address = ?, addresses = ?, email = ?, working_hours = ?, map_url = ?, location_note = ?, countries = ?, instagram_username = ?, instagram_url = ?, facebook_username = ?, facebook_url = ?, articles = ?, site_title = ?, site_subtitle = ?, header_caption = ?, catalog_heading = ?, catalog_subheading = ?, hero_banner_title = ?, hero_banner_subtitle = ?, footer_about = ?, footer_copyright = ?, primary_color = ?, font_family = ?, whatsapp_button_text = ?, call_button_text = ?, share_button_text = ?, scroll_top_button_text = ?, site_active = ?, site_maintenance_message = ?, catalog_active = ?, maintenance_message = ?, updated_at = ?
+          SET whatsapp_number = ?, phone_number = ?, phone_numbers = ?, company_name = ?, address = ?, addresses = ?, email = ?, working_hours = ?, map_url = ?, location_note = ?, countries = ?, instagram_username = ?, instagram_url = ?, facebook_username = ?, facebook_url = ?, articles = ?, site_title = ?, site_subtitle = ?, header_caption = ?, catalog_heading = ?, catalog_subheading = ?, hero_banner_title = ?, hero_banner_subtitle = ?, footer_about = ?, footer_copyright = ?, primary_color = ?, font_family = ?, whatsapp_button_text = ?, call_button_text = ?, share_button_text = ?, scroll_top_button_text = ?, site_active = ?, site_maintenance_message = ?, catalog_active = ?, maintenance_message = ?, developer_name = ?, developer_role = ?, developer_phone = ?, developer_instagram = ?, developer_website = ?, about_text = ?, terms_text = ?, privacy_text = ?, support_text = ?, updated_at = ?
           WHERE id = 1
-        `).run(
+        `
+        ).run(
           catalog.settings.whatsappNumber || '',
           primaryPhone,
           phoneNumbersJson,
@@ -632,13 +848,17 @@ export const createCatalogDatabase = (databasePath) => {
           catalog.settings.headerCaption || 'Məhsul kataloqu',
           catalog.settings.catalogHeading || 'Bütün məhsullar',
           catalog.settings.catalogSubheading || 'Modellərə və texniki xüsusiyyət sahələrinə baxın',
-          catalog.settings.heroBannerTitle && catalog.settings.heroBannerTitle !== 'İtalyan ARDO & Məişət Texnikası'
+          catalog.settings.heroBannerTitle &&
+            catalog.settings.heroBannerTitle !== 'İtalyan ARDO & Məişət Texnikası'
             ? catalog.settings.heroBannerTitle
             : 'Sahara Electronics — Məhsul Kataloqu',
-          catalog.settings.heroBannerSubtitle && catalog.settings.heroBannerSubtitle !== 'Eleqant dizayn və yüksək enerji səmərəliliyi ilə məişət texnikası modelləri'
+          catalog.settings.heroBannerSubtitle &&
+            catalog.settings.heroBannerSubtitle !==
+              'Eleqant dizayn və yüksək enerji səmərəliliyi ilə məişət texnikası modelləri'
             ? catalog.settings.heroBannerSubtitle
             : 'Məişət və mətbəx texnikası modelləri, texniki parametrlər və rəsmi məhsul seçimi.',
-          catalog.settings.footerAbout || 'Sahara Electronics ARDO, Lotus və Artel məhsullarının kataloqunu təqdim edir.',
+          catalog.settings.footerAbout ||
+            'Sahara Electronics ARDO, Lotus və Artel məhsullarının kataloqunu təqdim edir.',
           catalog.settings.footerCopyright || 'Bütün hüquqlar qorunur.',
           catalog.settings.primaryColor || '#dc2626',
           catalog.settings.fontFamily || 'Inter',
@@ -650,10 +870,21 @@ export const createCatalogDatabase = (databasePath) => {
           siteMaintenanceMsg,
           catalogActiveVal,
           maintenanceMsg,
+          catalog.settings.developerName || '',
+          catalog.settings.developerRole || 'Veb-tərtibatçı',
+          catalog.settings.developerPhone || '',
+          catalog.settings.developerInstagram || '',
+          catalog.settings.developerWebsite || '',
+          catalog.settings.aboutText || '',
+          catalog.settings.termsText || '',
+          catalog.settings.privacyText || '',
+          catalog.settings.supportText || '',
           now
         );
       }
-      db.prepare("INSERT INTO catalog_meta(key,value) VALUES('updated_at',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(now);
+      db.prepare(
+        "INSERT INTO catalog_meta(key,value) VALUES('updated_at',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value"
+      ).run(now);
       db.exec('COMMIT');
     } catch (error) {
       db.exec('ROLLBACK');
@@ -663,25 +894,55 @@ export const createCatalogDatabase = (databasePath) => {
 
   const publishAtomic = (catalog, draftDb) => {
     if (!isPhase3SchemaReady(db)) {
-      const err = new Error('PUBLIC_DB_SCHEMA_NOT_READY: İctimai verilənlər bazası Phase 3 sxemi üçün hazır deyil. Əvvəlcədən təsdiqlənmiş miqrasiya tələb olunur.');
+      const err = new Error(
+        'PUBLIC_DB_SCHEMA_NOT_READY: İctimai verilənlər bazası Phase 3 sxemi üçün hazır deyil. Əvvəlcədən təsdiqlənmiş miqrasiya tələb olunur.'
+      );
       err.code = 'PUBLIC_DB_SCHEMA_NOT_READY';
       throw err;
     }
     const now = catalog.updatedAt || new Date().toISOString();
-    const upsertBrand = db.prepare(`INSERT INTO brands(id,name,slug,origin_country,description,logo,coming_soon,active) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,slug=excluded.slug,origin_country=excluded.origin_country,description=excluded.description,logo=excluded.logo,coming_soon=excluded.coming_soon,active=excluded.active`);
-    const upsertCategory = db.prepare(`INSERT INTO categories(id,name,slug,icon,active,sort_order) VALUES(?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,slug=excluded.slug,icon=excluded.icon,active=excluded.active,sort_order=excluded.sort_order`);
-    const upsertProduct = db.prepare(`INSERT INTO products(id,code,title,brand_id,category_id,primary_image,is_featured,is_new,badge_text,badge_color,price,old_price,currency,stock_status,short_description,manufacturing_country,status,image_position,image_fit,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET code=excluded.code,title=excluded.title,brand_id=excluded.brand_id,category_id=excluded.category_id,primary_image=excluded.primary_image,is_featured=excluded.is_featured,is_new=excluded.is_new,badge_text=excluded.badge_text,badge_color=excluded.badge_color,price=excluded.price,old_price=excluded.old_price,currency=excluded.currency,stock_status=excluded.stock_status,short_description=excluded.short_description,manufacturing_country=excluded.manufacturing_country,status=excluded.status,image_position=excluded.image_position,image_fit=excluded.image_fit,updated_at=excluded.updated_at`);
+    const upsertBrand = db.prepare(
+      `INSERT INTO brands(id,name,slug,origin_country,description,logo,coming_soon,active) VALUES(?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,slug=excluded.slug,origin_country=excluded.origin_country,description=excluded.description,logo=excluded.logo,coming_soon=excluded.coming_soon,active=excluded.active`
+    );
+    const upsertCategory = db.prepare(
+      `INSERT INTO categories(id,name,slug,icon,active,sort_order) VALUES(?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET name=excluded.name,slug=excluded.slug,icon=excluded.icon,active=excluded.active,sort_order=excluded.sort_order`
+    );
+    const upsertProduct = db.prepare(
+      `INSERT INTO products(id,code,title,brand_id,category_id,primary_image,is_featured,is_new,badge_text,badge_color,price,old_price,currency,stock_status,short_description,description,manufacturing_country,status,image_position,image_fit,crop_rect,original_image,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(id) DO UPDATE SET code=excluded.code,title=excluded.title,brand_id=excluded.brand_id,category_id=excluded.category_id,primary_image=excluded.primary_image,is_featured=excluded.is_featured,is_new=excluded.is_new,badge_text=excluded.badge_text,badge_color=excluded.badge_color,price=excluded.price,old_price=excluded.old_price,currency=excluded.currency,stock_status=excluded.stock_status,short_description=excluded.short_description,description=excluded.description,manufacturing_country=excluded.manufacturing_country,status=excluded.status,image_position=excluded.image_position,image_fit=excluded.image_fit,crop_rect=excluded.crop_rect,original_image=excluded.original_image,updated_at=excluded.updated_at`
+    );
 
     db.exec('BEGIN IMMEDIATE');
     try {
       for (const brand of catalog.brands || []) {
-        upsertBrand.run(brand.id, brand.name, brand.slug, brand.originCountry || '', brand.description || '', brand.logo || '', bool(brand.comingSoon), bool(brand.active));
+        upsertBrand.run(
+          brand.id,
+          brand.name,
+          brand.slug,
+          brand.originCountry || '',
+          brand.description || '',
+          brand.logo || '',
+          bool(brand.comingSoon),
+          bool(brand.active)
+        );
         db.prepare('DELETE FROM brand_manufacturing_countries WHERE brand_id = ?').run(brand.id);
-        (brand.manufacturingCountries || []).forEach((country, index) => db.prepare('INSERT INTO brand_manufacturing_countries(brand_id,country,sort_order) VALUES(?,?,?)').run(brand.id, country, index));
+        (brand.manufacturingCountries || []).forEach((country, index) =>
+          db
+            .prepare(
+              'INSERT INTO brand_manufacturing_countries(brand_id,country,sort_order) VALUES(?,?,?)'
+            )
+            .run(brand.id, country, index)
+        );
       }
 
       for (const category of catalog.categories || []) {
-        upsertCategory.run(category.id, category.name, category.slug, category.icon || '', bool(category.active), category.sortOrder || 0);
+        upsertCategory.run(
+          category.id,
+          category.name,
+          category.slug,
+          category.icon || '',
+          bool(category.active),
+          category.sortOrder || 0
+        );
       }
 
       for (const product of catalog.products || []) {
@@ -702,10 +963,13 @@ export const createCatalogDatabase = (databasePath) => {
           product.currency || '₼',
           product.stockStatus || 'in_stock',
           product.shortDesc || '',
+          product.description || '',
           product.manufacturingCountry || '',
           product.status === 'published' ? 'published' : 'draft',
           product.imagePosition || 'center',
           product.imageFit || 'contain',
+          product.cropRect ? JSON.stringify(product.cropRect) : null,
+          product.originalImage || null,
           createdAt,
           now
         );
@@ -717,7 +981,7 @@ export const createCatalogDatabase = (databasePath) => {
         (product.media || []).forEach((item, index) =>
           db
             .prepare(
-              'INSERT INTO product_media(id,product_id,media_type,url,alt_text,original_name,poster,object_position,fit_mode,sort_order) VALUES(?,?,?,?,?,?,?,?,?,?)'
+              'INSERT INTO product_media(id,product_id,media_type,url,alt_text,original_name,poster,object_position,fit_mode,crop_rect,original_url,sort_order) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)'
             )
             .run(
               item.id,
@@ -729,33 +993,75 @@ export const createCatalogDatabase = (databasePath) => {
               item.poster || '',
               item.objectPosition || 'center',
               item.fitMode || 'contain',
+              item.cropRect ? JSON.stringify(item.cropRect) : null,
+              item.originalUrl || null,
               index
             )
         );
-        (product.highlights || []).forEach((value, index) => db.prepare('INSERT INTO product_highlights(product_id,value,sort_order) VALUES(?,?,?)').run(product.id, value, index));
-        (product.specs || []).forEach((item, index) => db.prepare('INSERT INTO product_specs(id,product_id,name,value,description,icon,spec_group,sort_order) VALUES(?,?,?,?,?,?,?,?)').run(item.id, product.id, item.name, item.value || '', item.description || '', item.icon || '', item.group || 'Əsas', index));
+        (product.highlights || []).forEach((value, index) =>
+          db
+            .prepare('INSERT INTO product_highlights(product_id,value,sort_order) VALUES(?,?,?)')
+            .run(product.id, value, index)
+        );
+        (product.specs || []).forEach((item, index) =>
+          db
+            .prepare(
+              'INSERT INTO product_specs(id,product_id,name,value,description,icon,spec_group,sort_order) VALUES(?,?,?,?,?,?,?,?)'
+            )
+            .run(
+              item.id,
+              product.id,
+              item.name,
+              item.value || '',
+              item.description || '',
+              item.icon || '',
+              item.group || 'Əsas',
+              index
+            )
+        );
       }
 
       const productIds = (catalog.products || []).map((item) => item.id);
       const categoryIds = (catalog.categories || []).map((item) => item.id);
       const brandIds = (catalog.brands || []).map((item) => item.id);
 
-      if (productIds.length) db.prepare(`DELETE FROM products WHERE id NOT IN (${placeholders(productIds)})`).run(...productIds);
+      if (productIds.length)
+        db.prepare(`DELETE FROM products WHERE id NOT IN (${placeholders(productIds)})`).run(
+          ...productIds
+        );
       else db.exec('DELETE FROM products');
 
-      if (categoryIds.length) db.prepare(`DELETE FROM categories WHERE id NOT IN (${placeholders(categoryIds)})`).run(...categoryIds);
+      if (categoryIds.length)
+        db.prepare(`DELETE FROM categories WHERE id NOT IN (${placeholders(categoryIds)})`).run(
+          ...categoryIds
+        );
       else db.exec('DELETE FROM categories');
 
-      if (brandIds.length) db.prepare(`DELETE FROM brands WHERE id NOT IN (${placeholders(brandIds)})`).run(...brandIds);
+      if (brandIds.length)
+        db.prepare(`DELETE FROM brands WHERE id NOT IN (${placeholders(brandIds)})`).run(
+          ...brandIds
+        );
       else db.exec('DELETE FROM brands');
 
       if (catalog.settings) {
-        const countriesJson = JSON.stringify(catalog.settings.countries || catalog.countries || defaultCountriesList);
-        const phoneNumbersJson = JSON.stringify(catalog.settings.phoneNumbers || (catalog.settings.phoneNumber ? [catalog.settings.phoneNumber] : []));
-        const primaryAddress = catalog.settings.address || (catalog.settings.addresses && catalog.settings.addresses[0]?.address) || '';
+        const countriesJson = JSON.stringify(
+          catalog.settings.countries || catalog.countries || defaultCountriesList
+        );
+        const phoneNumbersJson = JSON.stringify(
+          catalog.settings.phoneNumbers ||
+            (catalog.settings.phoneNumber ? [catalog.settings.phoneNumber] : [])
+        );
+        const primaryAddress =
+          catalog.settings.address ||
+          (catalog.settings.addresses && catalog.settings.addresses[0]?.address) ||
+          '';
         let addressesToSave = catalog.settings.addresses;
         if (Array.isArray(addressesToSave) && addressesToSave.length) {
-          if (catalog.settings.address && addressesToSave.length === 1 && addressesToSave[0].address !== catalog.settings.address) {
+          if (
+            catalog.settings.address &&
+            addressesToSave.length === 1 &&
+            addressesToSave[0].address !== catalog.settings.address
+          ) {
             addressesToSave = [{ ...addressesToSave[0], address: catalog.settings.address }];
           }
         } else if (catalog.settings.address) {
@@ -774,17 +1080,28 @@ export const createCatalogDatabase = (databasePath) => {
         }
         const addressesJson = JSON.stringify(addressesToSave);
         const articlesJson = JSON.stringify(catalog.articles || defaultArticlesList);
-        const primaryPhone = catalog.settings.phoneNumber || (catalog.settings.phoneNumbers && catalog.settings.phoneNumbers[0]) || '';
-        const siteActiveVal = catalog.settings.siteActive !== undefined ? bool(catalog.settings.siteActive) : 1;
-        const siteMaintenanceMsg = catalog.settings.siteMaintenanceMessage || 'Saytda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';
-        const catalogActiveVal = catalog.settings.catalogActive !== undefined ? bool(catalog.settings.catalogActive) : 1;
-        const maintenanceMsg = catalog.settings.maintenanceMessage || 'Kataloqda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';
+        const primaryPhone =
+          catalog.settings.phoneNumber ||
+          (catalog.settings.phoneNumbers && catalog.settings.phoneNumbers[0]) ||
+          '';
+        const siteActiveVal =
+          catalog.settings.siteActive !== undefined ? bool(catalog.settings.siteActive) : 1;
+        const siteMaintenanceMsg =
+          catalog.settings.siteMaintenanceMessage ||
+          'Saytda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';
+        const catalogActiveVal =
+          catalog.settings.catalogActive !== undefined ? bool(catalog.settings.catalogActive) : 1;
+        const maintenanceMsg =
+          catalog.settings.maintenanceMessage ||
+          'Kataloqda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';
 
-        db.prepare(`
+        db.prepare(
+          `
           UPDATE catalog_settings
           SET whatsapp_number = ?, phone_number = ?, phone_numbers = ?, company_name = ?, address = ?, addresses = ?, email = ?, working_hours = ?, map_url = ?, location_note = ?, countries = ?, instagram_username = ?, instagram_url = ?, facebook_username = ?, facebook_url = ?, articles = ?, site_title = ?, site_subtitle = ?, header_caption = ?, catalog_heading = ?, catalog_subheading = ?, hero_banner_title = ?, hero_banner_subtitle = ?, footer_about = ?, footer_copyright = ?, primary_color = ?, font_family = ?, whatsapp_button_text = ?, call_button_text = ?, share_button_text = ?, scroll_top_button_text = ?, site_active = ?, site_maintenance_message = ?, catalog_active = ?, maintenance_message = ?, updated_at = ?
           WHERE id = 1
-        `).run(
+        `
+        ).run(
           catalog.settings.whatsappNumber || '',
           primaryPhone,
           phoneNumbersJson,
@@ -806,13 +1123,17 @@ export const createCatalogDatabase = (databasePath) => {
           catalog.settings.headerCaption || 'Məhsul kataloqu',
           catalog.settings.catalogHeading || 'Bütün məhsullar',
           catalog.settings.catalogSubheading || 'Modellərə və texniki xüsusiyyət sahələrinə baxın',
-          catalog.settings.heroBannerTitle && catalog.settings.heroBannerTitle !== 'İtalyan ARDO & Məişət Texnikası'
+          catalog.settings.heroBannerTitle &&
+            catalog.settings.heroBannerTitle !== 'İtalyan ARDO & Məişət Texnikası'
             ? catalog.settings.heroBannerTitle
             : 'Sahara Electronics — Məhsul Kataloqu',
-          catalog.settings.heroBannerSubtitle && catalog.settings.heroBannerSubtitle !== 'Eleqant dizayn və yüksək enerji səmərəliliyi ilə məişət texnikası modelləri'
+          catalog.settings.heroBannerSubtitle &&
+            catalog.settings.heroBannerSubtitle !==
+              'Eleqant dizayn və yüksək enerji səmərəliliyi ilə məişət texnikası modelləri'
             ? catalog.settings.heroBannerSubtitle
             : 'Məişət və mətbəx texnikası modelləri, texniki parametrlər və rəsmi məhsul seçimi.',
-          catalog.settings.footerAbout || 'Sahara Electronics ARDO, Lotus və Artel məhsullarının kataloqunu təqdim edir.',
+          catalog.settings.footerAbout ||
+            'Sahara Electronics ARDO, Lotus və Artel məhsullarının kataloqunu təqdim edir.',
           catalog.settings.footerCopyright || 'Bütün hüquqlar qorunur.',
           catalog.settings.primaryColor || '#dc2626',
           catalog.settings.fontFamily || 'Inter',
@@ -827,7 +1148,9 @@ export const createCatalogDatabase = (databasePath) => {
           now
         );
       }
-      db.prepare("INSERT INTO catalog_meta(key,value) VALUES('updated_at',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value").run(now);
+      db.prepare(
+        "INSERT INTO catalog_meta(key,value) VALUES('updated_at',?) ON CONFLICT(key) DO UPDATE SET value=excluded.value"
+      ).run(now);
 
       // Promote Phase 3 data in the SAME atomic transaction
       if (draftDb) {
@@ -840,7 +1163,8 @@ export const createCatalogDatabase = (databasePath) => {
         const s = draftRail.getSettings();
         const items = draftRail.getItems(true);
         if (s) {
-          db.prepare(`
+          db.prepare(
+            `
             INSERT INTO brand_rail_settings (
               id, enabled, title, animation_enabled, speed_seconds, direction, pause_on_hover, edge_fade, card_size, section_order, theme_variant, version, created_at, updated_at
             ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -857,7 +1181,8 @@ export const createCatalogDatabase = (databasePath) => {
               theme_variant = excluded.theme_variant,
               version = excluded.version,
               updated_at = excluded.updated_at
-          `).run(
+          `
+          ).run(
             s.id,
             s.enabled ? 1 : 0,
             s.title,
@@ -901,7 +1226,15 @@ export const createCatalogDatabase = (databasePath) => {
     }
   };
 
-  const logAction = ({ category, action, title, details = '', ipAddress = '', userAgent = '', status = 'info' }) => {
+  const logAction = ({
+    category,
+    action,
+    title,
+    details = '',
+    ipAddress = '',
+    userAgent = '',
+    status = 'info',
+  }) => {
     try {
       const stmt = db.prepare(`
         INSERT INTO audit_logs(category, action, title, details, ip_address, user_agent, status, created_at)
@@ -982,9 +1315,11 @@ export const createCatalogDatabase = (databasePath) => {
     } else if (range === 'yesterday') {
       dateFilter = "date(created_at, 'localtime') = date('now', 'localtime', '-1 day')";
     } else if (range === 'this_week') {
-      dateFilter = "date(created_at, 'localtime') >= date('now', 'localtime', 'weekday 0', '-6 days')";
+      dateFilter =
+        "date(created_at, 'localtime') >= date('now', 'localtime', 'weekday 0', '-6 days')";
     } else if (range === 'this_month') {
-      dateFilter = "strftime('%Y-%m', created_at, 'localtime') = strftime('%Y-%m', 'now', 'localtime')";
+      dateFilter =
+        "strftime('%Y-%m', created_at, 'localtime') = strftime('%Y-%m', 'now', 'localtime')";
     } else if (range === 'last_30_days') {
       dateFilter = "date(created_at, 'localtime') >= date('now', 'localtime', '-30 days')";
     } else if (range === 'custom' && fromDate) {
@@ -1022,13 +1357,16 @@ export const createCatalogDatabase = (databasePath) => {
           if (!contactActionsByProduct[row.product_id]) {
             contactActionsByProduct[row.product_id] = { whatsapp: 0, call: 0 };
           }
-          contactActionsByProduct[row.product_id][action] = (contactActionsByProduct[row.product_id][action] || 0) + row.count;
+          contactActionsByProduct[row.product_id][action] =
+            (contactActionsByProduct[row.product_id][action] || 0) + row.count;
         }
       }
     }
 
     if (range === 'all') {
-      const general = db.prepare('SELECT catalog_views, last_viewed_at FROM catalog_analytics WHERE id = 1').get();
+      const general = db
+        .prepare('SELECT catalog_views, last_viewed_at FROM catalog_analytics WHERE id = 1')
+        .get();
       if (general && general.catalog_views > catalogViews) {
         catalogViews = general.catalog_views;
       }
@@ -1060,14 +1398,22 @@ export const createCatalogDatabase = (databasePath) => {
     db.exec('BEGIN IMMEDIATE');
     try {
       if (type === 'catalog_view') {
-        db.prepare('UPDATE catalog_analytics SET catalog_views = catalog_views + 1, last_viewed_at = ? WHERE id = 1').run(now);
+        db.prepare(
+          'UPDATE catalog_analytics SET catalog_views = catalog_views + 1, last_viewed_at = ? WHERE id = 1'
+        ).run(now);
       } else if (type === 'product_view' && productId) {
-        db.prepare(`INSERT INTO product_view_stats(product_id, view_count, last_viewed_at) VALUES(?, 1, ?) ON CONFLICT(product_id) DO UPDATE SET view_count = view_count + 1, last_viewed_at = excluded.last_viewed_at`).run(productId, now);
+        db.prepare(
+          `INSERT INTO product_view_stats(product_id, view_count, last_viewed_at) VALUES(?, 1, ?) ON CONFLICT(product_id) DO UPDATE SET view_count = view_count + 1, last_viewed_at = excluded.last_viewed_at`
+        ).run(productId, now);
       } else if ((type === 'contact_whatsapp' || type === 'contact_call') && productId) {
         const action = type === 'contact_whatsapp' ? 'whatsapp' : 'call';
-        db.prepare(`INSERT INTO contact_action_stats(action_type, product_id, click_count, last_clicked_at) VALUES(?, ?, 1, ?) ON CONFLICT(action_type, product_id) DO UPDATE SET click_count = click_count + 1, last_clicked_at = excluded.last_clicked_at`).run(action, productId, now);
+        db.prepare(
+          `INSERT INTO contact_action_stats(action_type, product_id, click_count, last_clicked_at) VALUES(?, ?, 1, ?) ON CONFLICT(action_type, product_id) DO UPDATE SET click_count = click_count + 1, last_clicked_at = excluded.last_clicked_at`
+        ).run(action, productId, now);
       }
-      db.prepare('INSERT INTO analytics_events(event_type, product_id, created_at) VALUES(?, ?, ?)').run(type, productId || '', now);
+      db.prepare(
+        'INSERT INTO analytics_events(event_type, product_id, created_at) VALUES(?, ?, ?)'
+      ).run(type, productId || '', now);
       db.exec('COMMIT');
     } catch (error) {
       db.exec('ROLLBACK');
@@ -1101,17 +1447,23 @@ export const createCatalogDatabase = (databasePath) => {
     db.exec('BEGIN IMMEDIATE');
     try {
       if (typeof data.catalogViews === 'number') {
-        db.prepare('UPDATE catalog_analytics SET catalog_views = ?, last_viewed_at = ? WHERE id = 1').run(data.catalogViews, data.lastViewedAt || null);
+        db.prepare(
+          'UPDATE catalog_analytics SET catalog_views = ?, last_viewed_at = ? WHERE id = 1'
+        ).run(data.catalogViews, data.lastViewedAt || null);
       }
       if (data.productViews && typeof data.productViews === 'object') {
         for (const [pId, count] of Object.entries(data.productViews)) {
-          db.prepare('INSERT INTO product_view_stats(product_id, view_count) VALUES(?, ?) ON CONFLICT(product_id) DO UPDATE SET view_count = ?').run(pId, count, count);
+          db.prepare(
+            'INSERT INTO product_view_stats(product_id, view_count) VALUES(?, ?) ON CONFLICT(product_id) DO UPDATE SET view_count = ?'
+          ).run(pId, count, count);
         }
       }
       if (data.contactActions && typeof data.contactActions === 'object') {
         for (const [action, count] of Object.entries(data.contactActions)) {
           if (['whatsapp', 'call'].includes(action)) {
-            db.prepare('INSERT INTO contact_action_stats(action_type, product_id, click_count) VALUES(?, ?, ?) ON CONFLICT(action_type, product_id) DO UPDATE SET click_count = ?').run(action, 'global', count, count);
+            db.prepare(
+              'INSERT INTO contact_action_stats(action_type, product_id, click_count) VALUES(?, ?, ?) ON CONFLICT(action_type, product_id) DO UPDATE SET click_count = ?'
+            ).run(action, 'global', count, count);
           }
         }
       }
@@ -1122,21 +1474,32 @@ export const createCatalogDatabase = (databasePath) => {
     }
   };
 
-  const createSnapshot = ({ name = 'Avtomatik Nüsxə', createdBy = 'admin', catalogData = null } = {}) => {
+  const createSnapshot = ({
+    name = 'Avtomatik Nüsxə',
+    createdBy = 'admin',
+    catalogData = null,
+  } = {}) => {
     const data = catalogData || getCatalog();
     const id = `snap-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
     const json = JSON.stringify(data);
     const productCount = data.products?.length || 0;
-    db.prepare('INSERT INTO catalog_snapshots(id, name, catalog_json, product_count, created_by, created_at) VALUES (?, ?, ?, ?, ?, datetime(\'now\'))')
-      .run(id, name, json, productCount, createdBy);
-    
+    db.prepare(
+      "INSERT INTO catalog_snapshots(id, name, catalog_json, product_count, created_by, created_at) VALUES (?, ?, ?, ?, ?, datetime('now'))"
+    ).run(id, name, json, productCount, createdBy);
+
     // Prune very old auto-snapshots, keeping last 50
-    db.exec(`DELETE FROM catalog_snapshots WHERE id NOT IN (SELECT id FROM catalog_snapshots ORDER BY created_at DESC LIMIT 50)`);
+    db.exec(
+      `DELETE FROM catalog_snapshots WHERE id NOT IN (SELECT id FROM catalog_snapshots ORDER BY created_at DESC LIMIT 50)`
+    );
     return { id, name, productCount, createdAt: new Date().toISOString() };
   };
 
   const getSnapshots = ({ limit = 50, offset = 0 } = {}) => {
-    const rows = db.prepare('SELECT id, name, product_count, created_by, created_at FROM catalog_snapshots ORDER BY created_at DESC LIMIT ? OFFSET ?').all(limit, offset);
+    const rows = db
+      .prepare(
+        'SELECT id, name, product_count, created_by, created_at FROM catalog_snapshots ORDER BY created_at DESC LIMIT ? OFFSET ?'
+      )
+      .all(limit, offset);
     const total = db.prepare('SELECT COUNT(*) as count FROM catalog_snapshots').get().count;
     return {
       snapshots: rows.map((r) => ({
@@ -1177,7 +1540,10 @@ export const createCatalogDatabase = (databasePath) => {
   };
 
   const tableNames = () => {
-    return db.prepare("SELECT name FROM sqlite_master WHERE type='table'").all().map((r) => r.name);
+    return db
+      .prepare("SELECT name FROM sqlite_master WHERE type='table'")
+      .all()
+      .map((r) => r.name);
   };
 
   const checkpoint = () => {
@@ -1207,25 +1573,27 @@ export const createCatalogDatabase = (databasePath) => {
 
   const updateCatalogStatus = (active, message) => {
     const isAct = active ? 1 : 0;
-    const msg =
-      message || 'Kataloqda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';
-    db.prepare(`
+    const msg = message || 'Kataloqda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';
+    db.prepare(
+      `
       UPDATE catalog_settings
       SET catalog_active = ?, maintenance_message = ?, updated_at = datetime('now')
       WHERE id = 1
-    `).run(isAct, msg);
+    `
+    ).run(isAct, msg);
     return { active: Boolean(isAct), message: msg };
   };
 
   const updateSiteStatus = (active, message) => {
     const isAct = active ? 1 : 0;
-    const msg =
-      message || 'Saytda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';
-    db.prepare(`
+    const msg = message || 'Saytda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.';
+    db.prepare(
+      `
       UPDATE catalog_settings
       SET site_active = ?, site_maintenance_message = ?, updated_at = datetime('now')
       WHERE id = 1
-    `).run(isAct, msg);
+    `
+    ).run(isAct, msg);
     return { active: Boolean(isAct), message: msg };
   };
 
@@ -1267,18 +1635,18 @@ export const createCatalogDatabase = (databasePath) => {
   };
 };
 
-/**
- * Creates an atomic, online consistent snapshot of an existing SQLite database using VACUUM INTO.
- * Fails closed with an explicit error if VACUUM INTO fails.
- */
 export function createConsistentDatabaseSnapshot(sourceDbPath, destinationDbPath) {
   const sourceDb = new DatabaseSync(sourceDbPath, { readOnly: true });
   try {
     const escaped = destinationDbPath.replace(/'/g, "''");
     sourceDb.exec(`VACUUM INTO '${escaped}';`);
   } catch (err) {
-    throw new Error(`Failed to create consistent database snapshot from '${sourceDbPath}' to '${destinationDbPath}': ${err.message}`);
+    throw new Error(
+      `Failed to create consistent database snapshot from '${sourceDbPath}' to '${destinationDbPath}': ${err.message}`
+    );
   } finally {
-    sourceDb.close();
+    try {
+      sourceDb.close();
+    } catch {}
   }
 }

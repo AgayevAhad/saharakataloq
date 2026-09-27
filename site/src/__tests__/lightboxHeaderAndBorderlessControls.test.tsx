@@ -2,20 +2,17 @@ import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { render, screen, fireEvent, cleanup } from '@testing-library/react';
 import { ProductDetailModal } from '../components/ProductDetailModal';
-import { ThemeColors } from '../types/theme';
+import {
+  ThemeColors,
+  darkTheme as baseDarkTheme,
+  lightTheme as baseLightTheme,
+} from '../types/theme';
 import { Product } from '../types/product';
 
 const lightTheme: ThemeColors = {
-  mode: 'light',
+  ...baseLightTheme,
   primary: '#dc2626',
   primaryHover: '#b91c1c',
-  bg: '#ffffff',
-  bgSecondary: '#f8fafc',
-  bgCard: '#ffffff',
-  text: '#0f172a',
-  textSecondary: '#475569',
-  textMuted: '#94a3b8',
-  border: '#e2e8f0',
 };
 
 const mockProduct: Product = {
@@ -31,8 +28,9 @@ const mockProduct: Product = {
     '/media/products/ardo/aspirator/ardo-ar6120-white.jpg',
     '/media/products/ardo/aspirator/ardo-ar6120-white-2.jpg',
   ],
-  specs: [{ group: 'Əsas', name: 'Rəng', value: 'Ağ' }],
-  inStock: true,
+  shortDesc: '',
+  specs: [{ id: 'spec-color', group: 'Əsas', name: 'Rəng', value: 'Ağ' }],
+  highlights: [],
 };
 
 describe('ProductDetailModal Lightbox White Background & Integrated Top Header Controls', () => {
@@ -110,7 +108,8 @@ describe('ProductDetailModal Lightbox White Background & Integrated Top Header C
     fireEvent.click(stage);
 
     // Lightbox container should have white background (#ffffff) in light theme
-    const lightboxModal = document.querySelector('.zoom-pan-container')?.parentElement as HTMLDivElement;
+    const lightboxModal = document.querySelector('.zoom-pan-container')
+      ?.parentElement as HTMLDivElement;
     expect(lightboxModal).toBeTruthy();
     expect(['#ffffff', 'rgb(255, 255, 255)']).toContain(lightboxModal.style.backgroundColor);
 
@@ -170,7 +169,7 @@ describe('ProductDetailModal Lightbox White Background & Integrated Top Header C
         allProducts={[mockProduct]}
         categories={[]}
         brands={[]}
-        settings={{}}
+        settings={{ whatsappNumber: '', phoneNumber: '' }}
         theme={lightTheme}
         themeMode="light"
         onNavigate={vi.fn()}
@@ -212,16 +211,9 @@ describe('ProductDetailModal Lightbox White Background & Integrated Top Header C
 
   it('renders fullscreen lightbox in dark mode with white background surround and light aesthetics', () => {
     const darkTheme: ThemeColors = {
-      mode: 'dark',
+      ...baseDarkTheme,
       primary: '#dc2626',
       primaryHover: '#b91c1c',
-      bg: '#0f172a',
-      bgSecondary: '#1e293b',
-      bgCard: '#1e293b',
-      text: '#f8fafc',
-      textSecondary: '#94a3b8',
-      textMuted: '#64748b',
-      border: '#334155',
     };
 
     render(
@@ -244,7 +236,8 @@ describe('ProductDetailModal Lightbox White Background & Integrated Top Header C
     // Open fullscreen lightbox
     fireEvent.click(stage);
 
-    const lightboxModal = document.querySelector('.zoom-pan-container')?.parentElement as HTMLDivElement;
+    const lightboxModal = document.querySelector('.zoom-pan-container')
+      ?.parentElement as HTMLDivElement;
     expect(lightboxModal).toBeTruthy();
     expect(['#ffffff', 'rgb(255, 255, 255)']).toContain(lightboxModal.style.backgroundColor);
 

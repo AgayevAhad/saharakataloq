@@ -7,7 +7,12 @@ export default defineConfig(({ isSsrBuild }) => ({
   resolve: {
     extensions: ['.tsx', '.ts', '.jsx', '.js'],
   },
+  esbuild: {
+    drop: ['debugger'],
+    pure: ['console.log', 'console.warn', 'console.debug', 'console.info'],
+  },
   build: {
+    sourcemap: false,
     rollupOptions: {
       output: isSsrBuild
         ? {}

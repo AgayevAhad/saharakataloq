@@ -1,3 +1,4 @@
+// @vitest-environment happy-dom
 import React from 'react';
 import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
@@ -9,7 +10,9 @@ vi.mock('../services/catalogApi', () => ({
     getAdminSessionStatus: vi.fn().mockResolvedValue({ authenticated: false }),
     getAdminData: vi.fn().mockResolvedValue(null),
     getCatalog: vi.fn().mockResolvedValue({
-      categories: [{ id: 'refrigerators', name: 'Soyuducular', slug: 'soyuducular', icon: 'Refrigerator' }],
+      categories: [
+        { id: 'refrigerators', name: 'Soyuducular', slug: 'soyuducular', icon: 'Refrigerator' },
+      ],
       brands: [{ id: 'ardo', name: 'ARDO', slug: 'ardo', active: true }],
       products: [
         {
@@ -40,7 +43,9 @@ describe('CatalogApp Component Integration', () => {
   it('renders normal catalog storefront when catalogActive is true', async () => {
     const initialData = {
       catalog: {
-        categories: [{ id: 'refrigerators', name: 'Soyuducular', slug: 'soyuducular', icon: 'Refrigerator' }],
+        categories: [
+          { id: 'refrigerators', name: 'Soyuducular', slug: 'soyuducular', icon: 'Refrigerator' },
+        ],
         brands: [{ id: 'ardo', name: 'ARDO', slug: 'ardo', active: true }],
         products: [
           {

@@ -10,7 +10,9 @@ const getCategoryIcon = (id: string, slug?: string) => {
   return <CategoryGlyph id={id} slug={slug} compact />;
 };
 
-const getBrandLogoStyle = (brandSlugOrId: string): { maxWidth: string; maxHeight: string; scale?: string } => {
+const getBrandLogoStyle = (
+  brandSlugOrId: string
+): { maxWidth: string; maxHeight: string; scale?: string } => {
   const key = (brandSlugOrId || '').toLowerCase();
   if (key.includes('ardo')) return { maxWidth: '115px', maxHeight: '32px', scale: '1.1' };
   if (key.includes('lotus')) return { maxWidth: '96px', maxHeight: '23px', scale: '1.0' };
@@ -384,7 +386,6 @@ export const MegaMenu: React.FC<MegaMenuProps> = ({
                 </button>
               );
             })}
-
           </div>
 
           {/* Center Column: Kateqoriyalar (Categories Grid) */}

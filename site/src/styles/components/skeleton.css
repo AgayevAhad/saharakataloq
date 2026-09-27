@@ -166,7 +166,6 @@
   will-change: opacity, transform;
 }
 
-
 /* Featured Curated Tabs */
 .featured-curated-tabs {
   display: flex;
@@ -188,7 +187,10 @@
   border: none;
   padding: 6px 12px 8px;
   border-radius: 8px;
-  font-family: 'Outfit', -apple-system, sans-serif;
+  font-family:
+    'Outfit',
+    -apple-system,
+    sans-serif;
   font-size: clamp(14px, 1.4vw, 16px);
   font-weight: 700;
   color: #64748b;
@@ -367,4 +369,3 @@
 .product-card.mobile-focused .product-card-img-inner {
   transform: scale(1.08) !important;
 }
-

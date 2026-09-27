@@ -10,7 +10,7 @@ import {
   Phone,
   ArrowLeft,
 } from 'lucide-react';
-import { Product, CatalogSettings } from '../types/product';
+import { Product, CatalogSettings, Brand } from '../types/product';
 import { ThemeColors } from '../types/theme';
 import { ShimmerImage } from '../components/ShimmerImage';
 import { WhatsAppIcon } from '../components/WhatsAppIcon';
@@ -24,6 +24,7 @@ export interface CartItem {
 export interface CartPageProps {
   cartItems: CartItem[];
   allProducts: Product[];
+  brands?: Brand[];
   settings?: CatalogSettings;
   theme: ThemeColors;
   themeMode: 'light' | 'dark';
@@ -34,13 +35,19 @@ export interface CartPageProps {
   onSelectProduct: (product: Product) => void;
   onWhatsAppCheckout: (cartItems: CartItem[], total: number, promoCode?: string) => void;
   onCall: (phone?: string) => void;
+  onToggleCompare?: (product: Product) => void;
+  comparisonIds?: string[];
+  onAddToCart?: (product: Product) => void;
+  onToggleFavorite?: (product: Product) => void;
+  favoriteIds?: string[];
 }
 
 export const CartPage: React.FC<CartPageProps> = ({
   cartItems,
   allProducts,
+  brands,
   theme,
-  themeMode,
+  themeMode = 'light',
   onUpdateQuantity,
   onRemoveItem,
   onClearCart,
@@ -48,6 +55,11 @@ export const CartPage: React.FC<CartPageProps> = ({
   onSelectProduct,
   onWhatsAppCheckout,
   onCall,
+  onToggleCompare: _onToggleCompare,
+  comparisonIds: _comparisonIds = [],
+  onAddToCart,
+  onToggleFavorite,
+  favoriteIds = [],
 }) => {
   // Subtotal calculation
   const subtotal = useMemo(() => {
@@ -82,23 +94,32 @@ export const CartPage: React.FC<CartPageProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
           <button
             type="button"
+            className="cart-back-btn"
             onClick={() => onNavigate('catalog')}
             style={{
               background: 'transparent',
-              border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`,
-              borderRadius: '10px',
-              padding: '8px 14px',
+              border: 'none',
+              borderRadius: '0',
+              padding: '6px 0',
               color: theme.text,
-              fontSize: '13px',
-              fontWeight: 600,
+              fontSize: '13.5px',
+              fontWeight: 650,
               cursor: 'pointer',
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
-              backgroundColor: themeMode === 'dark' ? '#1e293b' : '#ffffff',
+              transition: 'color 0.18s ease, transform 0.18s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = theme.primary;
+              e.currentTarget.style.transform = 'translateX(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = theme.text;
+              e.currentTarget.style.transform = 'translateX(0)';
             }}
           >
-            <ArrowLeft size={15} />
+            <ArrowLeft size={16} />
             <span>Kataloqa qayıt</span>
           </button>
         </div>
@@ -307,6 +328,10 @@ export const CartPage: React.FC<CartPageProps> = ({
                         <ShimmerImage
                           src={coverImage}
                           alt={product.title}
+                          cropRect={product.cropRect || product.media?.[0]?.cropRect}
+                          objectPosition={
+                            product.imagePosition || product.media?.[0]?.objectPosition || 'center'
+                          }
                           containerStyle={{ width: '100%', height: '100%' }}
                           style={{ objectFit: 'contain' }}
                           spinnerSize={14}
@@ -737,20 +762,31 @@ export const CartPage: React.FC<CartPageProps> = ({
             </div>
 
             <div className="product-grid-container">
-              {recommendedProducts.map((prod) => (
-                <ProductCard
-                  key={prod.id}
-                  product={prod}
-                  theme={theme}
-                  onSelect={onSelectProduct}
-                  onShare={() => {}}
-                  onWhatsApp={() =>
-                    onWhatsAppCheckout([{ product: prod, quantity: 1 }], prod.price || 0)
-                  }
-                  onCall={() => onCall()}
-                  onCopyLink={() => {}}
-                />
-              ))}
+              {recommendedProducts.map((prod) => {
+                const prodBrand = brands?.find(
+                  (b) => b.id.toLowerCase() === (prod.brandId || '').toLowerCase()
+                );
+                return (
+                  <ProductCard
+                    key={prod.id}
+                    product={prod}
+                    theme={theme}
+                    brand={prodBrand}
+                    brandName={prodBrand?.name || prod.brandName}
+                    brandOrigin={prodBrand?.originCountry}
+                    onSelect={onSelectProduct}
+                    onAddToCart={onAddToCart}
+                    onToggleFavorite={onToggleFavorite}
+                    isFavorite={favoriteIds.includes(prod.id)}
+                    onShare={() => {}}
+                    onWhatsApp={() =>
+                      onWhatsAppCheckout([{ product: prod, quantity: 1 }], prod.price || 0)
+                    }
+                    onCall={() => onCall()}
+                    onCopyLink={() => {}}
+                  />
+                );
+              })}
             </div>
           </div>
         )}

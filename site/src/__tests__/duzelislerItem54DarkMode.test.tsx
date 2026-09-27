@@ -35,13 +35,9 @@ describe('Item 54 Dark Mode Refinements & Contrast Verification', () => {
   describe('TrustHighlights Button Semantics & Dark Mode Contrast', () => {
     it('renders Peşəkar dəstək and other trust items with interactive button semantics in dark mode', () => {
       const onNavigate = vi.fn();
-      const { container } = render(
-        <TrustHighlights theme={darkTheme} onNavigate={onNavigate} />
-      );
+      const { container } = render(<TrustHighlights theme={darkTheme} onNavigate={onNavigate} />);
 
-      const supportBtn = container.querySelector(
-        '.trust-btn-trust-support'
-      ) as HTMLElement;
+      const supportBtn = container.querySelector('.trust-btn-trust-support') as HTMLElement;
       expect(supportBtn).toBeDefined();
       expect(supportBtn.getAttribute('role')).toBe('button');
       expect(supportBtn.getAttribute('tabindex')).toBe('0');
@@ -52,9 +48,7 @@ describe('Item 54 Dark Mode Refinements & Contrast Verification', () => {
       expect(onNavigate).toHaveBeenCalledWith('support');
 
       // Verify keyboard Enter navigates
-      const warrantyBtn = container.querySelector(
-        '.trust-btn-trust-warranty'
-      ) as HTMLElement;
+      const warrantyBtn = container.querySelector('.trust-btn-trust-warranty') as HTMLElement;
       fireEvent.keyDown(warrantyBtn, { key: 'Enter' });
       expect(onNavigate).toHaveBeenCalledWith('warranty');
 
@@ -65,13 +59,9 @@ describe('Item 54 Dark Mode Refinements & Contrast Verification', () => {
 
     it('renders trust items in light mode correctly', () => {
       const onNavigate = vi.fn();
-      const { container } = render(
-        <TrustHighlights theme={lightTheme} onNavigate={onNavigate} />
-      );
+      const { container } = render(<TrustHighlights theme={lightTheme} onNavigate={onNavigate} />);
 
-      const deliveryBtn = container.querySelector(
-        '.trust-btn-trust-delivery'
-      ) as HTMLElement;
+      const deliveryBtn = container.querySelector('.trust-btn-trust-delivery') as HTMLElement;
       expect(deliveryBtn).toBeDefined();
       fireEvent.click(deliveryBtn);
       expect(onNavigate).toHaveBeenCalledWith('delivery');
@@ -80,9 +70,7 @@ describe('Item 54 Dark Mode Refinements & Contrast Verification', () => {
 
   describe('Breadcrumbs Dark Mode & Page Header Contrast', () => {
     it('renders Ana Səhifə as single active breadcrumb on home page', () => {
-      const { container } = render(
-        <Breadcrumbs items={[{ label: 'Ana Səhifə', href: '/' }]} />
-      );
+      const { container } = render(<Breadcrumbs items={[{ label: 'Ana Səhifə', href: '/' }]} />);
 
       const nav = container.querySelector('.breadcrumbs-container');
       expect(nav).toBeDefined();
@@ -127,6 +115,7 @@ describe('Item 54 Dark Mode Refinements & Contrast Verification', () => {
         categoryName: 'Sobalar',
         images: ['/media/ardo-soba.jpg'],
         image: '/media/ardo-soba.jpg',
+        shortDesc: 'ARDO soba modeli',
         price: 900,
         status: 'published' as const,
         specs: [],
@@ -169,4 +158,3 @@ describe('Item 54 Dark Mode Refinements & Contrast Verification', () => {
     });
   });
 });
-

@@ -166,6 +166,7 @@ describe('Catalog Status Switch and Maintenance Mode', () => {
       ok: true,
       active: false,
       message: 'Kataloqda profilaktik yenilənmə aparılır.',
+      scope: 'catalog',
     });
 
     render(

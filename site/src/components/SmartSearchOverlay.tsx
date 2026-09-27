@@ -644,6 +644,7 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
                       <ShimmerImage
                         src={prodImg}
                         alt={prod.title}
+                        cropRect={prod.cropRect || prod.media?.[0]?.cropRect}
                         loading="lazy"
                         objectFit="contain"
                         spinnerSize={22}

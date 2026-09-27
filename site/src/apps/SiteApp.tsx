@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState, lazy, Suspense } from 'react';
 import { catalogApi, AdminPayload } from '../services/catalogApi';
 import { Product, TechnologyArticle } from '../types/product';
-import { DEFAULT_CATALOG, normalizeCatalog } from '../data/catalog';
+import { normalizeCatalog } from '../data/catalog';
 import { phoneHref, whatsappHref } from '../utils/contact';
 import { Lock, MessageCircle, Moon, Phone, Sparkles, Sun, Loader2 } from 'lucide-react';
 import { SiteHeader } from '../components/site/SiteHeader';
@@ -43,9 +43,7 @@ const CatalogAdmin = lazy(() =>
 const ComparePage = lazy(() =>
   import('../pages/ComparePage').then((m) => ({ default: m.ComparePage }))
 );
-const CartPage = lazy(() =>
-  import('../pages/CartPage').then((m) => ({ default: m.CartPage }))
-);
+const CartPage = lazy(() => import('../pages/CartPage').then((m) => ({ default: m.CartPage })));
 const FavoritesPage = lazy(() =>
   import('../pages/FavoritesPage').then((m) => ({ default: m.FavoritesPage }))
 );
@@ -55,15 +53,11 @@ const ProductDetailPage = lazy(() =>
 const AccountPage = lazy(() =>
   import('../pages/AccountPage').then((m) => ({ default: m.AccountPage }))
 );
-const AboutPage = lazy(() =>
-  import('../pages/AboutPage').then((m) => ({ default: m.AboutPage }))
-);
+const AboutPage = lazy(() => import('../pages/AboutPage').then((m) => ({ default: m.AboutPage })));
 const CareersPage = lazy(() =>
   import('../pages/CareersPage').then((m) => ({ default: m.CareersPage }))
 );
-const TermsPage = lazy(() =>
-  import('../pages/TermsPage').then((m) => ({ default: m.TermsPage }))
-);
+const TermsPage = lazy(() => import('../pages/TermsPage').then((m) => ({ default: m.TermsPage })));
 const PrivacyPage = lazy(() =>
   import('../pages/PrivacyPage').then((m) => ({ default: m.PrivacyPage }))
 );
@@ -72,9 +66,6 @@ const CustomerCarePage = lazy(() =>
 );
 
 // Lazy Loaded Modals
-const ProductDetailModal = lazy(() =>
-  import('../components/ProductDetailModal').then((m) => ({ default: m.ProductDetailModal }))
-);
 const InverterInfoModal = lazy(() =>
   import('../components/InverterInfoModal').then((m) => ({ default: m.InverterInfoModal }))
 );
@@ -125,7 +116,11 @@ const isAdminPath = () => {
   );
 };
 
-export const SiteApp: React.FC<SiteAppProps> = ({ initialRoute: _initialRoute, initialData, isSsr = false }) => {
+export const SiteApp: React.FC<SiteAppProps> = ({
+  initialRoute: _initialRoute,
+  initialData,
+  isSsr = false,
+}) => {
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -202,8 +197,7 @@ export const SiteApp: React.FC<SiteAppProps> = ({ initialRoute: _initialRoute, i
     if (resolved.productId) {
       const found = catalog.products.find(
         (p) =>
-          p.id === resolved.productId ||
-          p.code.toLowerCase() === resolved.productId?.toLowerCase()
+          p.id === resolved.productId || p.code.toLowerCase() === resolved.productId?.toLowerCase()
       );
       if (found) {
         setSelectedProduct(found);
@@ -217,20 +211,11 @@ export const SiteApp: React.FC<SiteAppProps> = ({ initialRoute: _initialRoute, i
   const { themeMode, toggleTheme, activeTheme } = useTheme(catalog.settings?.primaryColor);
 
   // 4. Compare Hook
-  const {
-    comparisonIds,
-    comparisonProducts,
-    toggleCompare,
-    removeFromCompare,
-    clearCompare,
-  } = useCompare(catalog.products, { showToast });
+  const { comparisonIds, comparisonProducts, toggleCompare, removeFromCompare, clearCompare } =
+    useCompare(catalog.products, { showToast });
 
   // 5. Favorites Hook
-  const {
-    favoriteIds,
-    toggleFavorite,
-    clearFavorites,
-  } = useFavorites({ showToast });
+  const { favoriteIds, toggleFavorite, clearFavorites } = useFavorites({ showToast });
 
   // 6. Contact & Link Hook
   const productUrl = useCallback(
@@ -587,7 +572,10 @@ export const SiteApp: React.FC<SiteAppProps> = ({ initialRoute: _initialRoute, i
       return [
         { label: 'Ana Səhifə', href: '/' },
         { label: 'Brendlər', href: '/brands' },
-        { label: (brand as any)?.name || (brand as any)?.brandName || selectedBrand, href: `/brand/${selectedBrand}` },
+        {
+          label: (brand as any)?.name || (brand as any)?.brandName || selectedBrand,
+          href: `/brand/${selectedBrand}`,
+        },
       ];
     }
     if (currentRoute === 'stores') {
@@ -854,12 +842,25 @@ export const SiteApp: React.FC<SiteAppProps> = ({ initialRoute: _initialRoute, i
             showToast={showToast}
             onSave={async (data) => {
               await catalogApi.saveCatalog(data, adminData.csrfToken);
+              setCatalog(normalizeCatalog(data));
+              try {
+                const refreshed = await catalogApi.getAdminData();
+                if (refreshed) setAdminData(refreshed);
+              } catch {}
             }}
             onPublish={async (data) => {
               await catalogApi.saveCatalog(data, adminData.csrfToken);
               await catalogApi.publishCatalog(adminData.csrfToken);
               const updated = await catalogApi.getCatalog();
-              setCatalog(normalizeCatalog(updated));
+              if (updated) {
+                setCatalog(normalizeCatalog(updated));
+              } else {
+                setCatalog(normalizeCatalog(data));
+              }
+              try {
+                const refreshed = await catalogApi.getAdminData();
+                if (refreshed) setAdminData(refreshed);
+              } catch {}
             }}
             onUpload={(file) => catalogApi.uploadMedia(file, adminData.csrfToken)}
             onLogout={async () => {
@@ -974,6 +975,7 @@ export const SiteApp: React.FC<SiteAppProps> = ({ initialRoute: _initialRoute, i
         favoritesCount={favoriteIds.length}
         authUser={authUser}
         onOpenSaharaMatch={() => setIsSaharaMatchOpen(true)}
+        onOpenCatalogShare={() => openShare(null)}
         mobileMenuOpenSignal={mobileMenuOpenSignal}
       />
 
@@ -1139,6 +1141,7 @@ export const SiteApp: React.FC<SiteAppProps> = ({ initialRoute: _initialRoute, i
               <CartPage
                 cartItems={cartItems}
                 allProducts={catalog.products}
+                brands={catalog.brands}
                 settings={catalog.settings}
                 theme={activeTheme}
                 themeMode={themeMode}
@@ -1147,6 +1150,11 @@ export const SiteApp: React.FC<SiteAppProps> = ({ initialRoute: _initialRoute, i
                 onClearCart={clearCart}
                 onNavigate={handleNavigate}
                 onSelectProduct={selectProduct}
+                onAddToCart={addToCart}
+                onToggleFavorite={toggleFavorite}
+                favoriteIds={favoriteIds}
+                onToggleCompare={toggleCompare}
+                comparisonIds={comparisonIds}
                 onWhatsAppCheckout={handleWhatsAppCheckout}
                 onCall={openCall}
               />
@@ -1198,6 +1206,7 @@ export const SiteApp: React.FC<SiteAppProps> = ({ initialRoute: _initialRoute, i
                 favoriteIds={favoriteIds}
                 allProducts={catalog.products}
                 categories={catalog.categories}
+                brands={catalog.brands}
                 settings={catalog.settings}
                 theme={activeTheme}
                 themeMode={themeMode}
@@ -1210,6 +1219,8 @@ export const SiteApp: React.FC<SiteAppProps> = ({ initialRoute: _initialRoute, i
                 onCall={openCall}
                 onShare={openShare}
                 onCopyLink={copyLink}
+                onToggleCompare={toggleCompare}
+                comparisonIds={comparisonIds}
                 onNavigate={handleNavigate}
               />
             )}
@@ -1233,18 +1244,10 @@ export const SiteApp: React.FC<SiteAppProps> = ({ initialRoute: _initialRoute, i
               />
             )}
             {currentRoute === 'terms' && (
-              <TermsPage
-                theme={activeTheme}
-                themeMode={themeMode}
-                onNavigate={handleNavigate}
-              />
+              <TermsPage theme={activeTheme} themeMode={themeMode} onNavigate={handleNavigate} />
             )}
             {currentRoute === 'privacy' && (
-              <PrivacyPage
-                theme={activeTheme}
-                themeMode={themeMode}
-                onNavigate={handleNavigate}
-              />
+              <PrivacyPage theme={activeTheme} themeMode={themeMode} onNavigate={handleNavigate} />
             )}
             {(currentRoute === 'delivery' ||
               currentRoute === 'warranty' ||
@@ -1269,6 +1272,7 @@ export const SiteApp: React.FC<SiteAppProps> = ({ initialRoute: _initialRoute, i
 
       {/* Corporate Desktop & Mobile Footer */}
       <Footer
+        variant="site"
         settings={catalog.settings}
         categories={catalog.categories}
         theme={activeTheme}
@@ -1423,7 +1427,7 @@ export const SiteApp: React.FC<SiteAppProps> = ({ initialRoute: _initialRoute, i
       />
 
       <CustomerChatWidget user={authUser} onOpenAccount={() => handleNavigate('account')} />
-      
+
       <Toast
         message={toast.message}
         type={toast.type}

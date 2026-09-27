@@ -1,14 +1,14 @@
 # Sahara Electronics — Verilənlər Bazasının Yedəklənməsi və Bərpası Qaydası (Backup & Restore Runbook)
 
 > **Tarix:** 06.09.2026  
-> **Tətbiq sahəsi:** `data/catalog.sqlite`, `data/catalog-draft.sqlite`
+> **Tətbiq sahəsi:** repository rootundan `site/data/catalog.sqlite`, `site/data/catalog-draft.sqlite`
 
 ---
 
 ## 1. Avtomatik Snapshot və Backup Prinsipləri
 
-1. **Hər Dərc Əməliyyatında Snapshot:** Admin paneldən "Dərc et" düyməsi basıldıqda, cari `data/catalog.sqlite` faylının JSON/SQLite tam nüsxəsi `catalog_snapshots` cədvəlinə və ya `data/snapshots/` qovluğuna yazılır.
-2. **Cold Backup:** İstənilən struktur miqrasiyasından və ya toplu idxal əməliyyatından əvvəl `data/catalog.sqlite` faylı `data/backups/catalog_backup_YYYYMMDD_HHMMSS.sqlite` olaraq kopyalanır.
+1. **Hər Dərc Əməliyyatında Snapshot:** Admin paneldən "Dərc et" düyməsi basıldıqda, cari `site/data/catalog.sqlite` faylının JSON/SQLite tam nüsxəsi `catalog_snapshots` cədvəlinə və ya `site/data/snapshots/` qovluğuna yazılır.
+2. **Cold Backup:** İstənilən struktur miqrasiyasından və ya toplu idxal əməliyyatından əvvəl `site/data/catalog.sqlite` faylı `site/data/backups/catalog_backup_YYYYMMDD_HHMMSS.sqlite` olaraq kopyalanır.
 3. **Additive Miqrasiya:** Miqrasiyalar heç vaxt mövcud sütunları və cədvəlləri silmir; yalnız yeni sahələr əlavə edilir (`ALTER TABLE ADD COLUMN`).
 
 ---
@@ -30,14 +30,14 @@
 killall node
 
 # 2. Cari zədələnmiş faylı arxivləşdirin
-mv data/catalog.sqlite data/catalog_corrupted_$(date +%Y%m%d).sqlite
+mv site/data/catalog.sqlite site/data/catalog_corrupted_$(date +%Y%m%d).sqlite
 
 # 3. Ən son sağlam backup nüsxəsini bərpa edin
-cp data/backups/catalog_backup_YYYYMMDD_HHMMSS.sqlite data/catalog.sqlite
-cp data/backups/catalog_backup_YYYYMMDD_HHMMSS.sqlite data/catalog-draft.sqlite
+cp site/data/backups/catalog_backup_YYYYMMDD_HHMMSS.sqlite site/data/catalog.sqlite
+cp site/data/backups/catalog_backup_YYYYMMDD_HHMMSS.sqlite site/data/catalog-draft.sqlite
 
 # 4. Baza bütövlüyünü yoxlayın
-sqlite3 data/catalog.sqlite "PRAGMA integrity_check;"
+sqlite3 site/data/catalog.sqlite "PRAGMA integrity_check;"
 
 # 5. Serveri yenidən işə salın
 npm start

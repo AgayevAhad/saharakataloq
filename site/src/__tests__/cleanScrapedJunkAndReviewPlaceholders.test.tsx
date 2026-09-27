@@ -1,38 +1,24 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect } from 'vitest';
-import { MemoryRouter, Route, Routes } from 'react-router-dom';
+import { MemoryRouter } from 'react-router-dom';
 import { ProductDetailPage } from '../pages/ProductDetailPage';
 import { Product } from '../types/product';
-import { ThemeColors } from '../types/theme';
+import { DEFAULT_BRANDS, DEFAULT_CATEGORIES, DEFAULT_SETTINGS } from '../data/catalog';
+import { lightTheme } from '../types/theme';
 
 const sampleCleanProduct: Product = {
   id: 'ardo-clean-test-1',
   code: 'ARDO-TST-01',
   title: 'ARDO Sabaf 60 Inox',
-  brand: 'ardo',
+  brandId: 'ardo',
   category: 'hood',
   categoryName: 'Aspiratorlar',
   image: '/media/ardo/aspirator.webp',
   price: 480,
   shortDesc: 'İtaliya istehsalı premium mətbəx aspiratoru',
-};
-
-const lightTheme: ThemeColors = {
-  mode: 'light',
-  primary: '#dc2626',
-  primaryHover: '#b91c1c',
-  primarySoft: 'rgba(220, 38, 38, 0.1)',
-  secondary: '#ef4444',
-  accent: '#f87171',
-  bg: '#ffffff',
-  surface: '#f8fafc',
-  surfaceHover: '#f1f5f9',
-  border: '#e2e8f0',
-  borderLight: '#cbd5e1',
-  text: '#0f172a',
-  textSecondary: '#475569',
-  textMuted: '#94a3b8',
+  specs: [],
+  highlights: [],
 };
 
 describe('Clean Scraped Junk & Review Placeholders Suite', () => {
@@ -42,8 +28,13 @@ describe('Clean Scraped Junk & Review Placeholders Suite', () => {
         <ProductDetailPage
           product={sampleCleanProduct}
           allProducts={[sampleCleanProduct]}
+          categories={DEFAULT_CATEGORIES}
+          brands={DEFAULT_BRANDS}
+          settings={DEFAULT_SETTINGS}
           theme={lightTheme}
           themeMode="light"
+          onNavigate={() => {}}
+          onSelectProduct={() => {}}
           onWhatsApp={() => {}}
           onCall={() => {}}
         />

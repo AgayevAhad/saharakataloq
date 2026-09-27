@@ -1,16 +1,15 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import { Crop, GripVertical, Plus, Trash2, UploadCloud, X } from 'lucide-react';
 import {
-  Crop,
-  GripVertical,
-  Plus,
-  Trash2,
-  UploadCloud,
-  X,
-} from 'lucide-react';
-import { Brand, CatalogCategory, Product, ProductMedia, ProductSpecItem } from '../../../types/product';
+  Brand,
+  CatalogCategory,
+  Product,
+  ProductMedia,
+  ProductSpecItem,
+} from '../../../types/product';
 import { ThemeColors } from '../../../types/theme';
 import { ShimmerImage } from '../../ShimmerImage';
-import { ImageCropStudioModal } from '../../ImageCropStudioModal';
+import { ImageCropStudioModal, NormalizedRect } from '../../ImageCropStudioModal';
 import { calculateCompletenessScore } from '../../../utils/completenessScorer';
 import { newId } from '../utils/adminHelpers';
 
@@ -41,12 +40,34 @@ export interface ProductEditorProps {
   availableCountries: string[];
   theme: ThemeColors;
   onUpload: (file: File) => Promise<ProductMedia>;
+  onDiscardUpload?: (url: string) => Promise<unknown>;
   onClose: () => void;
-  onSave: (value: Product) => void;
+  onSave: (value: Product) => Promise<void> | void;
   onQuickCreateCategory?: (prodId: string) => void;
   onQuickCreateBrand?: (prodId: string) => void;
   onOpenLightbox?: (prod: Product, mediaIndex: number) => void;
 }
+
+const syncPrimaryMediaFields = (product: Product, media: ProductMedia[]): Product => {
+  const primaryImage = media.find((item) => item.type === 'image' && item.url);
+  const firstMedia = media.find((item) => item.url);
+  const presentationMedia = primaryImage || firstMedia;
+  const image =
+    primaryImage?.url ||
+    (firstMedia?.type === 'video' ? firstMedia.poster || firstMedia.url : firstMedia?.url) ||
+    '';
+
+  return {
+    ...product,
+    media,
+    image,
+    originalImage: presentationMedia?.originalUrl,
+    cropRect: presentationMedia?.type === 'image' ? presentationMedia.cropRect : undefined,
+    imagePosition: presentationMedia?.objectPosition || 'center',
+    imageFit: presentationMedia?.fitMode || 'contain',
+    gallery: media.filter((item) => item.type === 'image' && item.url).map((item) => item.url),
+  };
+};
 
 // PRODUCT EDITOR MODAL
 export const ProductEditor = ({
@@ -56,6 +77,7 @@ export const ProductEditor = ({
   availableCountries,
   theme,
   onUpload,
+  onDiscardUpload,
   onClose,
   onSave,
   onQuickCreateCategory,
@@ -65,6 +87,8 @@ export const ProductEditor = ({
   const [product, setProduct] = useState(initial);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState('');
+  const [savingProduct, setSavingProduct] = useState(false);
+  const pendingUploadUrlsRef = useRef(new Set<string>());
   const [customCountryInput, setCustomCountryInput] = useState('');
   const [isAddingCustomCountry, setIsAddingCustomCountry] = useState(false);
 
@@ -73,10 +97,12 @@ export const ProductEditor = ({
   const [dropTargetMediaIndex, setDropTargetMediaIndex] = useState<number | null>(null);
   const [mediaDropPosition, setMediaDropPosition] = useState<'before' | 'after' | null>(null);
 
-  // Visual Crop & Focal Studio state
+  // Visual Crop Studio state
   const [cropStudioTarget, setCropStudioTarget] = useState<{
     mediaIndex: number;
     imageUrl: string;
+    originalUrl?: string;
+    cropRect?: NormalizedRect;
     objectPosition?: string;
     fitMode?: 'contain' | 'cover';
   } | null>(null);
@@ -85,27 +111,31 @@ export const ProductEditor = ({
     setProduct((current) => ({ ...current, [key]: value }));
 
   const addMedia = (type: ProductMedia['type']) => {
-    const list = [...(product.media || []), { id: newId('media'), type, url: '', alt: '' }];
-    setProduct((curr) => ({
-      ...curr,
-      media: list,
-      gallery: list.map((m) => m.url).filter(Boolean),
-    }));
+    setProduct((current) =>
+      syncPrimaryMediaFields(current, [
+        ...(current.media || []),
+        { id: newId('media'), type, url: '', alt: '' },
+      ])
+    );
   };
 
   const updateMedia = (index: number, patch: Partial<ProductMedia>) => {
     setProduct((curr) => {
-      const list = (curr.media || []).map((item, i) =>
-        i === index ? { ...item, ...patch } : item
-      );
-      const firstImg =
-        list.find((m) => m.type === 'image' && m.url)?.url || list[0]?.url || curr.image;
-      return {
-        ...curr,
-        media: list,
-        image: index === 0 && patch.url ? patch.url : firstImg,
-        gallery: list.map((m) => m.url).filter(Boolean),
-      };
+      const list = (curr.media || []).map((item, i) => {
+        if (i !== index) return item;
+        const urlChanged = patch.url !== undefined && patch.url !== item.url;
+        const resetFraming =
+          urlChanged && patch.cropRect === undefined
+            ? {
+                cropRect: undefined,
+                originalUrl: undefined,
+                objectPosition: 'center',
+                fitMode: 'contain' as const,
+              }
+            : {};
+        return { ...item, ...resetFraming, ...patch };
+      });
+      return syncPrimaryMediaFields(curr, list);
     });
   };
 
@@ -118,22 +148,7 @@ export const ProductEditor = ({
       const [moved] = list.splice(fromIndex, 1);
       list.splice(targetIdx, 0, moved);
 
-      const firstMedia = list[0];
-      const firstImg =
-        firstMedia?.type === 'video'
-          ? firstMedia.poster ||
-            list.find((m) => m.type === 'image' && m.url)?.url ||
-            firstMedia.url ||
-            current.image
-          : list.find((m) => m.type === 'image' && m.url)?.url || list[0]?.url || current.image;
-      const gallery = list.map((m) => m.url).filter(Boolean);
-
-      return {
-        ...current,
-        media: list,
-        image: firstImg,
-        gallery,
-      };
+      return syncPrimaryMediaFields(current, list);
     });
   };
 
@@ -202,18 +217,56 @@ export const ProductEditor = ({
     setUploadError('');
     try {
       const uploaded = await onUpload(file);
-      const updatedMedia = [...(product.media || []), uploaded];
-      const firstImg = !product.image && uploaded.type === 'image' ? uploaded.url : product.image;
-      setProduct((curr) => ({
-        ...curr,
-        image: firstImg || uploaded.url,
-        media: updatedMedia,
-        gallery: updatedMedia.map((m) => m.url).filter(Boolean),
-      }));
+      if (uploaded.url.startsWith('/uploads/')) pendingUploadUrlsRef.current.add(uploaded.url);
+      setProduct((current) =>
+        syncPrimaryMediaFields(current, [...(current.media || []), uploaded])
+      );
     } catch (e) {
       setUploadError(e instanceof Error ? e.message : 'Media yüklənmədi');
     } finally {
       setUploading(false);
+    }
+  };
+
+  const discardPendingUploads = async () => {
+    if (!onDiscardUpload || pendingUploadUrlsRef.current.size === 0) return;
+    const pending = [...pendingUploadUrlsRef.current];
+    pendingUploadUrlsRef.current.clear();
+    await Promise.allSettled(pending.map((url) => onDiscardUpload(url)));
+  };
+
+  const handleClose = async () => {
+    if (savingProduct) return;
+    if (!onDiscardUpload || pendingUploadUrlsRef.current.size === 0) {
+      onClose();
+      return;
+    }
+    await discardPendingUploads();
+    onClose();
+  };
+
+  const handleSaveProduct = async () => {
+    if (!product.code.trim() || !product.title.trim()) {
+      alert('Model kodu və adı mütləqdir');
+      return;
+    }
+    const normalized = syncPrimaryMediaFields(product, product.media || []);
+    setSavingProduct(true);
+    try {
+      const retainedUrls = new Set((normalized.media || []).map((media) => media.url));
+      const unusedPendingUploads = [...pendingUploadUrlsRef.current].filter(
+        (url) => !retainedUrls.has(url)
+      );
+      if (onDiscardUpload && unusedPendingUploads.length) {
+        await Promise.allSettled(unusedPendingUploads.map((url) => onDiscardUpload(url)));
+        unusedPendingUploads.forEach((url) => pendingUploadUrlsRef.current.delete(url));
+      }
+      await onSave(normalized);
+      pendingUploadUrlsRef.current.clear();
+    } catch (error) {
+      setUploadError(error instanceof Error ? error.message : 'Məhsul saxlanılmadı');
+    } finally {
+      setSavingProduct(false);
     }
   };
 
@@ -247,7 +300,7 @@ export const ProductEditor = ({
   const completeness = calculateCompletenessScore(product);
 
   return (
-    <div className="product-modal-backdrop" onClick={onClose}>
+    <div className="product-modal-backdrop" onClick={() => void handleClose()}>
       <div
         className="product-modal-card"
         style={{ background: theme.bgCard, borderColor: theme.border, maxWidth: '920px' }}
@@ -260,7 +313,7 @@ export const ProductEditor = ({
               Kataloq üçün bütün parametrləri birbaşa buradan doldurun
             </p>
           </div>
-          <button onClick={onClose}>
+          <button onClick={() => void handleClose()}>
             <X size={18} />
           </button>
         </header>
@@ -616,7 +669,7 @@ export const ProductEditor = ({
                   <UploadCloud size={15} /> {uploading ? 'Yüklənir...' : 'Kompüterdən yüklə'}
                   <input
                     type="file"
-                    accept="image/*,video/*"
+                    accept=".jpg,.jpeg,.png,.webp,.svg,.mp4,.webm"
                     onChange={handleFileUpload}
                     disabled={uploading}
                     style={{ display: 'none' }}
@@ -726,6 +779,7 @@ export const ProductEditor = ({
                         <ShimmerImage
                           src={m.url}
                           alt={m.alt || ''}
+                          cropRect={m.cropRect || (i === 0 ? product.cropRect : undefined)}
                           style={{
                             width: '100%',
                             height: '100%',
@@ -893,6 +947,45 @@ export const ProductEditor = ({
                           {m.type === 'video' ? '🎬 1-ci / Qapaq et' : '⭐ 1-ci et'}
                         </button>
                       )}
+
+                      {/* Visual Framing & Focal Studio Launcher Button */}
+                      {m.type !== 'video' && m.url && (
+                        <button
+                          type="button"
+                          className="crop-open-studio-btn"
+                          onClick={() =>
+                            setCropStudioTarget({
+                              mediaIndex: i,
+                              imageUrl: m.originalUrl || m.url,
+                              originalUrl: m.originalUrl || m.url,
+                              cropRect: m.cropRect || (i === 0 ? product.cropRect : undefined),
+                              objectPosition:
+                                m.objectPosition ||
+                                (i === 0 ? product.imagePosition : undefined) ||
+                                'center',
+                              fitMode:
+                                m.fitMode || (i === 0 ? product.imageFit : undefined) || 'contain',
+                            })
+                          }
+                          title="Şəkildə görünəcək hissəni və fokus sahəsini interaktiv studiyada düzənləyin"
+                          style={{
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: '4px',
+                            padding: '4px 9px',
+                            borderRadius: '6px',
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            background: 'rgba(59, 130, 246, 0.1)',
+                            color: '#2563eb',
+                            border: '1px solid rgba(59, 130, 246, 0.25)',
+                            cursor: 'pointer',
+                          }}
+                        >
+                          <Crop size={12} />
+                          <span>🎯 Vizual Düzənlə</span>
+                        </button>
+                      )}
                     </div>
 
                     {/* Up / Down Move Step Arrows */}
@@ -921,123 +1014,12 @@ export const ProductEditor = ({
                       className="del-btn"
                       onClick={() => {
                         const remaining = (product.media || []).filter((_, idx) => idx !== i);
-                        const firstImg =
-                          remaining.find((item) => item.type === 'image' && item.url)?.url ||
-                          remaining[0]?.url ||
-                          '';
-                        setProduct((curr) => ({
-                          ...curr,
-                          media: remaining,
-                          image: firstImg,
-                          gallery: remaining.map((item) => item.url).filter(Boolean),
-                        }));
+                        setProduct((curr) => syncPrimaryMediaFields(curr, remaining));
                       }}
                       title="Bu media faylını sil"
                     >
                       <Trash2 size={14} />
                     </button>
-
-                    {/* Position & Alignment Control Sub-Row */}
-                    <div className="media-pos-row">
-                      <div className="media-pos-label">
-                        <span>🎯 Şəkilin duruşu:</span>
-                      </div>
-
-                      {/* Visual Crop & Focal Studio Launcher Button */}
-                      {m.type !== 'video' && m.url && (
-                        <button
-                          type="button"
-                          className="crop-open-studio-btn"
-                          onClick={() =>
-                            setCropStudioTarget({
-                              mediaIndex: i,
-                              imageUrl: m.url,
-                              objectPosition: m.objectPosition || 'center',
-                              fitMode: m.fitMode || 'contain',
-                            })
-                          }
-                          title="Şəkli vizual kəsin, nisbətini seçin və fokusunu interaktiv studiyada tənzimləyin"
-                        >
-                          <Crop size={13} />
-                          <span>✂️ Vizual Kəs & Tənzimlə</span>
-                        </button>
-                      )}
-
-                      {/* 9-Dot Visual Quick Alignment Picker */}
-                      <div
-                        className="media-pos-grid-picker"
-                        title="Tez mövqe seçimi (9 nöqtəli fokus)"
-                      >
-                        {[
-                          { pos: 'top-left', icon: '↖', label: 'Yuxarı Sol' },
-                          { pos: 'top', icon: '⬆', label: 'Üst / Yuxarı' },
-                          { pos: 'top-right', icon: '↗', label: 'Yuxarı Sağ' },
-                          { pos: 'left', icon: '⬅', label: 'Sol' },
-                          { pos: 'center', icon: '⏺', label: 'Mərkəz (Orta)' },
-                          { pos: 'right', icon: '➡', label: 'Sağ' },
-                          { pos: 'bottom-left', icon: '↙', label: 'Aşağı Sol' },
-                          { pos: 'bottom', icon: '⬇', label: 'Alt / Aşağı' },
-                          { pos: 'bottom-right', icon: '↘', label: 'Aşağı Sağ' },
-                        ].map((btn) => (
-                          <button
-                            key={btn.pos}
-                            type="button"
-                            className={`media-pos-dot ${(m.objectPosition || 'center') === btn.pos ? 'active' : ''}`}
-                            onClick={() => updateMedia(i, { objectPosition: btn.pos })}
-                            title={btn.label}
-                          >
-                            {btn.icon}
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* Position Select Dropdown */}
-                      <select
-                        value={m.objectPosition || 'center'}
-                        onChange={(e) => updateMedia(i, { objectPosition: e.target.value })}
-                        className="media-pos-select"
-                        title="Duruş mövqeyini dəqiqləşdirin"
-                      >
-                        <option value="center">⏺ Mərkəz (Orta)</option>
-                        <option value="top">⬆ Üst (Yuxarı fokus)</option>
-                        <option value="bottom">⬇ Alt (Aşağı fokus)</option>
-                        <option value="left">⬅ Sol fokus</option>
-                        <option value="right">➡ Sağ fokus</option>
-                        <option value="top-left">↖ Yuxarı-Sol</option>
-                        <option value="top-right">↗ Yuxarı-Sağ</option>
-                        <option value="bottom-left">↙ Aşağı-Sol</option>
-                        <option value="bottom-right">↘ Aşağı-Sağ</option>
-                      </select>
-
-                      {/* Fit Mode Select Dropdown */}
-                      <div
-                        style={{
-                          display: 'inline-flex',
-                          alignItems: 'center',
-                          gap: '6px',
-                          marginLeft: 'auto',
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontSize: '11px',
-                            color: 'rgba(127,127,127,0.85)',
-                            fontWeight: 600,
-                          }}
-                        >
-                          Görünüş:
-                        </span>
-                        <select
-                          value={m.fitMode || 'contain'}
-                          onChange={(e) => updateMedia(i, { fitMode: e.target.value as any })}
-                          className="media-fit-select"
-                          title="Kəsim / sığışdırma rejimi"
-                        >
-                          <option value="contain">🖼 Tam sığışdır (Contain)</option>
-                          <option value="cover">📐 Kartı doldur (Cover)</option>
-                        </select>
-                      </div>
-                    </div>
                   </div>
                 );
               })}
@@ -1134,28 +1116,16 @@ export const ProductEditor = ({
         </div>
 
         <footer className="product-modal-footer" style={{ borderColor: theme.border }}>
-          <button type="button" onClick={onClose}>
+          <button type="button" onClick={() => void handleClose()} disabled={savingProduct}>
             İmtina
           </button>
           <button
             type="button"
-            onClick={() => {
-              if (!product.code.trim() || !product.title.trim())
-                return alert('Model kodu və adı mütləqdir');
-              const firstImg =
-                (product.media || []).find((m) => m.type === 'image' && m.url)?.url ||
-                product.media?.[0]?.url ||
-                product.image;
-              const gallery = (product.media || []).map((m) => m.url).filter(Boolean);
-              onSave({
-                ...product,
-                image: firstImg,
-                gallery: gallery.length ? gallery : [firstImg].filter(Boolean),
-              });
-            }}
+            onClick={() => void handleSaveProduct()}
+            disabled={savingProduct}
             style={{ background: theme.primary, color: '#fff' }}
           >
-            Yadda saxla
+            {savingProduct ? 'Saxlanılır...' : 'Yadda saxla'}
           </button>
         </footer>
 
@@ -1164,6 +1134,8 @@ export const ProductEditor = ({
           <ImageCropStudioModal
             isOpen={true}
             imageUrl={cropStudioTarget.imageUrl}
+            originalImageUrl={cropStudioTarget.originalUrl}
+            initialCropRect={cropStudioTarget.cropRect}
             initialObjectPosition={cropStudioTarget.objectPosition || 'center'}
             initialFitMode={cropStudioTarget.fitMode || 'contain'}
             productTitle={product.title}
@@ -1171,26 +1143,16 @@ export const ProductEditor = ({
             onClose={() => setCropStudioTarget(null)}
             onSavePosition={(pos, fit) => {
               updateMedia(cropStudioTarget.mediaIndex, { objectPosition: pos, fitMode: fit });
-              if (cropStudioTarget.mediaIndex === 0) {
-                setProduct((curr) => ({ ...curr, imagePosition: pos, imageFit: fit }));
-              }
             }}
-            onSaveCroppedImage={(newUrl, pos) => {
+            onSaveCroppedImage={(_newUrl, pos, cropRect, origUrl) => {
+              const originalUrlToSave =
+                origUrl || cropStudioTarget.originalUrl || cropStudioTarget.imageUrl;
               updateMedia(cropStudioTarget.mediaIndex, {
-                url: newUrl,
+                url: originalUrlToSave,
+                originalUrl: originalUrlToSave,
+                cropRect: cropRect,
                 objectPosition: pos || 'center',
               });
-              if (cropStudioTarget.mediaIndex === 0) {
-                setProduct((curr) => ({
-                  ...curr,
-                  image: newUrl,
-                  imagePosition: pos || 'center',
-                }));
-              }
-            }}
-            onUpload={async (file) => {
-              const media = await onUpload(file);
-              return media.url;
             }}
           />
         )}

@@ -1,16 +1,6 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { renderHook, act } from '@testing-library/react';
-import {
-  useTheme,
-  useToast,
-  useFavorites,
-  useCompare,
-  useCatalog,
-  useContact,
-  THEME_KEY,
-  FAVORITES_KEY,
-  COMPARE_KEY,
-} from '../hooks';
+import { useTheme, useToast, useFavorites, useCompare, useCatalog, useContact } from '../hooks';
 import { catalogApi } from '../services/catalogApi';
 import { DEFAULT_CATALOG } from '../data/catalog';
 import type { Product, CatalogSettings } from '../types/product';
@@ -196,9 +186,7 @@ describe('PROMPT 01 — App.tsx Custom Hooks Test Suite', () => {
       const p5: Product = { ...mockProduct, id: 'p5', code: 'C-5' };
       const manyProds = [mockProduct, mockProduct2, p3, p4, p5];
 
-      const { result: compareLimitResult } = renderHook(() =>
-        useCompare(manyProds, { showToast })
-      );
+      const { result: compareLimitResult } = renderHook(() => useCompare(manyProds, { showToast }));
 
       act(() => {
         compareLimitResult.current.toggleCompare(mockProduct);
@@ -213,10 +201,7 @@ describe('PROMPT 01 — App.tsx Custom Hooks Test Suite', () => {
         compareLimitResult.current.toggleCompare(p5);
       });
       expect(compareLimitResult.current.comparisonIds.length).toBe(4);
-      expect(showToast).toHaveBeenCalledWith(
-        'Maksimum 4 məhsul müqayisə edilə bilər.',
-        'warning'
-      );
+      expect(showToast).toHaveBeenCalledWith('Maksimum 4 məhsul müqayisə edilə bilər.', 'warning');
     });
 
     it('clears compare list', () => {
@@ -239,9 +224,7 @@ describe('PROMPT 01 — App.tsx Custom Hooks Test Suite', () => {
   describe('useCatalog Hook', () => {
     it('loads catalog and calls onLoaded callback', async () => {
       const onLoaded = vi.fn();
-      const getCatalogSpy = vi
-        .spyOn(catalogApi, 'getCatalog')
-        .mockResolvedValue(DEFAULT_CATALOG);
+      const getCatalogSpy = vi.spyOn(catalogApi, 'getCatalog').mockResolvedValue(DEFAULT_CATALOG);
       const trackSpy = vi.spyOn(catalogApi, 'track').mockImplementation(() => {});
 
       const { result } = renderHook(() => useCatalog({ onLoaded }));
@@ -268,9 +251,7 @@ describe('PROMPT 01 — App.tsx Custom Hooks Test Suite', () => {
       const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
       const trackSpy = vi.spyOn(catalogApi, 'track').mockImplementation(() => {});
 
-      const { result } = renderHook(() =>
-        useContact({ settings, getProductUrl, showToast })
-      );
+      const { result } = renderHook(() => useContact({ settings, getProductUrl, showToast }));
 
       act(() => {
         result.current.openWhatsApp(mockProduct);
@@ -288,9 +269,7 @@ describe('PROMPT 01 — App.tsx Custom Hooks Test Suite', () => {
       const openSpy = vi.spyOn(window, 'open').mockImplementation(() => null);
       const trackSpy = vi.spyOn(catalogApi, 'track').mockImplementation(() => {});
 
-      const { result } = renderHook(() =>
-        useContact({ settings, getProductUrl, showToast })
-      );
+      const { result } = renderHook(() => useContact({ settings, getProductUrl, showToast }));
 
       act(() => {
         result.current.openCall(mockProduct);
@@ -308,9 +287,7 @@ describe('PROMPT 01 — App.tsx Custom Hooks Test Suite', () => {
         writable: true,
       });
 
-      const { result } = renderHook(() =>
-        useContact({ settings, getProductUrl, showToast })
-      );
+      const { result } = renderHook(() => useContact({ settings, getProductUrl, showToast }));
 
       await act(async () => {
         await result.current.copyLink(mockProduct);

@@ -24,11 +24,76 @@ const mockCategories: CatalogCategory[] = [
 ];
 
 const mockProducts: Product[] = [
-  { id: 'p1', code: 'SOBA-1', title: 'Soba 1 Model', category: 'soba', categoryName: 'Quraşdırılan Sobalar', brandId: 'ardo', price: 500, status: 'published', image: '', shortDesc: '', specs: [], highlights: [] },
-  { id: 'p2', code: 'SOBA-2', title: 'Soba 2 Model', category: 'soba', categoryName: 'Quraşdırılan Sobalar', brandId: 'ardo', price: 600, status: 'published', image: '', shortDesc: '', specs: [], highlights: [] },
-  { id: 'p3', code: 'PANEL-1', title: 'Panel 1 Model', category: 'panel', categoryName: 'Bişirmə Panelləri', brandId: 'ardo', price: 400, status: 'published', image: '', shortDesc: '', specs: [], highlights: [] },
-  { id: 'p4', code: 'PANEL-2', title: 'Panel 2 Model', category: 'panel', categoryName: 'Bişirmə Panelləri', brandId: 'ardo', price: 450, status: 'published', image: '', shortDesc: '', specs: [], highlights: [] },
-  { id: 'p5', code: 'ASP-1', title: 'Aspirator 1 Model', category: 'aspirator', categoryName: 'Aspiratorlar', brandId: 'ardo', price: 300, status: 'published', image: '', shortDesc: '', specs: [], highlights: [] },
+  {
+    id: 'p1',
+    code: 'SOBA-1',
+    title: 'Soba 1 Model',
+    category: 'soba',
+    categoryName: 'Quraşdırılan Sobalar',
+    brandId: 'ardo',
+    price: 500,
+    status: 'published',
+    image: '',
+    shortDesc: '',
+    specs: [],
+    highlights: [],
+  },
+  {
+    id: 'p2',
+    code: 'SOBA-2',
+    title: 'Soba 2 Model',
+    category: 'soba',
+    categoryName: 'Quraşdırılan Sobalar',
+    brandId: 'ardo',
+    price: 600,
+    status: 'published',
+    image: '',
+    shortDesc: '',
+    specs: [],
+    highlights: [],
+  },
+  {
+    id: 'p3',
+    code: 'PANEL-1',
+    title: 'Panel 1 Model',
+    category: 'panel',
+    categoryName: 'Bişirmə Panelləri',
+    brandId: 'ardo',
+    price: 400,
+    status: 'published',
+    image: '',
+    shortDesc: '',
+    specs: [],
+    highlights: [],
+  },
+  {
+    id: 'p4',
+    code: 'PANEL-2',
+    title: 'Panel 2 Model',
+    category: 'panel',
+    categoryName: 'Bişirmə Panelləri',
+    brandId: 'ardo',
+    price: 450,
+    status: 'published',
+    image: '',
+    shortDesc: '',
+    specs: [],
+    highlights: [],
+  },
+  {
+    id: 'p5',
+    code: 'ASP-1',
+    title: 'Aspirator 1 Model',
+    category: 'aspirator',
+    categoryName: 'Aspiratorlar',
+    brandId: 'ardo',
+    price: 300,
+    status: 'published',
+    image: '',
+    shortDesc: '',
+    specs: [],
+    highlights: [],
+  },
 ];
 
 describe('BrandDetailPage In-Place Category Filtering & Mixed Order', () => {
@@ -74,7 +139,9 @@ describe('BrandDetailPage In-Place Category Filtering & Mixed Order', () => {
     // Interleaved order: Soba 1 (p1), Panel 1 (p3), Aspirator 1 (p5), Soba 2 (p2), Panel 2 (p4)
     const productIds = Array.from(productCards).map(
       (card) =>
-        card.querySelector('[data-featured-product-card-id]')?.getAttribute('data-featured-product-card-id') ||
+        card
+          .querySelector('[data-featured-product-card-id]')
+          ?.getAttribute('data-featured-product-card-id') ||
         card.getAttribute('data-featured-product-card-id') ||
         ''
     );
@@ -112,7 +179,9 @@ describe('BrandDetailPage In-Place Category Filtering & Mixed Order', () => {
 
     const productIds = Array.from(productCards).map(
       (card) =>
-        card.querySelector('[data-featured-product-card-id]')?.getAttribute('data-featured-product-card-id') ||
+        card
+          .querySelector('[data-featured-product-card-id]')
+          ?.getAttribute('data-featured-product-card-id') ||
         card.getAttribute('data-featured-product-card-id') ||
         ''
     );

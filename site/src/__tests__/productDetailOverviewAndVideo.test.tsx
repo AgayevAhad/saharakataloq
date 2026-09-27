@@ -5,39 +5,23 @@ import { MemoryRouter } from 'react-router-dom';
 import { ProductDetailPage } from '../pages/ProductDetailPage';
 import { ProductDetailModal } from '../components/ProductDetailModal';
 import { Product } from '../types/product';
-import { ThemeColors } from '../types/theme';
+import { lightTheme } from '../types/theme';
+import { DEFAULT_BRANDS, DEFAULT_CATEGORIES, DEFAULT_SETTINGS } from '../data/catalog';
 
 const sampleLongDescProduct: Product = {
   id: 'ardo-overview-test',
   code: 'ARDO-OVW-01',
   title: 'ARDO Sabaf 60 Inox Aspirator',
-  brand: 'ardo',
+  brandId: 'ardo',
   category: 'hood',
   categoryName: 'Aspiratorlar',
   image: '/media/ardo/aspirator.webp',
   price: 480,
-  shortDesc: 'Bu məhsul İtaliya istehsalı olan Sabaf motorlu premium aspiratordur.\nÇox səssiz işləyir və yüksək sovurma gücünə malikdir.\nMətbəxinizdə təmiz hava və zərif görünüş təmin edir.\nƏlavə olaraq alüminium yağ filtri və LED işıqlandırma ilə təchiz edilmişdir.',
+  shortDesc:
+    'Bu məhsul İtaliya istehsalı olan Sabaf motorlu premium aspiratordur.\nÇox səssiz işləyir və yüksək sovurma gücünə malikdir.\nMətbəxinizdə təmiz hava və zərif görünüş təmin edir.\nƏlavə olaraq alüminium yağ filtri və LED işıqlandırma ilə təchiz edilmişdir.',
   specs: [],
-  media: [
-    { id: 'v-1', url: '/media/ardo/video.mp4', type: 'video', alt: 'ARDO Video İcmal' },
-  ],
-};
-
-const lightTheme: ThemeColors = {
-  mode: 'light',
-  primary: '#dc2626',
-  primaryHover: '#b91c1c',
-  primarySoft: 'rgba(220, 38, 38, 0.1)',
-  secondary: '#ef4444',
-  accent: '#f87171',
-  bg: '#ffffff',
-  surface: '#f8fafc',
-  surfaceHover: '#f1f5f9',
-  border: '#e2e8f0',
-  borderLight: '#cbd5e1',
-  text: '#0f172a',
-  textSecondary: '#475569',
-  textMuted: '#94a3b8',
+  highlights: [],
+  media: [{ id: 'v-1', url: '/media/ardo/video.mp4', type: 'video', alt: 'ARDO Video İcmal' }],
 };
 
 describe('Product Detail Overview & Video Suite', () => {
@@ -47,8 +31,13 @@ describe('Product Detail Overview & Video Suite', () => {
         <ProductDetailPage
           product={sampleLongDescProduct}
           allProducts={[sampleLongDescProduct]}
+          categories={DEFAULT_CATEGORIES}
+          brands={DEFAULT_BRANDS}
+          settings={DEFAULT_SETTINGS}
           theme={lightTheme}
           themeMode="light"
+          onNavigate={vi.fn()}
+          onSelectProduct={vi.fn()}
           onWhatsApp={vi.fn()}
           onCall={vi.fn()}
         />
@@ -78,8 +67,13 @@ describe('Product Detail Overview & Video Suite', () => {
         <ProductDetailPage
           product={sampleLongDescProduct}
           allProducts={[sampleLongDescProduct]}
+          categories={DEFAULT_CATEGORIES}
+          brands={DEFAULT_BRANDS}
+          settings={DEFAULT_SETTINGS}
           theme={lightTheme}
           themeMode="light"
+          onNavigate={vi.fn()}
+          onSelectProduct={vi.fn()}
           onWhatsApp={vi.fn()}
           onCall={vi.fn()}
         />
@@ -125,12 +119,15 @@ describe('Product Detail Overview & Video Suite', () => {
       id: 'bosch-hmg978nb1-test',
       code: 'HMG978NB1',
       title: 'Quraşdırılan soba Bosch HMG978NB1, Series 8',
-      brand: 'bosch',
+      brandId: 'bosch',
       category: 'oven',
+      categoryName: 'Sobalar',
       image: '/media/bosch/oven.webp',
       price: 5149.99,
       oldPrice: 6699.99,
       specs: [],
+      shortDesc: '',
+      highlights: [],
       media: [],
     };
 
@@ -139,8 +136,13 @@ describe('Product Detail Overview & Video Suite', () => {
         <ProductDetailPage
           product={emptyProduct}
           allProducts={[emptyProduct]}
+          categories={DEFAULT_CATEGORIES}
+          brands={DEFAULT_BRANDS}
+          settings={DEFAULT_SETTINGS}
           theme={lightTheme}
           themeMode="light"
+          onNavigate={vi.fn()}
+          onSelectProduct={vi.fn()}
           onWhatsApp={vi.fn()}
           onCall={vi.fn()}
         />

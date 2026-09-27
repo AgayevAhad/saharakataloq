@@ -1,43 +1,80 @@
 import React from 'react';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+import { render, fireEvent, cleanup } from '@testing-library/react';
 import { CatalogPage } from '../pages/CatalogPage';
 import { CustomerChatWidget } from '../components/site/CustomerChatWidget';
 import { lightTheme, darkTheme } from '../types/theme';
-import { Category, Brand, Product, CatalogSettings } from '../types/product';
+import { CatalogCategory, Brand, Product, CatalogSettings } from '../types/product';
 
-const mockCategories: Category[] = [
+const mockCategories: CatalogCategory[] = [
   { id: 'aspirator', name: 'Aspiratorlar', icon: 'fan', slug: 'aspiratorlar', active: true },
   { id: 'soba', name: 'Sobalar', icon: 'flame', slug: 'sobalar', active: true },
 ];
 
 const mockBrands: Brand[] = [
-  { id: 'ardo', name: 'ARDO', logo: '/media/brands/ardo.svg', slug: 'ardo', active: true },
-  { id: 'lotus', name: 'LOTUS', logo: '/media/brands/lotus.svg', slug: 'lotus', active: true },
+  {
+    id: 'ardo',
+    name: 'ARDO',
+    logo: '/media/brands/ardo.svg',
+    slug: 'ardo',
+    originCountry: 'İtaliya',
+    manufacturingCountries: ['İtaliya'],
+    active: true,
+  },
+  {
+    id: 'lotus',
+    name: 'LOTUS',
+    logo: '/media/brands/lotus.svg',
+    slug: 'lotus',
+    originCountry: 'Türkiyə',
+    manufacturingCountries: ['Türkiyə'],
+    active: true,
+  },
 ];
 
 const mockProducts: Product[] = [
   {
     id: 'prod-1',
+    code: 'ARDO-1',
     title: 'ARDO Aspirator Elite',
     category: 'aspirator',
+    categoryName: 'Aspiratorlar',
     brandId: 'ardo',
+    image: '/test-ardo.jpg',
+    shortDesc: '',
+    specs: [],
+    highlights: [],
     price: 350,
-    published: true,
+    status: 'published',
   },
   {
     id: 'prod-2',
+    code: 'LOTUS-2',
     title: 'LOTUS Soba Pro',
     category: 'soba',
+    categoryName: 'Sobalar',
     brandId: 'lotus',
+    image: '/test-lotus.jpg',
+    shortDesc: '',
+    specs: [],
+    highlights: [],
     price: 650,
-    published: true,
+    status: 'published',
   },
 ];
 
 const mockSettings: CatalogSettings = {
-  currency: 'AZN',
-  storeName: 'Sahara Electronics',
+  whatsappNumber: '+994501234567',
+  phoneNumber: '+994501234567',
+};
+
+const catalogPageActions = {
+  onSelectProduct: vi.fn(),
+  onWhatsApp: vi.fn(),
+  onCall: vi.fn(),
+  onShare: vi.fn(),
+  onCopyLink: vi.fn(),
+  onNavigate: vi.fn(),
 };
 
 describe('Item 55 Catalog Pills, Compare Box & Border Removals Verification', () => {
@@ -48,6 +85,7 @@ describe('Item 55 Catalog Pills, Compare Box & Border Removals Verification', ()
   it('renders quick category pills without borders and with soft translucent red active styling', () => {
     const { container } = render(
       <CatalogPage
+        {...catalogPageActions}
         categories={mockCategories}
         brands={mockBrands}
         products={mockProducts}
@@ -84,6 +122,7 @@ describe('Item 55 Catalog Pills, Compare Box & Border Removals Verification', ()
   it('renders model count badge without border and with soft translucent red styling', () => {
     const { container } = render(
       <CatalogPage
+        {...catalogPageActions}
         categories={mockCategories}
         brands={mockBrands}
         products={mockProducts}
@@ -105,6 +144,7 @@ describe('Item 55 Catalog Pills, Compare Box & Border Removals Verification', ()
   it('renders top controls toolbar, sort button, and view mode switch without borders', () => {
     const { container } = render(
       <CatalogPage
+        {...catalogPageActions}
         categories={mockCategories}
         brands={mockBrands}
         products={mockProducts}
@@ -126,9 +166,7 @@ describe('Item 55 Catalog Pills, Compare Box & Border Removals Verification', ()
   });
 
   it('renders CustomerChatWidget trigger button with 0 border class and active pulse animation', () => {
-    const { container } = render(
-      <CustomerChatWidget user={null} onOpenAccount={vi.fn()} />
-    );
+    const { container } = render(<CustomerChatWidget user={null} onOpenAccount={vi.fn()} />);
 
     const trigger = container.querySelector('.customer-chat-trigger') as HTMLElement;
     expect(trigger).toBeDefined();

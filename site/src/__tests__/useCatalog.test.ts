@@ -45,9 +45,7 @@ describe('useCatalog', () => {
     const onLoaded = vi.fn();
     vi.spyOn(catalogApi, 'getCatalog').mockResolvedValueOnce(mockCatalogData);
 
-    const { result } = renderHook(() =>
-      useCatalog({ isSsr: false, onLoaded })
-    );
+    const { result } = renderHook(() => useCatalog({ isSsr: false, onLoaded }));
 
     await waitFor(() => {
       expect(result.current.isLoadingCatalog).toBe(false);
@@ -60,9 +58,7 @@ describe('useCatalog', () => {
   it('API xətası baş verdikdə fallback DEFAULT_CATALOG istifadə edir', async () => {
     vi.spyOn(catalogApi, 'getCatalog').mockRejectedValueOnce(new Error('Network error'));
 
-    const { result } = renderHook(() =>
-      useCatalog({ isSsr: false })
-    );
+    const { result } = renderHook(() => useCatalog({ isSsr: false }));
 
     await waitFor(() => {
       expect(result.current.isLoadingCatalog).toBe(false);
@@ -72,9 +68,7 @@ describe('useCatalog', () => {
   });
 
   it('setCatalog ilə kataloqu yeniləmək mümkündür', () => {
-    const { result } = renderHook(() =>
-      useCatalog({ initialCatalog: mockCatalogData })
-    );
+    const { result } = renderHook(() => useCatalog({ initialCatalog: mockCatalogData }));
     const custom = { ...mockCatalogData, products: [] };
     act(() => {
       result.current.setCatalog(custom);

@@ -4,7 +4,12 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { AdminShell } from '../components/admin/AdminShell';
 import { catalogApi } from '../services/catalogApi';
 import { lightTheme } from '../types/theme';
-import { DEFAULT_BRANDS, DEFAULT_CATEGORIES, DEFAULT_ARTICLES, DEFAULT_SETTINGS } from '../data/catalog';
+import {
+  DEFAULT_BRANDS,
+  DEFAULT_CATEGORIES,
+  DEFAULT_ARTICLES,
+  DEFAULT_SETTINGS,
+} from '../data/catalog';
 
 const mockAdminData = (overrides = {}) => ({
   brands: DEFAULT_BRANDS,
@@ -16,7 +21,12 @@ const mockAdminData = (overrides = {}) => ({
       title: 'ARDO Paltaryuyan',
       brandId: 'ardo',
       category: 'cat-1',
-      status: 'active',
+      categoryName: 'Paltaryuyanlar',
+      image: '/test-ardo.jpg',
+      shortDesc: '',
+      specs: [],
+      highlights: [],
+      status: 'published' as const,
       price: 1000,
     },
     {
@@ -25,7 +35,12 @@ const mockAdminData = (overrides = {}) => ({
       title: 'Artel Televizor',
       brandId: 'artel',
       category: 'cat-2',
-      status: 'draft',
+      categoryName: 'Televizorlar',
+      image: '/test-artel.jpg',
+      shortDesc: '',
+      specs: [],
+      highlights: [],
+      status: 'draft' as const,
       price: 600,
     },
   ],
@@ -40,13 +55,10 @@ const mockAdminData = (overrides = {}) => ({
     ...overrides,
   },
   analytics: {
-    totalViews: 100,
-    uniqueVisitors: 50,
+    catalogViews: 100,
     productViews: {},
-    categoryViews: {},
-    brandViews: {},
-    popularProducts: [],
-    recentEvents: [],
+    contactActions: { whatsapp: 0, call: 0 },
+    contactActionsByProduct: {},
   },
   csrfToken: 'test-csrf-token',
 });
@@ -135,12 +147,7 @@ describe('AdminShell Site CMS vs Catalog PIM Status Toggle Scope Integration Sui
     fireEvent.click(screen.getByText('🟡 Dayandırılıb (Profilaktika)'));
 
     await waitFor(() => {
-      expect(toggleSpy).toHaveBeenCalledWith(
-        false,
-        expect.any(String),
-        'test-csrf-token',
-        'site'
-      );
+      expect(toggleSpy).toHaveBeenCalledWith(false, expect.any(String), 'test-csrf-token', 'site');
     });
   });
 });

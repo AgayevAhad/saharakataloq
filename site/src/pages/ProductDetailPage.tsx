@@ -34,7 +34,6 @@ import {
   FileText,
   Send,
   UserCheck,
-  RefreshCw,
   LogIn,
   Lock,
 } from 'lucide-react';
@@ -142,7 +141,6 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
   const fullscreenVideoRef = useRef<HTMLVideoElement>(null);
   const thumbnailScrollRef = useRef<HTMLDivElement>(null);
   const tabsContainerRef = useRef<HTMLDivElement>(null);
-  const pinchStartRef = useRef<{ distance: number; scale: number } | null>(null);
 
   const { dragProps: _thumbDragProps } = useHorizontalScroll({
     scrollRef: thumbnailScrollRef,
@@ -182,7 +180,10 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     [brands, product.brandId, (product as any).brand]
   );
   const category = useMemo(
-    () => (categories || []).find((c) => c.id === product.category || c.id === (product as any).categoryId),
+    () =>
+      (categories || []).find(
+        (c) => c.id === product.category || c.id === (product as any).categoryId
+      ),
     [categories, product.category]
   );
 
@@ -196,6 +197,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
       alt?: string;
       objectPosition?: string;
       fitMode?: string;
+      cropRect?: { x: number; y: number; w: number; h: number };
     }> = [];
 
     const seenUrls = new Set<string>();
@@ -212,6 +214,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
             alt: m.alt || `${product.title} - ${idx + 1}`,
             objectPosition: m.objectPosition,
             fitMode: m.fitMode,
+            cropRect: m.cropRect || (idx === 0 ? product.cropRect : undefined),
           });
         }
       });
@@ -226,6 +229,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
         alt: product.title,
         objectPosition: product.imagePosition,
         fitMode: product.imageFit,
+        cropRect: product.cropRect,
       });
     }
 
@@ -348,9 +352,6 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     rawPrice !== undefined && rawPrice !== null && Number(rawPrice) > 0 ? Number(rawPrice) : null;
   const oldPrice =
     product.oldPrice && product.oldPrice > (currentPrice || 0) ? product.oldPrice : null;
-  const discountPercent =
-    currentPrice && oldPrice ? Math.round(((oldPrice - currentPrice) / oldPrice) * 100) : null;
-
   // Real Rating calculations
   const averageRating = useMemo(() => {
     if (!reviews.length) return null;
@@ -842,6 +843,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 <ShimmerImage
                   src={activeMedia.url}
                   alt={activeMedia.alt || product.title}
+                  cropRect={activeMedia.cropRect}
                   objectFit={(activeMedia.fitMode as any) || 'contain'}
                   objectPosition={activeMedia.objectPosition || 'center'}
                   spinnerSize={36}
@@ -1157,145 +1159,162 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 </div>
               ) : null}
 
-            {/* Video Overview Preview Card (Displayed ONLY if video is attached) */}
-            {overviewVideo && (
-              <div
-                onClick={() => {
-                  const vIdx = mediaList.findIndex((m) => m.type === 'video');
-                  if (vIdx !== -1) setActiveMediaIndex(vIdx);
-                  setIsFullscreenGallery(true);
-                }}
-                style={{
-                  position: 'relative',
-                  borderRadius: '12px',
-                  overflow: 'hidden',
-                  backgroundColor: '#0f172a',
-                  cursor: 'pointer',
-                  border: `1.5px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)'}`,
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '14px',
-                  padding: '10px 14px',
-                  boxShadow: '0 4px 14px rgba(0, 0, 0, 0.08)',
-                  transition: 'transform 0.2s ease, box-shadow 0.2s ease',
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.transform = 'translateY(-2px)';
-                  e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.15)';
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.transform = 'translateY(0)';
-                  e.currentTarget.style.boxShadow = '0 4px 14px rgba(0, 0, 0, 0.08)';
-                }}
-              >
-                {/* Mini Thumbnail / Play Box */}
+              {/* Video Overview Preview Card (Displayed ONLY if video is attached) */}
+              {overviewVideo && (
                 <div
+                  onClick={() => {
+                    const vIdx = mediaList.findIndex((m) => m.type === 'video');
+                    if (vIdx !== -1) setActiveMediaIndex(vIdx);
+                    setIsFullscreenGallery(true);
+                  }}
                   style={{
                     position: 'relative',
-                    width: '64px',
-                    height: '48px',
-                    borderRadius: '8px',
+                    borderRadius: '12px',
                     overflow: 'hidden',
-                    backgroundColor: '#1e293b',
+                    backgroundColor: '#0f172a',
+                    cursor: 'pointer',
+                    border: `1.5px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.08)'}`,
                     display: 'flex',
                     alignItems: 'center',
-                    justifyContent: 'center',
-                    flexShrink: 0,
+                    gap: '14px',
+                    padding: '10px 14px',
+                    boxShadow: '0 4px 14px rgba(0, 0, 0, 0.08)',
+                    transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                  }}
+                  onMouseEnter={(e) => {
+                    e.currentTarget.style.transform = 'translateY(-2px)';
+                    e.currentTarget.style.boxShadow = '0 8px 20px rgba(0, 0, 0, 0.15)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.currentTarget.style.transform = 'translateY(0)';
+                    e.currentTarget.style.boxShadow = '0 4px 14px rgba(0, 0, 0, 0.08)';
                   }}
                 >
-                  {overviewVideo.poster ? (
-                    <img
-                      src={overviewVideo.poster}
-                      alt=""
-                      style={{ width: '100%', height: '100%', objectFit: 'cover' }}
-                    />
-                  ) : (
-                    <video
-                      src={overviewVideo.url}
-                      muted
-                      playsInline
-                      style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }}
-                    />
-                  )}
+                  {/* Mini Thumbnail / Play Box */}
                   <div
                     style={{
-                      position: 'absolute',
-                      inset: 0,
-                      backgroundColor: 'rgba(0, 0, 0, 0.35)',
+                      position: 'relative',
+                      width: '64px',
+                      height: '48px',
+                      borderRadius: '8px',
+                      overflow: 'hidden',
+                      backgroundColor: '#1e293b',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
+                      flexShrink: 0,
                     }}
                   >
+                    {overviewVideo.poster ? (
+                      <img
+                        src={overviewVideo.poster}
+                        alt=""
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                      />
+                    ) : (
+                      <video
+                        src={overviewVideo.url}
+                        muted
+                        playsInline
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          pointerEvents: 'none',
+                        }}
+                      />
+                    )}
                     <div
                       style={{
-                        width: '24px',
-                        height: '24px',
-                        borderRadius: '50%',
-                        backgroundColor: '#dc2626',
-                        color: '#ffffff',
+                        position: 'absolute',
+                        inset: 0,
+                        backgroundColor: 'rgba(0, 0, 0, 0.35)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        boxShadow: '0 2px 8px rgba(220, 38, 38, 0.5)',
                       }}
                     >
-                      <Play size={12} fill="#ffffff" color="#ffffff" style={{ marginLeft: '1px' }} />
+                      <div
+                        style={{
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: '50%',
+                          backgroundColor: '#dc2626',
+                          color: '#ffffff',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          boxShadow: '0 2px 8px rgba(220, 38, 38, 0.5)',
+                        }}
+                      >
+                        <Play
+                          size={12}
+                          fill="#ffffff"
+                          color="#ffffff"
+                          style={{ marginLeft: '1px' }}
+                        />
+                      </div>
                     </div>
                   </div>
-                </div>
 
-                {/* Video Info & Call to Action */}
-                <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
-                    <span
+                  {/* Video Info & Call to Action */}
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
                       style={{
-                        backgroundColor: 'rgba(220, 38, 38, 0.15)',
-                        color: '#dc2626',
-                        fontSize: '10.5px',
-                        fontWeight: 800,
-                        padding: '2px 6px',
-                        borderRadius: '4px',
-                        textTransform: 'uppercase',
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '6px',
+                        marginBottom: '2px',
                       }}
                     >
-                      Video İcmal
-                    </span>
-                    <span style={{ fontSize: '11px', color: '#94a3b8' }}>HD Keyfiyyət</span>
+                      <span
+                        style={{
+                          backgroundColor: 'rgba(220, 38, 38, 0.15)',
+                          color: '#dc2626',
+                          fontSize: '10.5px',
+                          fontWeight: 800,
+                          padding: '2px 6px',
+                          borderRadius: '4px',
+                          textTransform: 'uppercase',
+                        }}
+                      >
+                        Video İcmal
+                      </span>
+                      <span style={{ fontSize: '11px', color: '#94a3b8' }}>HD Keyfiyyət</span>
+                    </div>
+                    <div
+                      style={{
+                        fontSize: '13px',
+                        fontWeight: 700,
+                        color: '#ffffff',
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      Məhsulun video icmalını izləyin
+                    </div>
                   </div>
+
+                  {/* Arrow / Play text */}
                   <div
                     style={{
-                      fontSize: '13px',
-                      fontWeight: 700,
-                      color: '#ffffff',
-                      overflow: 'hidden',
-                      textOverflow: 'ellipsis',
-                      whiteSpace: 'nowrap',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '4px',
+                      color: '#38bdf8',
+                      fontSize: '12px',
+                      fontWeight: 800,
+                      flexShrink: 0,
                     }}
                   >
-                    Məhsulun video icmalını izləyin
+                    <span>İzlə</span>
+                    <ChevronRight size={14} />
                   </div>
                 </div>
-
-                {/* Arrow / Play text */}
-                <div
-                  style={{
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    color: '#38bdf8',
-                    fontSize: '12px',
-                    fontWeight: 800,
-                    flexShrink: 0,
-                  }}
-                >
-                  <span>İzlə</span>
-                  <ChevronRight size={14} />
-                </div>
-              </div>
-            )}
-          </div>
-        )}
+              )}
+            </div>
+          )}
 
           {/* Clean Borderless Price Section */}
           <div
@@ -1344,7 +1363,9 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
           {/* Key Highlights Checklist */}
           {product.highlights && product.highlights.length > 0 && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '4px' }}>
+            <div
+              style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '4px' }}
+            >
               <div
                 style={{
                   fontSize: '12px',
@@ -3046,7 +3067,17 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
 
             <div
               className="product-lightbox-controls zoom-floating-controls"
-              style={{ position: 'static', display: 'flex', alignItems: 'center', gap: '6px', background: 'rgba(0, 0, 0, 0.04)', padding: '4px 8px', borderRadius: '10px', border: 'none', boxShadow: 'none' }}
+              style={{
+                position: 'static',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                background: 'rgba(0, 0, 0, 0.04)',
+                padding: '4px 8px',
+                borderRadius: '10px',
+                border: 'none',
+                boxShadow: 'none',
+              }}
             >
               <button
                 type="button"
@@ -3055,7 +3086,12 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 className="product-lightbox-icon-btn zoom-btn"
                 title="Sola fırlat"
                 aria-label="Şəkli sola fırlat"
-                style={{ border: 'none', background: 'transparent', color: '#0f172a', cursor: 'pointer' }}
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                  color: '#0f172a',
+                  cursor: 'pointer',
+                }}
               >
                 <RotateCcw size={16} />
               </button>
@@ -3066,7 +3102,12 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 className="product-lightbox-icon-btn zoom-btn"
                 title="Sağa fırlat"
                 aria-label="Şəkli sağa fırlat"
-                style={{ border: 'none', background: 'transparent', color: '#0f172a', cursor: 'pointer' }}
+                style={{
+                  border: 'none',
+                  background: 'transparent',
+                  color: '#0f172a',
+                  cursor: 'pointer',
+                }}
               >
                 <RotateCw size={16} />
               </button>
@@ -3262,9 +3303,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               className="fs-lightbox-bottom-bar"
               style={{
                 backgroundColor:
-                  themeMode === 'dark'
-                    ? 'rgba(15, 23, 42, 0.85)'
-                    : 'rgba(241, 245, 249, 0.95)',
+                  themeMode === 'dark' ? 'rgba(15, 23, 42, 0.85)' : 'rgba(241, 245, 249, 0.95)',
                 border: 'none',
                 boxShadow:
                   themeMode === 'dark'

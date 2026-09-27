@@ -72,11 +72,19 @@ export interface BrandItem {
   aliases?: BrandAlias[];
 }
 
-export const BrandRegistryStudio: React.FC<{
+export interface BrandRegistryStudioProps {
   theme: ThemeColors;
   csrfToken: string;
   onRefreshCatalog?: () => void;
-}> = ({ theme, csrfToken, onRefreshCatalog }) => {
+  allowedBrandIds?: string[];
+}
+
+export const BrandRegistryStudio: React.FC<BrandRegistryStudioProps> = ({
+  theme,
+  csrfToken,
+  onRefreshCatalog,
+  allowedBrandIds,
+}) => {
   const [brands, setBrands] = useState<BrandItem[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [selectedBrand, setSelectedBrand] = useState<BrandItem | null>(null);
@@ -319,6 +327,9 @@ export const BrandRegistryStudio: React.FC<{
   };
 
   const filteredBrands = brands.filter((b) => {
+    if (allowedBrandIds && allowedBrandIds.length > 0) {
+      if (!allowedBrandIds.includes(b.id.toLowerCase())) return false;
+    }
     if (statusFilter !== 'all' && b.verificationStatus !== statusFilter) return false;
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();

@@ -44,20 +44,19 @@ describe('Admin Panel Mode Separation (Site CMS vs Catalog PIM)', () => {
       />
     );
 
-    // Header badge & title
-    expect(screen.getByText(/Rəsmi Sayt \(CMS\)/i)).toBeDefined();
-    expect(screen.getByRole('heading', { level: 1, name: /Rəsmi Sayt İdarəetmə Paneli/i })).toBeDefined();
-
-    // Site tabs should be present
+    // Site tabs should be present (including Products and Sayt Statistikası)
+    expect(screen.getByRole('button', { name: /Sayt Statistikası/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /Məhsullar \(Modellər\)/i })).toBeDefined();
     expect(screen.getByRole('button', { name: /Naviqasiya \(CMS\)/i })).toBeDefined();
     expect(screen.getByRole('button', { name: /Görünüş & Mətnlər/i })).toBeDefined();
     expect(screen.getByRole('button', { name: /Əlaqə & Filiallar/i })).toBeDefined();
     expect(screen.getByRole('button', { name: /Müştəri Çatı/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /Loglama \(Audit\)/i })).toBeDefined();
     expect(screen.getByRole('button', { name: /Təhlükəsizlik & Şifrə/i })).toBeDefined();
 
-    // Catalog tabs should NOT be in the sidebar navigation
-    expect(screen.queryByRole('button', { name: /Məhsullar \(Modellər\)/i })).toBeNull();
+    // Catalog-only tabs should NOT be in the site sidebar navigation
     expect(screen.queryByRole('button', { name: /Brend Lenti/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Bərpa & Nüsxələr/i })).toBeNull();
 
     // Live preview action
     expect(screen.getByText('Canlı Sayta Bax')).toBeDefined();
@@ -77,21 +76,20 @@ describe('Admin Panel Mode Separation (Site CMS vs Catalog PIM)', () => {
       />
     );
 
-    // Header badge & title
-    expect(screen.getByText(/Məhsul Kataloqu \(PIM\)/i)).toBeDefined();
-    expect(screen.getByRole('heading', { level: 1, name: /Məhsul Kataloqu İdarəetmə Paneli/i })).toBeDefined();
-
-    // Catalog tabs should be present
+    // Catalog tabs should be present (including Statistika, Products, unified Brands, Appearance, Contact, Logs, Security)
+    expect(screen.getByRole('button', { name: /^Statistika$/i })).toBeDefined();
     expect(screen.getByRole('button', { name: /Məhsullar \(Modellər\)/i })).toBeDefined();
     expect(screen.getByRole('button', { name: /Kateqoriyalar/i })).toBeDefined();
     expect(screen.getByRole('button', { name: /Brendlər/i })).toBeDefined();
-    expect(screen.getByRole('button', { name: /Brend Lenti/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /Görünüş & Mətnlər/i })).toBeDefined();
     expect(screen.getByRole('button', { name: /Texnologiyalar \(i\)/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /Əlaqə & Filiallar/i })).toBeDefined();
     expect(screen.getByRole('button', { name: /Bərpa & Nüsxələr/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /Loglama \(Audit\)/i })).toBeDefined();
+    expect(screen.getByRole('button', { name: /Təhlükəsizlik & Şifrə/i })).toBeDefined();
 
-    // Site tabs should NOT be in the sidebar navigation
+    // Site-exclusive tabs should NOT be in catalog navigation
     expect(screen.queryByRole('button', { name: /Naviqasiya \(CMS\)/i })).toBeNull();
-    expect(screen.queryByRole('button', { name: /Görünüş & Mətnlər/i })).toBeNull();
     expect(screen.queryByRole('button', { name: /Müştəri Çatı/i })).toBeNull();
 
     // Live preview action
@@ -113,7 +111,6 @@ describe('Admin Panel Mode Separation (Site CMS vs Catalog PIM)', () => {
     );
 
     // Initially in Site mode
-    expect(screen.getByRole('heading', { level: 1, name: /Rəsmi Sayt İdarəetmə Paneli/i })).toBeDefined();
     expect(screen.getByRole('button', { name: /Naviqasiya \(CMS\)/i })).toBeDefined();
 
     // Switch to Catalog mode
@@ -121,7 +118,6 @@ describe('Admin Panel Mode Separation (Site CMS vs Catalog PIM)', () => {
     fireEvent.click(catalogModeBtn);
 
     // Now in Catalog mode
-    expect(screen.getByRole('heading', { level: 1, name: /Məhsul Kataloqu İdarəetmə Paneli/i })).toBeDefined();
     expect(screen.getByRole('button', { name: /Məhsullar \(Modellər\)/i })).toBeDefined();
     expect(screen.queryByRole('button', { name: /Naviqasiya \(CMS\)/i })).toBeNull();
 
@@ -130,7 +126,6 @@ describe('Admin Panel Mode Separation (Site CMS vs Catalog PIM)', () => {
     fireEvent.click(siteModeBtn);
 
     // Back in Site mode
-    expect(screen.getByRole('heading', { level: 1, name: /Rəsmi Sayt İdarəetmə Paneli/i })).toBeDefined();
     expect(screen.getByRole('button', { name: /Naviqasiya \(CMS\)/i })).toBeDefined();
   });
 
@@ -155,10 +150,38 @@ describe('Admin Panel Mode Separation (Site CMS vs Catalog PIM)', () => {
     const mixedPayload = {
       ...mockAdminPayload,
       brands: [
-        { id: 'ardo', name: 'ARDO', slug: 'ardo', active: true },
-        { id: 'artel', name: 'ARTEL', slug: 'artel', active: true },
-        { id: 'bosch', name: 'Bosch', slug: 'bosch', active: true },
-        { id: 'samsung', name: 'Samsung', slug: 'samsung', active: true },
+        {
+          id: 'ardo',
+          name: 'ARDO',
+          slug: 'ardo',
+          originCountry: 'İtaliya',
+          manufacturingCountries: ['İtaliya'],
+          active: true,
+        },
+        {
+          id: 'artel',
+          name: 'ARTEL',
+          slug: 'artel',
+          originCountry: 'Özbəkistan',
+          manufacturingCountries: ['Özbəkistan'],
+          active: true,
+        },
+        {
+          id: 'bosch',
+          name: 'Bosch',
+          slug: 'bosch',
+          originCountry: 'Almaniya',
+          manufacturingCountries: ['Almaniya'],
+          active: true,
+        },
+        {
+          id: 'samsung',
+          name: 'Samsung',
+          slug: 'samsung',
+          originCountry: 'Cənubi Koreya',
+          manufacturingCountries: ['Cənubi Koreya'],
+          active: true,
+        },
       ],
       products: [
         {
@@ -167,6 +190,11 @@ describe('Admin Panel Mode Separation (Site CMS vs Catalog PIM)', () => {
           title: 'ARDO Soyuducu',
           brandId: 'ardo',
           category: 'fridge',
+          categoryName: 'Soyuducular',
+          image: '/test-ardo.jpg',
+          shortDesc: '',
+          specs: [],
+          highlights: [],
           status: 'published' as const,
           createdAt: '2026-01-01',
           updatedAt: '2026-01-01',
@@ -177,6 +205,11 @@ describe('Admin Panel Mode Separation (Site CMS vs Catalog PIM)', () => {
           title: 'Bosch Paltaryuyan',
           brandId: 'bosch',
           category: 'washing',
+          categoryName: 'Paltaryuyanlar',
+          image: '/test-bosch.jpg',
+          shortDesc: '',
+          specs: [],
+          highlights: [],
           status: 'published' as const,
           createdAt: '2026-01-01',
           updatedAt: '2026-01-01',
@@ -207,5 +240,189 @@ describe('Admin Panel Mode Separation (Site CMS vs Catalog PIM)', () => {
     // Bosch site product must NOT be present in Catalog mode
     expect(screen.queryByText('Bosch Paltaryuyan')).toBeNull();
     expect(screen.queryByText('BOSCH-900')).toBeNull();
+  });
+
+  it('isolates analytics and statistics strictly to catalog brands and products in Catalog mode', () => {
+    const mixedAnalyticsPayload = {
+      ...mockAdminPayload,
+      brands: [
+        {
+          id: 'ardo',
+          name: 'ARDO',
+          slug: 'ardo',
+          originCountry: 'İtaliya',
+          manufacturingCountries: ['İtaliya'],
+          active: true,
+        },
+        {
+          id: 'artel',
+          name: 'ARTEL',
+          slug: 'artel',
+          originCountry: 'Özbəkistan',
+          manufacturingCountries: ['Özbəkistan'],
+          active: true,
+        },
+        {
+          id: 'lotus',
+          name: 'LOTUS',
+          slug: 'lotus',
+          originCountry: 'Türkiyə',
+          manufacturingCountries: ['Türkiyə'],
+          active: true,
+        },
+        {
+          id: 'bosch',
+          name: 'Bosch',
+          slug: 'bosch',
+          originCountry: 'Almaniya',
+          manufacturingCountries: ['Almaniya'],
+          active: true,
+        },
+      ],
+      products: [
+        {
+          id: 'p-ardo-1',
+          code: 'ARDO-100',
+          title: 'ARDO Soyuducu 100',
+          brandId: 'ardo',
+          category: 'fridge',
+          categoryName: 'Soyuducular',
+          image: '/test-ardo.jpg',
+          shortDesc: '',
+          specs: [],
+          highlights: [],
+          status: 'published' as const,
+          createdAt: '2026-01-01',
+          updatedAt: '2026-01-01',
+        },
+        {
+          id: 'p-bosch-1',
+          code: 'BOSCH-900',
+          title: 'Bosch Paltaryuyan 900',
+          brandId: 'bosch',
+          category: 'washing',
+          categoryName: 'Paltaryuyanlar',
+          image: '/test-bosch.jpg',
+          shortDesc: '',
+          specs: [],
+          highlights: [],
+          status: 'published' as const,
+          createdAt: '2026-01-01',
+          updatedAt: '2026-01-01',
+        },
+      ],
+      analytics: {
+        catalogViews: 100,
+        productViews: {
+          'p-ardo-1': 45,
+          'p-bosch-1': 999, // Should NOT leak into catalog stats
+        },
+        contactActions: { whatsapp: 50, call: 20 },
+        contactActionsByProduct: {
+          'p-ardo-1': { whatsapp: 10, call: 5 },
+          'p-bosch-1': { whatsapp: 100, call: 80 },
+        },
+      },
+    };
+
+    render(
+      <AdminShell
+        initial={mixedAnalyticsPayload}
+        theme={lightTheme}
+        mode="catalog"
+        onSave={onSave}
+        onPublish={onPublish}
+        onUpload={onUpload}
+        onLogout={onLogout}
+        showToast={showToast}
+      />
+    );
+
+    // Switch to Dashboard / Statistics
+    fireEvent.click(screen.getByRole('button', { name: /^Statistika$/i }));
+
+    // Verify ARDO is shown in Brand Distribution
+    expect(screen.getByText('Brendlər və Əlaqə Kanalları')).toBeDefined();
+    expect(screen.getByText('ARDO')).toBeDefined();
+
+    // Verify Bosch does NOT appear in Brand Distribution or Top products in Catalog mode
+    expect(screen.queryByText('Bosch')).toBeNull();
+    expect(screen.queryByText('Bosch Paltaryuyan 900')).toBeNull();
+  });
+
+  it('isolates BrandsRegistry and BrandRail to catalog brands in Catalog mode', async () => {
+    const mockBrandsList = [
+      {
+        id: 'ardo',
+        name: 'ARDO',
+        slug: 'ardo',
+        active: true,
+        verificationStatus: 'verified',
+        sortOrder: 1,
+      },
+      {
+        id: 'artel',
+        name: 'ARTEL',
+        slug: 'artel',
+        active: true,
+        verificationStatus: 'verified',
+        sortOrder: 2,
+      },
+      {
+        id: 'lotus',
+        name: 'LOTUS',
+        slug: 'lotus',
+        active: true,
+        verificationStatus: 'verified',
+        sortOrder: 3,
+      },
+      {
+        id: 'bosch',
+        name: 'Bosch',
+        slug: 'bosch',
+        active: true,
+        verificationStatus: 'verified',
+        sortOrder: 4,
+      },
+    ];
+
+    const originalFetch = global.fetch;
+    global.fetch = vi.fn().mockImplementation((url: string) => {
+      if (url.includes('/api/admin/brands')) {
+        return Promise.resolve({
+          ok: true,
+          json: async () => ({ brands: mockBrandsList }),
+        } as any);
+      }
+      return Promise.resolve({ ok: true, json: async () => ({}) } as any);
+    });
+
+    try {
+      render(
+        <AdminShell
+          initial={mockAdminPayload}
+          theme={lightTheme}
+          mode="catalog"
+          onSave={onSave}
+          onPublish={onPublish}
+          onUpload={onUpload}
+          onLogout={onLogout}
+          showToast={showToast}
+        />
+      );
+
+      // Click on Brands tab
+      fireEvent.click(screen.getByRole('button', { name: /Brendlər/i }));
+
+      // Wait for async brand render
+      expect(await screen.findByText('ARDO')).toBeDefined();
+      expect(await screen.findByText('ARTEL')).toBeDefined();
+      expect(await screen.findByText('LOTUS')).toBeDefined();
+
+      // Bosch is filtered out
+      expect(screen.queryByText('Bosch')).toBeNull();
+    } finally {
+      global.fetch = originalFetch;
+    }
   });
 });

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { ChevronLeft, ChevronRight, Play, CheckCircle2, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Play, Sparkles } from 'lucide-react';
 import { ThemeColors } from '../types/theme';
 import { ShimmerImage } from './ShimmerImage';
 
@@ -160,7 +160,9 @@ export const ProductVideoReviewsSection: React.FC<ProductVideoReviewsSectionProp
   const getStepDistance = (): number => {
     const container = scrollContainerRef.current;
     if (!container) return 396;
-    const firstCard = container.querySelector<HTMLElement>('.video-review-item, .video-review-card');
+    const firstCard = container.querySelector<HTMLElement>(
+      '.video-review-item, .video-review-card'
+    );
     if (firstCard) {
       return firstCard.offsetWidth + 18;
     }
@@ -169,7 +171,8 @@ export const ProductVideoReviewsSection: React.FC<ProductVideoReviewsSectionProp
 
   // Step-and-Pause Carousel Movement: smooth advance by 1 card, pause, advance, pause
   useEffect(() => {
-    if (isHovered || isDragging || playingVideoId !== null || !isInViewport || !isTabVisible) return;
+    if (isHovered || isDragging || playingVideoId !== null || !isInViewport || !isTabVisible)
+      return;
 
     const timer = setInterval(() => {
       const container = scrollContainerRef.current;
@@ -345,7 +348,8 @@ export const ProductVideoReviewsSection: React.FC<ProductVideoReviewsSectionProp
             width: '46px',
             height: '46px',
             borderRadius: '50%',
-            backgroundColor: theme.mode === 'dark' ? 'rgba(15, 23, 42, 0.88)' : 'rgba(255, 255, 255, 0.94)',
+            backgroundColor:
+              theme.mode === 'dark' ? 'rgba(15, 23, 42, 0.88)' : 'rgba(255, 255, 255, 0.94)',
             backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)',
             border: `1px solid ${theme.border}`,
@@ -375,7 +379,8 @@ export const ProductVideoReviewsSection: React.FC<ProductVideoReviewsSectionProp
             width: '46px',
             height: '46px',
             borderRadius: '50%',
-            backgroundColor: theme.mode === 'dark' ? 'rgba(15, 23, 42, 0.88)' : 'rgba(255, 255, 255, 0.94)',
+            backgroundColor:
+              theme.mode === 'dark' ? 'rgba(15, 23, 42, 0.88)' : 'rgba(255, 255, 255, 0.94)',
             backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)',
             border: `1px solid ${theme.border}`,
@@ -417,141 +422,142 @@ export const ProductVideoReviewsSection: React.FC<ProductVideoReviewsSectionProp
             touchAction: 'pan-y',
           }}
         >
-        {videos.map((item) => {
-          const isPlaying = playingVideoId === item.videoId;
-          return (
-            <div
-              key={item.id}
-              className="video-review-item"
-              style={{
-                flex: '0 0 320px',
-                width: '320px',
-                maxWidth: '85vw',
-                scrollSnapAlign: 'start',
-                display: 'flex',
-                flexDirection: 'column',
-                background: 'transparent',
-                border: 'none',
-                boxShadow: 'none',
-                position: 'relative',
-              }}
-            >
-              {/* Tall Vertical Video Media Frame (9:16 Shorts/Reel Aspect Ratio) */}
+          {videos.map((item) => {
+            const isPlaying = playingVideoId === item.videoId;
+            return (
               <div
-                className="video-review-media-wrapper"
+                key={item.id}
+                className="video-review-item"
                 style={{
+                  flex: '0 0 320px',
+                  width: '320px',
+                  maxWidth: '85vw',
+                  scrollSnapAlign: 'start',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  background: 'transparent',
+                  border: 'none',
+                  boxShadow: 'none',
                   position: 'relative',
-                  width: '100%',
-                  aspectRatio: '9 / 16',
-                  minHeight: '480px',
-                  borderRadius: '22px',
-                  backgroundColor: '#000000',
-                  overflow: 'hidden',
-                  cursor: isPlaying ? 'default' : 'pointer',
-                  boxShadow:
-                    theme.mode === 'dark'
-                      ? '0 8px 30px rgba(0,0,0,0.6)'
-                      : '0 8px 26px rgba(0,0,0,0.12)',
-                  transition: 'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
-                }}
-                onClick={() => {
-                  if (!hasDraggedRef.current && !isPlaying) {
-                    setPlayingVideoId(item.videoId);
-                  }
                 }}
               >
-                {isPlaying ? (
-                  <iframe
-                    src={`https://www.youtube-nocookie.com/embed/${item.videoId}?autoplay=1&rel=0&modestbranding=1`}
-                    title={item.title}
-                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
-                    allowFullScreen
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      border: 'none',
-                    }}
-                  />
-                ) : (
-                  <>
-                    <ShimmerImage
-                      src={item.thumbnailUrl}
-                      alt={item.title}
-                      containerStyle={{ width: '100%', height: '100%' }}
+                {/* Tall Vertical Video Media Frame (9:16 Shorts/Reel Aspect Ratio) */}
+                <div
+                  className="video-review-media-wrapper"
+                  style={{
+                    position: 'relative',
+                    width: '100%',
+                    aspectRatio: '9 / 16',
+                    minHeight: '480px',
+                    borderRadius: '22px',
+                    backgroundColor: '#000000',
+                    overflow: 'hidden',
+                    cursor: isPlaying ? 'default' : 'pointer',
+                    boxShadow:
+                      theme.mode === 'dark'
+                        ? '0 8px 30px rgba(0,0,0,0.6)'
+                        : '0 8px 26px rgba(0,0,0,0.12)',
+                    transition:
+                      'transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), box-shadow 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
+                  }}
+                  onClick={() => {
+                    if (!hasDraggedRef.current && !isPlaying) {
+                      setPlayingVideoId(item.videoId);
+                    }
+                  }}
+                >
+                  {isPlaying ? (
+                    <iframe
+                      src={`https://www.youtube-nocookie.com/embed/${item.videoId}?autoplay=1&rel=0&modestbranding=1`}
+                      title={item.title}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                      allowFullScreen
                       style={{
                         width: '100%',
                         height: '100%',
-                        objectFit: 'cover',
-                        transition: 'transform 0.4s ease',
+                        border: 'none',
                       }}
                     />
+                  ) : (
+                    <>
+                      <ShimmerImage
+                        src={item.thumbnailUrl}
+                        alt={item.title}
+                        containerStyle={{ width: '100%', height: '100%' }}
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          transition: 'transform 0.4s ease',
+                        }}
+                      />
 
-                    {/* Subtle vignette gradient */}
-                    <div
-                      style={{
-                        position: 'absolute',
-                        inset: 0,
-                        background:
-                          'linear-gradient(180deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.35) 100%)',
-                        pointerEvents: 'none',
-                      }}
-                    />
+                      {/* Subtle vignette gradient */}
+                      <div
+                        style={{
+                          position: 'absolute',
+                          inset: 0,
+                          background:
+                            'linear-gradient(180deg, rgba(0,0,0,0.02) 0%, rgba(0,0,0,0.35) 100%)',
+                          pointerEvents: 'none',
+                        }}
+                      />
 
-                    {/* Center Play Button Overlay */}
-                    <div
-                      className="video-review-play-btn"
-                      style={{
-                        position: 'absolute',
-                        top: '50%',
-                        left: '50%',
-                        transform: 'translate(-50%, -50%)',
-                        width: '56px',
-                        height: '56px',
-                        borderRadius: '50%',
-                        backgroundColor: 'rgba(220, 38, 38, 0.95)',
-                        backdropFilter: 'blur(6px)',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#ffffff',
-                        boxShadow: '0 6px 20px rgba(220, 38, 38, 0.55)',
-                        transition: 'all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
-                      }}
-                    >
-                      <Play size={24} fill="#ffffff" style={{ marginLeft: '4px' }} />
-                    </div>
-                  </>
-                )}
+                      {/* Center Play Button Overlay */}
+                      <div
+                        className="video-review-play-btn"
+                        style={{
+                          position: 'absolute',
+                          top: '50%',
+                          left: '50%',
+                          transform: 'translate(-50%, -50%)',
+                          width: '56px',
+                          height: '56px',
+                          borderRadius: '50%',
+                          backgroundColor: 'rgba(220, 38, 38, 0.95)',
+                          backdropFilter: 'blur(6px)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          color: '#ffffff',
+                          boxShadow: '0 6px 20px rgba(220, 38, 38, 0.55)',
+                          transition: 'all 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275)',
+                        }}
+                      >
+                        <Play size={24} fill="#ffffff" style={{ marginLeft: '4px' }} />
+                      </div>
+                    </>
+                  )}
+                </div>
+
+                {/* Simple Video Title Directly Underneath */}
+                <h3
+                  style={{
+                    fontSize: '14.5px',
+                    fontWeight: 700,
+                    color: theme.mode === 'dark' ? '#f8fafc' : '#0f172a',
+                    margin: '10px 0 0 0',
+                    lineHeight: 1.45,
+                    fontFamily: 'Outfit, -apple-system, sans-serif',
+                    letterSpacing: '-0.01em',
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    cursor: 'pointer',
+                  }}
+                  title={item.title}
+                  onClick={() => {
+                    if (!hasDraggedRef.current) {
+                      setPlayingVideoId(isPlaying ? null : item.videoId);
+                    }
+                  }}
+                >
+                  {item.title}
+                </h3>
               </div>
-
-              {/* Simple Video Title Directly Underneath */}
-              <h3
-                style={{
-                  fontSize: '14.5px',
-                  fontWeight: 700,
-                  color: theme.mode === 'dark' ? '#f8fafc' : '#0f172a',
-                  margin: '10px 0 0 0',
-                  lineHeight: 1.45,
-                  fontFamily: 'Outfit, -apple-system, sans-serif',
-                  letterSpacing: '-0.01em',
-                  display: '-webkit-box',
-                  WebkitLineClamp: 2,
-                  WebkitBoxOrient: 'vertical',
-                  overflow: 'hidden',
-                  cursor: 'pointer',
-                }}
-                title={item.title}
-                onClick={() => {
-                  if (!hasDraggedRef.current) {
-                    setPlayingVideoId(isPlaying ? null : item.videoId);
-                  }
-                }}
-              >
-                {item.title}
-              </h3>
-            </div>
-          );
-        })}
+            );
+          })}
         </div>
       </div>
     </section>

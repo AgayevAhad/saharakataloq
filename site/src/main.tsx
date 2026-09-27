@@ -1,7 +1,7 @@
 import './init-theme-splash';
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { App } from './App';
+import { App, getAppMode } from './App';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
 import './styles/index.css';
 
@@ -22,7 +22,13 @@ if (rootElement) {
     }
   } catch {}
 
-  const isHydratable = rootElement.hasChildNodes() && rootElement.innerHTML.trim().length > 0;
+  const currentMode = typeof window !== 'undefined' ? getAppMode() : 'site';
+  const isHydratable =
+    rootElement.hasChildNodes() &&
+    rootElement.innerHTML.trim().length > 0 &&
+    currentMode === 'site' &&
+    typeof window !== 'undefined' &&
+    !window.location.pathname.startsWith('/AdministratorNT');
 
   const appElement = (
     <React.StrictMode>
@@ -32,13 +38,10 @@ if (rootElement) {
     </React.StrictMode>
   );
 
-  if (
-    isHydratable &&
-    typeof window !== 'undefined' &&
-    !window.location.pathname.startsWith('/AdministratorNT')
-  ) {
+  if (isHydratable) {
     ReactDOM.hydrateRoot(rootElement, appElement);
   } else {
+    rootElement.innerHTML = '';
     ReactDOM.createRoot(rootElement).render(appElement);
   }
 }

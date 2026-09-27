@@ -21,6 +21,7 @@ interface BrandRailStudioProps {
   allBrands?: Brand[];
   theme: ThemeColors;
   csrfToken?: string;
+  allowedBrandIds?: string[];
   onSaveDraft?: (
     settings: BrandRailSettings,
     items: BrandRailItem[],
@@ -36,12 +37,20 @@ export const BrandRailStudio: React.FC<BrandRailStudioProps> = ({
   allBrands = [],
   theme,
   csrfToken,
+  allowedBrandIds,
   onSaveDraft,
   onPublish,
   onRollback: _onRollback,
   showToast,
 }) => {
-  const safeBrands = Array.isArray(allBrands) ? allBrands : [];
+  const safeBrands = useMemo(() => {
+    const raw = Array.isArray(allBrands) ? allBrands : [];
+    if (allowedBrandIds && allowedBrandIds.length > 0) {
+      const allowedLower = allowedBrandIds.map((id) => id.toLowerCase());
+      return raw.filter((b) => allowedLower.includes((b.id || b.slug).toLowerCase()));
+    }
+    return raw;
+  }, [allBrands, allowedBrandIds]);
 
   const [settings, setSettings] = useState<BrandRailSettings>(() => {
     return (
@@ -64,6 +73,12 @@ export const BrandRailStudio: React.FC<BrandRailStudioProps> = ({
 
   const [items, setItems] = useState<BrandRailItem[]>(() => {
     if (initialRail?.items && initialRail.items.length > 0) {
+      if (allowedBrandIds && allowedBrandIds.length > 0) {
+        const allowedLower = allowedBrandIds.map((id) => id.toLowerCase());
+        return initialRail.items.filter((it) =>
+          allowedLower.includes((it.brandId || it.brandSlug).toLowerCase())
+        );
+      }
       return initialRail.items;
     }
     return safeBrands.map((b, idx) => ({
@@ -99,25 +114,40 @@ export const BrandRailStudio: React.FC<BrandRailStudioProps> = ({
         .then((res) => {
           if (res) {
             if (res.settings) setSettings(res.settings);
-            if (res.items && res.items.length > 0) setItems(res.items);
+            if (res.items && res.items.length > 0) {
+              const filtered =
+                allowedBrandIds && allowedBrandIds.length > 0
+                  ? res.items.filter((it) =>
+                      allowedBrandIds
+                        .map((id) => id.toLowerCase())
+                        .includes((it.brandId || it.brandSlug).toLowerCase())
+                    )
+                  : res.items;
+              setItems(filtered);
+            }
             if (res.settings?.version) setEtag(`"br-default-v${res.settings.version}"`);
           }
         })
         .catch(() => {});
     }
-  }, [initialRail]);
+  }, [initialRail, allowedBrandIds]);
 
-  // Filter items based on search
+  // Filter items based on search and allowedBrandIds
   const filteredItems = useMemo(() => {
-    if (!searchQuery.trim()) return items;
+    let list = items;
+    if (allowedBrandIds && allowedBrandIds.length > 0) {
+      const allowedLower = allowedBrandIds.map((id) => id.toLowerCase());
+      list = list.filter((it) => allowedLower.includes((it.brandId || it.brandSlug).toLowerCase()));
+    }
+    if (!searchQuery.trim()) return list;
     const q = searchQuery.toLowerCase();
-    return items.filter(
+    return list.filter(
       (it) =>
         it.brandName.toLowerCase().includes(q) ||
         (it.optionalDisplayLabel && it.optionalDisplayLabel.toLowerCase().includes(q)) ||
         it.brandSlug.toLowerCase().includes(q)
     );
-  }, [items, searchQuery]);
+  }, [items, searchQuery, allowedBrandIds]);
 
   // Available brands to add
   const availableBrandsToAdd = useMemo(() => {

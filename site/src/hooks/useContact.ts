@@ -10,12 +10,7 @@ interface UseContactOptions {
   showToast: (message: string, type?: 'success' | 'warning') => void;
 }
 
-export function useContact({
-  settings,
-  brands = [],
-  getProductUrl,
-  showToast,
-}: UseContactOptions) {
+export function useContact({ settings, brands = [], getProductUrl, showToast }: UseContactOptions) {
   const getUrl = useCallback(
     (product: Product) => {
       if (getProductUrl) return getProductUrl(product);
@@ -35,7 +30,8 @@ export function useContact({
         const categoryLine = product.categoryName ? `\n🗂 Kateqoriya: ${product.categoryName}` : '';
         const text = `Salam, Sahara Electronics! Bu məhsul haqqında məlumat almaq istəyirəm:\n\n📌 Model: ${product.code}\n🏷 Məhsul: ${product.title}${brandLine}${categoryLine}\n\n🔗 ${getUrl(product)}`;
         const href = whatsappHref(settings?.whatsappNumber, text);
-        if (!href) return showToast('WhatsApp nömrəsi admin paneldə hələ əlavə edilməyib.', 'warning');
+        if (!href)
+          return showToast('WhatsApp nömrəsi admin paneldə hələ əlavə edilməyib.', 'warning');
         catalogApi.track('contact_whatsapp', product.id);
         window.open(href, '_blank', 'noopener,noreferrer');
       } else {
@@ -43,7 +39,8 @@ export function useContact({
           settings?.whatsappNumber,
           'Salam, Sahara Electronics! Saytınızdan yazıram, məsləhət almaq istərdim.'
         );
-        if (!href) return showToast('WhatsApp nömrəsi admin paneldə hələ əlavə edilməyib.', 'warning');
+        if (!href)
+          return showToast('WhatsApp nömrəsi admin paneldə hələ əlavə edilməyib.', 'warning');
         window.open(href, '_blank', 'noopener,noreferrer');
       }
     },

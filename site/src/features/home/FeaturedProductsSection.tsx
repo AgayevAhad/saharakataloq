@@ -180,27 +180,18 @@ export const FeaturedProductsSection: React.FC<FeaturedProductsSectionProps> = (
                 onClick={() => selectTab(tab.id)}
                 className={`featured-tab-btn ${isActive ? 'is-active' : ''}`}
                 style={{
-                  color: isActive
-                    ? '#dc2626'
-                    : theme.mode === 'dark'
-                      ? '#94a3b8'
-                      : '#64748b',
+                  color: isActive ? '#dc2626' : theme.mode === 'dark' ? '#94a3b8' : '#64748b',
                 }}
               >
                 <span>{tab.name}</span>
                 <div
                   className="featured-tab-progress-track"
                   style={{
-                    backgroundColor: isActive
-                      ? 'rgba(220, 38, 38, 0.14)'
-                      : 'transparent',
+                    backgroundColor: isActive ? 'rgba(220, 38, 38, 0.14)' : 'transparent',
                   }}
                 >
                   {isActive && (
-                    <div
-                      key={`${tab.id}-${tabKey}`}
-                      className="featured-tab-progress-fill"
-                    />
+                    <div key={`${tab.id}-${tabKey}`} className="featured-tab-progress-fill" />
                   )}
                 </div>
               </button>

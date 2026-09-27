@@ -1,10 +1,8 @@
-import React from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   Copy,
-  Download,
   Eye,
   EyeOff,
-  FileSpreadsheet,
   GripVertical,
   LayoutGrid,
   List,
@@ -13,15 +11,15 @@ import {
   Plus,
   RotateCcw,
   Search,
+  Shuffle,
+  Tag,
   Trash2,
-  Upload,
   Zap,
 } from 'lucide-react';
 import { CatalogData, Product } from '../../../types/product';
 import { ThemeColors } from '../../../types/theme';
 import { ShimmerImage } from '../../ShimmerImage';
 import {
-  getProductImageCount,
   getProductUniqueMediaCount,
   getProductVideoCount,
   isProductModified,
@@ -38,22 +36,9 @@ export interface ProductsSectionProps {
   adminCategory: string;
   setAdminCategory: (c: string) => void;
   adminMediaFilter:
-    | 'all'
-    | 'has-media'
-    | 'no-media'
-    | 'has-video'
-    | 'no-video'
-    | 'multi-media'
-    | 'single-media';
+    'all' | 'has-media' | 'no-media' | 'has-video' | 'no-video' | 'multi-media' | 'single-media';
   setAdminMediaFilter: (
-    f:
-      | 'all'
-      | 'has-media'
-      | 'no-media'
-      | 'has-video'
-      | 'no-video'
-      | 'multi-media'
-      | 'single-media'
+    f: 'all' | 'has-media' | 'no-media' | 'has-video' | 'no-video' | 'multi-media' | 'single-media'
   ) => void;
   adminSpecsFilter: 'all' | 'has-specs' | 'no-specs';
   setAdminSpecsFilter: (f: 'all' | 'has-specs' | 'no-specs') => void;
@@ -66,12 +51,6 @@ export interface ProductsSectionProps {
   adminViewMode: 'table' | 'cards';
   setAdminViewMode: (v: 'table' | 'cards') => void;
   filtered: Product[];
-  csvFileInputRef: React.RefObject<HTMLInputElement>;
-  handleExportExcel: () => void;
-  handleExportCsv: () => void;
-  handleImportFile: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  handleDownloadExcelTemplate: () => void;
-  handleDownloadCsvTemplate: () => void;
   handleBulkSetStatus: (
     type:
       | 'no-media-draft'
@@ -123,12 +102,6 @@ export const ProductsSection = ({
   adminViewMode,
   setAdminViewMode,
   filtered,
-  csvFileInputRef,
-  handleExportExcel,
-  handleExportCsv,
-  handleImportFile,
-  handleDownloadExcelTemplate,
-  handleDownloadCsvTemplate,
   handleBulkSetStatus,
   onNewProduct,
   onOpenEditProduct,
@@ -148,29 +121,153 @@ export const ProductsSection = ({
   onQuickCreateCategoryRequest,
   onQuickCreateBrandRequest,
 }: ProductsSectionProps) => {
+  const [isRandomOrder, setIsRandomOrder] = useState<boolean>(false);
+  const [randomSeed, setRandomSeed] = useState<number>(0);
+
+  const handleToggleRandom = () => {
+    if (!isRandomOrder) {
+      setIsRandomOrder(true);
+      setRandomSeed(Date.now());
+    } else {
+      setRandomSeed(Date.now());
+    }
+  };
+
+  const handleResetFilters = () => {
+    setQuery('');
+    setAdminBrand('all');
+    setAdminCategory('all');
+    setAdminMediaFilter('all');
+    setAdminSpecsFilter('all');
+    setAdminStatusFilter('all');
+    setAdminPriceFilter('all');
+    setAdminStockFilter('all');
+    setIsRandomOrder(false);
+  };
+
+  const displayedProducts = useMemo(() => {
+    if (!isRandomOrder) return filtered;
+    return [...filtered].sort((a, b) => {
+      const hashA =
+        (a.id + randomSeed).split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0) % 997;
+      const hashB =
+        (b.id + randomSeed).split('').reduce((acc, ch) => acc + ch.charCodeAt(0), 0) % 997;
+      return hashA - hashB;
+    });
+  }, [filtered, isRandomOrder, randomSeed]);
+
+  // Counts for interactive filter pills
+  const videoCount = useMemo(
+    () => catalog.products.filter((p) => getProductVideoCount(p) > 0).length,
+    [catalog.products]
+  );
+  const mediaCount = useMemo(
+    () => catalog.products.filter((p) => getProductUniqueMediaCount(p) > 0).length,
+    [catalog.products]
+  );
+  const noMediaCount = useMemo(
+    () => catalog.products.filter((p) => getProductUniqueMediaCount(p) === 0).length,
+    [catalog.products]
+  );
+  const specsCount = useMemo(
+    () => catalog.products.filter((p) => Boolean(p.specs?.length)).length,
+    [catalog.products]
+  );
+  const noSpecsCount = useMemo(
+    () => catalog.products.filter((p) => !p.specs?.length).length,
+    [catalog.products]
+  );
+  const pubCount = useMemo(
+    () => catalog.products.filter((p) => p.status === 'published').length,
+    [catalog.products]
+  );
+  const draftCount = useMemo(
+    () => catalog.products.filter((p) => p.status === 'draft').length,
+    [catalog.products]
+  );
+  const modCount = useMemo(
+    () =>
+      catalog.products.filter((p) =>
+        isProductModified(
+          p,
+          initialProducts.find((ip) => ip.id === p.id)
+        )
+      ).length,
+    [catalog.products, initialProducts]
+  );
+  const priceCount = useMemo(
+    () => catalog.products.filter((p) => p.price && Number(p.price) > 0).length,
+    [catalog.products]
+  );
+  const noPriceCount = useMemo(
+    () => catalog.products.filter((p) => !p.price || Number(p.price) <= 0).length,
+    [catalog.products]
+  );
+
+  const isAllFilterActive =
+    adminMediaFilter === 'all' &&
+    adminSpecsFilter === 'all' &&
+    adminStatusFilter === 'all' &&
+    adminPriceFilter === 'all' &&
+    adminBrand === 'all' &&
+    adminCategory === 'all' &&
+    adminStockFilter === 'all' &&
+    !query &&
+    !isRandomOrder;
+
   return (
     <div>
-      <div className="admin-list-actions" style={{ flexWrap: 'wrap', gap: '10px' }}>
+      {/* Top Search (Compact on left) & Right-aligned Controls Toolbar strictly 1 unified row */}
+      <div
+        className="admin-list-actions admin-products-top-toolbar"
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'nowrap',
+          gap: '8px',
+          width: '100%',
+          overflowX: 'auto',
+          paddingBottom: '2px',
+        }}
+      >
         <div
           className="admin-search"
-          style={{ background: theme.bgCard, borderColor: theme.border }}
+          style={{
+            background: theme.bgCard,
+            borderColor: theme.border,
+            flex: '0 0 200px',
+            minWidth: '160px',
+            maxWidth: '220px',
+          }}
         >
-          <Search size={15} color={theme.textMuted} />
+          <Search size={14} color={theme.textMuted} />
           <input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
-            placeholder="Məhsul adı, kod və ya nişan ilə axtar..."
-            style={{ color: theme.text }}
+            placeholder="Model, kod və ya adla axtar..."
+            style={{ color: theme.text, fontSize: '12px' }}
           />
         </div>
 
-        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+        <div
+          className="admin-toolbar-controls"
+          style={{
+            display: 'flex',
+            gap: '6px',
+            alignItems: 'center',
+            flexWrap: 'nowrap',
+            flexShrink: 0,
+            justifyContent: 'flex-end',
+          }}
+        >
           {/* Brand Filter */}
           <select
             value={adminBrand}
             onChange={(e) => setAdminBrand(e.target.value)}
-            className="admin-category-select"
+            className="admin-category-select admin-compact-select"
             title="Brendə görə süzgəc"
+            style={{ maxWidth: '125px' }}
           >
             <option value="all">Bütün brendlər ({catalog.brands.length})</option>
             {catalog.brands.map((b) => (
@@ -184,8 +281,9 @@ export const ProductsSection = ({
           <select
             value={adminCategory}
             onChange={(e) => setAdminCategory(e.target.value)}
-            className="admin-category-select"
+            className="admin-category-select admin-compact-select"
             title="Kateqoriyaya görə süzgəc"
+            style={{ maxWidth: '125px' }}
           >
             <option value="all">Bütün kateqoriyalar</option>
             {catalog.categories.map((c) => (
@@ -195,7 +293,7 @@ export const ProductsSection = ({
             ))}
           </select>
 
-          {/* Media Filter (Videolu / Videosuz / Şəkilli / Şəkilsiz / Çoxşəkilli) */}
+          {/* Media Filter */}
           <select
             value={adminMediaFilter}
             onChange={(e) =>
@@ -210,32 +308,21 @@ export const ProductsSection = ({
                   | 'single-media'
               )
             }
-            className="admin-category-select"
+            className="admin-category-select admin-compact-select"
             title="Şəkilli və ya şəkilsiz məhsullara görə süzgəc"
+            style={{ maxWidth: '115px' }}
           >
             <option value="all">Bütün Media ({catalog.products.length})</option>
-            <option value="has-video">
-              🎬 Videolu olanlar (
-              {catalog.products.filter((p) => getProductVideoCount(p) > 0).length})
-            </option>
-            <option value="no-video">
-              📹 Videosuz olanlar (
-              {catalog.products.filter((p) => getProductVideoCount(p) === 0).length})
-            </option>
-            <option value="has-media">
-              🖼 Medialı olanlar (
-              {catalog.products.filter((p) => getProductUniqueMediaCount(p) > 0).length})
-            </option>
-            <option value="no-media">
-              📷 Mediasız olanlar (
-              {catalog.products.filter((p) => getProductUniqueMediaCount(p) === 0).length})
-            </option>
+            <option value="has-video">🎬 Videolu ({videoCount})</option>
+            <option value="no-video">📹 Videosuz ({catalog.products.length - videoCount})</option>
+            <option value="has-media">🖼 Medialı ({mediaCount})</option>
+            <option value="no-media">📷 Mediasız ({noMediaCount})</option>
             <option value="multi-media">
-              📸 Çoxmedia (&gt;1) (
+              📸 Çoxmedia (
               {catalog.products.filter((p) => getProductUniqueMediaCount(p) > 1).length})
             </option>
             <option value="single-media">
-              🖼️ Tək media (=1) (
+              🖼️ Tək media (
               {catalog.products.filter((p) => getProductUniqueMediaCount(p) === 1).length})
             </option>
           </select>
@@ -246,51 +333,29 @@ export const ProductsSection = ({
             onChange={(e) =>
               setAdminSpecsFilter(e.target.value as 'all' | 'has-specs' | 'no-specs')
             }
-            className="admin-category-select"
+            className="admin-category-select admin-compact-select"
             title="Texniki göstəricilərə görə süzgəc"
+            style={{ maxWidth: '110px' }}
           >
-            <option value="all">Bütün Göstəricilər</option>
-            <option value="has-specs">
-              📊 Göstəricisi olanlar (
-              {catalog.products.filter((p) => Boolean(p.specs?.length)).length})
-            </option>
-            <option value="no-specs">
-              ⚠️ Göstəricisi boş olanlar (
-              {catalog.products.filter((p) => !p.specs?.length).length})
-            </option>
+            <option value="all">Göstəricilər</option>
+            <option value="has-specs">📊 Var ({specsCount})</option>
+            <option value="no-specs">⚠️ Boş ({noSpecsCount})</option>
           </select>
 
           {/* Status Filter */}
           <select
             value={adminStatusFilter}
             onChange={(e) =>
-              setAdminStatusFilter(
-                e.target.value as 'all' | 'published' | 'draft' | 'modified'
-              )
+              setAdminStatusFilter(e.target.value as 'all' | 'published' | 'draft' | 'modified')
             }
-            className="admin-category-select"
+            className="admin-category-select admin-compact-select"
             title="Məhsul statusuna görə süzgəc"
+            style={{ maxWidth: '110px' }}
           >
-            <option value="all">Bütün Statuslar</option>
-            <option value="published">
-              ✅ Dərc edilmişlər (
-              {catalog.products.filter((p) => p.status === 'published').length})
-            </option>
-            <option value="draft">
-              📝 Qaralamalar ({catalog.products.filter((p) => p.status === 'draft').length})
-            </option>
-            <option value="modified">
-              ✏️ Düzəliş edilənlər (
-              {
-                catalog.products.filter((p) =>
-                  isProductModified(
-                    p,
-                    initialProducts.find((ip) => ip.id === p.id)
-                  )
-                ).length
-              }
-              )
-            </option>
+            <option value="all">Statuslar</option>
+            <option value="published">✅ Dərc ({pubCount})</option>
+            <option value="draft">📝 Qaralama ({draftCount})</option>
+            <option value="modified">✏️ Düzəliş ({modCount})</option>
           </select>
 
           {/* Price Filter */}
@@ -299,18 +364,13 @@ export const ProductsSection = ({
             onChange={(e) =>
               setAdminPriceFilter(e.target.value as 'all' | 'has-price' | 'no-price')
             }
-            className="admin-category-select"
+            className="admin-category-select admin-compact-select"
             title="Qiymətə görə süzgəc"
+            style={{ maxWidth: '105px' }}
           >
-            <option value="all">Bütün Qiymətlər</option>
-            <option value="has-price">
-              💰 Qiyməti olanlar (
-              {catalog.products.filter((p) => p.price && Number(p.price) > 0).length})
-            </option>
-            <option value="no-price">
-              🏷️ Qiymətsiz olanlar (
-              {catalog.products.filter((p) => !p.price || Number(p.price) <= 0).length})
-            </option>
+            <option value="all">Qiymət</option>
+            <option value="has-price">💰 Qiymətli ({priceCount})</option>
+            <option value="no-price">🏷️ Qiymətsiz ({noPriceCount})</option>
           </select>
 
           {/* Stock Filter */}
@@ -321,46 +381,43 @@ export const ProductsSection = ({
                 e.target.value as 'all' | 'in_stock' | 'out_of_stock' | 'preorder'
               )
             }
-            className="admin-category-select"
+            className="admin-category-select admin-compact-select"
             title="Stok vəziyyətinə görə süzgəc"
+            style={{ maxWidth: '105px' }}
           >
-            <option value="all">Bütün Stok</option>
+            <option value="all">Stok</option>
             <option value="in_stock">
-              🟢 Stokda var (
-              {
-                catalog.products.filter((p) => (p.stockStatus || 'in_stock') === 'in_stock')
-                  .length
-              }
-              )
+              🟢 Var (
+              {catalog.products.filter((p) => (p.stockStatus || 'in_stock') === 'in_stock').length})
             </option>
             <option value="out_of_stock">
-              🔴 Bitib / Yoxdur (
-              {catalog.products.filter((p) => p.stockStatus === 'out_of_stock').length})
+              🔴 Yoxdur ({catalog.products.filter((p) => p.stockStatus === 'out_of_stock').length})
             </option>
             <option value="preorder">
-              🟡 Ön sifariş (
-              {catalog.products.filter((p) => p.stockStatus === 'preorder').length})
+              🟡 Ön sifariş ({catalog.products.filter((p) => p.stockStatus === 'preorder').length})
             </option>
           </select>
+
+          {/* Random / Shuffle Order Button */}
+          <button
+            type="button"
+            className={`admin-random-btn ${isRandomOrder ? 'active' : ''}`}
+            onClick={handleToggleRandom}
+            title={
+              isRandomOrder
+                ? 'Təsadüfi sıranı yenidən qarışdır'
+                : 'Məhsulları təsadüfi ardıcıllıqla göstər (Random)'
+            }
+          >
+            <Shuffle size={13} />
+            <span>{isRandomOrder ? 'Qarışdırıldı' : 'Təsadüfi'}</span>
+          </button>
 
           {/* View Mode Toggle Switch (Table vs Cards) */}
           <div
             className="admin-view-toggle"
             style={{ borderColor: theme.border, background: theme.bgSecondary }}
           >
-            <button
-              type="button"
-              className={`admin-view-btn ${adminViewMode === 'table' ? 'active' : ''}`}
-              style={{
-                background: adminViewMode === 'table' ? theme.primary : 'transparent',
-                color: adminViewMode === 'table' ? '#ffffff' : theme.textMuted,
-              }}
-              onClick={() => setAdminViewMode('table')}
-              title="Sıra / Cədvəl görünüşü"
-            >
-              <List size={14} />
-              <span>Siyahı</span>
-            </button>
             <button
               type="button"
               className={`admin-view-btn ${adminViewMode === 'cards' ? 'active' : ''}`}
@@ -371,200 +428,200 @@ export const ProductsSection = ({
               onClick={() => setAdminViewMode('cards')}
               title="Kart / Vitrin görünüşü"
             >
-              <LayoutGrid size={14} />
+              <LayoutGrid size={13} />
               <span>Kartlar</span>
+            </button>
+            <button
+              type="button"
+              className={`admin-view-btn ${adminViewMode === 'table' ? 'active' : ''}`}
+              style={{
+                background: adminViewMode === 'table' ? theme.primary : 'transparent',
+                color: adminViewMode === 'table' ? '#ffffff' : theme.textMuted,
+              }}
+              onClick={() => setAdminViewMode('table')}
+              title="Sıra / Cədvəl görünüşü"
+            >
+              <List size={13} />
+              <span>Siyahı</span>
             </button>
           </div>
 
-          {/* Bulk Excel & CSV Buttons */}
-          <button
-            type="button"
-            onClick={handleExportExcel}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              backgroundColor: '#1e293b',
-              color: '#38bdf8',
-              border: `1px solid rgba(56, 189, 248, 0.4)`,
-              padding: '8px 12px',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontWeight: 750,
-              fontSize: '12px',
-            }}
-            title="Bütün məhsulları Excel (.xlsx) cədvəli kimi endir"
-          >
-            <FileSpreadsheet size={14} />
-            <span>Excel (.xlsx) İxrac</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleExportCsv}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              backgroundColor: theme.bgSecondary,
-              color: theme.text,
-              border: `1px solid ${theme.border}`,
-              padding: '8px 12px',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontWeight: 700,
-              fontSize: '12px',
-            }}
-            title="Məhsulları CSV faylı kimi endir"
-          >
-            <Download size={14} />
-            <span>CSV İxrac</span>
-          </button>
-
-          <label
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              backgroundColor: '#16a34a',
-              color: '#ffffff',
-              padding: '8px 13px',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontWeight: 750,
-              fontSize: '12px',
-              boxShadow: '0 2px 8px rgba(22, 163, 74, 0.28)',
-            }}
-            title="Excel (.xlsx / .xls) və ya CSV faylı ilə məhsulları toplu yüklə"
-          >
-            <Upload size={14} />
-            <span>Excel / CSV İdxal</span>
-            <input
-              ref={csvFileInputRef}
-              type="file"
-              accept=".xlsx,.xls,.csv"
-              onChange={handleImportFile}
-              style={{ display: 'none' }}
-            />
-          </label>
-
-          <button
-            type="button"
-            onClick={handleDownloadExcelTemplate}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              backgroundColor: 'transparent',
-              color: '#16a34a',
-              border: `1px dashed #16a34a`,
-              padding: '8px 10px',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '11px',
-              fontWeight: 650,
-            }}
-            title="Nümunə Excel (.xlsx) şablon faylını endir"
-          >
-            <FileSpreadsheet size={13} />
-            <span>Excel Şablonu</span>
-          </button>
-
-          <button
-            type="button"
-            onClick={handleDownloadCsvTemplate}
-            style={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              backgroundColor: 'transparent',
-              color: theme.textMuted,
-              border: `1px dashed ${theme.border}`,
-              padding: '8px 10px',
-              borderRadius: '8px',
-              cursor: 'pointer',
-              fontSize: '11px',
-            }}
-            title="Nümunə CSV şablon faylını endir"
-          >
-            <FileSpreadsheet size={13} />
-            <span>CSV Şablonu</span>
-          </button>
-
+          {/* Create New Product Button */}
           <button
             className="manager-add"
             onClick={onNewProduct}
-            style={{ background: theme.primary, color: '#fff' }}
+            style={{
+              background: theme.primary,
+              color: '#fff',
+              padding: '8px 13px',
+              borderRadius: '8px',
+              fontSize: '12px',
+              flexShrink: 0,
+              whiteSpace: 'nowrap',
+            }}
           >
-            <Plus size={16} /> Yeni Məhsul
+            <Plus size={15} /> Yeni Məhsul
           </button>
         </div>
       </div>
 
-      {/* Results count & status overview bar */}
+      {/* Interactive Quick Filter Chips Strip ("GÖSTƏRİLİR" SECTION) */}
       <div
+        className="admin-filter-chips-bar"
         style={{
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          margin: '12px 0 10px',
-          padding: '8px 14px',
           background: theme.bgSecondary,
-          borderRadius: '8px',
-          border: `1px solid ${theme.border}`,
-          fontSize: '12px',
+          borderColor: theme.border,
           color: theme.textMuted,
-          flexWrap: 'wrap',
-          gap: '8px',
         }}
       >
-        <div>
-          Göstərilir: <strong style={{ color: theme.text }}>{filtered.length}</strong> /{' '}
-          {catalog.products.length} məhsul
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <span>Göstərilir:</span>
+          <strong style={{ color: theme.text, fontSize: '13px' }}>
+            {displayedProducts.length}
+          </strong>
+          <span>/ {catalog.products.length} məhsul</span>
         </div>
-        <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-          <span>
-            Videolu:{' '}
-            <strong style={{ color: '#8b5cf6' }}>
-              {catalog.products.filter((p) => getProductVideoCount(p) > 0).length}
-            </strong>
-          </span>
-          <span>
-            Şəkilli:{' '}
-            <strong style={{ color: '#16a34a' }}>
-              {catalog.products.filter((p) => getProductUniqueMediaCount(p) > 0).length}
-            </strong>
-          </span>
-          <span>
-            Şəkilsiz:{' '}
-            <strong style={{ color: '#ef4444' }}>
-              {catalog.products.filter((p) => getProductUniqueMediaCount(p) === 0).length}
-            </strong>
-          </span>
-          <span>
-            Göstəricili:{' '}
-            <strong style={{ color: '#2563eb' }}>
-              {catalog.products.filter((p) => Boolean(p.specs?.length)).length}
-            </strong>
-          </span>
-          <span>
-            Göstəricisiz:{' '}
-            <strong style={{ color: '#d97706' }}>
-              {catalog.products.filter((p) => !p.specs?.length).length}
-            </strong>
-          </span>
-          <span>
-            Yayımda:{' '}
-            <strong style={{ color: '#16a34a' }}>
-              {catalog.products.filter((p) => p.status === 'published').length}
-            </strong>
-          </span>
-          <span>
-            Qaralama:{' '}
-            <strong style={{ color: '#64748b' }}>
-              {catalog.products.filter((p) => p.status === 'draft').length}
-            </strong>
-          </span>
+
+        <div className="admin-filter-chips-list">
+          {/* Hamısı chip */}
+          <button
+            type="button"
+            className={`admin-filter-chip ${isAllFilterActive ? 'active' : ''}`}
+            onClick={handleResetFilters}
+            title="Bütün filtrləri sıfırla və hamısını göstər"
+          >
+            Hamısı ({catalog.products.length})
+          </button>
+
+          {/* Videolu chip */}
+          <button
+            type="button"
+            className={`admin-filter-chip ${adminMediaFilter === 'has-video' ? 'active purple' : ''}`}
+            onClick={() =>
+              setAdminMediaFilter(adminMediaFilter === 'has-video' ? 'all' : 'has-video')
+            }
+            title="Yalnız video çarxı olan məhsulları filtrlə"
+          >
+            🎬 Videolu ({videoCount})
+          </button>
+
+          {/* Şəkilli chip */}
+          <button
+            type="button"
+            className={`admin-filter-chip ${adminMediaFilter === 'has-media' ? 'active green' : ''}`}
+            onClick={() =>
+              setAdminMediaFilter(adminMediaFilter === 'has-media' ? 'all' : 'has-media')
+            }
+            title="Yalnız şəkli olan məhsulları filtrlə"
+          >
+            🖼 Medialı ({mediaCount})
+          </button>
+
+          {/* Şəkilsiz chip */}
+          <button
+            type="button"
+            className={`admin-filter-chip ${adminMediaFilter === 'no-media' ? 'active' : ''}`}
+            onClick={() =>
+              setAdminMediaFilter(adminMediaFilter === 'no-media' ? 'all' : 'no-media')
+            }
+            title="Şəkilsiz məhsulları filtrlə"
+          >
+            📷 Şəkilsiz ({noMediaCount})
+          </button>
+
+          {/* Göstəricili chip */}
+          <button
+            type="button"
+            className={`admin-filter-chip ${adminSpecsFilter === 'has-specs' ? 'active blue' : ''}`}
+            onClick={() =>
+              setAdminSpecsFilter(adminSpecsFilter === 'has-specs' ? 'all' : 'has-specs')
+            }
+            title="Texniki parametrləri olan məhsulları filtrlə"
+          >
+            📊 Göstəricili ({specsCount})
+          </button>
+
+          {/* Göstəricisiz chip */}
+          <button
+            type="button"
+            className={`admin-filter-chip ${adminSpecsFilter === 'no-specs' ? 'active amber' : ''}`}
+            onClick={() =>
+              setAdminSpecsFilter(adminSpecsFilter === 'no-specs' ? 'all' : 'no-specs')
+            }
+            title="Texniki parametrləri boş olan məhsulları filtrlə"
+          >
+            ⚠️ Göstəricisiz ({noSpecsCount})
+          </button>
+
+          {/* Yayımda chip */}
+          <button
+            type="button"
+            className={`admin-filter-chip ${adminStatusFilter === 'published' ? 'active green' : ''}`}
+            onClick={() =>
+              setAdminStatusFilter(adminStatusFilter === 'published' ? 'all' : 'published')
+            }
+            title="Dərc edilmiş aktiv məhsulları filtrlə"
+          >
+            ✅ Yayımda ({pubCount})
+          </button>
+
+          {/* Qaralama chip */}
+          <button
+            type="button"
+            className={`admin-filter-chip ${adminStatusFilter === 'draft' ? 'active' : ''}`}
+            onClick={() => setAdminStatusFilter(adminStatusFilter === 'draft' ? 'all' : 'draft')}
+            title="Qaralama halında olan məhsulları filtrlə"
+          >
+            📝 Qaralama ({draftCount})
+          </button>
+
+          {/* Düzəliş chip */}
+          {modCount > 0 && (
+            <button
+              type="button"
+              className={`admin-filter-chip ${adminStatusFilter === 'modified' ? 'active amber' : ''}`}
+              onClick={() =>
+                setAdminStatusFilter(adminStatusFilter === 'modified' ? 'all' : 'modified')
+              }
+              title="Düzəliş edilmiş məhsulları filtrlə"
+            >
+              ✏️ Düzəliş ({modCount})
+            </button>
+          )}
+
+          {/* Qiymətli chip */}
+          <button
+            type="button"
+            className={`admin-filter-chip ${adminPriceFilter === 'has-price' ? 'active blue' : ''}`}
+            onClick={() =>
+              setAdminPriceFilter(adminPriceFilter === 'has-price' ? 'all' : 'has-price')
+            }
+            title="Qiyməti olan məhsulları filtrlə"
+          >
+            💰 Qiymətli ({priceCount})
+          </button>
+
+          {/* Qiymətsiz chip */}
+          <button
+            type="button"
+            className={`admin-filter-chip ${adminPriceFilter === 'no-price' ? 'active' : ''}`}
+            onClick={() =>
+              setAdminPriceFilter(adminPriceFilter === 'no-price' ? 'all' : 'no-price')
+            }
+            title="Qiymətsiz (Sorğu ilə) olan məhsulları filtrlə"
+          >
+            🏷️ Qiymətsiz ({noPriceCount})
+          </button>
+
+          {/* Təsadüfi chip */}
+          <button
+            type="button"
+            className={`admin-filter-chip ${isRandomOrder ? 'active purple' : ''}`}
+            onClick={handleToggleRandom}
+            title="Təsadüfi düzülüşü aktivləşdir / yenidən qarışdır"
+          >
+            🎲 Təsadüfi {isRandomOrder ? '(Aktiv)' : ''}
+          </button>
         </div>
       </div>
 
@@ -708,7 +765,7 @@ export const ProductsSection = ({
               cursor: 'pointer',
             }}
           >
-            <Eye size={12} /> Süzgəcdəkiləri Dərc Et ({filtered.length})
+            <Eye size={12} /> Süzgəcdəkiləri Dərc Et ({displayedProducts.length})
           </button>
 
           <button
@@ -729,16 +786,18 @@ export const ProductsSection = ({
               cursor: 'pointer',
             }}
           >
-            <EyeOff size={12} /> Süzgəcdəkiləri Gizlə ({filtered.length})
+            <EyeOff size={12} /> Süzgəcdəkiləri Gizlə ({displayedProducts.length})
           </button>
         </div>
       </div>
 
+      {/* PRODUCT LIST (CARDS VIEW VS TABLE VIEW) */}
       {adminViewMode === 'cards' ? (
         <div className="admin-products-cards-grid">
-          {filtered.map((product) => {
+          {displayedProducts.map((product) => {
             const catalogIndex = catalog.products.findIndex((p) => p.id === product.id);
             const brand = catalog.brands.find((b) => b.id === product.brandId);
+            const categoryObj = catalog.categories.find((c) => c.id === product.category);
             const mediaCount = getProductUniqueMediaCount(product);
             const specsCount = product.specs?.length || 0;
             const initialProduct = initialProducts.find((p) => p.id === product.id);
@@ -750,16 +809,17 @@ export const ProductsSection = ({
                 className="admin-product-card"
                 style={{ background: theme.bgCard, borderColor: theme.border }}
               >
-                {/* Card Media Preview */}
+                {/* 1. Card Media Stage (215px Crisp Containment with ShimmerImage & Badges) */}
                 <div
                   className="admin-card-image-wrap"
                   onClick={() => onOpenLightbox(product)}
-                  title="Böyütmək və baxmaq üçün klikləyin"
+                  title="Böyütmək və şəkillərə tam baxmaq üçün klikləyin"
                 >
                   {product.image ? (
                     <ShimmerImage
                       src={product.image}
                       alt={product.title}
+                      cropRect={product.cropRect || product.media?.[0]?.cropRect}
                       className="admin-card-img"
                       style={{
                         objectPosition: product.imagePosition || 'center',
@@ -784,11 +844,11 @@ export const ProductsSection = ({
                       <span
                         className="admin-card-video-badge"
                         style={{
-                          background: 'rgba(124, 58, 237, 0.9)',
+                          background: 'rgba(124, 58, 237, 0.92)',
                           color: '#ffffff',
-                          padding: '2px 6px',
-                          borderRadius: '4px',
-                          fontSize: '10px',
+                          padding: '3px 7px',
+                          borderRadius: '6px',
+                          fontSize: '9.5px',
                           fontWeight: 800,
                           boxShadow: '0 2px 6px rgba(124, 58, 237, 0.4)',
                         }}
@@ -802,9 +862,9 @@ export const ProductsSection = ({
                         style={{
                           background: '#d97706',
                           color: '#ffffff',
-                          padding: '2px 6px',
-                          borderRadius: '4px',
-                          fontSize: '10px',
+                          padding: '3px 7px',
+                          borderRadius: '6px',
+                          fontSize: '9.5px',
                           fontWeight: 800,
                         }}
                         title="Bu məhsulda redaktə və ya kəsim dəyişikliyi var"
@@ -822,9 +882,24 @@ export const ProductsSection = ({
                   )}
                 </div>
 
-                {/* Card Body */}
+                {/* 2. Card Body (Matching exact catalog ProductCard typography and spacing) */}
                 <div className="admin-card-body">
-                  <div className="admin-card-category">{product.categoryName}</div>
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '6px',
+                    }}
+                  >
+                    <span className="admin-card-category">
+                      {product.categoryName || categoryObj?.name || product.category}
+                    </span>
+                    <span className="admin-card-code" style={{ fontWeight: 700 }}>
+                      № {catalogIndex + 1}
+                    </span>
+                  </div>
+
                   <h4
                     className="admin-card-title"
                     title={product.title}
@@ -832,97 +907,161 @@ export const ProductsSection = ({
                   >
                     {product.title || 'Adsız məhsul'}
                   </h4>
+
                   <div className="admin-card-code" style={{ color: theme.textMuted }}>
-                    Model:{' '}
-                    <strong style={{ color: theme.text }}>{product.code || 'KODSUZ'}</strong>{' '}
-                    (№ {catalogIndex + 1})
+                    Model: <strong style={{ color: theme.text }}>{product.code || 'KODSUZ'}</strong>
                   </div>
 
-                  {/* Quick Stats */}
-                  <div className="admin-card-stats" style={{ borderColor: theme.border }}>
-                    <span className={`admin-card-stat ${specsCount > 0 ? 'good' : 'warn'}`}>
-                      📊 {specsCount} parametr
-                    </span>
-                    <span
-                      className={`admin-card-stat ${product.price ? 'price' : 'no-price'}`}
-                    >
-                      💰{' '}
-                      {product.price
-                        ? `${product.price} ${product.currency || '₼'}`
-                        : 'Qiymətsiz'}
-                    </span>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="admin-card-actions">
-                    <button
-                      type="button"
-                      className="admin-card-btn edit"
-                      onClick={() => onOpenEditProduct(product)}
-                      style={{ background: theme.primary, borderColor: theme.primary }}
-                      title="Məhsulu redaktə et"
-                    >
-                      <Pencil size={12} /> Redaktə
-                    </button>
-                    {isModified && initialProduct && (
-                      <button
-                        type="button"
-                        className="admin-card-btn"
-                        onClick={() => onRevertSingleProduct(product.id)}
-                        title="Bu məhsulu ilkin dərc olunmuş vəziyyətinə qaytar"
-                        style={{
-                          background: 'rgba(217, 119, 6, 0.15)',
-                          color: '#d97706',
-                          border: '1px solid #d97706',
-                        }}
-                      >
-                        <RotateCcw size={12} />
-                      </button>
-                    )}
-                    <button
-                      type="button"
-                      className="admin-card-btn duplicate"
-                      onClick={() => onDuplicateProduct(product)}
-                      title="Nüsxəsini çıxar"
-                    >
-                      <Copy size={12} />
-                    </button>
-                    <button
-                      type="button"
-                      className={`admin-card-btn toggle ${
-                        product.status === 'published' ? 'to-draft' : 'to-pub'
-                      }`}
-                      onClick={() =>
-                        onUpdateProductInline(product.id, {
-                          status: product.status === 'published' ? 'draft' : 'published',
-                        })
-                      }
-                      title={
-                        product.status === 'published'
-                          ? 'Qaralamaya keçir (Gizlə)'
-                          : 'Dərc et (Göstər)'
-                      }
-                    >
-                      {product.status === 'published' ? (
-                        <EyeOff size={12} />
-                      ) : (
-                        <Eye size={12} />
+                  {/* Specs summary pills */}
+                  {specsCount > 0 ? (
+                    <div className="admin-card-specs-row">
+                      {product.specs?.slice(0, 3).map((s, sIdx) => (
+                        <span
+                          key={sIdx}
+                          className="admin-card-spec-pill"
+                          style={{ borderColor: theme.border }}
+                          title={`${s.name}: ${s.value}`}
+                        >
+                          {s.name}: <strong>{s.value}</strong>
+                        </span>
+                      ))}
+                      {specsCount > 3 && (
+                        <span className="admin-card-spec-pill" style={{ opacity: 0.7 }}>
+                          +{specsCount - 3} parametr
+                        </span>
                       )}
-                    </button>
+                    </div>
+                  ) : (
+                    <div
+                      style={{
+                        fontSize: '11px',
+                        color: '#d97706',
+                        fontStyle: 'italic',
+                        margin: '2px 0',
+                      }}
+                    >
+                      ⚠️ Xüsusiyyətlər qeyd edilməyib
+                    </div>
+                  )}
+
+                  {/* Price and Stock Status Row */}
+                  <div className="admin-card-price-row">
+                    {product.price && Number(product.price) > 0 ? (
+                      <span className="admin-card-price-val">
+                        {Number(product.price).toLocaleString('az-AZ')} {product.currency || '₼'}
+                      </span>
+                    ) : (
+                      <span className="admin-card-price-none">Qiymət: Sorğu ilə (Qiymətsiz)</span>
+                    )}
+
+                    <span
+                      style={{
+                        fontSize: '10.5px',
+                        fontWeight: 750,
+                        padding: '2px 6px',
+                        borderRadius: '4px',
+                        background:
+                          product.stockStatus === 'out_of_stock'
+                            ? 'rgba(239, 68, 68, 0.12)'
+                            : product.stockStatus === 'preorder'
+                              ? 'rgba(245, 158, 11, 0.12)'
+                              : 'rgba(22, 163, 74, 0.12)',
+                        color:
+                          product.stockStatus === 'out_of_stock'
+                            ? '#ef4444'
+                            : product.stockStatus === 'preorder'
+                              ? '#f59e0b'
+                              : '#16a34a',
+                      }}
+                    >
+                      {product.stockStatus === 'out_of_stock'
+                        ? 'Bitib'
+                        : product.stockStatus === 'preorder'
+                          ? 'Ön sifariş'
+                          : 'Stokda'}
+                    </span>
+                  </div>
+                </div>
+
+                {/* 3. Attached Thin Bottom Action Strip (Separated by a thin top line) */}
+                <div className="admin-card-actions-strip" style={{ borderColor: theme.border }}>
+                  <button
+                    type="button"
+                    className="admin-card-action-btn edit"
+                    onClick={() => onOpenEditProduct(product)}
+                    style={{ background: theme.primary, borderColor: theme.primary }}
+                    title="Redaktə et"
+                  >
+                    <Pencil size={12} /> Redaktə
+                  </button>
+
+                  <button
+                    type="button"
+                    className={`admin-card-action-btn price-toggle`}
+                    onClick={() => {
+                      if (product.price && Number(product.price) > 0) {
+                        onUpdateProductInline(product.id, { price: 0 });
+                      } else {
+                        const val = prompt('Məhsul üçün qiymət daxil edin (AZN):', '100');
+                        if (val && !isNaN(Number(val))) {
+                          onUpdateProductInline(product.id, { price: Number(val) });
+                        }
+                      }
+                    }}
+                    title={product.price ? 'Qiyməti sıfırla (Qiymətsiz et)' : 'Qiymət təyin et'}
+                  >
+                    <Tag size={12} /> {product.price ? 'Qiymətli' : 'Qiymətsiz'}
+                  </button>
+
+                  <button
+                    type="button"
+                    className={`admin-card-action-btn pub-toggle ${
+                      product.status === 'published' ? 'to-draft' : 'to-pub'
+                    }`}
+                    onClick={() =>
+                      onUpdateProductInline(product.id, {
+                        status: product.status === 'published' ? 'draft' : 'published',
+                      })
+                    }
+                    title={
+                      product.status === 'published'
+                        ? 'Qaralamaya keçir (Gizlə)'
+                        : 'Dərc et (Yayımda göstər)'
+                    }
+                  >
+                    {product.status === 'published' ? <Eye size={12} /> : <EyeOff size={12} />}
+                    <span>{product.status === 'published' ? 'Dərc' : 'Qaralama'}</span>
+                  </button>
+
+                  {isModified && initialProduct && (
                     <button
                       type="button"
-                      className="admin-card-btn delete"
-                      onClick={() => onRemoveProduct(product.id)}
-                      title="Məhsulu sil"
+                      className="admin-card-action-btn"
+                      onClick={() => onRevertSingleProduct(product.id)}
+                      title="Bu məhsulu ilkin dərc olunmuş vəziyyətinə qaytar"
+                      style={{
+                        background: 'rgba(217, 119, 6, 0.15)',
+                        color: '#d97706',
+                        borderColor: '#d97706',
+                      }}
                     >
-                      <Trash2 size={12} />
+                      <RotateCcw size={12} />
                     </button>
-                  </div>
+                  )}
+
+                  <button
+                    type="button"
+                    className="admin-card-action-btn delete"
+                    onClick={() => onRemoveProduct(product.id)}
+                    title="Məhsulu sil"
+                  >
+                    <Trash2 size={12} />
+                  </button>
                 </div>
               </div>
             );
           })}
-          {!filtered.length && (
+          {!displayedProducts.length && (
             <div
               style={{
                 gridColumn: '1 / -1',
@@ -959,7 +1098,7 @@ export const ProductsSection = ({
               </tr>
             </thead>
             <tbody>
-              {filtered.map((product) => {
+              {displayedProducts.map((product) => {
                 const catalogIndex = catalog.products.findIndex((p) => p.id === product.id);
                 const isDragging = draggedIndex === catalogIndex;
                 const isDropTarget = dropTargetIndex === catalogIndex;
@@ -1020,6 +1159,7 @@ export const ProductsSection = ({
                             <ShimmerImage
                               src={product.image}
                               alt={product.title}
+                              cropRect={product.cropRect || product.media?.[0]?.cropRect}
                               style={{ width: '100%', height: '100%', objectFit: 'contain' }}
                             />
                           ) : (
@@ -1075,9 +1215,7 @@ export const ProductsSection = ({
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                         <strong className="admin-code">{product.code || '—'}</strong>
                         {(() => {
-                          const initialProduct = initialProducts.find(
-                            (p) => p.id === product.id
-                          );
+                          const initialProduct = initialProducts.find((p) => p.id === product.id);
                           const isModified = isProductModified(product, initialProduct);
                           return isModified ? (
                             <span
@@ -1115,9 +1253,7 @@ export const ProductsSection = ({
                           if (e.target.value === '__new_category__') {
                             onQuickCreateCategoryRequest?.(product.id);
                           } else {
-                            const cat = catalog.categories.find(
-                              (c) => c.id === e.target.value
-                            );
+                            const cat = catalog.categories.find((c) => c.id === e.target.value);
                             onUpdateProductInline(product.id, {
                               category: e.target.value,
                               categoryName: cat?.name || product.categoryName,
@@ -1230,8 +1366,7 @@ export const ProductsSection = ({
                               product.status === 'published'
                                 ? 'rgba(37, 99, 235, 0.12)'
                                 : 'rgba(127,127,127,0.12)',
-                            color:
-                              product.status === 'published' ? '#2563eb' : theme.textMuted,
+                            color: product.status === 'published' ? '#2563eb' : theme.textMuted,
                             fontWeight: 750,
                           }}
                         >
@@ -1297,9 +1432,7 @@ export const ProductsSection = ({
                           <Copy size={15} />
                         </button>
                         {(() => {
-                          const initialProduct = initialProducts.find(
-                            (p) => p.id === product.id
-                          );
+                          const initialProduct = initialProducts.find((p) => p.id === product.id);
                           const isModified = isProductModified(product, initialProduct);
                           return isModified && initialProduct ? (
                             <button
@@ -1346,7 +1479,7 @@ export const ProductsSection = ({
                   </tr>
                 );
               })}
-              {!filtered.length && (
+              {!displayedProducts.length && (
                 <tr>
                   <td
                     colSpan={10}

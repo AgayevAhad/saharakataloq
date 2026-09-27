@@ -53,7 +53,8 @@ export const DEFAULT_BRANDS: Brand[] = [
     active: true,
     comingSoon: false,
   },
-  { id: 'artel', name: 'ARTEL', slug: 'artel', originCountry: 'Özbəkistan', manufacturingCountries: ['Özbəkistan'], logo: '/media/brands/artel-logo.svg', active: true, comingSoon: true },
+  { id: 'artel', name: 'ARTEL', slug: 'artel', originCountry: 'Özbəkistan', manufacturingCountries: ['Özbəkistan'], logo: '/media/brands/artel-logo.svg', active: true, comingSoon: false },
+  { id: 'beko', name: 'BEKO', slug: 'beko', originCountry: 'Türkiyə', manufacturingCountries: ['Türkiyə'], logo: '/media/brands/beko-logo.png', active: true, comingSoon: true },
 ];
 
 export const DEFAULT_CATEGORIES: CatalogCategory[] = [
@@ -111,6 +112,15 @@ export const DEFAULT_SETTINGS: CatalogSettings = {
   siteMaintenanceMessage: 'Saytda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.',
   catalogActive: true,
   maintenanceMessage: 'Kataloqda profilaktik yenilənmə aparılır. Tezliklə xidmətinizdəyik.',
+  aboutText: 'Sahara Electronics — ARDO, Lotus və Artel kimi qabaqcıl Avropa və Asiya məişət texnikası brendlərinin Azərbaycandakı rəsmi distribütoru və zəmanətli tədarükçüsüdür. Məqsədimiz hər bir ailəyə ən müasir, enerji baxımından səmərəli və zərif dizaynlı məişət avadanlıqlarını rəsmi zəmanət və operativ servis dəstəyi ilə təqdim etməkdir.',
+  termsText: 'Sahara Electronics kataloqundakı bütün məhsul parametrləri, texniki xüsusiyyətlər və qiymətlər rəsmi istehsalçı məlumatları əsasında yenilənir. Kataloq üzərindən seçilmiş məhsullarla bağlı ətraflı məlumat və rəsmi sifariş üçün birbaşa mağazalarımıza müraciət edə və ya WhatsApp xidməti ilə əlaqə saxlaya bilərsiniz.',
+  privacyText: 'Sahara Electronics müştərilərin fərdi məlumatlarının məxfiliyinə və təhlükəsizliyinə yüksək məsuliyyətlə yanaşır. Bizimlə paylaşılan əlaqə nömrələri və sorğular yalnız müştəri xidmətinin keyfiyyətini artırmaq və rəsmi təklifləri çatdırmaq məqsədilə istifadə olunur.',
+  supportText: 'Hər hansı sualınız, texniki dəstək ehtiyacınız və ya məhsul seçimi ilə bağlı köməyə ehtiyacınız olduqda peşəkar konsultantlarımız həftənin hər günü xidmətinizdədir.',
+  developerName: 'Ahad Agayev',
+  developerRole: 'Full Stack Developer & UI/UX Designer',
+  developerPhone: '+994501234567',
+  developerInstagram: '@ahad.agayev',
+  developerWebsite: 'https://ahadagayev.dev',
 };
 
 export const normalizeProduct = (product: Product): Product => {
@@ -227,6 +237,15 @@ export const normalizeCatalog = (data?: Partial<CatalogData> | null): CatalogDat
       siteMaintenanceMessage: data?.settings?.siteMaintenanceMessage || DEFAULT_SETTINGS.siteMaintenanceMessage,
       catalogActive: data?.settings?.catalogActive !== undefined ? data.settings.catalogActive : true,
       maintenanceMessage: data?.settings?.maintenanceMessage || DEFAULT_SETTINGS.maintenanceMessage,
+      aboutText: data?.settings?.aboutText || DEFAULT_SETTINGS.aboutText,
+      termsText: data?.settings?.termsText || DEFAULT_SETTINGS.termsText,
+      privacyText: data?.settings?.privacyText || DEFAULT_SETTINGS.privacyText,
+      supportText: data?.settings?.supportText || DEFAULT_SETTINGS.supportText,
+      developerName: data?.settings?.developerName ?? DEFAULT_SETTINGS.developerName,
+      developerRole: data?.settings?.developerRole ?? DEFAULT_SETTINGS.developerRole,
+      developerPhone: data?.settings?.developerPhone ?? DEFAULT_SETTINGS.developerPhone,
+      developerInstagram: data?.settings?.developerInstagram ?? DEFAULT_SETTINGS.developerInstagram,
+      developerWebsite: data?.settings?.developerWebsite ?? DEFAULT_SETTINGS.developerWebsite,
     },
     countries,
     updatedAt: data?.updatedAt,

@@ -134,7 +134,8 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
             ? '0 20px 40px -8px rgba(0, 0, 0, 0.22), 0 6px 16px rgba(0, 0, 0, 0.08)'
             : '0 4px 20px rgba(0, 0, 0, 0.05)',
         zIndex: isActive ? 20 : 1,
-        transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), min-height 0.25s ease, z-index 0.15s ease',
+        transition:
+          'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), min-height 0.25s ease, z-index 0.15s ease',
         overflow: 'visible',
       }}
       role="button"
@@ -148,21 +149,25 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
     >
       {!hideBrandAndCategoryMeta && <ProductBrandBadge brand={brand} />}
       {!hideBrandAndCategoryMeta && (
-        <div className="product-card-category-top" aria-label={`Kateqoriya: ${product.categoryName}`}>
+        <div
+          className="product-card-category-top"
+          aria-label={`Kateqoriya: ${product.categoryName}`}
+        >
           <CategoryGlyph id={product.category} compact plain />
           <span>{product.categoryName}</span>
         </div>
       )}
-      {!hideBrandAndCategoryMeta && manufacturingCountryFlag(verifiedManufacturingCountry(product)) && (
-        <span
-          className="product-card-country-flag"
-          data-country={verifiedManufacturingCountry(product)}
-          title={`İstehsal ölkəsi: ${verifiedManufacturingCountry(product)}`}
-          aria-label={`İstehsal ölkəsi: ${verifiedManufacturingCountry(product)}`}
-        >
-          {manufacturingCountryFlag(verifiedManufacturingCountry(product))}
-        </span>
-      )}
+      {!hideBrandAndCategoryMeta &&
+        manufacturingCountryFlag(verifiedManufacturingCountry(product)) && (
+          <span
+            className="product-card-country-flag"
+            data-country={verifiedManufacturingCountry(product)}
+            title={`İstehsal ölkəsi: ${verifiedManufacturingCountry(product)}`}
+            aria-label={`İstehsal ölkəsi: ${verifiedManufacturingCountry(product)}`}
+          >
+            {manufacturingCountryFlag(verifiedManufacturingCountry(product))}
+          </span>
+        )}
 
       {!hideBrandAndCategoryMeta && getVisibleBadgeText(product) && (
         <span
@@ -241,15 +246,9 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
           aria-label={isFavorite ? 'Sevimlilərdən çıxar' : 'Sevimlilərə əlavə et'}
           title={isFavorite ? 'Sevimlilərdən çıxar' : 'Sevimlilərə əlavə et'}
         >
-          <Heart
-            size={16}
-            fill={isFavorite ? 'currentColor' : 'none'}
-            color="currentColor"
-          />
+          <Heart size={16} fill={isFavorite ? 'currentColor' : 'none'} color="currentColor" />
         </button>
       </div>
-
-
 
       {/* Maximized Product Image Stage */}
       <div
@@ -287,6 +286,10 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
             <ShimmerImage
               src={coverImage}
               alt={product.title}
+              cropRect={product.cropRect || product.media?.[0]?.cropRect}
+              objectPosition={
+                product.imagePosition || product.media?.[0]?.objectPosition || 'center'
+              }
               style={{
                 width: '100%',
                 height: '100%',

@@ -22,13 +22,14 @@ describe('Product Images and Media Integration', () => {
   );
 
   it('populates product image, gallery, and media arrays in the database', () => {
-    const { mkdtempSync, copyFileSync, rmSync } = require('node:fs');
+    const { mkdtempSync, rmSync } = require('node:fs');
     const { tmpdir } = require('node:os');
+    const { createConsistentDatabaseSnapshot } = require('../../backend/catalogDatabase.mjs');
     const tempDir = mkdtempSync(join(tmpdir(), 'sahara-product-images-'));
     const tempDbPath = join(tempDir, 'catalog.sqlite');
 
     try {
-      copyFileSync(join(ROOT, 'data', 'catalog.sqlite'), tempDbPath);
+      createConsistentDatabaseSnapshot(join(ROOT, 'data', 'catalog.sqlite'), tempDbPath);
       const db = createCatalogDatabase(tempDbPath);
       const catalog = db.getCatalog();
       db.close();

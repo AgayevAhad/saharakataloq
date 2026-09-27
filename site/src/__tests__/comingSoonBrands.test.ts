@@ -14,9 +14,9 @@ describe('Public Coming Soon Brands & Draft Preservation Isolation Suite', () =>
     expect(lotusBrand).toBeDefined();
     expect(lotusBrand?.comingSoon).toBe(false);
 
-    const artelBrand = catalog.brands.find((b) => b.id === 'artel');
-    expect(artelBrand).toBeDefined();
-    expect(artelBrand?.comingSoon).toBe(true);
+    const bekoBrand = catalog.brands.find((b) => b.id === 'beko');
+    expect(bekoBrand).toBeDefined();
+    expect(bekoBrand?.comingSoon).toBe(true);
 
     const ardoBrand = catalog.brands.find((b) => b.id === 'ardo');
     expect(ardoBrand).toBeDefined();
@@ -27,6 +27,10 @@ describe('Public Coming Soon Brands & Draft Preservation Isolation Suite', () =>
     const tempDir = mkdtempSync(join(tmpdir(), 'sahara-coming-soon-'));
     const tempDbPath = join(tempDir, 'catalog.sqlite');
     copyFileSync(join(__dirname, '..', '..', 'data', 'catalog.sqlite'), tempDbPath);
+    const { DatabaseSync } = await import('node:sqlite');
+    const setupDb = new DatabaseSync(tempDbPath);
+    setupDb.exec("UPDATE brands SET coming_soon = 1 WHERE id = 'beko';");
+    setupDb.close();
 
     try {
       const prevEnv = process.env.NODE_ENV;
@@ -46,14 +50,13 @@ describe('Public Coming Soon Brands & Draft Preservation Isolation Suite', () =>
       const pubLotus = publicCatalog.brands.find((b: any) => b.id === 'lotus');
       expect(pubLotus?.comingSoon).toBe(false);
 
-      const pubArtel = publicCatalog.brands.find((b: any) => b.id === 'artel');
-      expect(pubArtel?.comingSoon).toBe(true);
+      const pubBeko = publicCatalog.brands.find((b: any) => b.id === 'beko');
+      expect(pubBeko?.comingSoon).toBe(true);
 
-      const publicArtelProducts = publicCatalog.products.filter(
-        (p: any) => p.brandId === 'artel' || p.brand === 'artel'
+      const publicBekoProducts = publicCatalog.products.filter(
+        (p: any) => p.brandId === 'beko' || p.brand === 'beko'
       );
-      expect(publicArtelProducts.length).toBe(0);
-      expect(publicArtelProducts.length).toBe(0);
+      expect(publicBekoProducts.length).toBe(0);
 
       const publicArdoProducts = publicCatalog.products.filter(
         (p: any) => p.brandId === 'ardo' || p.brand === 'ardo'

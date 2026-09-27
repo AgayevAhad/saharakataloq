@@ -80,14 +80,13 @@ export const ProductCard: React.FC<ProductCardProps> = ({
   const videoItem = product.media?.find((item) => item.type === 'video');
 
   const imageList = useMemo(() => {
+    if (Array.isArray(product.media) && product.media.length > 0) {
+      const list = product.media.filter((m) => m.type === 'image' && m.url).map((m) => m.url);
+      if (list.length > 0) return Array.from(new Set(list));
+    }
     const list: string[] = [];
     if (product.image) list.push(product.image);
     if (Array.isArray(product.gallery)) list.push(...product.gallery);
-    if (Array.isArray(product.media)) {
-      product.media.forEach((m) => {
-        if (m.type === 'image' && m.url) list.push(m.url);
-      });
-    }
     return Array.from(new Set(list.filter(Boolean)));
   }, [product.image, product.gallery, product.media]);
 
@@ -277,7 +276,8 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           ? '0 20px 40px -8px rgba(0, 0, 0, 0.22), 0 6px 16px rgba(0, 0, 0, 0.08)'
           : '0 4px 20px rgba(0, 0, 0, 0.05)',
         zIndex: isActive ? 20 : 1,
-        transition: 'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), min-height 0.25s ease, z-index 0.15s ease',
+        transition:
+          'transform 0.3s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.3s cubic-bezier(0.16, 1, 0.3, 1), min-height 0.25s ease, z-index 0.15s ease',
         overflow: 'visible',
       }}
     >
@@ -417,8 +417,6 @@ export const ProductCard: React.FC<ProductCardProps> = ({
         </div>
       </div>
 
-
-
       {/* Maximized Product Image / Media Frame Container with Touch Swiping */}
       <div
         className="product-card-img-wrap product-card-media"
@@ -495,12 +493,17 @@ export const ProductCard: React.FC<ProductCardProps> = ({
               const cardObjectPosition =
                 activeMediaObj?.objectPosition || product.imagePosition || 'center';
               const cardFitMode = activeMediaObj?.fitMode || product.imageFit || 'contain';
+              const cardCropRect =
+                activeMediaObj?.cropRect ||
+                (currentImgUrl === product.image ? product.cropRect : undefined) ||
+                (currentImageIdx === 0 ? product.cropRect : undefined);
 
               return (
                 <ShimmerImage
                   src={currentImgUrl}
                   alt={product.title}
                   loading="lazy"
+                  cropRect={cardCropRect}
                   objectFit={cardFitMode as any}
                   objectPosition={cardObjectPosition}
                   spinnerSize={24}

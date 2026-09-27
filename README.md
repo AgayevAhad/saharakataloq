@@ -13,18 +13,18 @@ Layihə public məhsul kataloqu və yalnız lokal şəbəkədən açılan idarə
 Public kataloq: `http://SERVER_IP:3000/`  
 Admin panel: `http://SERVER_IP:3000/AdministratorNT`
 
-Admin ünvanı public IP-lərdən server səviyyəsində `404` qaytarır. Giriş sessiyası `HttpOnly`/`SameSite` cookie, CSRF tokeni və uğursuz giriş limiti ilə qorunur. İnternetə çıxararkən HTTPS reverse proxy-də real müştəri IP-sinin `X-Forwarded-For` başlığı ilə ötürülməsini, `/AdministratorNT` və `/api/admin/` yollarının əlavə olaraq LAN/VPN ilə məhdudlaşdırılmasını və `data/` qovluğunun müntəzəm backup-ını təmin edin.
+Admin ünvanı public IP-lərdən server səviyyəsində `404` qaytarır. Giriş sessiyası `HttpOnly`/`SameSite` cookie, CSRF tokeni və uğursuz giriş limiti ilə qorunur. İnternetə çıxararkən HTTPS reverse proxy-də real müştəri IP-sinin `X-Forwarded-For` başlığı ilə ötürülməsini, `/AdministratorNT` və `/api/admin/` yollarının əlavə olaraq LAN/VPN ilə məhdudlaşdırılmasını və `site/data/` qovluğunun müntəzəm backup-ını təmin edin.
 
 ## Məlumat və media
 
 - Brend, kateqoriya, məhsul, xüsusiyyət, status və istehsal ölkəsi admin paneldən idarə olunur.
-- Admin paneldə JPG, PNG, WEBP, MP4 və WEBM fayllarını birbaşa yükləmək, önizləmək, dəyişmək və əsas şəkli seçmək mümkündür. Yüklənən fayllar `data/media/` qovluğunda saxlanılır.
+- Admin paneldə JPG, PNG, WEBP, SVG, MP4 və WEBM fayllarını birbaşa yükləmək, önizləmək, dəyişmək və əsas şəkli seçmək mümkündür. Yüklənən fayllar `site/data/media/` qovluğunda saxlanılır.
 - Sahara loqosu `public/media/SaharaLogo.png` yolunda saxlanılır və public/admin interfeysində istifadə olunur.
 - Qiymət, kontragent və müştəri məlumatı kataloq sxemində saxlanılmır və public interfeysə çıxarılmır.
-- Public kataloq `data/catalog.sqlite`, admin qaralaması isə ayrıca `data/catalog-draft.sqlite` SQLite bazasında saxlanılır. “Qaralamanı saxla” public görünüşü dəyişmir; “Önizləmə” yoxlamadan sonra yalnız “Public et” əmri qaralamanı yayımlayır.
+- Public kataloq `site/data/catalog.sqlite`, admin qaralaması isə ayrıca `site/data/catalog-draft.sqlite` SQLite bazasında saxlanılır. Rootdakı köhnə `data/*.sqlite` faylları runtime tərəfindən istifadə edilmir. “Qaralamanı saxla” public görünüşü dəyişmir; “Önizləmə” yoxlamadan sonra yalnız “Public et” əmri qaralamanı yayımlayır.
 - Brendlər, istehsal ölkələri, kateqoriyalar, məhsullar, media, xüsusiyyətlər və statistika əlaqəli cədvəllərlə saxlanılır; məhsul məlumatları JSON faylına yazılmır.
-- Köhnə `data/catalog.json` və `data/analytics.json` varsa, ilk start zamanı əməliyyat daxilində SQLite-a miqrasiya edilir və yalnız uğurlu miqrasiyadan sonra silinir.
-- Backup üçün server dayandırıldıqdan sonra hər iki SQLite faylının və `data/media/` qovluğunun surətini saxlayın.
+- Köhnə `site/data/catalog.json` və `site/data/analytics.json` varsa, ilk start zamanı əməliyyat daxilində SQLite-a miqrasiya edilir və yalnız uğurlu miqrasiyadan sonra silinir.
+- Backup üçün server dayandırıldıqdan sonra hər iki SQLite faylının və `site/data/media/` qovluğunun surətini saxlayın.
 
 ## Excel-dən ARDO idxalı
 

@@ -4,7 +4,7 @@ import { useCompare } from '../hooks/useCompare';
 import type { Product } from '../types/product';
 
 const makeProduct = (id: string): Product =>
-  ({ id, code: id, title: `Məhsul ${id}`, brandId: 'test', category: 'test' } as Product);
+  ({ id, code: id, title: `Məhsul ${id}`, brandId: 'test', category: 'test' }) as Product;
 
 const products = [
   makeProduct('p1'),

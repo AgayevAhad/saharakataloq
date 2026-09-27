@@ -148,10 +148,11 @@ describe('Zod Runtime Schemas Validation Suite', () => {
     });
 
     it('validates all live products from draft database without any schema error', async () => {
-      const { mkdtempSync, copyFileSync, rmSync, existsSync } = await import('node:fs');
+      const { mkdtempSync, rmSync, existsSync } = await import('node:fs');
       const { tmpdir } = await import('node:os');
       const { join, resolve } = await import('node:path');
-      const { createCatalogDatabase } = await import('../../backend/catalogDatabase.mjs');
+      const { createCatalogDatabase, createConsistentDatabaseSnapshot } =
+        await import('../../backend/catalogDatabase.mjs');
 
       const ROOT = resolve(__dirname, '../..');
       const tempDir = mkdtempSync(join(tmpdir(), 'sahara-schema-check-draft-'));
@@ -162,7 +163,7 @@ describe('Zod Runtime Schemas Validation Suite', () => {
         return;
       }
 
-      copyFileSync(draftSrc, tempDbPath);
+      createConsistentDatabaseSnapshot(draftSrc, tempDbPath);
       const db = createCatalogDatabase(tempDbPath);
       const catalog = db.getCatalog();
       db.close();
@@ -176,10 +177,11 @@ describe('Zod Runtime Schemas Validation Suite', () => {
     });
 
     it('validates all live products from main public database without any schema error', async () => {
-      const { mkdtempSync, copyFileSync, rmSync, existsSync } = await import('node:fs');
+      const { mkdtempSync, rmSync, existsSync } = await import('node:fs');
       const { tmpdir } = await import('node:os');
       const { join, resolve } = await import('node:path');
-      const { createCatalogDatabase } = await import('../../backend/catalogDatabase.mjs');
+      const { createCatalogDatabase, createConsistentDatabaseSnapshot } =
+        await import('../../backend/catalogDatabase.mjs');
 
       const ROOT = resolve(__dirname, '../..');
       const tempDir = mkdtempSync(join(tmpdir(), 'sahara-schema-check-main-'));
@@ -190,7 +192,7 @@ describe('Zod Runtime Schemas Validation Suite', () => {
         return;
       }
 
-      copyFileSync(mainSrc, tempDbPath);
+      createConsistentDatabaseSnapshot(mainSrc, tempDbPath);
       const db = createCatalogDatabase(tempDbPath);
       const catalog = db.getCatalog();
       db.close();

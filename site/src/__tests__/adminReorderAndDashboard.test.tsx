@@ -117,6 +117,7 @@ describe('Executive Dashboard & Drag-Drop & Quick Create', () => {
 
     // Switch to products tab
     fireEvent.click(screen.getByRole('button', { name: /Məhsullar/ }));
+    fireEvent.click(screen.getByTitle('Sıra / Cədvəl görünüşü'));
 
     // Verify sequence inputs rendered
     const seqInputs = screen.getAllByTitle(/Sıra nömrəsini daxil edib Enter basın/);
@@ -171,6 +172,7 @@ describe('Executive Dashboard & Drag-Drop & Quick Create', () => {
 
     // Switch to Products tab
     fireEvent.click(screen.getByRole('button', { name: /Məhsullar/ }));
+    fireEvent.click(screen.getByTitle('Sıra / Cədvəl görünüşü'));
 
     // Find table category selects
     const catSelects = screen.getAllByDisplayValue('Aspiratorlar');

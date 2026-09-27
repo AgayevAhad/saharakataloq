@@ -140,10 +140,10 @@ describe('Admin iş axınları', () => {
     // Məhsullar tabına keç
     fireEvent.click(screen.getByRole('button', { name: /Məhsullar/ }));
 
-    // Excel və CSV düymələrinin mövcudluğunu yoxla
-    expect(screen.getByText(/Excel \(\.xlsx\) İxrac/i)).toBeDefined();
-    expect(screen.getByText(/Excel \/ CSV İdxal/i)).toBeDefined();
-    expect(screen.getByText(/Excel Şablonu/i)).toBeDefined();
+    // Excel və CSV düymələrinin ləğv olunduğunu yoxla
+    expect(screen.queryByText(/Excel \(\.xlsx\) İxrac/i)).toBeNull();
+    expect(screen.queryByText(/Excel \/ CSV İdxal/i)).toBeNull();
+    expect(screen.queryByText(/Excel Şablonu/i)).toBeNull();
 
     // Redaktə (Pencil) düyməsinə bas
     const editButtons = screen.getAllByTitle('Redaktə et');

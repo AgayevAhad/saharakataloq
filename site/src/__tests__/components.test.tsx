@@ -34,25 +34,25 @@ describe('Sahara Electronic - UI Komponentləri və İstifadəçi Qarşılıqlı
     const trigger = screen.getByTitle('Böyütmək üçün toxunun / klikləyin');
     fireEvent.click(trigger);
 
-    expect(screen.getByText(/Məişət Texnikası və İqlim Sistemləri/i)).toBeDefined();
+    expect(screen.getByText(/Məişət Texnikası/i)).toBeDefined();
+    expect(screen.queryByText(/İqlim Sistemləri/i)).toBeNull();
 
     const closeBtn = screen.getByLabelText('Bağla');
     fireEvent.click(closeBtn);
-    expect(screen.queryByText(/Məişət Texnikası və İqlim Sistemləri/i)).toBeNull();
+    expect(screen.queryByText(/Məişət Texnikası/i)).toBeNull();
   });
 
-  it('Artel bölməsini Tezliklə statusu ilə göstərməlidir', () => {
+  it('Artel, LOTUS və ARDO bölmələrini aktiv brendlər olaraq göstərməlidir', () => {
     render(
       <BrandShowcase
         brands={DEFAULT_BRANDS}
-        products={[TEST_PRODUCT, { ...TEST_PRODUCT, id: 'lotus-oven-1', brandId: 'lotus', brand: 'lotus' }]}
+        products={[TEST_PRODUCT, { ...TEST_PRODUCT, id: 'lotus-oven-1', brandId: 'lotus' }, { ...TEST_PRODUCT, id: 'artel-ac-1', brandId: 'artel' }]}
         theme={lightTheme}
         onSelect={vi.fn()}
       />
     );
     expect(screen.getByText('LOTUS')).toBeDefined();
     expect(screen.getByText('ARTEL')).toBeDefined();
-    expect(screen.getAllByText('TEZLİKLƏ')).toHaveLength(1);
     expect(screen.getByAltText('ARDO loqosu').getAttribute('src')).toBe(
       '/media/brands/ardo-logo.png'
     );

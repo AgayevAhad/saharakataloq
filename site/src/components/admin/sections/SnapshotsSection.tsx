@@ -25,11 +25,7 @@ export const SnapshotsSection: React.FC<SnapshotsSectionProps> = ({
         showToast={showToast}
         onRestore={onRestore}
       />
-      <PimMigrationManager
-        theme={theme}
-        csrfToken={csrfToken}
-        showToast={showToast}
-      />
+      <PimMigrationManager theme={theme} csrfToken={csrfToken} showToast={showToast} />
     </div>
   );
 };

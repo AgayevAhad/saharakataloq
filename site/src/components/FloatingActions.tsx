@@ -298,7 +298,13 @@ export const FloatingActions: React.FC<FloatingActionsProps> = ({
           title="Zəng etmək üçün toxunun"
           aria-label="Zəng etmək üçün toxunun"
         >
-          <Phone size={19} fill="#dc2626" color="#dc2626" strokeWidth={1} style={{ flexShrink: 0 }} />
+          <Phone
+            size={19}
+            fill="#dc2626"
+            color="#dc2626"
+            strokeWidth={1}
+            style={{ flexShrink: 0 }}
+          />
           <span
             className="btn-label"
             style={{

@@ -42,6 +42,8 @@ export interface ProductMedia {
     | 'bottom-right'
     | string;
   fitMode?: 'contain' | 'cover';
+  originalUrl?: string;
+  cropRect?: { x: number; y: number; w: number; h: number };
 }
 
 export interface ProductSpecItem {
@@ -60,6 +62,8 @@ export interface Product {
   category: ProductCategory;
   categoryName: string;
   image: string;
+  originalImage?: string;
+  cropRect?: { x: number; y: number; w: number; h: number };
   imagePosition?: 'center' | 'top' | 'bottom' | 'left' | 'right' | string;
   imageFit?: 'contain' | 'cover';
   gallery?: string[];
@@ -160,6 +164,19 @@ export interface CatalogSettings {
   siteMaintenanceMessage?: string;
   catalogActive?: boolean;
   maintenanceMessage?: string;
+
+  // Content & Legal Pages (In-Catalog CMS)
+  aboutText?: string;
+  termsText?: string;
+  privacyText?: string;
+  supportText?: string;
+
+  // Developer Credits / Attributions
+  developerName?: string;
+  developerRole?: string;
+  developerPhone?: string;
+  developerInstagram?: string;
+  developerWebsite?: string;
 }
 
 export interface BrandRailSettings {

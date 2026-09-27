@@ -22,13 +22,7 @@ import {
   seedCanonical54Brands,
 } from './backend/phase5BrandRailMigration.mjs';
 import { CustomerSupportStore } from './backend/customerSupportStore.mjs';
-import {
-  send,
-  isLocalNetwork,
-  readLegacyJson,
-  normalizeProduct,
-  mime,
-} from './api/helpers.mjs';
+import { send, isLocalNetwork, readLegacyJson, normalizeProduct, mime } from './api/helpers.mjs';
 import { createApiRouter } from './api/router.mjs';
 
 const ROOT = fileURLToPath(new URL('.', import.meta.url));
@@ -187,7 +181,6 @@ const seedCatalog = async () => {
 
 // Startup Crash Recovery
 let startupRecoveryFailed = false;
-let startupRecoveryError = null;
 
 try {
   const recoveryResult = executeStartupCrashRecovery(DATA_DIR, STAGING_DIR);
@@ -198,7 +191,6 @@ try {
   }
 } catch (recErr) {
   startupRecoveryFailed = true;
-  startupRecoveryError = recErr;
   console.error('[Startup Recovery] ❌ CRITICAL: Crash recovery failed on startup:', recErr);
   if (process.env.NODE_ENV === 'production') {
     throw recErr;
@@ -230,7 +222,10 @@ try {
   });
   pubWorker.start(20000);
 } catch (dbInitErr) {
-  console.error('[Startup] Failed to initialize catalog databases or publication worker:', dbInitErr);
+  console.error(
+    '[Startup] Failed to initialize catalog databases or publication worker:',
+    dbInitErr
+  );
 }
 
 // Initial Catalog Seeding
@@ -259,7 +254,11 @@ if (catalogDatabase && draftDatabase) {
 const readCatalog = () =>
   draftDatabase?.getAdminData
     ? draftDatabase.getAdminData()
-    : draftDatabase?.getCatalog({ includeAll: true }) || { brands: [], categories: [], products: [] };
+    : draftDatabase?.getCatalog({ includeAll: true }) || {
+        brands: [],
+        categories: [],
+        products: [],
+      };
 
 const readPublicCatalog = async () => {
   const catalog = catalogDatabase?.getCatalog
@@ -283,13 +282,14 @@ const readPublicCatalog = async () => {
   return {
     ...catalog,
     brands,
-    categories: (catalog.categories || []).filter((category) => category.active && !category.isArchived),
+    categories: (catalog.categories || []).filter(
+      (category) => category.active && !category.isArchived
+    ),
     products: (catalog.products || [])
       .map(normalizeProduct)
       .filter(
         (product) =>
-          product.status === 'published' &&
-          visibleBrandIds.has(product.brandId || product.brand)
+          product.status === 'published' && visibleBrandIds.has(product.brandId || product.brand)
       ),
   };
 };
@@ -302,10 +302,10 @@ const recordEvent = (event) =>
 const isMaintenanceActive = () =>
   Boolean(
     globalThis.__SAHARA_MAINTENANCE__ ||
-      globalThis.__SAHARA_FAIL_CLOSED__ ||
-      startupRecoveryFailed ||
-      !catalogDatabase ||
-      !draftDatabase
+    globalThis.__SAHARA_FAIL_CLOSED__ ||
+    startupRecoveryFailed ||
+    !catalogDatabase ||
+    !draftDatabase
   );
 
 const isrCache = new Map();
@@ -319,6 +319,33 @@ const securityHeaders = {
   'X-Content-Type-Options': 'nosniff',
   'X-Frame-Options': 'DENY',
   'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'X-DNS-Prefetch-Control': 'off',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+  'Content-Security-Policy': [
+    "default-src 'self'",
+    // Şəkillər: öz server + data URI (crop üçün) + Google Fonts şəkillər
+    "img-src 'self' data: blob: https://fonts.gstatic.com",
+    // Stillər: öz server + Google Fonts + inline stil (React inline style üçün)
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    // Fontlar: öz server + Google Fonts
+    "font-src 'self' https://fonts.gstatic.com",
+    // Skriptlər: yalnız öz server (React bundle)
+    "script-src 'self'",
+    // API çağırışları: yalnız öz server
+    "connect-src 'self'",
+    // Media faylları: öz server + blob (video üçün)
+    "media-src 'self' blob:",
+    // Iframe: heç kim
+    "frame-src 'none'",
+    // Object/embed: heç kim
+    "object-src 'none'",
+    // Base URI: yalnız öz server
+    "base-uri 'self'",
+    // Form: yalnız öz server
+    "form-action 'self'",
+    // Upgrade insecure requests (HTTPS-də)
+    'upgrade-insecure-requests',
+  ].join('; '),
 };
 
 const serveUploadedMedia = async (req, res, pathname) => {
@@ -353,9 +380,18 @@ const serveFile = async (res, pathname) => {
   try {
     if (!(await stat(finalPath)).isFile()) throw new Error();
   } catch {
-    if (extname(target)) return send(res, 404, 'Tapılmadı');
-    finalPath = join(DIST, 'index.html');
-    isIndexHtml = true;
+    const publicTarget = resolve(join(ROOT, 'public'), normalize(relative));
+    try {
+      if ((await stat(publicTarget)).isFile()) {
+        finalPath = publicTarget;
+      } else {
+        throw new Error();
+      }
+    } catch {
+      if (extname(target)) return send(res, 404, 'Tapılmadı');
+      finalPath = join(DIST, 'index.html');
+      isIndexHtml = true;
+    }
   }
   if (finalPath.endsWith('index.html')) {
     isIndexHtml = true;
@@ -538,10 +574,16 @@ export async function waitForActiveRequestsDrain(timeoutMs = 5000) {
 const apiRouter = createApiRouter({
   getCatalogDatabase: () => catalogDatabase,
   getDraftDatabase: () => draftDatabase,
-  setCatalogDatabase: (db) => { catalogDatabase = db; },
-  setDraftDatabase: (db) => { draftDatabase = db; },
+  setCatalogDatabase: (db) => {
+    catalogDatabase = db;
+  },
+  setDraftDatabase: (db) => {
+    draftDatabase = db;
+  },
   getPubWorker: () => pubWorker,
-  setPubWorker: (w) => { pubWorker = w; },
+  setPubWorker: (w) => {
+    pubWorker = w;
+  },
   catalogDatabase,
   draftDatabase,
   customerStore,
@@ -550,7 +592,9 @@ const apiRouter = createApiRouter({
   eventLimits,
   customerLoginAttempts,
   getAdminPassword: () => adminPassword,
-  setAdminPassword: (p) => { adminPassword = p; },
+  setAdminPassword: (p) => {
+    adminPassword = p;
+  },
   DATA_DIR,
   MEDIA_DIR,
   DATABASE_FILE,

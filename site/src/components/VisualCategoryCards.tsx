@@ -1,10 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
-import {
-  ArrowRight,
-  Sparkles,
-  ChevronLeft,
-  ChevronRight,
-} from 'lucide-react';
+import { ArrowRight, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Brand, CatalogCategory, Product } from '../types/product';
 import { ThemeColors } from '../types/theme';
 import { FeaturedProductCard } from './FeaturedProductCard';
@@ -64,206 +59,203 @@ const CategoryUnitCard: React.FC<{
   onCall?: (product: Product) => void;
   isSelected?: boolean;
   hasDraggedRef?: React.MutableRefObject<boolean>;
-}> = React.memo(({
-  category,
-  categoryProducts,
-  brandsById,
-  theme,
-  onSelectCategory,
-  onSelectProduct,
-  onAddToCart,
-  onToggleFavorite,
-  favoriteIdSet,
-  comparisonIdSet,
-  onToggleCompare,
-  onWhatsApp,
-  onCall,
-  isSelected,
-  hasDraggedRef,
-}) => {
-  const visibleProducts = useMemo(
-    () => categoryProducts.slice(0, 2),
-    [categoryProducts]
-  );
+}> = React.memo(
+  ({
+    category,
+    categoryProducts,
+    brandsById,
+    theme,
+    onSelectCategory,
+    onSelectProduct,
+    onAddToCart,
+    onToggleFavorite,
+    favoriteIdSet,
+    comparisonIdSet,
+    onToggleCompare,
+    onWhatsApp,
+    onCall,
+    isSelected,
+    hasDraggedRef,
+  }) => {
+    const visibleProducts = useMemo(() => categoryProducts.slice(0, 2), [categoryProducts]);
 
-  const handleCategoryClick = () => {
-    if (hasDraggedRef?.current) return;
-    onSelectCategory(category.id);
-  };
+    const handleCategoryClick = () => {
+      if (hasDraggedRef?.current) return;
+      onSelectCategory(category.id);
+    };
 
-  const handleProductClick = (prod: Product) => {
-    if (hasDraggedRef?.current) return;
-    if (onSelectProduct) onSelectProduct(prod);
-    else onSelectCategory(category.id);
-  };
+    const handleProductClick = (prod: Product) => {
+      if (hasDraggedRef?.current) return;
+      if (onSelectProduct) onSelectProduct(prod);
+      else onSelectCategory(category.id);
+    };
 
-  return (
-    <div
-      className={`category-unit-box category-unit-card visual-category-card ${isSelected ? 'is-selected' : ''}`}
-      style={{
-        flexShrink: 0,
-        width: '694px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '12px',
-        backgroundColor: 'transparent',
-        border: 'none',
-        boxShadow: 'none',
-        padding: 0,
-        boxSizing: 'border-box',
-        contain: 'paint layout',
-      }}
-    >
-      {/* Category Unit Header */}
+    return (
       <div
-        className="category-unit-header"
+        className={`category-unit-box category-unit-card visual-category-card ${isSelected ? 'is-selected' : ''}`}
         style={{
+          flexShrink: 0,
+          width: '694px',
           display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 4px',
+          flexDirection: 'column',
+          gap: '12px',
+          backgroundColor: 'transparent',
+          border: 'none',
+          boxShadow: 'none',
+          padding: 0,
+          boxSizing: 'border-box',
+          contain: 'paint layout',
         }}
       >
-        <button
-          type="button"
-          onClick={handleCategoryClick}
-          data-category-id={category.id}
+        {/* Category Unit Header */}
+        <div
+          className="category-unit-header"
           style={{
             display: 'flex',
             alignItems: 'center',
-            gap: '8px',
-            background: 'transparent',
-            border: 'none',
-            padding: 0,
-            cursor: 'pointer',
-            textAlign: 'left',
+            justifyContent: 'space-between',
+            padding: '0 4px',
+          }}
+        >
+          <button
+            type="button"
+            onClick={handleCategoryClick}
+            data-category-id={category.id}
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              background: 'transparent',
+              border: 'none',
+              padding: 0,
+              cursor: 'pointer',
+              textAlign: 'left',
+            }}
+          >
+            <div
+              style={{
+                width: '30px',
+                height: '30px',
+                borderRadius: '8px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor:
+                  theme.mode === 'dark' ? 'rgba(239, 48, 56, 0.16)' : 'rgba(239, 48, 56, 0.08)',
+                color: '#e31e24',
+                flexShrink: 0,
+              }}
+            >
+              <CategoryGlyph id={category.id} slug={category.slug || category.id} compact plain />
+            </div>
+            <span
+              className="visual-category-title"
+              style={{
+                fontSize: '15.5px',
+                fontWeight: 850,
+                color: theme.text,
+                letterSpacing: '-0.01em',
+                whiteSpace: 'nowrap',
+                overflow: 'visible',
+                textOverflow: 'clip',
+                maxWidth: 'none',
+              }}
+            >
+              {category.name}
+            </span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleCategoryClick}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '4px',
+              background: 'transparent',
+              border: 'none',
+              color: '#e31e24',
+              fontSize: '12px',
+              fontWeight: 750,
+              cursor: 'pointer',
+              padding: '2px 6px',
+            }}
+          >
+            <span>Hamısı</span>
+            <ArrowRight size={12} />
+          </button>
+        </div>
+
+        {/* 2 FeaturedProductCards Side by Side */}
+        <div
+          className="category-unit-products-viewport"
+          style={{
+            width: '694px',
+            overflow: 'hidden',
+            position: 'relative',
           }}
         >
           <div
+            className="category-unit-products-slide"
             style={{
-              width: '30px',
-              height: '30px',
-              borderRadius: '8px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              backgroundColor:
-                theme.mode === 'dark'
-                  ? 'rgba(239, 48, 56, 0.16)'
-                  : 'rgba(239, 48, 56, 0.08)',
-              color: '#e31e24',
-              flexShrink: 0,
+              width: '694px',
+              display: 'grid',
+              gridTemplateColumns: '339px 339px',
+              gap: '16px',
             }}
           >
-            <CategoryGlyph id={category.id} slug={category.slug || category.id} compact plain />
-          </div>
-          <span
-            className="visual-category-title"
-            style={{
-              fontSize: '15.5px',
-              fontWeight: 850,
-              color: theme.text,
-              letterSpacing: '-0.01em',
-              whiteSpace: 'nowrap',
-              overflow: 'visible',
-              textOverflow: 'clip',
-              maxWidth: 'none',
-            }}
-          >
-            {category.name}
-          </span>
-        </button>
-
-        <button
-          type="button"
-          onClick={handleCategoryClick}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '4px',
-            background: 'transparent',
-            border: 'none',
-            color: '#e31e24',
-            fontSize: '12px',
-            fontWeight: 750,
-            cursor: 'pointer',
-            padding: '2px 6px',
-          }}
-        >
-          <span>Hamısı</span>
-          <ArrowRight size={12} />
-        </button>
-      </div>
-
-      {/* 2 FeaturedProductCards Side by Side */}
-      <div
-        className="category-unit-products-viewport"
-        style={{
-          width: '694px',
-          overflow: 'hidden',
-          position: 'relative',
-        }}
-      >
-        <div
-          className="category-unit-products-slide"
-          style={{
-            width: '694px',
-            display: 'grid',
-            gridTemplateColumns: '339px 339px',
-            gap: '16px',
-          }}
-        >
-          {visibleProducts.map((prod, pIdx) => {
-            if (!prod) return null;
-            return (
-              <div
-                key={`${prod.id}-${pIdx}`}
-                className="category-product-subcard category-carousel-product-card"
-                role="button"
-                tabIndex={0}
-                onClick={() => handleProductClick(prod)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    e.preventDefault();
-                    handleProductClick(prod);
-                  }
-                }}
-                style={{
-                  width: '339px',
-                  minWidth: '339px',
-                  maxWidth: '339px',
-                  height: '339px',
-                  flexShrink: 0,
-                  cursor: 'pointer',
-                }}
-              >
-                <FeaturedProductCard
-                  product={prod}
-                  theme={theme}
-                  transparentBg={true}
-                  hideBrandAndCategoryMeta={true}
-                  onSelect={(p) => {
-                    if (hasDraggedRef?.current) return;
-                    if (onSelectProduct) onSelectProduct(p);
-                    else onSelectCategory(category.id);
+            {visibleProducts.map((prod, pIdx) => {
+              if (!prod) return null;
+              return (
+                <div
+                  key={`${prod.id}-${pIdx}`}
+                  className="category-product-subcard category-carousel-product-card"
+                  role="button"
+                  tabIndex={0}
+                  onClick={() => handleProductClick(prod)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      handleProductClick(prod);
+                    }
                   }}
-                  onAddToCart={onAddToCart}
-                  onToggleFavorite={onToggleFavorite}
-                  isFavorite={favoriteIdSet.has(prod.id)}
-                  onToggleCompare={onToggleCompare}
-                  isComparing={comparisonIdSet.has(prod.id)}
-                  onWhatsApp={onWhatsApp}
-                  onCall={onCall}
-                  brand={brandsById.get(prod.brandId || '')}
-                />
-              </div>
-            );
-          })}
+                  style={{
+                    width: '339px',
+                    minWidth: '339px',
+                    maxWidth: '339px',
+                    height: '339px',
+                    flexShrink: 0,
+                    cursor: 'pointer',
+                  }}
+                >
+                  <FeaturedProductCard
+                    product={prod}
+                    theme={theme}
+                    transparentBg={true}
+                    hideBrandAndCategoryMeta={true}
+                    onSelect={(p) => {
+                      if (hasDraggedRef?.current) return;
+                      if (onSelectProduct) onSelectProduct(p);
+                      else onSelectCategory(category.id);
+                    }}
+                    onAddToCart={onAddToCart}
+                    onToggleFavorite={onToggleFavorite}
+                    isFavorite={favoriteIdSet.has(prod.id)}
+                    onToggleCompare={onToggleCompare}
+                    isComparing={comparisonIdSet.has(prod.id)}
+                    onWhatsApp={onWhatsApp}
+                    onCall={onCall}
+                    brand={brandsById.get(prod.brandId || '')}
+                  />
+                </div>
+              );
+            })}
+          </div>
         </div>
       </div>
-    </div>
-  );
-});
+    );
+  }
+);
 
 export const VisualCategoryCards: React.FC<VisualCategoryCardsProps> = ({
   categories = [],
@@ -721,4 +713,3 @@ export const VisualCategoryCards: React.FC<VisualCategoryCardsProps> = ({
     </section>
   );
 };
-

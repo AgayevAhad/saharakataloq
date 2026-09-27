@@ -8,7 +8,6 @@ import {
   List,
   ChevronDown,
   ChevronUp,
-  Sparkles,
   Search,
   Tag,
   Flame,
@@ -699,8 +698,6 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
               )}
             </div>
 
-
-
             {/* Filter Group: Texniki Xüsusiyyətlər (Enerji sinfi, Mühərrik, Rəng) */}
             <div
               style={{
@@ -1164,12 +1161,14 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                     aria-expanded={isSortDropdownOpen}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      {sortBy === 'recommended' && <Sparkles size={14} color="#e31e24" />}
+                      {(sortBy === 'all' || sortBy === 'recommended') && (
+                        <LayoutGrid size={14} color="#e31e24" />
+                      )}
                       {sortBy === 'price-asc' && <ArrowDownNarrowWide size={14} color="#10b981" />}
                       {sortBy === 'price-desc' && <ArrowUpNarrowWide size={14} color="#3b82f6" />}
                       {sortBy === 'newest' && <Flame size={14} color="#f97316" />}
                       <span>
-                        {sortBy === 'recommended' && 'Tövsiyə olunan'}
+                        {(sortBy === 'all' || sortBy === 'recommended') && 'Hamısı'}
                         {sortBy === 'price-asc' && 'Qiymət: Ucuzdan bahaya'}
                         {sortBy === 'price-desc' && 'Qiymət: Bahadan ucuza'}
                         {sortBy === 'newest' && 'Yeni modellər'}
@@ -1208,9 +1207,9 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                     >
                       {[
                         {
-                          value: 'recommended' as CatalogSortOption,
-                          label: 'Tövsiyə olunan',
-                          icon: <Sparkles size={14} color="#e31e24" />,
+                          value: 'all' as CatalogSortOption,
+                          label: 'Hamısı',
+                          icon: <LayoutGrid size={14} color="#e31e24" />,
                         },
                         {
                           value: 'price-asc' as CatalogSortOption,
@@ -1228,7 +1227,8 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                           icon: <Flame size={14} color="#f97316" />,
                         },
                       ].map((opt) => {
-                        const isSelected = sortBy === opt.value;
+                        const isSelected =
+                          sortBy === opt.value || (opt.value === 'all' && sortBy === 'recommended');
                         return (
                           <button
                             key={opt.value}
@@ -1497,6 +1497,8 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                   <ShimmerImage
                     src={cp.image || (Array.isArray(cp.gallery) && cp.gallery[0]) || ''}
                     alt={cp.title}
+                    cropRect={cp.cropRect || cp.media?.[0]?.cropRect}
+                    objectPosition={cp.imagePosition || cp.media?.[0]?.objectPosition || 'center'}
                     style={{ width: '100%', height: '100%', objectFit: 'contain', padding: '2px' }}
                   />
                   <button

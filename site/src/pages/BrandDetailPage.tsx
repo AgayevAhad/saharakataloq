@@ -191,7 +191,14 @@ export const BrandDetailPage: React.FC<BrandDetailPageProps> = ({
             {brand.name}
           </h1>
           {brand.description ? (
-            <p style={{ color: theme.textMuted, lineHeight: 1.7, maxWidth: '700px', margin: '0 0 10px 0' }}>
+            <p
+              style={{
+                color: theme.textMuted,
+                lineHeight: 1.7,
+                maxWidth: '700px',
+                margin: '0 0 10px 0',
+              }}
+            >
               {brand.description}
             </p>
           ) : null}
@@ -230,7 +237,8 @@ export const BrandDetailPage: React.FC<BrandDetailPageProps> = ({
               type="button"
               onClick={() => setSelectedCategory('all')}
               style={{
-                border: selectedCategory === 'all' ? '1px solid #e31e24' : `1px solid ${theme.border}`,
+                border:
+                  selectedCategory === 'all' ? '1px solid #e31e24' : `1px solid ${theme.border}`,
                 background: selectedCategory === 'all' ? '#e31e24' : theme.bgCard,
                 color: selectedCategory === 'all' ? '#ffffff' : theme.text,
                 borderRadius: '999px',
@@ -241,7 +249,10 @@ export const BrandDetailPage: React.FC<BrandDetailPageProps> = ({
                 display: 'inline-flex',
                 alignItems: 'center',
                 gap: '8px',
-                boxShadow: selectedCategory === 'all' ? '0 4px 14px rgba(227, 30, 36, 0.25)' : '0 2px 8px rgba(0, 0, 0, 0.04)',
+                boxShadow:
+                  selectedCategory === 'all'
+                    ? '0 4px 14px rgba(227, 30, 36, 0.25)'
+                    : '0 2px 8px rgba(0, 0, 0, 0.04)',
                 transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
               }}
             >
@@ -290,7 +301,9 @@ export const BrandDetailPage: React.FC<BrandDetailPageProps> = ({
                     display: 'inline-flex',
                     alignItems: 'center',
                     gap: '8px',
-                    boxShadow: isSelected ? '0 4px 14px rgba(227, 30, 36, 0.25)' : '0 2px 8px rgba(0, 0, 0, 0.04)',
+                    boxShadow: isSelected
+                      ? '0 4px 14px rgba(227, 30, 36, 0.25)'
+                      : '0 2px 8px rgba(0, 0, 0, 0.04)',
                     transition: 'all 0.2s cubic-bezier(0.16, 1, 0.3, 1)',
                   }}
                 >
@@ -305,7 +318,12 @@ export const BrandDetailPage: React.FC<BrandDetailPageProps> = ({
                       flexShrink: 0,
                     }}
                   >
-                    <CategoryGlyph id={category.id} slug={category.slug || category.id} compact plain />
+                    <CategoryGlyph
+                      id={category.id}
+                      slug={category.slug || category.id}
+                      compact
+                      plain
+                    />
                   </span>
                   <span>{category.name}</span>
                   <span

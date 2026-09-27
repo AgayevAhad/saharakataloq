@@ -3,7 +3,6 @@ import {
   Layers,
   Tag,
   SlidersHorizontal,
-  Sparkles,
   Zap,
   RotateCcw,
   ChevronDown,
@@ -22,6 +21,7 @@ export interface CatalogSidebarFilterProps {
   categories: CatalogCategory[];
   brands?: Brand[];
   activeProducts: Product[];
+  allProducts?: Product[];
   selectedCategory: string;
   onSelectCategory: (categoryId: string) => void;
   selectedBrands?: string[];
@@ -61,6 +61,7 @@ export const CatalogSidebarFilter: React.FC<CatalogSidebarFilterProps> = ({
   categories,
   brands = [],
   activeProducts,
+  allProducts,
   selectedCategory,
   onSelectCategory,
   selectedBrands = [],
@@ -74,10 +75,10 @@ export const CatalogSidebarFilter: React.FC<CatalogSidebarFilterProps> = ({
   maxAvailablePrice,
   onMinPriceChange,
   onMaxPriceChange,
-  onlyDiscounted,
-  onToggleDiscounted,
-  onlyWithVideo,
-  onToggleWithVideo,
+  onlyDiscounted: _onlyDiscounted,
+  onToggleDiscounted: _onToggleDiscounted,
+  onlyWithVideo: _onlyWithVideo,
+  onToggleWithVideo: _onToggleWithVideo,
   selectedEnergyClass,
   onSelectEnergyClass,
   selectedMotorType,
@@ -130,7 +131,11 @@ export const CatalogSidebarFilter: React.FC<CatalogSidebarFilterProps> = ({
             gap: '8px',
           }}
         >
-          <Search size={16} color={searchQuery ? theme.primary : theme.textMuted} style={{ flexShrink: 0 }} />
+          <Search
+            size={16}
+            color={searchQuery ? theme.primary : theme.textMuted}
+            style={{ flexShrink: 0 }}
+          />
           <input
             type="text"
             value={searchQuery || ''}
@@ -265,11 +270,7 @@ export const CatalogSidebarFilter: React.FC<CatalogSidebarFilterProps> = ({
                 padding: '6px 10px',
                 borderRadius: '8px',
                 backgroundColor:
-                  selectedCategory === 'all'
-                    ? isDarkMode
-                      ? '#334155'
-                      : '#f1f5f9'
-                    : 'transparent',
+                  selectedCategory === 'all' ? (isDarkMode ? '#334155' : '#f1f5f9') : 'transparent',
                 color: selectedCategory === 'all' ? theme.primary : theme.text,
                 border: 'none',
                 fontSize: '12.5px',
@@ -283,13 +284,14 @@ export const CatalogSidebarFilter: React.FC<CatalogSidebarFilterProps> = ({
                 <span>Bütün Bölmələr</span>
               </span>
               <span style={{ fontSize: '11px', color: theme.textMuted }}>
-                {activeProducts.length}
+                {(allProducts || activeProducts).filter((p) => p.status !== 'draft').length}
               </span>
             </button>
 
             {categories
               .map((cat) => {
-                const count = activeProducts.filter(
+                const targetPool = allProducts || activeProducts;
+                const count = targetPool.filter(
                   (p) => p.category === cat.id && p.status !== 'draft'
                 ).length;
                 return { cat, count };
@@ -383,10 +385,9 @@ export const CatalogSidebarFilter: React.FC<CatalogSidebarFilterProps> = ({
               }}
             >
               {brands.map((brand) => {
-                const count = activeProducts.filter(
-                  (p) =>
-                    p.brandId?.toLowerCase() === brand.id.toLowerCase() &&
-                    p.status !== 'draft'
+                const targetPool = allProducts || activeProducts;
+                const count = targetPool.filter(
+                  (p) => p.brandId?.toLowerCase() === brand.id.toLowerCase() && p.status !== 'draft'
                 ).length;
                 const isChecked = selectedBrands
                   .map((b) => b.toLowerCase())
@@ -446,10 +447,11 @@ export const CatalogSidebarFilter: React.FC<CatalogSidebarFilterProps> = ({
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            backgroundColor: isDarkMode ? '#1e293b' : '#ffffff',
-                            borderRadius: '4px',
+                            backgroundColor: '#ffffff',
+                            borderRadius: '5px',
                             padding: '2px 4px',
-                            boxShadow: '0 1px 3px rgba(0,0,0,0.06)',
+                            boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+                            flexShrink: 0,
                           }}
                         >
                           <ShimmerImage
@@ -640,8 +642,6 @@ export const CatalogSidebarFilter: React.FC<CatalogSidebarFilterProps> = ({
           </div>
         )}
       </div>
-
-
 
       {/* 5. Texniki Parametrlər & Funksiyalar */}
       <div

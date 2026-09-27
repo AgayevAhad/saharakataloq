@@ -1,6 +1,9 @@
-import { describe, it, expect } from 'vitest';
+// @vitest-environment happy-dom
+import { describe, it, expect, afterEach } from 'vitest';
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, screen, fireEvent, cleanup } from '@testing-library/react';
+
+afterEach(cleanup);
 import { ProductCard } from '../components/ProductCard';
 import { ProductDetailModal } from '../components/ProductDetailModal';
 import { FloatingActions } from '../components/FloatingActions';
@@ -15,7 +18,6 @@ const mockProductWithPrice: Product = {
   code: '501C FFD',
   modelCode: '501C FFD',
   title: 'Plitə ARDO 501C FFD',
-  brand: 'ARDO',
   brandId: 'ardo',
   category: 'cooktops',
   categoryName: 'Bişirmə panelləri',
@@ -25,7 +27,8 @@ const mockProductWithPrice: Product = {
   image: '/media/ardo/501c.jpg',
   gallery: ['/media/ardo/501c.jpg'],
   status: 'published',
-  specs: [{ name: 'Rəng', value: 'Inox' }],
+  shortDesc: '',
+  specs: [{ id: 'spec-color-ardo', name: 'Rəng', value: 'Inox' }],
   highlights: ['Sabaf ocaqlar', 'Qaz-kontrol'],
 };
 
@@ -34,7 +37,6 @@ const mockProductWithoutPrice: Product = {
   code: 'L-900',
   modelCode: 'L-900',
   title: 'Aspirator Lotus L-900',
-  brand: 'Lotus',
   brandId: 'lotus',
   category: 'hoods',
   categoryName: 'Aspiratorlar',
@@ -42,18 +44,15 @@ const mockProductWithoutPrice: Product = {
   image: '/media/lotus/l900.jpg',
   gallery: ['/media/lotus/l900.jpg'],
   status: 'published',
-  specs: [{ name: 'Rəng', value: 'Qara' }],
+  shortDesc: '',
+  specs: [{ id: 'spec-color-lotus', name: 'Rəng', value: 'Qara' }],
+  highlights: [],
 };
 
 describe('Permanent Price & Modernized Sort Filter Tests', () => {
   it('1. ProductCard renders permanent price row with formatted price and strikethrough oldPrice', () => {
     const { container } = render(
-      <ProductCard
-        product={mockProductWithPrice}
-        brand="ARDO"
-        theme={lightTheme}
-        onSelect={() => {}}
-      />
+      <ProductCard product={mockProductWithPrice} theme={lightTheme} onSelect={() => {}} />
     );
 
     const priceRow = container.querySelector('.product-card-price-row');
@@ -64,12 +63,7 @@ describe('Permanent Price & Modernized Sort Filter Tests', () => {
 
   it('2. ProductCard displays "Qiymət: Sorğu ilə" when product has no numeric price', () => {
     const { container } = render(
-      <ProductCard
-        product={mockProductWithoutPrice}
-        brand="Lotus"
-        theme={lightTheme}
-        onSelect={() => {}}
-      />
+      <ProductCard product={mockProductWithoutPrice} theme={lightTheme} onSelect={() => {}} />
     );
 
     const priceRow = container.querySelector('.product-card-price-row');
@@ -78,18 +72,20 @@ describe('Permanent Price & Modernized Sort Filter Tests', () => {
   });
 
   it('3. ProductDetailModal displays permanent clean price section', () => {
-    const { container } = render(
+    render(
       <ProductDetailModal
         product={mockProductWithPrice}
-        brand="ARDO"
         theme={lightTheme}
-        themeMode="light"
-        isOpen={true}
+        visible={true}
         onClose={() => {}}
+        onShare={() => {}}
+        onWhatsApp={() => {}}
+        onCall={() => {}}
+        onCopyLink={() => {}}
       />
     );
 
-    const priceRow = container.querySelector('.product-detail-price-row');
+    const priceRow = document.querySelector('.product-detail-price-row');
     expect(priceRow).toBeDefined();
     expect(screen.getByText(/1\.250\s*₼/)).toBeDefined();
     expect(screen.getByText(/1\.450\s*₼/)).toBeDefined();
@@ -137,7 +133,7 @@ describe('Permanent Price & Modernized Sort Filter Tests', () => {
 
     const popover = container.querySelector('.catalog-sort-popover');
     expect(popover).toBeDefined();
-    expect(screen.getAllByText('Tövsiyə olunan').length).toBeGreaterThanOrEqual(1);
+    expect(screen.getAllByText('Hamısı').length).toBeGreaterThanOrEqual(1);
     expect(screen.getByText('Qiymət: Ucuzdan bahaya')).toBeDefined();
     expect(screen.getByText('Qiymət: Bahadan ucuza')).toBeDefined();
     expect(screen.getByText('Yeni modellər')).toBeDefined();
@@ -154,11 +150,7 @@ describe('Permanent Price & Modernized Sort Filter Tests', () => {
     };
 
     const { container } = render(
-      <FloatingActions
-        settings={mockSettings as any}
-        theme={lightTheme}
-        showToast={() => {}}
-      />
+      <FloatingActions settings={mockSettings as any} theme={lightTheme} showToast={() => {}} />
     );
 
     const siteLink = container.querySelector('.floating-site-btn') as HTMLAnchorElement;
@@ -241,7 +233,9 @@ describe('Permanent Price & Modernized Sort Filter Tests', () => {
     const ardoCard = container.querySelector('.brand-showcase-card.brand-ardo') as HTMLElement;
     fireEvent.click(ardoCard);
 
-    const searchField = container.querySelector('.catalog-top-search-field input') as HTMLInputElement;
+    const searchField = container.querySelector(
+      '.catalog-top-search-field input'
+    ) as HTMLInputElement;
     expect(searchField).toBeDefined();
     expect(searchField.placeholder).toBe('Məhsul axtar...');
   });
@@ -269,5 +263,3 @@ describe('Permanent Price & Modernized Sort Filter Tests', () => {
     expect(closeBtn.style.color).toBe('#dc2626');
   });
 });
-
-

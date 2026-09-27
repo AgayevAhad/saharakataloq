@@ -47,9 +47,7 @@ export const BrandCategoryFilter: React.FC<BrandCategoryFilterProps> = ({
   const brandProducts = React.useMemo(
     () =>
       products.filter(
-        (p) =>
-          activeBrandIds.includes((p.brandId || '').toLowerCase()) &&
-          p.status !== 'draft'
+        (p) => activeBrandIds.includes((p.brandId || '').toLowerCase()) && p.status !== 'draft'
       ),
     [products, activeBrandIds]
   );
@@ -131,9 +129,10 @@ export const BrandCategoryFilter: React.FC<BrandCategoryFilterProps> = ({
                 style={{
                   display: 'inline-flex',
                   alignItems: 'center',
-                  padding: '2px 4px',
-                  borderRadius: '6px',
-                  backgroundColor: 'transparent',
+                  padding: '3px 8px',
+                  borderRadius: '8px',
+                  backgroundColor: '#ffffff',
+                  boxShadow: '0 1px 4px rgba(0, 0, 0, 0.08)',
                 }}
               >
                 {b.logo ? (
@@ -145,7 +144,9 @@ export const BrandCategoryFilter: React.FC<BrandCategoryFilterProps> = ({
                     containerStyle={{ width: '80px', height: '32px' }}
                   />
                 ) : (
-                  <span className="brand-filter-name-text">{b.name}</span>
+                  <span className="brand-filter-name-text" style={{ color: '#0f172a' }}>
+                    {b.name}
+                  </span>
                 )}
               </div>
             ))}
@@ -188,14 +189,24 @@ export const BrandCategoryFilter: React.FC<BrandCategoryFilterProps> = ({
             onSelectCategory('all');
           }}
           style={{
-            backgroundColor: selectedCategory === 'all' ? theme.primary : theme.bgSecondary,
-            color: selectedCategory === 'all' ? '#ffffff' : theme.text,
+            backgroundColor: selectedCategory === 'all' ? `${theme.primary}18` : theme.bgSecondary,
+            color: selectedCategory === 'all' ? theme.primary : theme.text,
             border: 'none',
+            fontWeight: selectedCategory === 'all' ? 750 : 600,
           }}
         >
           <CategoryGlyph id="all" compact plain />
           <span>Hamısı</span>
-          <small className="pill-count">({totalCount})</small>
+          <small
+            className="pill-count"
+            style={{
+              color: selectedCategory === 'all' ? theme.primary : theme.textMuted,
+              fontWeight: 700,
+              marginLeft: '4px',
+            }}
+          >
+            ({totalCount})
+          </small>
         </button>
 
         {availableCategories.map((cat) => {
@@ -213,14 +224,24 @@ export const BrandCategoryFilter: React.FC<BrandCategoryFilterProps> = ({
                 onSelectCategory(cat.id);
               }}
               style={{
-                backgroundColor: isActive ? theme.primary : theme.bgSecondary,
-                color: isActive ? '#ffffff' : theme.text,
+                backgroundColor: isActive ? `${theme.primary}18` : theme.bgSecondary,
+                color: isActive ? theme.primary : theme.text,
                 border: 'none',
+                fontWeight: isActive ? 750 : 600,
               }}
             >
               <CategoryGlyph id={cat.id} slug={cat.slug} compact plain />
               <span>{cat.name}</span>
-              <small className="pill-count">({cat.count})</small>
+              <small
+                className="pill-count"
+                style={{
+                  color: isActive ? theme.primary : theme.textMuted,
+                  fontWeight: 700,
+                  marginLeft: '4px',
+                }}
+              >
+                ({cat.count})
+              </small>
             </button>
           );
         })}

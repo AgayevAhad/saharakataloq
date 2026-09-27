@@ -116,17 +116,17 @@ describe('Real Admin HTTP E2E Integration Suite', () => {
 
       const artelBrand = publicRes.json.brands.find((b: any) => b.id === 'artel');
       expect(artelBrand).toBeDefined();
-      expect(artelBrand.comingSoon).toBe(true);
+      expect(artelBrand.comingSoon).toBe(false);
 
       const publicLotusProducts = publicRes.json.products.filter(
         (p: any) => p.brandId === 'lotus' || p.brand === 'lotus'
       );
-      expect(publicLotusProducts.length).toBeGreaterThanOrEqual(1);
+      expect(publicLotusProducts.length).toBeGreaterThan(0);
 
       const publicArtelProducts = publicRes.json.products.filter(
         (p: any) => p.brandId === 'artel' || p.brand === 'artel'
       );
-      expect(publicArtelProducts.length).toBe(0);
+      expect(publicArtelProducts.length).toBeGreaterThan(0);
 
       const publicArdoProducts = publicRes.json.products.filter(
         (p: any) => p.brandId === 'ardo' || p.brand === 'ardo'

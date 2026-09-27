@@ -3,15 +3,46 @@ import { readFile } from 'node:fs/promises';
 export const MAX_BODY = 8 * 1024 * 1024;
 export const MAX_MEDIA_BODY = 100 * 1024 * 1024;
 
+export const securityHeaders = {
+  'X-Content-Type-Options': 'nosniff',
+  'X-Frame-Options': 'DENY',
+  'Referrer-Policy': 'strict-origin-when-cross-origin',
+  'X-DNS-Prefetch-Control': 'off',
+  'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
+  'Content-Security-Policy': [
+    "default-src 'self'",
+    // Şəkillər: öz server + data URI (crop üçün) + Google Fonts şəkillər
+    "img-src 'self' data: blob: https://fonts.gstatic.com",
+    // Stillər: öz server + Google Fonts + inline stil (React inline style üçün)
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    // Fontlar: öz server + Google Fonts
+    "font-src 'self' https://fonts.gstatic.com",
+    // Skriptlər: yalnız öz server (React bundle)
+    "script-src 'self'",
+    // API çağırışları: yalnız öz server
+    "connect-src 'self'",
+    // Media faylları: öz server + blob (video üçün)
+    "media-src 'self' blob:",
+    // Iframe: heç kim
+    "frame-src 'none'",
+    // Object/embed: heç kim
+    "object-src 'none'",
+    // Base URI: yalnız öz server
+    "base-uri 'self'",
+    // Form: yalnız öz server
+    "form-action 'self'",
+    // Upgrade insecure requests (HTTPS-də)
+    "upgrade-insecure-requests",
+  ].join('; '),
+};
+
 export const send = (res, status, body, extra = {}) => {
   if (res.writableEnded || res.headersSent) return true;
   const isJson = typeof body === 'object' && body !== null && !Buffer.isBuffer(body);
   const payload = isJson ? JSON.stringify(body) : body || '';
   res.writeHead(status, {
     'Content-Type': isJson ? 'application/json; charset=utf-8' : 'text/plain; charset=utf-8',
-    'X-Content-Type-Options': 'nosniff',
-    'X-Frame-Options': 'DENY',
-    'Referrer-Policy': 'strict-origin-when-cross-origin',
+    ...securityHeaders,
     ...extra,
   });
   res.end(payload);
@@ -23,9 +54,9 @@ export const remoteIp = (req) => {
   if (forwarded) {
     const raw = Array.isArray(forwarded) ? forwarded[0] : forwarded.split(',')[0];
     const clean = raw.trim();
-    if (clean) return clean;
+    if (/^[\d.:a-fA-F]+$/.test(clean)) return clean;
   }
-  return req.socket.remoteAddress || '127.0.0.1';
+  return req.socket?.remoteAddress || '127.0.0.1';
 };
 
 export const isLocalNetwork = (req) => {

@@ -16,7 +16,6 @@ import {
   VolumeX,
   RotateCcw,
   RotateCw,
-  Globe2,
   Play,
   ChevronDown,
   ChevronUp,
@@ -29,7 +28,6 @@ import { WhatsAppIcon } from './WhatsAppIcon';
 import { ShimmerImage } from './ShimmerImage';
 import { useHorizontalScroll } from '../hooks/useHorizontalScroll';
 import { pushOverlay, popOverlay, isTopOverlay } from '../utils/backgroundIsolation';
-import { verifiedManufacturingCountry } from '../utils/manufacturingCountry';
 import { getVisibleBadgeText } from './productCardVisuals';
 import { animateProductToCart, animateProductToFavorites } from '../utils/cartFlight';
 import { CategoryGlyph } from './CategoryGlyph';
@@ -65,8 +63,6 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
     onAddToCart,
     onToggleFavorite,
     isFavorite = false,
-    whatsappButtonText = 'WhatsApp ilə məlumat al',
-    callButtonText = 'Zəng et',
   }) => {
     const [activeTab, setActiveTab] = useState<'specs' | 'tech'>('specs');
     const [isFullscreenImage, setIsFullscreenImage] = useState(false);
@@ -263,6 +259,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
         poster?: string;
         objectPosition?: string;
         fitMode?: string;
+        cropRect?: { x: number; y: number; w: number; h: number };
       }> = [];
       const seen = new Set<string>();
 
@@ -278,9 +275,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
               poster: m.poster,
               objectPosition: m.objectPosition || product.imagePosition || 'center',
               fitMode: m.fitMode || product.imageFit || 'contain',
+              cropRect: m.cropRect || (idx === 0 ? product.cropRect : undefined),
             });
           }
         });
+        if (items.length > 0) return items;
       }
 
       if (product.image && !seen.has(product.image)) {
@@ -292,6 +291,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
           alt: product.title,
           objectPosition: product.imagePosition || 'center',
           fitMode: product.imageFit || 'contain',
+          cropRect: product.cropRect,
         });
       }
 
@@ -618,7 +618,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                   onClick={handlePrint}
                   className="modal-header-action-btn"
                   style={{
-                    background: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+                    background:
+                      theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
                     border: 'none',
                     padding: '7px 12px',
                     borderRadius: '8px',
@@ -644,7 +645,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                   className="modal-share-btn modal-header-action-btn"
                   onClick={() => onShare(product)}
                   style={{
-                    background: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+                    background:
+                      theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
                     border: 'none',
                     padding: '7px 12px',
                     borderRadius: '8px',
@@ -870,6 +872,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                       <ShimmerImage
                         src={activeMedia.url}
                         alt={activeMedia.alt || product.title}
+                        cropRect={activeMedia.cropRect}
                         objectFit={activeFitMode as any}
                         objectPosition={activeObjectPosition}
                         spinnerSize={28}
@@ -912,10 +915,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                     )}
 
                     {activeMedia?.type === 'image' && activeMedia.url && (
-                      <div
-                        className="modal-stage-fs-pill"
-                        title="Tam ekranda bax"
-                      >
+                      <div className="modal-stage-fs-pill" title="Tam ekranda bax">
                         <Maximize2 size={13} />
                         <span>Tam Ekran Bax</span>
                       </div>
@@ -1011,7 +1011,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                             >
                               {displayDescription}
                             </div>
-                            {(displayDescription.length > 120 || displayDescription.includes('\n')) && (
+                            {(displayDescription.length > 120 ||
+                              displayDescription.includes('\n')) && (
                               <button
                                 type="button"
                                 onClick={() => setIsDescExpanded(!isDescExpanded)}
@@ -1031,7 +1032,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                                 }}
                               >
                                 <span>{isDescExpanded ? 'Qısalt' : 'Davamını oxu...'}</span>
-                                {isDescExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                                {isDescExpanded ? (
+                                  <ChevronUp size={13} />
+                                ) : (
+                                  <ChevronDown size={13} />
+                                )}
                               </button>
                             )}
                           </div>
@@ -1085,7 +1090,12 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                                   src={overviewVideo.url}
                                   muted
                                   playsInline
-                                  style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }}
+                                  style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover',
+                                    pointerEvents: 'none',
+                                  }}
                                 />
                               )}
                               <div
@@ -1110,13 +1120,25 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                                     justifyContent: 'center',
                                   }}
                                 >
-                                  <Play size={10} fill="#ffffff" color="#ffffff" style={{ marginLeft: '1px' }} />
+                                  <Play
+                                    size={10}
+                                    fill="#ffffff"
+                                    color="#ffffff"
+                                    style={{ marginLeft: '1px' }}
+                                  />
                                 </div>
                               </div>
                             </div>
 
                             <div style={{ flex: 1, minWidth: 0 }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginBottom: '1px' }}>
+                              <div
+                                style={{
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px',
+                                  marginBottom: '1px',
+                                }}
+                              >
                                 <span
                                   style={{
                                     backgroundColor: 'rgba(220, 38, 38, 0.2)',
@@ -1175,7 +1197,9 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                         flexWrap: 'wrap',
                       }}
                     >
-                      {product.price !== undefined && product.price !== null && Number(product.price) > 0 ? (
+                      {product.price !== undefined &&
+                      product.price !== null &&
+                      Number(product.price) > 0 ? (
                         <>
                           <span
                             style={{
@@ -1186,7 +1210,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                               letterSpacing: '-0.3px',
                             }}
                           >
-                            {Number(product.price).toLocaleString('az-AZ')} {product.currency || '₼'}
+                            {Number(product.price).toLocaleString('az-AZ')}{' '}
+                            {product.currency || '₼'}
                           </span>
                           {product.oldPrice && product.oldPrice > product.price && (
                             <span
@@ -1198,7 +1223,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                                 fontWeight: 500,
                               }}
                             >
-                              {Number(product.oldPrice).toLocaleString('az-AZ')} {product.currency || '₼'}
+                              {Number(product.oldPrice).toLocaleString('az-AZ')}{' '}
+                              {product.currency || '₼'}
                             </span>
                           )}
                         </>
@@ -1295,7 +1321,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                           type="button"
                           className="modal-action-btn-fav"
                           onClick={(e) => {
-                            if (!isFavorite) animateProductToFavorites(e.currentTarget, product.image);
+                            if (!isFavorite)
+                              animateProductToFavorites(e.currentTarget, product.image);
                             onToggleFavorite(product);
                           }}
                           style={{
@@ -1403,7 +1430,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                           alignItems: 'center',
                           justifyContent: 'center',
                           gap: '5px',
-                          backgroundColor: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)',
+                          backgroundColor:
+                            theme.mode === 'dark'
+                              ? 'rgba(255, 255, 255, 0.05)'
+                              : 'rgba(0, 0, 0, 0.03)',
                           border: 'none',
                           outline: 'none',
                           color: theme.mode === 'dark' ? '#f87171' : '#b91c1c',
@@ -1864,9 +1894,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                       }}
                       style={{
                         backgroundColor:
-                          activeMediaIndex === idx
-                            ? theme.primary
-                            : 'rgba(0, 0, 0, 0.2)',
+                          activeMediaIndex === idx ? theme.primary : 'rgba(0, 0, 0, 0.2)',
                       }}
                       aria-label={`Şəkil ${idx + 1}`}
                     />

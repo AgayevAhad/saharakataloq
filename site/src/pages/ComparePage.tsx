@@ -200,6 +200,8 @@ export const ComparePage: React.FC<ComparePageProps> = ({
                     <ShimmerImage
                       src={p.image || '/media/placeholder.png'}
                       alt={p.title}
+                      cropRect={p.cropRect || p.media?.[0]?.cropRect}
+                      objectPosition={p.imagePosition || p.media?.[0]?.objectPosition || 'center'}
                       style={{
                         width: '100%',
                         height: '110px',

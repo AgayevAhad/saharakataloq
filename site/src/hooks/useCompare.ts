@@ -45,19 +45,16 @@ export function useCompare(products: Product[] = [], options: UseCompareOptions 
     [showToast]
   );
 
-  const addToCompare = useCallback(
-    (productId: string) => {
-      setComparisonIds((prev) => {
-        if (prev.includes(productId) || prev.length >= 4) return prev;
-        const next = [...prev, productId];
-        try {
-          localStorage.setItem(COMPARE_KEY, JSON.stringify(next));
-        } catch {}
-        return next;
-      });
-    },
-    []
-  );
+  const addToCompare = useCallback((productId: string) => {
+    setComparisonIds((prev) => {
+      if (prev.includes(productId) || prev.length >= 4) return prev;
+      const next = [...prev, productId];
+      try {
+        localStorage.setItem(COMPARE_KEY, JSON.stringify(next));
+      } catch {}
+      return next;
+    });
+  }, []);
 
   const removeFromCompare = useCallback((productId: string) => {
     setComparisonIds((prev) => {

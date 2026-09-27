@@ -30,13 +30,9 @@ export const getAppMode = (): 'catalog' | 'site' => {
 
     const fullSearch = window.location.search.toLowerCase();
     const fullPath = window.location.pathname.toLowerCase();
-    const fullHash = window.location.hash.toLowerCase();
     if (
       fullSearch.includes('mode=catalog') ||
-      fullPath.includes('mode=catalog') ||
-      fullSearch.includes('catalog') ||
-      fullPath.startsWith('/catalog') ||
-      fullHash.includes('catalog')
+      fullPath.includes('mode=catalog')
     ) {
       return 'catalog';
     }

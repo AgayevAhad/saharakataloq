@@ -194,7 +194,12 @@ export const ShareModal: React.FC<ShareModalProps> = ({
             </div>
             <div style={{ flex: 1, minWidth: 0 }}>
               <div
-                style={{ fontSize: '14px', fontWeight: 750, color: theme.text, marginBottom: '4px' }}
+                style={{
+                  fontSize: '14px',
+                  fontWeight: 750,
+                  color: theme.text,
+                  marginBottom: '4px',
+                }}
               >
                 {title}
               </div>

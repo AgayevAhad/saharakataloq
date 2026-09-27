@@ -1,57 +1,42 @@
 import React from 'react';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, fireEvent } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
 import { ProductCard } from '../components/ProductCard';
 import { FeaturedProductCard } from '../components/FeaturedProductCard';
 import { Product } from '../types/product';
-import { ThemeColors } from '../types/theme';
+import {
+  ThemeColors,
+  darkTheme as baseDarkTheme,
+  lightTheme as baseLightTheme,
+} from '../types/theme';
 
 const mockProduct: Product = {
   id: 'prod-56-1',
-  brand: 'ardo',
+  brandId: 'ardo',
   category: 'aspirators',
   categoryName: 'Aspiratorlar',
   title: 'ARDO Sabaf 60 Inox Aspirator',
   code: 'ARDO-ASP-60-INX',
   price: 480,
   image: '/media/ardo/aspirator.webp',
-  badge: 'Yeni',
-  badgeColor: '#dc2626',
-  country: 'İtaliya',
+  badgeText: 'Yeni',
+  badgeColor: 'red',
+  manufacturingCountry: 'İtaliya',
+  shortDesc: '',
+  specs: [],
+  highlights: [],
 };
 
 const darkTheme: ThemeColors = {
-  mode: 'dark',
+  ...baseDarkTheme,
   primary: '#e11d48',
   primaryHover: '#be123c',
-  primarySoft: 'rgba(225, 29, 72, 0.15)',
-  secondary: '#f43f5e',
-  accent: '#fb7185',
-  bg: '#0b0f19',
-  surface: '#111827',
-  surfaceHover: '#1f2937',
-  border: '#1e293b',
-  borderLight: '#334155',
-  text: '#ffffff',
-  textSecondary: '#94a3b8',
-  textMuted: '#64748b',
 };
 
 const lightTheme: ThemeColors = {
-  mode: 'light',
+  ...baseLightTheme,
   primary: '#dc2626',
   primaryHover: '#b91c1c',
-  primarySoft: 'rgba(220, 38, 38, 0.1)',
-  secondary: '#ef4444',
-  accent: '#f87171',
-  bg: '#ffffff',
-  surface: '#f8fafc',
-  surfaceHover: '#f1f5f9',
-  border: '#e2e8f0',
-  borderLight: '#cbd5e1',
-  text: '#0f172a',
-  textSecondary: '#475569',
-  textMuted: '#94a3b8',
 };
 
 describe('Duzelisler Item 56: Product Card High Contrast & Netflix Hover Bottom Placement', () => {
@@ -209,11 +194,7 @@ describe('Duzelisler Item 56: Product Card High Contrast & Netflix Hover Bottom 
     };
 
     const { container } = render(
-      <ProductCard
-        product={multiImageProduct}
-        theme={lightTheme}
-        onSelect={vi.fn()}
-      />
+      <ProductCard product={multiImageProduct} theme={lightTheme} onSelect={vi.fn()} />
     );
 
     const prevBtn = container.querySelector('.card-media-nav-btn.prev') as HTMLElement;

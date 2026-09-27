@@ -1,6 +1,9 @@
+// @vitest-environment happy-dom
 import React from 'react';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent, waitFor } from '@testing-library/react';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
+import { render, fireEvent, waitFor, cleanup } from '@testing-library/react';
+
+afterEach(cleanup);
 import { CatalogApp } from '../apps/CatalogApp';
 import { Header } from '../components/Header';
 import { lightTheme } from '../types/theme';
@@ -58,9 +61,7 @@ describe('CatalogApp Cart and Favorites Integration', () => {
   });
 
   it('renders CatalogApp and allows navigating between catalog, cart and favorites', async () => {
-    const { container } = render(
-      <CatalogApp initialData={{ catalog: DEFAULT_CATALOG }} />
-    );
+    const { container } = render(<CatalogApp initialData={{ catalog: DEFAULT_CATALOG }} />);
 
     // Initial view is catalog
     expect(container.querySelector('.catalog-loaded-wrap')).toBeTruthy();
@@ -72,7 +73,9 @@ describe('CatalogApp Cart and Favorites Integration', () => {
 
     // Should switch to cart page view
     await waitFor(() => {
-      expect(container.querySelector('.cart-page-wrapper') || container.querySelector('.catalog-shell')).toBeTruthy();
+      expect(
+        container.querySelector('.cart-page-wrapper') || container.querySelector('.catalog-shell')
+      ).toBeTruthy();
     });
 
     // Click favorite icon in header
@@ -82,7 +85,10 @@ describe('CatalogApp Cart and Favorites Integration', () => {
 
     // Should switch to favorites page view
     await waitFor(() => {
-      expect(container.querySelector('.favorites-page-wrapper') || container.querySelector('.catalog-shell')).toBeTruthy();
+      expect(
+        container.querySelector('.favorites-page-wrapper') ||
+          container.querySelector('.catalog-shell')
+      ).toBeTruthy();
     });
   });
 });

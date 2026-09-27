@@ -3,39 +3,56 @@ import { X, Check, Crop, RefreshCw, Eye, Wand2 } from 'lucide-react';
 import { ThemeColors } from '../types/theme';
 import { ShimmerImage } from './ShimmerImage';
 
-export interface ImageCropStudioModalProps {
-  isOpen: boolean;
-  imageUrl: string;
-  initialObjectPosition?: string;
-  initialFitMode?: 'contain' | 'cover';
-  productTitle?: string;
-  theme: ThemeColors;
-  onClose: () => void;
-  onSavePosition: (objectPosition: string, fitMode: 'contain' | 'cover') => void;
-  onSaveCroppedImage: (newImageUrl: string, objectPosition?: string) => Promise<void> | void;
-  onUpload?: (file: File) => Promise<string>;
-}
-
-type AspectRatioPreset = 'free' | '1:1' | '4:3' | '3:4' | '16:9';
-
-interface NormalizedRect {
+export interface NormalizedRect {
   x: number; // 0 to 1
   y: number; // 0 to 1
   w: number; // 0 to 1
   h: number; // 0 to 1
 }
 
+export interface ImageCropStudioModalProps {
+  isOpen: boolean;
+  imageUrl: string;
+  originalImageUrl?: string;
+  initialCropRect?: NormalizedRect;
+  initialObjectPosition?: string;
+  initialFitMode?: 'contain' | 'cover';
+  productTitle?: string;
+  theme: ThemeColors;
+  onClose: () => void;
+  onSavePosition?: (objectPosition: string, fitMode: 'contain' | 'cover') => void;
+  onSaveCroppedImage: (
+    newImageUrl: string,
+    objectPosition?: string,
+    cropRect?: NormalizedRect,
+    originalUrl?: string
+  ) => Promise<void> | void;
+  onUpload?: (file: File) => Promise<string>;
+}
+
+type AspectRatioPreset = 'free' | '1:1' | '4:3' | '3:4' | '16:9';
+
+const clampCropRect = (value?: NormalizedRect): NormalizedRect => {
+  if (!value) return { x: 0, y: 0, w: 1, h: 1 };
+  const w = Math.max(0.1, Math.min(1, Number.isFinite(value.w) ? value.w : 1));
+  const h = Math.max(0.1, Math.min(1, Number.isFinite(value.h) ? value.h : 1));
+  const x = Math.max(0, Math.min(1 - w, Number.isFinite(value.x) ? value.x : 0));
+  const y = Math.max(0, Math.min(1 - h, Number.isFinite(value.y) ? value.y : 0));
+  return { x, y, w, h };
+};
+
 export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
   isOpen,
   imageUrl,
-  initialObjectPosition: _initialObjectPosition = 'center',
-  initialFitMode: _initialFitMode = 'contain',
+  originalImageUrl,
+  initialCropRect,
+  initialObjectPosition = 'center',
+  initialFitMode = 'contain',
   productTitle = 'Məhsul Şəkli',
   theme,
   onClose,
   onSavePosition: _onSavePosition,
   onSaveCroppedImage,
-  onUpload,
 }) => {
   const [aspectRatio, setAspectRatio] = useState<AspectRatioPreset>('free');
   const [isSaving, setIsSaving] = useState(false);
@@ -43,7 +60,12 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
   const [imageSize, setImageSize] = useState({ width: 800, height: 600 });
 
   // Normalized crop rectangle [0..1] relative to the natural image
-  const [crop, setCrop] = useState<NormalizedRect>({ x: 0, y: 0, w: 1, h: 1 });
+  const [crop, setCrop] = useState<NormalizedRect>(() => {
+    if (initialCropRect && initialCropRect.w > 0 && initialCropRect.h > 0) {
+      return clampCropRect(initialCropRect);
+    }
+    return { x: 0, y: 0, w: 1, h: 1 };
+  });
 
   // Dragging state
   const [activeHandle, setActiveHandle] = useState<string | null>(null);
@@ -65,20 +87,45 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
 
   // Load Image and set initial bounds
   useEffect(() => {
-    if (!imageUrl) return;
+    const srcToLoad = originalImageUrl || imageUrl;
+    if (!srcToLoad) return;
     setLoaded(false);
     const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.src = imageUrl;
+    img.src = srcToLoad;
     img.onload = () => {
       const w = img.naturalWidth || 800;
       const h = img.naturalHeight || 600;
       setImageSize({ width: w, height: h });
       setLoaded(true);
-      // Initialize full crop or default 95%
-      setCrop({ x: 0, y: 0, w: 1, h: 1 });
+      if (initialCropRect && initialCropRect.w > 0 && initialCropRect.h > 0) {
+        setCrop(clampCropRect(initialCropRect));
+      } else if (initialObjectPosition && initialObjectPosition !== 'center') {
+        let fx = 0.5;
+        let fy = 0.5;
+        const parts = initialObjectPosition.split(' ');
+        if (parts.length === 2) {
+          const px = parseFloat(parts[0]);
+          const py = parseFloat(parts[1]);
+          if (!isNaN(px)) fx = px / 100;
+          if (!isNaN(py)) fy = py / 100;
+        } else if (initialObjectPosition === 'top') {
+          fy = 0.2;
+        } else if (initialObjectPosition === 'bottom') {
+          fy = 0.8;
+        }
+        const bw = 0.75;
+        const bh = 0.75;
+        setCrop({
+          x: Math.max(0, Math.min(1 - bw, fx - bw / 2)),
+          y: Math.max(0, Math.min(1 - bh, fy - bh / 2)),
+          w: bw,
+          h: bh,
+        });
+      } else {
+        setCrop({ x: 0, y: 0, w: 1, h: 1 });
+      }
     };
-  }, [imageUrl]);
+  }, [imageUrl, originalImageUrl, initialCropRect, initialObjectPosition]);
 
   // Recalculate rendered bounds on window resize or load
   const updateRenderedBounds = useCallback(() => {
@@ -121,8 +168,11 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
 
-      const w = imgRef.current.naturalWidth;
-      const h = imgRef.current.naturalHeight;
+      const naturalWidth = imgRef.current.naturalWidth;
+      const naturalHeight = imgRef.current.naturalHeight;
+      const analysisScale = Math.min(1, 1024 / Math.max(naturalWidth, naturalHeight));
+      const w = Math.max(1, Math.round(naturalWidth * analysisScale));
+      const h = Math.max(1, Math.round(naturalHeight * analysisScale));
       canvas.width = w;
       canvas.height = h;
       ctx.drawImage(imgRef.current, 0, 0, w, h);
@@ -216,43 +266,47 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
     const cropW = Math.max(10, Math.round(crop.w * natW));
     const cropH = Math.max(10, Math.round(crop.h * natH));
 
-    // Render Preview 1: Product Card Canvas
-    if (previewCanvasRef.current) {
-      const cardCanvas = previewCanvasRef.current;
-      const ctx = cardCanvas.getContext('2d');
-      if (ctx) {
-        cardCanvas.width = cropW;
-        cardCanvas.height = cropH;
-        ctx.clearRect(0, 0, cropW, cropH);
-        ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
-      }
-    }
+    const renderPreview = (
+      canvas: HTMLCanvasElement | null,
+      targetWidth: number,
+      targetHeight: number
+    ) => {
+      if (!canvas) return;
+      const pixelRatio = Math.min(window.devicePixelRatio || 1, 2);
+      canvas.width = Math.round(targetWidth * pixelRatio);
+      canvas.height = Math.round(targetHeight * pixelRatio);
+      canvas.style.width = `${targetWidth}px`;
+      canvas.style.height = `${targetHeight}px`;
+      const context = canvas.getContext('2d');
+      if (!context) return;
+      context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
+      context.clearRect(0, 0, targetWidth, targetHeight);
+      const scale = Math.min(targetWidth / cropW, targetHeight / cropH);
+      const drawWidth = cropW * scale;
+      const drawHeight = cropH * scale;
+      const offsetX = (targetWidth - drawWidth) / 2;
+      const offsetY = (targetHeight - drawHeight) / 2;
+      context.drawImage(img, cropX, cropY, cropW, cropH, offsetX, offsetY, drawWidth, drawHeight);
+    };
 
-    // Render Preview 2: Modal Canvas
-    if (modalPreviewCanvasRef.current) {
-      const modalCanvas = modalPreviewCanvasRef.current;
-      const ctx2 = modalCanvas.getContext('2d');
-      if (ctx2) {
-        modalCanvas.width = cropW;
-        modalCanvas.height = cropH;
-        ctx2.clearRect(0, 0, cropW, cropH);
-        ctx2.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
-      }
-    }
+    renderPreview(previewCanvasRef.current, 280, 144);
+    renderPreview(modalPreviewCanvasRef.current, 280, 104);
   }, [crop, loaded, imageSize]);
 
-  // Handle Dragging Crop Box & Handles
-  const handleHandleMouseDown = (handle: string, e: React.MouseEvent) => {
+  // Handle mouse, pen and touch with one pointer-event path.
+  const handleHandlePointerDown = (handle: string, e: React.PointerEvent) => {
     e.stopPropagation();
     e.preventDefault();
+    e.currentTarget.setPointerCapture?.(e.pointerId);
     setActiveHandle(handle);
     setDragStart({ clientX: e.clientX, clientY: e.clientY });
     setCropOnDragStart({ ...crop });
   };
 
-  const handleMouseMove = useCallback(
-    (e: MouseEvent) => {
+  const handlePointerMove = useCallback(
+    (e: PointerEvent) => {
       if (!activeHandle || !renderedBounds.width || !renderedBounds.height) return;
+      e.preventDefault();
 
       const dxNorm = (e.clientX - dragStart.clientX) / renderedBounds.width;
       const dyNorm = (e.clientY - dragStart.clientY) / renderedBounds.height;
@@ -302,77 +356,54 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
           h = Math.max(minSize, Math.min(1 - y, h + dyNorm));
         }
 
-        return { x, y, w, h };
+        return clampCropRect({ x, y, w, h });
       });
     },
     [activeHandle, dragStart, cropOnDragStart, renderedBounds]
   );
 
-  const handleMouseUp = useCallback(() => {
+  const handlePointerUp = useCallback(() => {
     setActiveHandle(null);
   }, []);
 
   useEffect(() => {
     if (activeHandle) {
-      window.addEventListener('mousemove', handleMouseMove);
-      window.addEventListener('mouseup', handleMouseUp);
+      window.addEventListener('pointermove', handlePointerMove, { passive: false });
+      window.addEventListener('pointerup', handlePointerUp);
+      window.addEventListener('pointercancel', handlePointerUp);
     }
     return () => {
-      window.removeEventListener('mousemove', handleMouseMove);
-      window.removeEventListener('mouseup', handleMouseUp);
+      window.removeEventListener('pointermove', handlePointerMove);
+      window.removeEventListener('pointerup', handlePointerUp);
+      window.removeEventListener('pointercancel', handlePointerUp);
     };
-  }, [activeHandle, handleMouseMove, handleMouseUp]);
+  }, [activeHandle, handlePointerMove, handlePointerUp]);
 
-  // Save Cropped Result to Backend Server & Product
-  const handleSaveCroppedImage = async () => {
-    if (!imgRef.current) return;
+  // Save Visual Framing / Crop to Product
+  const handleSaveFraming = async () => {
     setIsSaving(true);
     try {
-      const img = imgRef.current;
-      const natW = img.naturalWidth || imageSize.width;
-      const natH = img.naturalHeight || imageSize.height;
-
-      const cropX = Math.max(0, Math.round(crop.x * natW));
-      const cropY = Math.max(0, Math.round(crop.y * natH));
-      const cropW = Math.max(20, Math.round(crop.w * natW));
-      const cropH = Math.max(20, Math.round(crop.h * natH));
-
-      const canvas = document.createElement('canvas');
-      canvas.width = cropW;
-      canvas.height = cropH;
-      const ctx = canvas.getContext('2d');
-      if (!ctx) throw new Error('Canvas dəstəklənmir');
-
-      ctx.drawImage(img, cropX, cropY, cropW, cropH, 0, 0, cropW, cropH);
-
-      const blob = await new Promise<Blob | null>((resolve) =>
-        canvas.toBlob(resolve, 'image/jpeg', 0.94)
-      );
-
-      if (!blob) throw new Error('Şəkil kəsilə bilmədi');
-
-      let savedUrl = '';
-      if (onUpload) {
-        const file = new File([blob], `cropped-${Date.now()}.jpg`, { type: 'image/jpeg' });
-        savedUrl = await onUpload(file);
-      } else {
-        const res = await fetch('/api/admin/media', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'image/jpeg',
-            'X-Media-Alt': productTitle || 'Kəsilmiş şəkil',
-          },
-          body: blob,
-        });
-        if (!res.ok) throw new Error('Yüklənmə uğursuz oldu');
-        const data = await res.json();
-        savedUrl = data.url;
+      if (!imgRef.current || !loaded) {
+        onClose();
+        return;
       }
 
-      await onSaveCroppedImage(savedUrl, 'center');
+      const focalX = Math.round((crop.x + crop.w / 2) * 100);
+      const focalY = Math.round((crop.y + crop.h / 2) * 100);
+      const computedPosition = `${focalX}% ${focalY}%`;
+
+      if (_onSavePosition) {
+        _onSavePosition(computedPosition, initialFitMode);
+      }
+
+      const originalSourceUrl = originalImageUrl || imageUrl;
+
+      if (onSaveCroppedImage) {
+        await onSaveCroppedImage(originalSourceUrl, computedPosition, crop, originalSourceUrl);
+      }
       onClose();
     } catch (err) {
-      alert(`Xəta: ${err instanceof Error ? err.message : 'Kəsmə zamanı xəta baş verdi'}`);
+      alert(`Xəta: ${err instanceof Error ? err.message : 'Düzənləmə zamanı xəta baş verdi'}`);
     } finally {
       setIsSaving(false);
     }
@@ -417,12 +448,7 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
               <Crop size={18} />
             </div>
             <div>
-              <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800 }}>
-                Dəqiq Şəkil Kəsmə & Çərçivələmə Studiyası
-              </h3>
-              <p style={{ margin: 0, fontSize: '11px', color: theme.textMuted }}>
-                {productTitle} — Artıq ağ sahələri kəsin, məhsulu mərkəzləşdirin və canlı baxın
-              </p>
+              <h3 style={{ margin: 0, fontSize: '15px', fontWeight: 800 }}>{productTitle}</h3>
             </div>
           </div>
 
@@ -439,10 +465,10 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
                 padding: '6px 12px',
                 fontSize: '12px',
               }}
-              title="Şəklin ətrafındakı artıq ağ/boş sahələri avtomatik kəsib məhsulu mərkəzə salır"
+              title="Məhsulu avtomatik aşkar edib görünüş mərkəzinə gətirir"
             >
               <Wand2 size={14} />
-              <span>🪄 Ağ Sahələri Avtomatik Kəs</span>
+              <span>🪄 Avtomatik Fokusla</span>
             </button>
 
             <button type="button" className="crop-close-btn" onClick={onClose} title="Bağla">
@@ -452,24 +478,20 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
         </header>
 
         {/* Studio Body */}
-        <div className="crop-studio-body" style={{ gridTemplateColumns: '1fr 340px' }}>
+        <div className="crop-studio-body">
           {/* Left Column: Interactive Visual Cropper Canvas */}
           <div className="crop-workspace-col">
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                justifyContent: 'space-between',
+                justifyContent: 'flex-end',
                 fontSize: '11.5px',
                 color: theme.textMuted,
               }}
             >
               <span>
-                📐 <b>Mavi çərçivənin kənarlarını tutub sürüşdürün</b> (Yuxarıdakı ağ sahəni aşağı
-                çəkərək kəsin)
-              </span>
-              <span>
-                Kəsim Ölçüsü:{' '}
+                Fokus Sahəsi:{' '}
                 <b>
                   {cropPixelDimensions.w} × {cropPixelDimensions.h} px
                 </b>
@@ -481,7 +503,6 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
               className="crop-canvas-stage"
               ref={stageRef}
               style={{
-                height: '430px',
                 background: '#090d16',
                 position: 'relative',
                 overflow: 'hidden',
@@ -491,6 +512,7 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
                 alignItems: 'center',
                 justifyContent: 'center',
                 userSelect: 'none',
+                touchAction: 'none',
               }}
             >
               <ShimmerImage
@@ -530,7 +552,7 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
                     boxSizing: 'border-box',
                     zIndex: 20,
                   }}
-                  onMouseDown={(e) => handleHandleMouseDown('move', e)}
+                  onPointerDown={(e) => handleHandlePointerDown('move', e)}
                 >
                   {/* Grid 3x3 */}
                   <div className="crop-grid-line v1" />
@@ -541,22 +563,22 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
                   {/* Corner Handles */}
                   <div
                     className="crop-handle nw"
-                    onMouseDown={(e) => handleHandleMouseDown('nw', e)}
+                    onPointerDown={(e) => handleHandlePointerDown('nw', e)}
                     title="Yuxarı-Sol künc"
                   />
                   <div
                     className="crop-handle ne"
-                    onMouseDown={(e) => handleHandleMouseDown('ne', e)}
+                    onPointerDown={(e) => handleHandlePointerDown('ne', e)}
                     title="Yuxarı-Sağ künc"
                   />
                   <div
                     className="crop-handle sw"
-                    onMouseDown={(e) => handleHandleMouseDown('sw', e)}
+                    onPointerDown={(e) => handleHandlePointerDown('sw', e)}
                     title="Aşağı-Sol künc"
                   />
                   <div
                     className="crop-handle se"
-                    onMouseDown={(e) => handleHandleMouseDown('se', e)}
+                    onPointerDown={(e) => handleHandlePointerDown('se', e)}
                     title="Aşağı-Sağ künc"
                   />
 
@@ -573,7 +595,7 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
                       borderRadius: '4px',
                       cursor: 'ns-resize',
                     }}
-                    onMouseDown={(e) => handleHandleMouseDown('n', e)}
+                    onPointerDown={(e) => handleHandlePointerDown('n', e)}
                     title="Üst ağ sahəni aşağı çəkərək kəsin"
                   />
                   <div
@@ -588,7 +610,7 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
                       borderRadius: '4px',
                       cursor: 'ns-resize',
                     }}
-                    onMouseDown={(e) => handleHandleMouseDown('s', e)}
+                    onPointerDown={(e) => handleHandlePointerDown('s', e)}
                     title="Alt tərəfi kəsin"
                   />
                   <div
@@ -603,7 +625,7 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
                       borderRadius: '4px',
                       cursor: 'ew-resize',
                     }}
-                    onMouseDown={(e) => handleHandleMouseDown('w', e)}
+                    onPointerDown={(e) => handleHandlePointerDown('w', e)}
                     title="Sol tərəfi kəsin"
                   />
                   <div
@@ -618,7 +640,7 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
                       borderRadius: '4px',
                       cursor: 'ew-resize',
                     }}
-                    onMouseDown={(e) => handleHandleMouseDown('e', e)}
+                    onPointerDown={(e) => handleHandlePointerDown('e', e)}
                     title="Sağ tərəfi kəsin"
                   />
 
@@ -636,7 +658,7 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <span style={{ fontSize: '11.5px', fontWeight: 700, color: theme.textMuted }}>
-                  Kəsim Nisbəti:
+                  Görünüş Nisbəti:
                 </span>
                 {(['free', '1:1', '4:3', '3:4', '16:9'] as AspectRatioPreset[]).map((preset) => (
                   <button
@@ -645,7 +667,7 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
                     className={`crop-ratio-btn ${aspectRatio === preset ? 'active' : ''}`}
                     onClick={() => applyAspectRatio(preset)}
                   >
-                    {preset === 'free' ? '✂️ Sərbəst Kəsim' : preset}
+                    {preset === 'free' ? '🎯 Sərbəst Düzənləmə' : preset}
                   </button>
                 ))}
               </div>
@@ -754,13 +776,10 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
                 <b>Orijinal Şəkil:</b> {imageSize.width} × {imageSize.height} px
               </div>
               <div>
-                <b>Yeni Kəsilmiş Ölçü:</b>{' '}
+                <b>Seçilmiş Fokus Sahəsi:</b>{' '}
                 <code>
                   {cropPixelDimensions.w} × {cropPixelDimensions.h} px
                 </code>
-              </div>
-              <div style={{ color: '#22c55e', fontWeight: 700, marginTop: '4px' }}>
-                ✓ Sağ və sol kənarlar heç bir təhrif olmadan tam saxlanılır.
               </div>
             </div>
           </div>
@@ -776,7 +795,7 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
             <button
               type="button"
               className="crop-save-btn"
-              onClick={handleSaveCroppedImage}
+              onClick={handleSaveFraming}
               disabled={isSaving}
               style={{
                 background: theme.primary,
@@ -785,17 +804,17 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
                 padding: '9px 24px',
                 fontWeight: 800,
               }}
-              title="Kəsilmiş şəkli saxlayır və məhsulun şəkli olaraq təyin edir"
+              title="Seçilmiş görünüş fokusunu saxlayır və məhsula tətbiq edir"
             >
               {isSaving ? (
                 <>
                   <RefreshCw size={15} className="spin-anim" />
-                  <span>Kəsilir & Yadda Saxlanılır...</span>
+                  <span>Düzənlənir & Tətbiq Edilir...</span>
                 </>
               ) : (
                 <>
                   <Check size={16} />
-                  <span>✂️ Kəsilmiş Şəkli Saxla & Məhsula Tətbiq Et</span>
+                  <span>✓ Düzənləməni Saxla & Məhsula Tətbiq Et</span>
                 </>
               )}
             </button>

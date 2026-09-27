@@ -1,8 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState, lazy, Suspense } from 'react';
 import { AdminPayload, catalogApi } from '../services/catalogApi';
-import { normalizeCatalog } from '../data/catalog';
-import { Product, TechnologyArticle } from '../types/product';
-import { filterCatalogProducts } from '../utils/filter';
+import { Product } from '../types/product';
 import { phoneHref, whatsappHref } from '../utils/contact';
 import {
   CatalogSortOption,
@@ -17,6 +15,7 @@ import {
   ChevronDown,
   Filter,
   Flame,
+  LayoutGrid,
   Lock,
   MessageCircle,
   Moon,
@@ -39,13 +38,7 @@ import { Drawer } from '../components/ui/Drawer';
 import { Footer } from '../components/Footer';
 import { ProductGridSkeleton } from '../components/Skeletons';
 import type { CartItem } from '../pages/CartPage';
-import {
-  useTheme,
-  useToast,
-  useCatalog,
-  useContact,
-  useFavorites,
-} from '../hooks';
+import { useTheme, useToast, useCatalog, useContact, useFavorites } from '../hooks';
 
 // Lazy Loaded Pages & Modals
 const CatalogAdmin = lazy(() =>
@@ -54,9 +47,7 @@ const CatalogAdmin = lazy(() =>
 const AdminLogin = lazy(() =>
   import('../components/AdminLogin').then((m) => ({ default: m.AdminLogin }))
 );
-const CartPage = lazy(() =>
-  import('../pages/CartPage').then((m) => ({ default: m.CartPage }))
-);
+const CartPage = lazy(() => import('../pages/CartPage').then((m) => ({ default: m.CartPage })));
 const FavoritesPage = lazy(() =>
   import('../pages/FavoritesPage').then((m) => ({ default: m.FavoritesPage }))
 );
@@ -69,9 +60,7 @@ const InverterInfoModal = lazy(() =>
 const ShareModal = lazy(() =>
   import('../components/ShareModal').then((m) => ({ default: m.ShareModal }))
 );
-const SmartSearchOverlay = lazy(() =>
-  import('../components/SmartSearchOverlay').then((m) => ({ default: m.SmartSearchOverlay }))
-);
+import { CatalogInfoModal, CatalogInfoTab } from '../components/CatalogInfoModal';
 
 export interface CatalogAppProps {
   initialRoute?: string;
@@ -115,6 +104,24 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
     };
   }, []);
 
+  // Guarantee splash screen removal on mount
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    const splash = document.getElementById('app-splash-screen');
+    if (splash) {
+      const timer = setTimeout(() => {
+        const s = document.getElementById('app-splash-screen');
+        if (s) {
+          s.classList.add('splash-fade-out');
+          setTimeout(() => {
+            if (s.parentNode) s.parentNode.removeChild(s);
+          }, 400);
+        }
+      }, 250);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
   const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
@@ -126,9 +133,31 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
   const [selectedEnergyClass, setSelectedEnergyClass] = useState('all');
   const [selectedMotorType, setSelectedMotorType] = useState('all');
   const [selectedColor, setSelectedColor] = useState('all');
-  const [sortBy, setSortBy] = useState<CatalogSortOption>('recommended');
+  const [sortBy, setSortBy] = useState<CatalogSortOption>('all');
+  const [comparisonIds, setComparisonIds] = useState<string[]>([]);
   const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
   const sortDropdownRef = React.useRef<HTMLDivElement>(null);
+
+  const toggleCompare = (product: Product) => {
+    setComparisonIds((prev) =>
+      prev.includes(product.id) ? prev.filter((id) => id !== product.id) : [...prev, product.id]
+    );
+  };
+
+  const scrollToCatalogSection = () => {
+    const targetEl = document.querySelector('.catalog-section') as HTMLElement | null;
+    if (targetEl) {
+      const headerHeight =
+        parseFloat(
+          getComputedStyle(document.documentElement).getPropertyValue(
+            '--catalog-site-header-height'
+          )
+        ) || 140;
+      const targetPos =
+        targetEl.getBoundingClientRect().top + window.pageYOffset - (headerHeight + 20);
+      window.scrollTo({ top: Math.max(0, targetPos), behavior: 'smooth' });
+    }
+  };
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
@@ -150,6 +179,7 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
   const [selectedArticleId, setSelectedArticleId] = useState<string | null>(null);
   const [isShareModalOpen, setIsShareModalOpen] = useState(false);
   const [shareTargetProduct, setShareTargetProduct] = useState<Product | null>(null);
+  const [infoModalTab, setInfoModalTab] = useState<CatalogInfoTab | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   const [activeView, setActiveView] = useState<'catalog' | 'cart' | 'favorites'>('catalog');
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
@@ -259,8 +289,7 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
     const id = params.get('product');
     if (id) {
       const found = items.find(
-        (item) =>
-          item.id === id || item.code.toLocaleLowerCase('az') === id.toLocaleLowerCase('az')
+        (item) => item.id === id || item.code.toLocaleLowerCase('az') === id.toLocaleLowerCase('az')
       );
       if (found) {
         setSelectedProduct(found);
@@ -268,7 +297,7 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
     }
   }, []);
 
-  const { catalog, isLoadingCatalog } = useCatalog({
+  const { catalog, setCatalog, isLoadingCatalog } = useCatalog({
     initialCatalog: initialData?.catalog,
     isSsr,
     onLoaded: parseDeepLink,
@@ -354,17 +383,10 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
     );
   };
 
-  const openArticle = (article?: TechnologyArticle | null) => {
-    setSelectedArticleId(article?.id || null);
-    setIsInverterModalOpen(true);
-  };
-
   const SUPPORTED_CATALOG_BRAND_IDS = useMemo(() => ['ardo', 'artel', 'lotus'], []);
 
   const supportedBrands = useMemo(() => {
-    return catalog.brands.filter((b) =>
-      SUPPORTED_CATALOG_BRAND_IDS.includes(b.id.toLowerCase())
-    );
+    return catalog.brands.filter((b) => SUPPORTED_CATALOG_BRAND_IDS.includes(b.id.toLowerCase()));
   }, [catalog.brands, SUPPORTED_CATALOG_BRAND_IDS]);
 
   const activeCatalogProducts = useMemo(() => {
@@ -517,11 +539,9 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
 
   const activeCategoriesForSidebar = useMemo(() => {
     return catalog.categories.filter((cat) =>
-      brandFilteredProducts.some((p) => p.category === cat.id && p.status !== 'draft')
+      activeCatalogProducts.some((p) => p.category === cat.id && p.status !== 'draft')
     );
-  }, [catalog.categories, brandFilteredProducts]);
-
-  const activeBrandObj = activeSelectedBrands[0] || null;
+  }, [catalog.categories, activeCatalogProducts]);
 
   useEffect(() => {
     if (catalog.settings?.siteTitle) {
@@ -577,12 +597,25 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
             showToast={showToast}
             onSave={async (data) => {
               await catalogApi.saveCatalog(data, adminData.csrfToken);
+              setCatalog(data);
+              try {
+                const refreshed = await catalogApi.getAdminData();
+                if (refreshed) setAdminData(refreshed);
+              } catch {}
             }}
             onPublish={async (data) => {
               await catalogApi.saveCatalog(data, adminData.csrfToken);
               await catalogApi.publishCatalog(adminData.csrfToken);
               const updated = await catalogApi.getCatalog();
-              // update local catalog
+              if (updated) {
+                setCatalog(updated);
+              } else {
+                setCatalog(data);
+              }
+              try {
+                const refreshed = await catalogApi.getAdminData();
+                if (refreshed) setAdminData(refreshed);
+              } catch {}
             }}
             onUpload={(file) => catalogApi.uploadMedia(file, adminData.csrfToken)}
             onLogout={async () => {
@@ -687,7 +720,7 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
         categories={catalog.categories}
         brands={supportedBrands}
         products={activeCatalogProducts}
-        selectedCategory={selectedCategory || 'all'}
+        selectedCategory={activeSelectedBrands.length > 0 ? 'all' : selectedCategory || 'all'}
         selectedBrand={selectedBrand || 'all'}
         searchQuery={searchQuery}
         filteredCount={filteredProducts.length}
@@ -708,9 +741,13 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
         onToggleTheme={toggleTheme}
         onSelectCategory={(catId) => {
           setActiveView('catalog');
+          if (activeSelectedBrands.length > 0) {
+            setSelectedBrand(null);
+            setSelectedBrands([]);
+          }
           setSelectedCategory(catId);
           setTimeout(() => {
-            document.querySelector('.catalog-section')?.scrollIntoView({ behavior: 'smooth' });
+            scrollToCatalogSection();
           }, 50);
         }}
         onSelectBrand={(brandId) => {
@@ -718,7 +755,7 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
           setSelectedBrand(brandId);
           setSelectedBrands(brandId ? [brandId] : []);
           setTimeout(() => {
-            document.querySelector('.catalog-section')?.scrollIntoView({ behavior: 'smooth' });
+            scrollToCatalogSection();
           }, 50);
         }}
         onSearchChange={(query) => {
@@ -752,6 +789,7 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
             <CartPage
               cartItems={cartItems}
               allProducts={activeCatalogProducts}
+              brands={supportedBrands}
               settings={catalog.settings}
               theme={activeTheme}
               themeMode={themeMode}
@@ -767,6 +805,11 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                 window.scrollTo({ top: 0, behavior: 'smooth' });
               }}
               onSelectProduct={selectProduct}
+              onAddToCart={addToCart}
+              onToggleFavorite={toggleFavorite}
+              favoriteIds={favoriteIds}
+              onToggleCompare={toggleCompare}
+              comparisonIds={comparisonIds}
               onWhatsAppCheckout={(items, totalAmount) => {
                 const lines = items.map(
                   (item, idx) =>
@@ -792,6 +835,7 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
               favoriteIds={favoriteIds}
               allProducts={activeCatalogProducts}
               categories={catalog.categories}
+              brands={supportedBrands}
               settings={catalog.settings}
               theme={activeTheme}
               themeMode={themeMode}
@@ -804,6 +848,8 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
               onCall={() => openCall()}
               onShare={openShare}
               onCopyLink={copyLink}
+              onToggleCompare={toggleCompare}
+              comparisonIds={comparisonIds}
               onNavigate={(route) => {
                 if (route === 'cart') {
                   setActiveView('cart');
@@ -826,7 +872,7 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                   setSelectedBrands([brandId]);
                   setSelectedCategory('all');
                   setTimeout(() => {
-                    document.querySelector('.catalog-section')?.scrollIntoView({ behavior: 'smooth' });
+                    scrollToCatalogSection();
                   }, 60);
                 }}
               />
@@ -902,6 +948,7 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                     <CatalogSidebarFilter
                       categories={activeCategoriesForSidebar}
                       brands={supportedBrands}
+                      allProducts={activeCatalogProducts}
                       selectedBrands={
                         selectedBrands.length > 0
                           ? selectedBrands
@@ -960,7 +1007,16 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                         marginBottom: '16px',
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', flex: 1, minWidth: '200px' }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                          flexWrap: 'wrap',
+                          flex: 1,
+                          minWidth: '200px',
+                        }}
+                      >
                         <button
                           type="button"
                           onClick={() => setIsMobileFilterDrawerOpen(true)}
@@ -1058,8 +1114,15 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                           )}
                         </div>
 
-                        <span style={{ fontSize: '13px', fontWeight: 700, color: activeTheme.textMuted }}>
-                          Tapılan: <b style={{ color: activeTheme.text }}>{filteredProducts.length}</b> model
+                        <span
+                          style={{
+                            fontSize: '13px',
+                            fontWeight: 700,
+                            color: activeTheme.textMuted,
+                          }}
+                        >
+                          Tapılan:{' '}
+                          <b style={{ color: activeTheme.text }}>{filteredProducts.length}</b> model
                         </span>
 
                         {hasActiveFilters && (
@@ -1089,7 +1152,12 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                       {/* Modern Sort Popover */}
                       <div
                         ref={sortDropdownRef}
-                        style={{ position: 'relative', display: 'flex', alignItems: 'center', gap: '8px' }}
+                        style={{
+                          position: 'relative',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '8px',
+                        }}
                       >
                         <span
                           style={{
@@ -1134,7 +1202,9 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                           aria-expanded={isSortDropdownOpen}
                         >
                           <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                            {sortBy === 'recommended' && <Sparkles size={14} color="#e31e24" />}
+                            {(sortBy === 'all' || sortBy === 'recommended') && (
+                              <LayoutGrid size={14} color="#e31e24" />
+                            )}
                             {sortBy === 'price-asc' && (
                               <ArrowDownNarrowWide size={14} color="#10b981" />
                             )}
@@ -1143,7 +1213,7 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                             )}
                             {sortBy === 'newest' && <Flame size={14} color="#f97316" />}
                             <span>
-                              {sortBy === 'recommended' && 'Tövsiyə olunan'}
+                              {(sortBy === 'all' || sortBy === 'recommended') && 'Hamısı'}
                               {sortBy === 'price-asc' && 'Qiymət: Ucuzdan bahaya'}
                               {sortBy === 'price-desc' && 'Qiymət: Bahadan ucuza'}
                               {sortBy === 'newest' && 'Yeni modellər'}
@@ -1182,9 +1252,9 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                           >
                             {[
                               {
-                                value: 'recommended' as CatalogSortOption,
-                                label: 'Tövsiyə olunan',
-                                icon: <Sparkles size={14} color="#e31e24" />,
+                                value: 'all' as CatalogSortOption,
+                                label: 'Hamısı',
+                                icon: <LayoutGrid size={14} color="#e31e24" />,
                               },
                               {
                                 value: 'price-asc' as CatalogSortOption,
@@ -1202,7 +1272,9 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                                 icon: <Flame size={14} color="#f97316" />,
                               },
                             ].map((opt) => {
-                              const isSelected = sortBy === opt.value;
+                              const isSelected =
+                                sortBy === opt.value ||
+                                (opt.value === 'all' && sortBy === 'recommended');
                               return (
                                 <button
                                   key={opt.value}
@@ -1334,8 +1406,21 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                         gap: '16px',
                       }}
                     >
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <h3 style={{ margin: 0, fontSize: '16px', fontWeight: 800, color: activeTheme.text }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'space-between',
+                        }}
+                      >
+                        <h3
+                          style={{
+                            margin: 0,
+                            fontSize: '16px',
+                            fontWeight: 800,
+                            color: activeTheme.text,
+                          }}
+                        >
                           Filtrlər
                         </h3>
                         <button
@@ -1356,6 +1441,7 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                       <CatalogSidebarFilter
                         categories={activeCategoriesForSidebar}
                         brands={supportedBrands}
+                        allProducts={activeCatalogProducts}
                         selectedBrands={
                           selectedBrands.length > 0
                             ? selectedBrands
@@ -1395,7 +1481,14 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                         isDarkMode={themeMode === 'dark'}
                       />
 
-                      <div style={{ marginTop: 'auto', paddingTop: '16px', display: 'flex', gap: '8px' }}>
+                      <div
+                        style={{
+                          marginTop: 'auto',
+                          paddingTop: '16px',
+                          display: 'flex',
+                          gap: '8px',
+                        }}
+                      >
                         <button
                           type="button"
                           onClick={resetFilters}
@@ -1441,14 +1534,31 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
       </main>
 
       <Footer
+        variant="catalog"
         settings={catalog.settings}
         categories={catalog.categories}
         theme={activeTheme}
+        onNavigate={(route) => {
+          if (
+            route === 'about' ||
+            route === 'stores' ||
+            route === 'support' ||
+            route === 'terms' ||
+            route === 'privacy'
+          ) {
+            setInfoModalTab(route as CatalogInfoTab);
+          } else if (route === 'inverter') {
+            setIsInverterModalOpen(true);
+          } else if (route === 'catalog' || route === 'home') {
+            setActiveView('catalog');
+            scrollToCatalogSection();
+          }
+        }}
         onSelectCategory={(catId) => {
           setSelectedCategory(catId);
           setSelectedBrand('all');
           setTimeout(() => {
-            document.querySelector('.catalog-section')?.scrollIntoView({ behavior: 'smooth' });
+            scrollToCatalogSection();
           }, 50);
         }}
       />
@@ -1492,6 +1602,14 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
           onCopyLink={copyLink}
           onWhatsAppShare={shareWhatsApp}
           onTelegramShare={shareTelegram}
+        />
+        <CatalogInfoModal
+          isOpen={!!infoModalTab}
+          activeTab={infoModalTab || 'about'}
+          onClose={() => setInfoModalTab(null)}
+          onSelectTab={(tab) => setInfoModalTab(tab)}
+          settings={catalog.settings}
+          theme={activeTheme}
         />
       </Suspense>
 

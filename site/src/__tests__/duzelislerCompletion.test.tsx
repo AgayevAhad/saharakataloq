@@ -56,7 +56,12 @@ describe('Duzelisler.md completion', () => {
   it('routes every customer footer label to its own page', () => {
     const onNavigate = vi.fn();
     render(
-      <Footer settings={DEFAULT_CATALOG.settings} theme={lightTheme} onNavigate={onNavigate} />
+      <Footer
+        variant="site"
+        settings={DEFAULT_CATALOG.settings}
+        theme={lightTheme}
+        onNavigate={onNavigate}
+      />
     );
 
     const routes = [
@@ -64,6 +69,12 @@ describe('Duzelisler.md completion', () => {
       ['Zəmanət', 'warranty'],
       ['Qaytarma', 'returns'],
       ['Tez-tez verilən suallar', 'faq'],
+      ['Haqqımızda', 'about'],
+      ['Mağazalar', 'stores'],
+      ['Karyera', 'careers'],
+      ['Əlaqə', 'support'],
+      ['İstifadə şərtləri', 'terms'],
+      ['Məxfilik siyasəti', 'privacy'],
     ] as const;
 
     routes.forEach(([label, route]) => {

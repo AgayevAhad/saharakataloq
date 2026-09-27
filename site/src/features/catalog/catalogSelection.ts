@@ -1,6 +1,6 @@
 import { Product } from '../../types/product';
 
-export type CatalogSortOption = 'recommended' | 'price-asc' | 'price-desc' | 'newest';
+export type CatalogSortOption = 'all' | 'recommended' | 'price-asc' | 'price-desc' | 'newest';
 
 export interface CatalogSelection {
   query: string;

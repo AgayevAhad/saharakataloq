@@ -225,7 +225,6 @@
   place-items: center;
 }
 
-
 /* Mobile & Desktop Floating Action Buttons */
 .mobile-floating-actions {
   position: fixed;
@@ -292,7 +291,6 @@
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35) !important;
 }
 
-
 /* SOCIAL HOVER POPOVER CARD SYSTEM */
 .social-popover-wrapper {
   position: relative;
@@ -339,7 +337,6 @@
   transform: translateY(0) scale(1);
 }
 
-
 /* SCROLL TO TOP FLOATING BUTTON */
 .scroll-to-top-btn {
   will-change: transform, opacity;
@@ -367,7 +364,6 @@
     0 14px 32px rgba(220, 38, 38, 0.7),
     0 2px 8px rgba(0, 0, 0, 0.3) !important;
 }
-
 
 /* Header Sticky Transitions and Responsive Layouts */
 .site-header-sticky {
@@ -1020,7 +1016,6 @@
   cursor: default;
 }
 
-
 /* Mobile Bottom Dock Visibility */
 @media (min-width: 769px) {
   .hide-on-desktop {
@@ -1411,4 +1406,3 @@
     transform: translateY(0);
   }
 }
-

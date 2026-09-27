@@ -8,6 +8,8 @@ import {
   Phone,
   Mail,
   ExternalLink,
+  Code2,
+  Globe,
 } from 'lucide-react';
 import { CatalogCategory, CatalogSettings } from '../types/product';
 import { ThemeColors } from '../types/theme';
@@ -21,6 +23,7 @@ interface FooterProps {
   theme: ThemeColors;
   onSelectCategory?: (categoryId: string) => void;
   onNavigate?: (route: string) => void;
+  variant?: 'site' | 'catalog';
 }
 
 export const Footer: React.FC<FooterProps> = ({
@@ -29,9 +32,12 @@ export const Footer: React.FC<FooterProps> = ({
   theme,
   onSelectCategory: _onSelectCategory,
   onNavigate,
+  variant = 'site',
 }) => {
   const [emailInput, setEmailInput] = useState('');
   const [isSubscribed, setIsSubscribed] = useState(false);
+
+  const isCatalogMode = variant === 'catalog';
 
   const workingHours = settings?.workingHours || '';
   const locationNote = settings?.locationNote || '';
@@ -92,9 +98,17 @@ export const Footer: React.FC<FooterProps> = ({
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  const handleNavClick = (route: string) => {
+    if (onNavigate) {
+      onNavigate(route);
+    } else if (typeof window !== 'undefined' && !isCatalogMode) {
+      window.location.href = `/${route}`;
+    }
+  };
+
   return (
     <footer
-      className="catalog-footer-enhanced site-footer-v2"
+      className={`catalog-footer-enhanced site-footer-v2 ${isCatalogMode ? 'footer-mode-catalog' : 'footer-mode-site'}`}
       style={{
         backgroundColor: theme.mode === 'dark' ? '#090d13' : '#ffffff',
         borderTop: `1px solid ${theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : '#eaecf0'}`,
@@ -111,9 +125,9 @@ export const Footer: React.FC<FooterProps> = ({
           margin: '0 auto',
         }}
       >
-        {/* Main 5-Column Grid matching siteUI.png */}
+        {/* Main Columns Grid */}
         <div
-          className="footer-grid-5col"
+          className={isCatalogMode ? 'footer-grid-4col' : 'footer-grid-5col'}
           style={{
             display: 'grid',
             gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
@@ -126,7 +140,10 @@ export const Footer: React.FC<FooterProps> = ({
             className="footer-column footer-brand-column"
             style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}
           >
-            <div style={{ display: 'flex', alignItems: 'center' }}>
+            <div
+              className="footer-brand-logo-wrap"
+              style={{ display: 'flex', alignItems: 'center' }}
+            >
               <ShimmerImage
                 src={theme.mode === 'dark' ? '/media/SaharaLogo-dark.png' : '/media/SaharaLogo.png'}
                 alt="Sahara Electronics"
@@ -156,10 +173,11 @@ export const Footer: React.FC<FooterProps> = ({
 
           {/* Column 2: Şirkət */}
           <div
-            className="footer-column"
+            className="footer-column footer-company-column"
             style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}
           >
             <h4
+              className="footer-column-title"
               style={{
                 fontSize: '14px',
                 fontWeight: 800,
@@ -170,16 +188,23 @@ export const Footer: React.FC<FooterProps> = ({
             >
               Şirkət
             </h4>
-            {[
-              { label: 'Haqqımızda', route: 'about' },
-              { label: 'Mağazalar', route: 'stores' },
-              { label: 'Karyera', route: 'careers' },
-              { label: 'Əlaqə', route: 'support' },
-            ].map((link, idx) => (
+            {(isCatalogMode
+              ? [
+                  { label: 'Haqqımızda', route: 'about' },
+                  { label: 'Mağazalar', route: 'stores' },
+                  { label: 'Əlaqə və Dəstək', route: 'support' },
+                ]
+              : [
+                  { label: 'Haqqımızda', route: 'about' },
+                  { label: 'Mağazalar', route: 'stores' },
+                  { label: 'Karyera', route: 'careers' },
+                  { label: 'Əlaqə', route: 'support' },
+                ]
+            ).map((link, idx) => (
               <button
                 key={idx}
                 type="button"
-                onClick={() => (onNavigate ? onNavigate(link.route) : null)}
+                onClick={() => handleNavClick(link.route)}
                 style={{
                   background: 'transparent',
                   border: 'none',
@@ -192,62 +217,70 @@ export const Footer: React.FC<FooterProps> = ({
                   transition: 'color 0.15s ease',
                 }}
                 className="footer-nav-link"
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#e31e24')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = theme.textMuted || '#64748b')}
               >
                 {link.label}
               </button>
             ))}
           </div>
 
-          {/* Column 3: Müştəri üçün */}
-          <div
-            className="footer-column"
-            style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}
-          >
-            <h4
-              style={{
-                fontSize: '14px',
-                fontWeight: 800,
-                color: theme.text,
-                margin: '0 0 4px 0',
-                fontFamily: 'Outfit, sans-serif',
-              }}
+          {/* Column 3 (Site only): Müştəri üçün */}
+          {!isCatalogMode && (
+            <div
+              className="footer-column footer-customers-column"
+              style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}
             >
-              Müştəri üçün
-            </h4>
-            {[
-              { label: 'Çatdırılma', route: 'delivery' },
-              { label: 'Zəmanət', route: 'warranty' },
-              { label: 'Qaytarma', route: 'returns' },
-              { label: 'Tez-tez verilən suallar', route: 'faq' },
-            ].map((link, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => (onNavigate ? onNavigate(link.route) : null)}
+              <h4
+                className="footer-column-title"
                 style={{
-                  background: 'transparent',
-                  border: 'none',
-                  padding: 0,
-                  textAlign: 'left',
-                  color: theme.textMuted || '#64748b',
-                  fontSize: '13px',
-                  fontWeight: 500,
-                  cursor: 'pointer',
-                  transition: 'color 0.15s ease',
+                  fontSize: '14px',
+                  fontWeight: 800,
+                  color: theme.text,
+                  margin: '0 0 4px 0',
+                  fontFamily: 'Outfit, sans-serif',
                 }}
-                className="footer-nav-link"
               >
-                {link.label}
-              </button>
-            ))}
-          </div>
+                Müştəri üçün
+              </h4>
+              {[
+                { label: 'Çatdırılma', route: 'delivery' },
+                { label: 'Zəmanət', route: 'warranty' },
+                { label: 'Qaytarma', route: 'returns' },
+                { label: 'Tez-tez verilən suallar', route: 'faq' },
+              ].map((link, idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => handleNavClick(link.route)}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    padding: 0,
+                    textAlign: 'left',
+                    color: theme.textMuted || '#64748b',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    cursor: 'pointer',
+                    transition: 'color 0.15s ease',
+                  }}
+                  className="footer-nav-link"
+                  onMouseEnter={(e) => (e.currentTarget.style.color = '#e31e24')}
+                  onMouseLeave={(e) => (e.currentTarget.style.color = theme.textMuted || '#64748b')}
+                >
+                  {link.label}
+                </button>
+              ))}
+            </div>
+          )}
 
-          {/* Column 4: Kömək */}
+          {/* Column: Kömək və Qaydalar */}
           <div
-            className="footer-column"
+            className="footer-column footer-help-column"
             style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}
           >
             <h4
+              className="footer-column-title"
               style={{
                 fontSize: '14px',
                 fontWeight: 800,
@@ -256,7 +289,7 @@ export const Footer: React.FC<FooterProps> = ({
                 fontFamily: 'Outfit, sans-serif',
               }}
             >
-              Kömək
+              {isCatalogMode ? 'Kömək və Qaydalar' : 'Kömək'}
             </h4>
             {[
               { label: 'İstifadə şərtləri', route: 'terms' },
@@ -265,7 +298,7 @@ export const Footer: React.FC<FooterProps> = ({
               <button
                 key={idx}
                 type="button"
-                onClick={() => (onNavigate ? onNavigate(link.route) : null)}
+                onClick={() => handleNavClick(link.route)}
                 style={{
                   background: 'transparent',
                   border: 'none',
@@ -278,18 +311,21 @@ export const Footer: React.FC<FooterProps> = ({
                   transition: 'color 0.15s ease',
                 }}
                 className="footer-nav-link"
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#e31e24')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = theme.textMuted || '#64748b')}
               >
                 {link.label}
               </button>
             ))}
           </div>
 
-          {/* Column 5: Yeniliklərdən xəbərdar olun */}
+          {/* Column: Yeniliklərdən xəbərdar olun */}
           <div
             className="footer-column footer-subscribe-column"
             style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}
           >
             <h4
+              className="footer-column-title"
               style={{
                 fontSize: '14px',
                 fontWeight: 800,
@@ -578,9 +614,102 @@ export const Footer: React.FC<FooterProps> = ({
             color: theme.textMuted || '#94a3b8',
           }}
         >
-          <div>© {new Date().getFullYear()} Sahara Electronics. Bütün hüquqlar qorunur.</div>
+          <div className="footer-subfooter-copyright">
+            © {new Date().getFullYear()} Sahara Electronics. Bütün hüquqlar qorunur.
+          </div>
+
+          {/* Developer Credit Badge */}
+          {(settings?.developerName ||
+            settings?.developerInstagram ||
+            settings?.developerPhone ||
+            settings?.developerWebsite) && (
+            <div
+              className="footer-developer-badge"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+                fontSize: '12px',
+                color: theme.textMuted || '#94a3b8',
+                padding: '4px 12px',
+                borderRadius: '20px',
+                backgroundColor: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.04)' : '#f8fafc',
+                border: `1px solid ${theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0'}`,
+              }}
+            >
+              <Code2 size={13} color="#e31e24" />
+              <span>
+                Hazırladı:{' '}
+                <strong style={{ color: theme.text, fontWeight: 700 }}>
+                  {settings.developerName || 'Developer'}
+                </strong>
+                {settings.developerRole ? ` (${settings.developerRole})` : ''}
+              </span>
+
+              {/* Instagram */}
+              {settings.developerInstagram && (
+                <a
+                  href={
+                    settings.developerInstagram.startsWith('http')
+                      ? settings.developerInstagram
+                      : `https://instagram.com/${settings.developerInstagram.replace('@', '')}`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Developer Instagram"
+                  style={{
+                    color: '#e1306c',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    marginLeft: '2px',
+                  }}
+                >
+                  <Instagram size={13} />
+                </a>
+              )}
+
+              {/* Phone / WhatsApp */}
+              {settings.developerPhone && (
+                <a
+                  href={whatsappHref(settings.developerPhone, 'Salam!')}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Developer WhatsApp / Əlaqə"
+                  style={{
+                    color: '#16a34a',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                  }}
+                >
+                  <WhatsAppIcon size={13} color="#16a34a" />
+                </a>
+              )}
+
+              {/* Website */}
+              {settings.developerWebsite && (
+                <a
+                  href={
+                    settings.developerWebsite.startsWith('http')
+                      ? settings.developerWebsite
+                      : `https://${settings.developerWebsite}`
+                  }
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  title="Developer Veb-sayt / Portfel"
+                  style={{
+                    color: '#e31e24',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                  }}
+                >
+                  <Globe size={13} />
+                </a>
+              )}
+            </div>
+          )}
 
           <div
+            className="footer-subfooter-motto"
             style={{
               fontFamily: "'Playfair Display', Georgia, serif",
               fontStyle: 'italic',
@@ -593,6 +722,7 @@ export const Footer: React.FC<FooterProps> = ({
 
           <button
             type="button"
+            className="footer-scroll-top-btn"
             onClick={scrollToTop}
             style={{
               background: 'transparent',

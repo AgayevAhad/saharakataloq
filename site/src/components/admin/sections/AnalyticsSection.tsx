@@ -154,9 +154,7 @@ export const AnalyticsSection = ({
               className="dash-kpi-icon-pill"
               style={{
                 background:
-                  theme.mode === 'dark'
-                    ? 'rgba(239, 68, 68, 0.2)'
-                    : 'rgba(185, 28, 28, 0.12)',
+                  theme.mode === 'dark' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(185, 28, 28, 0.12)',
                 color: theme.mode === 'dark' ? '#f87171' : '#b91c1c',
               }}
             >
@@ -174,9 +172,7 @@ export const AnalyticsSection = ({
               className="dash-kpi-badge"
               style={{
                 background:
-                  theme.mode === 'dark'
-                    ? 'rgba(239, 68, 68, 0.2)'
-                    : 'rgba(185, 28, 28, 0.12)',
+                  theme.mode === 'dark' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(185, 28, 28, 0.12)',
                 color: theme.mode === 'dark' ? '#fca5a5' : '#991b1b',
               }}
             >
@@ -201,9 +197,7 @@ export const AnalyticsSection = ({
               className="dash-kpi-icon-pill"
               style={{
                 background:
-                  theme.mode === 'dark'
-                    ? 'rgba(96, 165, 250, 0.2)'
-                    : 'rgba(29, 78, 216, 0.12)',
+                  theme.mode === 'dark' ? 'rgba(96, 165, 250, 0.2)' : 'rgba(29, 78, 216, 0.12)',
                 color: theme.mode === 'dark' ? '#60a5fa' : '#1d4ed8',
               }}
             >
@@ -221,9 +215,7 @@ export const AnalyticsSection = ({
               className="dash-kpi-badge"
               style={{
                 background:
-                  theme.mode === 'dark'
-                    ? 'rgba(96, 165, 250, 0.2)'
-                    : 'rgba(29, 78, 216, 0.12)',
+                  theme.mode === 'dark' ? 'rgba(96, 165, 250, 0.2)' : 'rgba(29, 78, 216, 0.12)',
                 color: theme.mode === 'dark' ? '#bfdbfe' : '#1e40af',
               }}
             >
@@ -248,9 +240,7 @@ export const AnalyticsSection = ({
               className="dash-kpi-icon-pill"
               style={{
                 background:
-                  theme.mode === 'dark'
-                    ? 'rgba(34, 197, 94, 0.2)'
-                    : 'rgba(21, 128, 61, 0.12)',
+                  theme.mode === 'dark' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(21, 128, 61, 0.12)',
                 color: theme.mode === 'dark' ? '#4ade80' : '#15803d',
               }}
             >
@@ -268,9 +258,7 @@ export const AnalyticsSection = ({
               className="dash-kpi-badge"
               style={{
                 background:
-                  theme.mode === 'dark'
-                    ? 'rgba(34, 197, 94, 0.2)'
-                    : 'rgba(21, 128, 61, 0.12)',
+                  theme.mode === 'dark' ? 'rgba(34, 197, 94, 0.2)' : 'rgba(21, 128, 61, 0.12)',
                 color: theme.mode === 'dark' ? '#86efac' : '#166534',
               }}
             >
@@ -295,9 +283,7 @@ export const AnalyticsSection = ({
               className="dash-kpi-icon-pill"
               style={{
                 background:
-                  theme.mode === 'dark'
-                    ? 'rgba(245, 158, 11, 0.2)'
-                    : 'rgba(180, 83, 9, 0.12)',
+                  theme.mode === 'dark' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(180, 83, 9, 0.12)',
                 color: theme.mode === 'dark' ? '#fbbf24' : '#b45309',
               }}
             >
@@ -315,9 +301,7 @@ export const AnalyticsSection = ({
               className="dash-kpi-badge"
               style={{
                 background:
-                  theme.mode === 'dark'
-                    ? 'rgba(245, 158, 11, 0.2)'
-                    : 'rgba(180, 83, 9, 0.12)',
+                  theme.mode === 'dark' ? 'rgba(245, 158, 11, 0.2)' : 'rgba(180, 83, 9, 0.12)',
                 color: theme.mode === 'dark' ? '#fde68a' : '#92400e',
               }}
             >
@@ -342,9 +326,7 @@ export const AnalyticsSection = ({
               className="dash-kpi-icon-pill"
               style={{
                 background:
-                  theme.mode === 'dark'
-                    ? 'rgba(167, 139, 250, 0.2)'
-                    : 'rgba(109, 40, 217, 0.12)',
+                  theme.mode === 'dark' ? 'rgba(167, 139, 250, 0.2)' : 'rgba(109, 40, 217, 0.12)',
                 color: theme.mode === 'dark' ? '#a78bfa' : '#6d28d9',
               }}
             >
@@ -362,9 +344,7 @@ export const AnalyticsSection = ({
               className="dash-kpi-badge"
               style={{
                 background:
-                  theme.mode === 'dark'
-                    ? 'rgba(167, 139, 250, 0.2)'
-                    : 'rgba(109, 40, 217, 0.12)',
+                  theme.mode === 'dark' ? 'rgba(167, 139, 250, 0.2)' : 'rgba(109, 40, 217, 0.12)',
                 color: theme.mode === 'dark' ? '#ddd6fe' : '#5b21b6',
               }}
             >
@@ -392,9 +372,7 @@ export const AnalyticsSection = ({
               className="dash-kpi-icon-pill"
               style={{
                 background:
-                  theme.mode === 'dark'
-                    ? 'rgba(56, 189, 248, 0.2)'
-                    : 'rgba(3, 105, 161, 0.12)',
+                  theme.mode === 'dark' ? 'rgba(56, 189, 248, 0.2)' : 'rgba(3, 105, 161, 0.12)',
                 color: theme.mode === 'dark' ? '#38bdf8' : '#0369a1',
               }}
             >
@@ -412,9 +390,7 @@ export const AnalyticsSection = ({
               className="dash-kpi-badge"
               style={{
                 background:
-                  theme.mode === 'dark'
-                    ? 'rgba(56, 189, 248, 0.2)'
-                    : 'rgba(3, 105, 161, 0.12)',
+                  theme.mode === 'dark' ? 'rgba(56, 189, 248, 0.2)' : 'rgba(3, 105, 161, 0.12)',
                 color: theme.mode === 'dark' ? '#bae6fd' : '#075985',
               }}
             >
@@ -446,14 +422,7 @@ export const AnalyticsSection = ({
           </div>
           <div className="dash-bar-list">
             {categoryDistribution.map((cat, idx) => {
-              const colors = [
-                '#dc2626',
-                '#2563eb',
-                '#16a34a',
-                '#d97706',
-                '#7c3aed',
-                '#0ea5e9',
-              ];
+              const colors = ['#dc2626', '#2563eb', '#16a34a', '#d97706', '#7c3aed', '#0ea5e9'];
               const color = colors[idx % colors.length];
               return (
                 <div key={cat.id} className="dash-bar-item">

@@ -2,7 +2,7 @@ import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { existsSync, readdirSync, mkdtempSync, copyFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { createCatalogDatabase } from '../../backend/catalogDatabase.mjs';
+import { createCatalogDatabase, createConsistentDatabaseSnapshot } from '../../backend/catalogDatabase.mjs';
 
 const ROOT = process.cwd();
 
@@ -13,7 +13,7 @@ describe('Lotus Brand & 190 Products Import & 43 Media Audit Tests', () => {
   beforeAll(() => {
     tempDir = mkdtempSync(path.join(tmpdir(), 'sahara-lotus-audit-'));
     tempDbPath = path.join(tempDir, 'catalog.sqlite');
-    copyFileSync(path.join(ROOT, 'data/catalog.sqlite'), tempDbPath);
+    createConsistentDatabaseSnapshot(path.join(ROOT, 'data/catalog.sqlite'), tempDbPath);
   });
 
   afterAll(() => {
@@ -52,20 +52,22 @@ describe('Lotus Brand & 190 Products Import & 43 Media Audit Tests', () => {
     db.close();
 
     const registeredUrls = new Set<string>();
-    catalog.products.forEach((p) => {
-      if (p.image) registeredUrls.add(p.image);
-      if (Array.isArray(p.gallery)) p.gallery.forEach((g) => registeredUrls.add(g));
-      if (Array.isArray(p.media)) p.media.forEach((m) => registeredUrls.add(m.url));
-    });
+    catalog.products
+      .filter((p) => p.brandId === 'lotus')
+      .forEach((p) => {
+        if (p.image) registeredUrls.add(p.image);
+        if (Array.isArray(p.gallery)) p.gallery.forEach((g) => registeredUrls.add(g));
+        if (Array.isArray(p.media)) p.media.forEach((m) => registeredUrls.add(m.url));
+      });
 
     // Verify that catalog has active registered media items
     expect(registeredUrls.size).toBeGreaterThanOrEqual(40);
   });
 
-  const publicMediaDir = path.join(ROOT, 'public/media/products');
+  const publicLotusMediaDir = path.join(ROOT, 'public/media/products/lotus');
   const hasSampleMedia =
-    existsSync(publicMediaDir) &&
-    readdirSync(publicMediaDir).filter((f) => f.endsWith('.jpg') || f.endsWith('.png')).length >=
+    existsSync(publicLotusMediaDir) &&
+    readdirSync(publicLotusMediaDir).filter((f) => f.endsWith('.jpg') || f.endsWith('.png')).length >=
       43;
 
   it.skipIf(!hasSampleMedia)(
@@ -76,12 +78,15 @@ describe('Lotus Brand & 190 Products Import & 43 Media Audit Tests', () => {
       db.close();
 
       const registeredUrls = new Set<string>();
-      catalog.products.forEach((p) => {
-        if (p.image) registeredUrls.add(p.image);
-        if (Array.isArray(p.gallery)) p.gallery.forEach((g) => registeredUrls.add(g));
-        if (Array.isArray(p.media)) p.media.forEach((m) => registeredUrls.add(m.url));
-      });
+      catalog.products
+        .filter((p) => p.brandId === 'lotus')
+        .forEach((p) => {
+          if (p.image) registeredUrls.add(p.image);
+          if (Array.isArray(p.gallery)) p.gallery.forEach((g) => registeredUrls.add(g));
+          if (Array.isArray(p.media)) p.media.forEach((m) => registeredUrls.add(m.url));
+        });
 
+      const publicMediaDir = path.join(ROOT, 'public/media/products');
       for (const url of Array.from(registeredUrls).slice(0, 30)) {
         if (url.startsWith('/media/products/')) {
           const file = url.replace('/media/products/', '');

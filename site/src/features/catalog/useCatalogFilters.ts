@@ -46,7 +46,7 @@ export function useCatalogFilters({
   const [selectedEnergyClass, setSelectedEnergyClass] = useState('all');
   const [selectedMotorType, setSelectedMotorType] = useState('all');
   const [selectedColor, setSelectedColor] = useState('all');
-  const [sortBy, setSortBy] = useState<CatalogSortOption>('recommended');
+  const [sortBy, setSortBy] = useState<CatalogSortOption>('all');
   const [catalogSearchQuery, setCatalogSearchQuery] = useState(initialSearch);
   const [minPrice, setMinPrice] = useState<number | null>(null);
   const [maxPrice, setMaxPrice] = useState<number | null>(null);

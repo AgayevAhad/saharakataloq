@@ -181,7 +181,7 @@ describe('Brand-First Interactive Navigation & Contextual Filter Suite', () => {
     const lotusBrand = DEFAULT_BRANDS.find((b) => b.id === 'lotus')!;
     const products = [TEST_ARDO_PRODUCT, TEST_LOTUS_PRODUCT, TEST_LOTUS_AIRFRYER];
 
-    const { getByText, getAllByRole } = render(
+    const { getByText } = render(
       <BrandCategoryFilter
         brands={[ardoBrand, lotusBrand]}
         categories={DEFAULT_CATEGORIES}
@@ -216,7 +216,6 @@ describe('Brand-First Interactive Navigation & Contextual Filter Suite', () => {
   });
 
   it('Clicking a brand card in AnimatedBrandRail navigates to brand detail view', () => {
-    const handleNavigateBrand = vi.fn();
     const mockRailData = {
       enabled: true,
       settings: null,
@@ -262,7 +261,9 @@ describe('Brand-First Interactive Navigation & Contextual Filter Suite', () => {
 
     // Verify robotic placeholder text is NOT rendered
     expect(container.textContent).not.toContain('Bu brend üçün təqdimat mətni əlavə edilməyib');
-    expect(container.textContent).not.toContain('Aşağıdakı məlumatlar aktiv kataloq qeydlərindən hesablanır');
+    expect(container.textContent).not.toContain(
+      'Aşağıdakı məlumatlar aktiv kataloq qeydlərindən hesablanır'
+    );
 
     // Verify category summary buttons contain SVG icons (CategoryGlyph)
     const categorySummaryBtns = container.querySelectorAll('.brand-category-summary button');

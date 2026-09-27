@@ -8,13 +8,16 @@ import {
   Plus,
   Trash2,
   X,
+  Code2,
+  BookOpen,
+  FileText,
+  Shield,
+  HelpCircle,
+  ExternalLink,
+  Instagram,
+  Phone,
 } from 'lucide-react';
-import {
-  CatalogSettings,
-  Product,
-  StoreAddress,
-  TechnologyArticle,
-} from '../../../types/product';
+import { CatalogSettings, Product, StoreAddress, TechnologyArticle } from '../../../types/product';
 import { DEFAULT_ADDRESSES, DEFAULT_COUNTRIES, DEFAULT_SETTINGS } from '../../../data/catalog';
 import { ThemeColors } from '../../../types/theme';
 import { newId, PRESET_COLORS } from '../utils/adminHelpers';
@@ -26,11 +29,7 @@ export interface AppearanceManagerProps {
   onChange: (value: CatalogSettings) => void;
 }
 
-export const AppearanceManager = ({
-  theme,
-  settings,
-  onChange,
-}: AppearanceManagerProps) => {
+export const AppearanceManager = ({ theme, settings, onChange }: AppearanceManagerProps) => {
   const update = (patch: Partial<CatalogSettings>) => {
     onChange({ ...settings, ...patch });
   };
@@ -232,7 +231,7 @@ export const AppearanceManager = ({
 
       <article
         className="manager-card"
-        style={{ background: theme.bgCard, borderColor: theme.border }}
+        style={{ background: theme.bgCard, borderColor: theme.border, marginBottom: '20px' }}
       >
         <div style={{ marginBottom: '16px' }}>
           <h2 style={{ fontSize: '18px', fontWeight: 800 }}>
@@ -256,6 +255,327 @@ export const AppearanceManager = ({
               onChange={(e) => update({ footerCopyright: e.target.value })}
             />
           </label>
+        </div>
+      </article>
+
+      {/* CMS & LEGAL TEXTS MANAGER */}
+      <article
+        className="manager-card"
+        style={{ background: theme.bgCard, borderColor: theme.border, marginBottom: '20px' }}
+      >
+        <div style={{ marginBottom: '16px' }}>
+          <h2
+            style={{
+              fontSize: '18px',
+              fontWeight: 800,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
+            <FileText size={18} color={theme.primary} />
+            Məlumat Səhifələri və Hüquqi Mətnlər (Haqqımızda, Qaydalar, Məxfilik)
+          </h2>
+          <p style={{ color: theme.textMuted, fontSize: '13px', margin: '4px 0 0 0' }}>
+            Kataloqda və saytda alt paneldən (Footer) açılan «Haqqımızda», «Əlaqə və Dəstək»,
+            «İstifadə şərtləri» və «Məxfilik siyasəti» mətnlərini buradan redaktə edin.
+          </p>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <span
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontWeight: 700,
+                fontSize: '13px',
+                color: theme.text,
+              }}
+            >
+              <BookOpen size={15} color={theme.primary} />
+              «Haqqımızda» Mətni
+            </span>
+            <textarea
+              rows={4}
+              value={settings.aboutText || ''}
+              onChange={(e) => update({ aboutText: e.target.value })}
+              placeholder="Sahara Electronics şirkəti haqqında rəsmi məlumat, tarixçə və fəlsəfə..."
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                borderRadius: '8px',
+                border: `1px solid ${theme.border}`,
+                backgroundColor: theme.bgSecondary,
+                color: theme.text,
+                fontSize: '13px',
+                fontFamily: 'inherit',
+                lineHeight: '1.5',
+                resize: 'vertical',
+              }}
+            />
+          </label>
+
+          <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <span
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontWeight: 700,
+                fontSize: '13px',
+                color: theme.text,
+              }}
+            >
+              <HelpCircle size={15} color={theme.primary} />
+              «Əlaqə və Dəstək» Məlumatı
+            </span>
+            <textarea
+              rows={3}
+              value={settings.supportText || ''}
+              onChange={(e) => update({ supportText: e.target.value })}
+              placeholder="Müştəri xidməti saatları, qaynar xətt və servis mərkəzləri haqqında məlumat..."
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                borderRadius: '8px',
+                border: `1px solid ${theme.border}`,
+                backgroundColor: theme.bgSecondary,
+                color: theme.text,
+                fontSize: '13px',
+                fontFamily: 'inherit',
+                lineHeight: '1.5',
+                resize: 'vertical',
+              }}
+            />
+          </label>
+
+          <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <span
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontWeight: 700,
+                fontSize: '13px',
+                color: theme.text,
+              }}
+            >
+              <FileText size={15} color={theme.primary} />
+              «İstifadə Şərtləri» Mətni
+            </span>
+            <textarea
+              rows={3}
+              value={settings.termsText || ''}
+              onChange={(e) => update({ termsText: e.target.value })}
+              placeholder="Kataloqdan və xidmətlərdən istifadə qaydaları..."
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                borderRadius: '8px',
+                border: `1px solid ${theme.border}`,
+                backgroundColor: theme.bgSecondary,
+                color: theme.text,
+                fontSize: '13px',
+                fontFamily: 'inherit',
+                lineHeight: '1.5',
+                resize: 'vertical',
+              }}
+            />
+          </label>
+
+          <label style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <span
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                fontWeight: 700,
+                fontSize: '13px',
+                color: theme.text,
+              }}
+            >
+              <Shield size={15} color={theme.primary} />
+              «Məxfilik Siyasəti» Mətni
+            </span>
+            <textarea
+              rows={3}
+              value={settings.privacyText || ''}
+              onChange={(e) => update({ privacyText: e.target.value })}
+              placeholder="Məlumatların qorunması və məxfilik tələbləri..."
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                borderRadius: '8px',
+                border: `1px solid ${theme.border}`,
+                backgroundColor: theme.bgSecondary,
+                color: theme.text,
+                fontSize: '13px',
+                fontFamily: 'inherit',
+                lineHeight: '1.5',
+                resize: 'vertical',
+              }}
+            />
+          </label>
+        </div>
+      </article>
+
+      {/* DEVELOPER SETTINGS & LIVE PREVIEW */}
+      <article
+        className="manager-card"
+        style={{ background: theme.bgCard, borderColor: theme.border }}
+      >
+        <div style={{ marginBottom: '16px' }}>
+          <h2
+            style={{
+              fontSize: '18px',
+              fontWeight: 800,
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+            }}
+          >
+            <Code2 size={18} color={theme.primary} />
+            Veb-tərtibatçı (Developer) Məlumatları
+          </h2>
+          <p style={{ color: theme.textMuted, fontSize: '13px', margin: '4px 0 0 0' }}>
+            Kataloq və veb-saytın hazırlanmasını qeyd etmək üçün tərtibatçı adı, əlaqə
+            nömrəsi/WhatsApp, Instagram və veb-sayt məlumatlarını daxil edin. Bu məlumatlar saytın
+            və kataloqun alt hissəsində (Footer) şık nişan olaraq görünür.
+          </p>
+        </div>
+
+        <div className="form-grid">
+          <label>
+            <span>Tərtibatçının Adı / Brendi</span>
+            <input
+              value={settings.developerName || ''}
+              onChange={(e) => update({ developerName: e.target.value })}
+              placeholder="məs: Ahad Agayev"
+            />
+          </label>
+          <label>
+            <span>Vəzifə / Rol</span>
+            <input
+              value={settings.developerRole || ''}
+              onChange={(e) => update({ developerRole: e.target.value })}
+              placeholder="məs: Veb-tərtibatçı"
+            />
+          </label>
+          <label>
+            <span>Əlaqə Nömrəsi / WhatsApp</span>
+            <input
+              value={settings.developerPhone || ''}
+              onChange={(e) => update({ developerPhone: e.target.value })}
+              placeholder="məs: +99450..."
+            />
+          </label>
+          <label>
+            <span>Instagram İstifadəçi Adı və ya Linki</span>
+            <input
+              value={settings.developerInstagram || ''}
+              onChange={(e) => update({ developerInstagram: e.target.value })}
+              placeholder="məs: @ahad.dev və ya https://instagram.com/..."
+            />
+          </label>
+          <label style={{ gridColumn: '1 / -1' }}>
+            <span>Portfel / Veb-sayt Linki</span>
+            <input
+              value={settings.developerWebsite || ''}
+              onChange={(e) => update({ developerWebsite: e.target.value })}
+              placeholder="https://..."
+            />
+          </label>
+        </div>
+
+        {/* Live Preview Box */}
+        <div
+          style={{
+            marginTop: '20px',
+            padding: '16px',
+            borderRadius: '12px',
+            backgroundColor: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.03)' : '#f8fafc',
+            border: `1px dashed ${theme.border}`,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '8px',
+          }}
+        >
+          <div
+            style={{
+              fontSize: '11px',
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em',
+              color: theme.primary,
+            }}
+          >
+            Alt paneldə (Footer) canlı görünüş nümunəsi:
+          </div>
+          <div
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '8px',
+              fontSize: '12px',
+              color: theme.textMuted || '#94a3b8',
+              padding: '6px 14px',
+              borderRadius: '20px',
+              backgroundColor: theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.06)' : '#ffffff',
+              border: `1px solid ${theme.border}`,
+              width: 'fit-content',
+            }}
+          >
+            <Code2 size={14} color="#e31e24" />
+            <span>
+              Hazırladı:{' '}
+              <strong style={{ color: theme.text, fontWeight: 700 }}>
+                {settings.developerName || 'Developer'}
+              </strong>
+              {settings.developerRole ? ` (${settings.developerRole})` : ''}
+            </span>
+            {settings.developerInstagram && (
+              <span
+                style={{
+                  color: '#e1306c',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '3px',
+                  fontWeight: 600,
+                }}
+              >
+                <Instagram size={12} />
+                {settings.developerInstagram.replace(/^https?:\/\/(www\.)?instagram\.com\//, '@')}
+              </span>
+            )}
+            {settings.developerPhone && (
+              <span
+                style={{
+                  color: '#16a34a',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '3px',
+                  fontWeight: 600,
+                }}
+              >
+                <Phone size={12} />
+                {settings.developerPhone}
+              </span>
+            )}
+            {settings.developerWebsite && (
+              <span
+                style={{
+                  color: '#e31e24',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  gap: '3px',
+                }}
+              >
+                <ExternalLink size={12} />
+              </span>
+            )}
+          </div>
         </div>
       </article>
     </div>
@@ -929,11 +1249,7 @@ export interface ArticleManagerProps {
   onChange: (value: TechnologyArticle[]) => void;
 }
 
-export const ArticleManager = ({
-  theme,
-  articles,
-  onChange,
-}: ArticleManagerProps) => {
+export const ArticleManager = ({ theme, articles, onChange }: ArticleManagerProps) => {
   const add = () => {
     const newArt: TechnologyArticle = {
       id: newId('art'),
@@ -1246,8 +1562,8 @@ export const SecurityManager = ({
           Admin Giriş Şifrəsini Dəyişdir
         </h2>
         <p style={{ color: theme.textMuted, fontSize: '13px', margin: '4px 0 0 0' }}>
-          Admin panelə daxil olmaq üçün istifadə edilən təhlükəsiz şifrəni birbaşa buradan
-          yeniləyə bilərsiniz.
+          Admin panelə daxil olmaq üçün istifadə edilən təhlükəsiz şifrəni birbaşa buradan yeniləyə
+          bilərsiniz.
         </p>
       </div>
 

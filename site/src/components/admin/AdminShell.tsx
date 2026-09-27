@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle,
   BarChart3,
@@ -21,7 +21,6 @@ import {
   Rocket,
   RotateCcw,
   Save,
-  Sparkles,
   X,
   Zap,
   ZoomIn,
@@ -41,7 +40,6 @@ import { ThemeColors } from '../../types/theme';
 import { SaharaLogo } from '../SaharaLogo';
 import { ShimmerImage } from '../ShimmerImage';
 import { AdminCatalogPreview } from '../AdminCatalogPreview';
-import { BrandRailStudio } from '../BrandRailStudio';
 import { NavigationManager } from '../NavigationManager';
 import { AdminSupportInbox } from '../AdminSupportInbox';
 import {
@@ -66,18 +64,6 @@ import {
   ContactManager,
   SecurityManager,
 } from './sections/SettingsSection';
-import {
-  downloadFile,
-  exportProductsToCsv,
-  generateCsvTemplate,
-  importProductsFromCsv,
-} from '../../utils/csv';
-import {
-  downloadExcelFile,
-  exportProductsToExcel,
-  generateExcelTemplate,
-  importProductsFromExcel,
-} from '../../utils/excel';
 
 export type AdminMode = 'site' | 'catalog' | 'all';
 
@@ -123,7 +109,11 @@ export const AdminShell: React.FC<AdminShellProps> = ({
     if (typeof window !== 'undefined') {
       const search = window.location.search || '';
       const path = window.location.pathname || '';
-      if (search.includes('mode=catalog') || path.includes('mode=catalog') || search.includes('catalog')) {
+      if (
+        search.includes('mode=catalog') ||
+        path.includes('mode=catalog') ||
+        search.includes('catalog')
+      ) {
         return 'catalog';
       }
       if (search.includes('mode=site') || path.includes('mode=site')) {
@@ -137,7 +127,11 @@ export const AdminShell: React.FC<AdminShellProps> = ({
     if (typeof window !== 'undefined') {
       const search = window.location.search || '';
       const path = window.location.pathname || '';
-      if (search.includes('mode=catalog') || path.includes('mode=catalog') || search.includes('catalog')) {
+      if (
+        search.includes('mode=catalog') ||
+        path.includes('mode=catalog') ||
+        search.includes('catalog')
+      ) {
         return 'products';
       }
     }
@@ -157,8 +151,10 @@ export const AdminShell: React.FC<AdminShellProps> = ({
   const [adminStockFilter, setAdminStockFilter] = useState<
     'all' | 'in_stock' | 'out_of_stock' | 'preorder'
   >('all');
-  const [adminViewMode, setAdminViewMode] = useState<'table' | 'cards'>('table');
-  const [completeness, _setCompleteness] = useState<'all' | 'missing-media' | 'missing-specs' | 'draft'>('all');
+  const [adminViewMode, setAdminViewMode] = useState<'table' | 'cards'>('cards');
+  const [completeness, _setCompleteness] = useState<
+    'all' | 'missing-media' | 'missing-specs' | 'draft'
+  >('all');
   const [editing, setEditing] = useState<Product | null>(null);
   const [editingProductEtag, setEditingProductEtag] = useState<string | null>(null);
   const [conflictModalData, setConflictModalData] = useState<{
@@ -169,10 +165,18 @@ export const AdminShell: React.FC<AdminShellProps> = ({
   } | null>(null);
   const [saving, setSaving] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
-  const csvFileInputRef = useRef<HTMLInputElement>(null);
+  const [baselineProducts, setBaselineProducts] = useState<Product[]>(() =>
+    structuredClone(initial?.products || [])
+  );
+
+  useEffect(() => {
+    if (initial?.products) {
+      setBaselineProducts(structuredClone(initial.products));
+    }
+  }, [initial]);
 
   const handleRevertSingleProduct = (productId: string) => {
-    const orig = initial.products.find((p) => p.id === productId);
+    const orig = baselineProducts.find((p) => p.id === productId);
     if (!orig) {
       showToast('İlkin məhsul məlumatı tapılmadı');
       return;
@@ -463,8 +467,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
 
       let matchPrice = true;
       if (adminPriceFilter === 'has-price') matchPrice = Boolean(p.price && Number(p.price) > 0);
-      else if (adminPriceFilter === 'no-price')
-        matchPrice = !p.price || Number(p.price) <= 0;
+      else if (adminPriceFilter === 'no-price') matchPrice = !p.price || Number(p.price) <= 0;
 
       let matchStock = true;
       if (adminStockFilter !== 'all') {
@@ -507,40 +510,75 @@ export const AdminShell: React.FC<AdminShellProps> = ({
 
   // Executive Dashboard Stats
   const totalCatalogViews = analyticsStats?.catalogViews || 0;
-  const totalProductViews = useMemo(
-    () => Object.values(analyticsStats?.productViews || {}).reduce((a, b) => a + b, 0),
-    [analyticsStats?.productViews]
+  const modeProductIds = useMemo(
+    () => new Set(modeCatalog.products.map((p) => p.id)),
+    [modeCatalog.products]
   );
-  const totalWhatsApp = analyticsStats.contactActions?.whatsapp || 0;
-  const totalCalls = analyticsStats.contactActions?.call || 0;
+
+  const totalProductViews = useMemo(() => {
+    return Object.entries(analyticsStats?.productViews || {}).reduce((acc, [pId, views]) => {
+      if (modeProductIds.has(pId)) return acc + views;
+      return acc;
+    }, 0);
+  }, [analyticsStats?.productViews, modeProductIds]);
+
+  const totalWhatsApp = useMemo(() => {
+    if (activeMode === 'catalog') {
+      return Object.entries(analyticsStats?.contactActionsByProduct || {}).reduce(
+        (acc, [pId, acts]) => {
+          if (modeProductIds.has(pId)) return acc + (acts.whatsapp || 0);
+          return acc;
+        },
+        0
+      );
+    }
+    return analyticsStats.contactActions?.whatsapp || 0;
+  }, [activeMode, analyticsStats, modeProductIds]);
+
+  const totalCalls = useMemo(() => {
+    if (activeMode === 'catalog') {
+      return Object.entries(analyticsStats?.contactActionsByProduct || {}).reduce(
+        (acc, [pId, acts]) => {
+          if (modeProductIds.has(pId)) return acc + (acts.call || 0);
+          return acc;
+        },
+        0
+      );
+    }
+    return analyticsStats.contactActions?.call || 0;
+  }, [activeMode, analyticsStats, modeProductIds]);
+
   const totalInquiries = totalWhatsApp + totalCalls;
   const conversionRate =
     totalCatalogViews > 0 ? ((totalInquiries / totalCatalogViews) * 100).toFixed(1) : '0.0';
 
   const categoryDistribution = useMemo(() => {
-    const total = catalog.products.length || 1;
-    return catalog.categories
+    const total = modeCatalog.products.length || 1;
+    return modeCatalog.categories
       .map((c) => {
-        const count = catalog.products.filter((p) => p.category === c.id).length;
+        const count = modeCatalog.products.filter((p) => p.category === c.id).length;
         const percent = Math.round((count / total) * 100);
         return { id: c.id, name: c.name, count, percent };
       })
+      .filter((c) => c.count > 0 || activeMode !== 'catalog')
       .sort((a, b) => b.count - a.count);
-  }, [catalog.categories, catalog.products]);
+  }, [modeCatalog.categories, modeCatalog.products, activeMode]);
 
   const brandDistribution = useMemo(() => {
-    const total = catalog.products.length || 1;
-    return catalog.brands
+    const total = modeCatalog.products.length || 1;
+    return modeCatalog.brands
       .map((b) => {
-        const count = catalog.products.filter((p) => p.brandId === b.id).length;
+        const count = modeCatalog.products.filter(
+          (p) => (p.brandId || '').toLowerCase() === b.id.toLowerCase()
+        ).length;
         const percent = Math.round((count / total) * 100);
         return { id: b.id, name: b.name, count, percent };
       })
       .sort((a, b) => b.count - a.count);
-  }, [catalog.brands, catalog.products]);
+  }, [modeCatalog.brands, modeCatalog.products]);
 
   const topRankedProducts = useMemo(() => {
-    return [...catalog.products]
+    return [...modeCatalog.products]
       .map((p) => {
         const views = analyticsStats.productViews?.[p.id] || 0;
         const wa = analyticsStats.contactActionsByProduct?.[p.id]?.whatsapp || 0;
@@ -551,7 +589,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
       })
       .sort((a, b) => b.views - a.views || b.inq - a.inq)
       .slice(0, 10);
-  }, [catalog.products, analyticsStats.productViews, analyticsStats.contactActionsByProduct]);
+  }, [modeCatalog.products, analyticsStats.productViews, analyticsStats.contactActionsByProduct]);
 
   // Reordering & Drag-Drop Methods
   const moveProductToPosition = (fromIndex: number, targetPos1Based: number) => {
@@ -762,8 +800,36 @@ export const AdminShell: React.FC<AdminShellProps> = ({
   const publish = async () => {
     setSaving(true);
     try {
+      const uploadedUrls = (products: Product[]) => {
+        const urls = new Set<string>();
+        products.forEach((product) => {
+          [product.image, product.originalImage, ...(product.gallery || [])].forEach((url) => {
+            if (url?.startsWith('/uploads/')) urls.add(url);
+          });
+          (product.media || []).forEach((media) => {
+            [media.url, media.originalUrl, media.poster].forEach((url) => {
+              if (url?.startsWith('/uploads/')) urls.add(url);
+            });
+          });
+        });
+        return urls;
+      };
+      const previousUploads = uploadedUrls(baselineProducts);
+      const retainedUploads = uploadedUrls(catalog.products);
+      const obsoleteUploads = [...previousUploads].filter((url) => !retainedUploads.has(url));
       await onPublish(catalog);
-      showToast('Kataloq uğurla canlıda yeniləndi!');
+      const cleanupResults = await Promise.allSettled(
+        obsoleteUploads.map((url) => catalogApi.deleteUploadedMedia(url, initial.csrfToken))
+      );
+      setBaselineProducts(structuredClone(catalog.products));
+      const cleanupFailures = cleanupResults.filter(
+        (result) => result.status === 'rejected'
+      ).length;
+      showToast(
+        cleanupFailures
+          ? `Kataloq yayımlandı, lakin ${cleanupFailures} köhnə media faylı təhlükəsiz silinmədi.`
+          : 'Kataloq uğurla canlıda yeniləndi!'
+      );
     } catch (e) {
       showToast(`Xəta: ${e instanceof Error ? e.message : 'Public etmək olmadı'}`);
     } finally {
@@ -779,8 +845,11 @@ export const AdminShell: React.FC<AdminShellProps> = ({
         setEditing(res.product);
         setEditingProductEtag(res.etag || null);
       }
-    } catch {
+    } catch (error) {
       setEditingProductEtag(null);
+      showToast(
+        `Məhsulun son versiyası yüklənmədi: ${error instanceof Error ? error.message : 'naməlum xəta'}`
+      );
     }
   };
 
@@ -790,10 +859,16 @@ export const AdminShell: React.FC<AdminShellProps> = ({
     const clean = { ...item, categoryName, updatedAt: new Date().toISOString() };
     const exists = catalog.products.some((p) => p.id === clean.id);
 
-    if (exists && editingProductEtag) {
+    if (exists) {
       try {
+        let etag = editingProductEtag;
+        if (!etag) {
+          const fresh = await catalogApi.getProduct(clean.id);
+          etag = fresh.etag || null;
+        }
+        if (!etag) throw new Error('Məhsul versiyası müəyyən edilə bilmədi');
         const res = await catalogApi.updateProduct(clean.id, clean, {
-          ifMatch: editingProductEtag,
+          ifMatch: etag,
           csrfToken: initial.csrfToken,
         });
         if (res?.product) {
@@ -814,26 +889,26 @@ export const AdminShell: React.FC<AdminShellProps> = ({
             attemptedProduct: clean,
             currentEtag: err.data?.currentEtag || '',
           });
-          return;
+          throw err;
         }
         showToast(`Məhsulu yeniləmək mümkün olmadı: ${err.message}`);
-        return;
+        throw err;
       }
     }
 
-    setCatalog((prev) => ({
-      ...prev,
-      products: exists
-        ? prev.products.map((p) => (p.id === clean.id ? clean : p))
-        : [clean, ...prev.products],
-    }));
-    setEditing(null);
-    setEditingProductEtag(null);
-    showToast(
-      exists
-        ? `"${clean.code || clean.title}" yeniləndi.`
-        : `"${clean.code || clean.title}" əlavə edildi.`
-    );
+    try {
+      const res = await catalogApi.createProduct(clean, initial.csrfToken);
+      if (!res?.product) throw new Error('Server yeni məhsulu qaytarmadı');
+      setCatalog((prev) => ({ ...prev, products: [res.product, ...prev.products] }));
+      setEditing(null);
+      setEditingProductEtag(null);
+      showToast(`"${clean.code || clean.title}" əlavə edildi.`);
+    } catch (error) {
+      showToast(
+        `Məhsulu əlavə etmək mümkün olmadı: ${error instanceof Error ? error.message : 'naməlum xəta'}`
+      );
+      throw error;
+    }
   };
 
   const duplicateProduct = (p: Product) => {
@@ -876,100 +951,6 @@ export const AdminShell: React.FC<AdminShellProps> = ({
     showToast('Məhsul silindi.');
   };
 
-  // CSV Export
-  const handleExportCsv = () => {
-    try {
-      const csvContent = exportProductsToCsv(modeCatalog.products, modeCatalog.categories, modeCatalog.brands);
-      downloadFile(
-        csvContent,
-        `sahara-${activeMode === 'catalog' ? 'kataloq' : 'sayt'}-mehsullar-${new Date().toISOString().slice(0, 10)}.csv`
-      );
-      showToast('Məhsullar CSV formatında endirildi.');
-    } catch (e) {
-      showToast(`İxrac xətası: ${e instanceof Error ? e.message : 'Uğursuz oldu'}`);
-    }
-  };
-
-  // Excel Export (.xlsx)
-  const handleExportExcel = () => {
-    try {
-      const buffer = exportProductsToExcel(modeCatalog.products, modeCatalog.categories, modeCatalog.brands);
-      downloadExcelFile(
-        buffer,
-        `sahara-${activeMode === 'catalog' ? 'kataloq' : 'sayt'}-mehsullar-${new Date().toISOString().slice(0, 10)}.xlsx`
-      );
-      showToast('Məhsullar Excel (.xlsx) formatında endirildi.');
-    } catch (e) {
-      showToast(`İxrac xətası: ${e instanceof Error ? e.message : 'Uğursuz oldu'}`);
-    }
-  };
-
-  // CSV Template Download
-  const handleDownloadCsvTemplate = () => {
-    const templateContent = generateCsvTemplate();
-    downloadFile(templateContent, 'sahara-kataloq-sablon.csv');
-    showToast('Nümunə CSV şablonu endirildi.');
-  };
-
-  // Excel Template Download (.xlsx)
-  const handleDownloadExcelTemplate = () => {
-    try {
-      const buffer = generateExcelTemplate();
-      downloadExcelFile(buffer, 'sahara-kataloq-sablon.xlsx');
-      showToast('Nümunə Excel (.xlsx) şablonu endirildi.');
-    } catch (e) {
-      showToast(`Şablon xətası: ${e instanceof Error ? e.message : 'Uğursuz oldu'}`);
-    }
-  };
-
-  // File Import (Supports .xlsx, .xls, and .csv)
-  const handleImportFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-    try {
-      const isExcel =
-        file.name.toLowerCase().endsWith('.xlsx') || file.name.toLowerCase().endsWith('.xls');
-      let imported: Product[] = [];
-      let errors: string[] = [];
-
-      if (isExcel) {
-        const buffer = await file.arrayBuffer();
-        const result = importProductsFromExcel(buffer, catalog.categories, catalog.brands);
-        imported = result.products;
-        errors = result.errors;
-      } else {
-        const text = await file.text();
-        const result = importProductsFromCsv(text, catalog.categories, catalog.brands);
-        imported = result.products;
-        errors = result.errors;
-      }
-
-      if (errors.length > 0) {
-        alert(`Bəzi xətalar baş verdi:\n${errors.slice(0, 6).join('\n')}`);
-      }
-      if (imported.length === 0) {
-        showToast('Fayldan heç bir məhsul oxuna bilmədi.');
-        return;
-      }
-
-      setCatalog((prev) => {
-        const existingMap = new Map(prev.products.map((p) => [p.code.toLowerCase(), p]));
-        for (const p of imported) {
-          existingMap.set(p.code.toLowerCase(), p);
-        }
-        return { ...prev, products: Array.from(existingMap.values()) };
-      });
-
-      showToast(
-        `${imported.length} məhsul (${isExcel ? 'Excel' : 'CSV'}) uğurla idxal edildi və qaralamaya əlavə olundu.`
-      );
-    } catch (err) {
-      showToast(`İdxal xətası: ${err instanceof Error ? err.message : 'Fayl oxunmadı'}`);
-    } finally {
-      if (csvFileInputRef.current) csvFileInputRef.current.value = '';
-    }
-  };
-
   // Handle password change
   const handleChangePassword = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -994,16 +975,21 @@ export const AdminShell: React.FC<AdminShellProps> = ({
   };
 
   const catalogTabs: Array<[Tab, string, React.ReactNode]> = [
+    ['dashboard', 'Statistika', <BarChart3 size={17} />],
     ['products', 'Məhsullar (Modellər)', <Boxes size={17} />],
     ['categories', 'Kateqoriyalar', <FolderPlus size={17} />],
     ['brands', 'Brendlər', <Building2 size={17} />],
-    ['brand_rail', 'Brend Lenti', <Sparkles size={17} />],
+    ['appearance', 'Görünüş & Mətnlər', <Palette size={17} />],
     ['articles', 'Texnologiyalar (i)', <Zap size={17} />],
+    ['contact', 'Əlaqə & Filiallar', <Phone size={17} />],
     ['snapshots', 'Bərpa & Nüsxələr', <RotateCcw size={17} />],
+    ['logs', 'Loglama (Audit)', <FileText size={17} />],
+    ['security', 'Təhlükəsizlik & Şifrə', <Lock size={17} />],
   ];
 
   const siteTabs: Array<[Tab, string, React.ReactNode]> = [
     ['dashboard', 'Sayt Statistikası', <BarChart3 size={17} />],
+    ['products', 'Məhsullar (Modellər)', <Boxes size={17} />],
     ['navigation', 'Naviqasiya (CMS)', <Compass size={17} />],
     ['appearance', 'Görünüş & Mətnlər', <Palette size={17} />],
     ['contact', 'Əlaqə & Filiallar', <Phone size={17} />],
@@ -1016,7 +1002,6 @@ export const AdminShell: React.FC<AdminShellProps> = ({
     ['dashboard', 'Sayt Statistikası', <BarChart3 size={17} />],
     ['products', 'Məhsullar (Modellər)', <Boxes size={17} />],
     ['brands', 'Brendlər', <Building2 size={17} />],
-    ['brand_rail', 'Brend Lenti', <Sparkles size={17} />],
     ['categories', 'Kateqoriyalar', <FolderPlus size={17} />],
     ['navigation', 'Naviqasiya (CMS)', <Compass size={17} />],
     ['appearance', 'Görünüş & Mətnlər', <Palette size={17} />],
@@ -1052,11 +1037,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
   };
 
   const currentTabs =
-    activeMode === 'catalog'
-      ? catalogTabs
-      : activeMode === 'site'
-        ? siteTabs
-        : allTabs;
+    activeMode === 'catalog' ? catalogTabs : activeMode === 'site' ? siteTabs : allTabs;
 
   return (
     <div className="admin-shell" style={{ color: theme.text, background: theme.bg }}>
@@ -1064,7 +1045,11 @@ export const AdminShell: React.FC<AdminShellProps> = ({
         className="admin-sidebar"
         style={{ background: theme.bgCard, borderColor: theme.border }}
       >
-        <a href={activeMode === 'catalog' ? '/?mode=catalog' : '/'} className="admin-brand" title={activeMode === 'catalog' ? 'Kataloqa qayıt' : 'Sayta qayıt'}>
+        <a
+          href={activeMode === 'catalog' ? '/?mode=catalog' : '/'}
+          className="admin-brand"
+          title={activeMode === 'catalog' ? 'Kataloqa qayıt' : 'Sayta qayıt'}
+        >
           <SaharaLogo className="admin-login-logo" isDark={theme.mode === 'dark'} />
         </a>
 
@@ -1097,7 +1082,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
               alignItems: 'center',
               justifyContent: 'center',
               gap: '5px',
-              background: activeMode === 'site' ? (theme.primary || '#dc2626') : 'transparent',
+              background: activeMode === 'site' ? theme.primary || '#dc2626' : 'transparent',
               color: activeMode === 'site' ? '#ffffff' : theme.textMuted,
               boxShadow: activeMode === 'site' ? '0 2px 8px rgba(0,0,0,0.15)' : 'none',
               transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -1123,7 +1108,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
               alignItems: 'center',
               justifyContent: 'center',
               gap: '5px',
-              background: activeMode === 'catalog' ? (theme.primary || '#dc2626') : 'transparent',
+              background: activeMode === 'catalog' ? theme.primary || '#dc2626' : 'transparent',
               color: activeMode === 'catalog' ? '#ffffff' : theme.textMuted,
               boxShadow: activeMode === 'catalog' ? '0 2px 8px rgba(0,0,0,0.15)' : 'none',
               transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
@@ -1169,49 +1154,16 @@ export const AdminShell: React.FC<AdminShellProps> = ({
       </aside>
 
       <main className="admin-main">
-        <header className="admin-toolbar" style={{ borderColor: theme.border }}>
-          <div className="admin-toolbar-title-wrap">
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-              <span
-                className="admin-mode-badge"
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: '5px',
-                  padding: '3px 10px',
-                  borderRadius: '20px',
-                  fontSize: '11px',
-                  fontWeight: 700,
-                  textTransform: 'uppercase',
-                  letterSpacing: '0.5px',
-                  backgroundColor:
-                    activeMode === 'catalog'
-                      ? 'rgba(16, 185, 129, 0.15)'
-                      : 'rgba(239, 68, 68, 0.15)',
-                  color: activeMode === 'catalog' ? '#10b981' : theme.primary || '#ef4444',
-                  border: `1px solid ${
-                    activeMode === 'catalog'
-                      ? 'rgba(16, 185, 129, 0.3)'
-                      : 'rgba(239, 68, 68, 0.3)'
-                  }`,
-                }}
-              >
-                {activeMode === 'catalog' ? <Boxes size={13} /> : <Compass size={13} />}
-                {activeMode === 'catalog' ? 'Məhsul Kataloqu (PIM)' : 'Rəsmi Sayt (CMS)'}
-              </span>
-            </div>
-            <h1>
-              {activeMode === 'catalog'
-                ? 'Məhsul Kataloqu İdarəetmə Paneli'
-                : 'Rəsmi Sayt İdarəetmə Paneli'}
-            </h1>
-            <p style={{ color: theme.textMuted }}>
-              {activeMode === 'catalog'
-                ? 'Məhsul modellərini, şəkilləri, kateqoriyaları, brendləri və texniki xüsusiyyətləri idarə edin'
-                : 'Saytın menyularını, görünüş və rənglərini, mağaza filiallarını, müştəri çatını və təhlükəsizliyi idarə edin'}
-            </p>
-          </div>
-          <div className="admin-toolbar-actions">
+        <header
+          className="admin-toolbar"
+          style={{
+            borderColor: theme.border,
+            justifyContent: 'flex-end',
+            paddingTop: '2px',
+            paddingBottom: '2px',
+          }}
+        >
+          <div className="admin-toolbar-actions" style={{ marginLeft: 'auto' }}>
             <button
               className={`catalog-status-toggle-btn ${isCurrentScopeActive ? 'is-active' : 'is-paused'}`}
               onClick={() => setStatusModalOpen(true)}
@@ -1246,7 +1198,11 @@ export const AdminShell: React.FC<AdminShellProps> = ({
                 borderColor: theme.border,
                 color: theme.text,
               }}
-              title={activeMode === 'catalog' ? 'Kataloqu canlı önbaxışda aç' : 'Rəsmi saytı yeni tabda aç'}
+              title={
+                activeMode === 'catalog'
+                  ? 'Kataloqu canlı önbaxışda aç'
+                  : 'Rəsmi saytı yeni tabda aç'
+              }
             >
               <Eye size={16} />
               <span>{activeMode === 'catalog' ? 'Kataloq Önbaxış' : 'Canlı Sayta Bax'}</span>
@@ -1306,7 +1262,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
           <ProductsSection
             theme={theme}
             catalog={modeCatalog}
-            initialProducts={initial.products}
+            initialProducts={baselineProducts}
             query={query}
             setQuery={setQuery}
             adminBrand={adminBrand}
@@ -1326,14 +1282,10 @@ export const AdminShell: React.FC<AdminShellProps> = ({
             adminViewMode={adminViewMode}
             setAdminViewMode={setAdminViewMode}
             filtered={filtered}
-            csvFileInputRef={csvFileInputRef as React.RefObject<HTMLInputElement>}
-            handleExportExcel={handleExportExcel}
-            handleExportCsv={handleExportCsv}
-            handleImportFile={handleImportFile}
-            handleDownloadExcelTemplate={handleDownloadExcelTemplate}
-            handleDownloadCsvTemplate={handleDownloadCsvTemplate}
             handleBulkSetStatus={handleBulkSetStatus}
-            onNewProduct={() => setEditing(emptyProduct(modeCatalog.brands, modeCatalog.categories))}
+            onNewProduct={() =>
+              setEditing(emptyProduct(modeCatalog.brands, modeCatalog.categories))
+            }
             onOpenEditProduct={(p) => handleOpenEditProduct(p)}
             onRevertSingleProduct={handleRevertSingleProduct}
             onDuplicateProduct={duplicateProduct}
@@ -1358,20 +1310,22 @@ export const AdminShell: React.FC<AdminShellProps> = ({
         )}
 
         {/* TAB 3: BRANDS & BRAND REGISTRY STUDIO */}
-        {tab === 'brands' && (
+        {(tab === 'brands' || tab === 'brand_rail') && (
           <BrandsSection
             theme={theme}
+            catalog={modeCatalog}
+            onUpdateBrands={(updater) =>
+              setCatalog((p) => ({
+                ...p,
+                brands: typeof updater === 'function' ? updater(p.brands) : updater,
+              }))
+            }
+            mode={activeMode}
             csrfToken={initial.csrfToken}
             showToast={showToast}
-            onQuickOpenBrandRail={() => setTab('brand_rail')}
+            initialSubTab={tab === 'brand_rail' ? 'rail' : 'brands'}
+            allowedBrandIds={activeMode === 'catalog' ? SUPPORTED_CATALOG_BRAND_IDS : undefined}
           />
-        )}
-
-        {/* TAB 3.5: BRAND RAIL STUDIO */}
-        {tab === 'brand_rail' && (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 24 }}>
-            <BrandRailStudio theme={theme} csrfToken={initial.csrfToken} showToast={showToast} />
-          </div>
         )}
 
         {/* TAB 4: CATEGORIES & CATEGORY TREE */}
@@ -1437,11 +1391,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
 
         {/* TAB 9: AUDIT & SYSTEM LOGS */}
         {tab === 'logs' && (
-          <LogsSection
-            theme={theme}
-            csrfToken={initial.csrfToken}
-            showToast={showToast}
-          />
+          <LogsSection theme={theme} csrfToken={initial.csrfToken} showToast={showToast} />
         )}
 
         {/* TAB 10: SECURITY & PASSWORD */}
@@ -1484,9 +1434,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
                 </div>
                 <div>
                   <h3 style={{ margin: 0, fontSize: '17px', fontWeight: 800 }}>
-                    {activeMode === 'site'
-                      ? 'Sayt Fəaliyyət Statusu'
-                      : 'Kataloq Fəaliyyət Statusu'}
+                    {activeMode === 'site' ? 'Sayt Fəaliyyət Statusu' : 'Kataloq Fəaliyyət Statusu'}
                   </h3>
                   <span style={{ fontSize: '12px', color: theme.textMuted }}>
                     {activeMode === 'site'
@@ -1623,6 +1571,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
           availableCountries={availableCountries}
           theme={theme}
           onUpload={onUpload}
+          onDiscardUpload={(url) => catalogApi.deleteUploadedMedia(url, initial.csrfToken)}
           onClose={() => setEditing(null)}
           onSave={upsertProduct}
           onQuickCreateCategory={(prodId) =>

@@ -7,7 +7,7 @@ import {
   Sparkles,
   MapPin,
   ShoppingCart,
-  User,
+  Share2,
   Home,
   LayoutGrid,
   ArrowRight,
@@ -58,6 +58,7 @@ interface SiteHeaderProps {
   favoritesCount: number;
   cartCount?: number;
   onOpenSaharaMatch: () => void;
+  onOpenCatalogShare?: () => void;
   onOpenDrawer?: () => void;
   onOpenUserDrawer?: () => void;
   authUser?: AuthUser | null;
@@ -78,6 +79,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
   onSearchChange,
   favoritesCount,
   cartCount = 0,
+  onOpenCatalogShare,
   onOpenDrawer,
   onOpenUserDrawer,
   authUser,
@@ -195,6 +197,31 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
     };
   }, []);
 
+  useEffect(() => {
+    const updateHeaderHeight = () => {
+      if (headerRef.current) {
+        const height = headerRef.current.getBoundingClientRect().height;
+        if (height > 0) {
+          document.documentElement.style.setProperty(
+            '--catalog-site-header-height',
+            `${Math.round(height)}px`
+          );
+        }
+      }
+    };
+    updateHeaderHeight();
+    const ro =
+      typeof ResizeObserver !== 'undefined' ? new ResizeObserver(() => updateHeaderHeight()) : null;
+    if (headerRef.current && ro) {
+      ro.observe(headerRef.current);
+    }
+    window.addEventListener('resize', updateHeaderHeight, { passive: true });
+    return () => {
+      if (ro) ro.disconnect();
+      window.removeEventListener('resize', updateHeaderHeight);
+    };
+  }, [isCompact, isSearchExpanded, isMegaMenuOpen]);
+
   return (
     <>
       {/* Main Sticky Header (1:1 siteUI.png) */}
@@ -205,9 +232,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
           position: 'sticky',
           top: 0,
           backgroundColor:
-            themeMode === 'dark'
-              ? 'rgba(15, 23, 42, 0.88)'
-              : 'rgba(255, 255, 255, 0.85)',
+            themeMode === 'dark' ? 'rgba(15, 23, 42, 0.88)' : 'rgba(255, 255, 255, 0.85)',
           backdropFilter: 'blur(28px) saturate(190%)',
           WebkitBackdropFilter: 'blur(28px) saturate(190%)',
           border: 'none',
@@ -453,44 +478,18 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               </div>
             </div>
 
-            {/* Right Action Icons & Utilities matching siteUI.png */}
+            {/* Right Action Icons: Seçilmiş -> Səbət -> Paylaş -> Konum -> Gecə/Gündüz */}
             <div
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: '16px',
+                gap: '14px',
                 flexShrink: 0,
                 minWidth: '240px',
                 justifyContent: 'flex-end',
               }}
             >
-              {/* Location: 📍 Bakı */}
-              <button
-                type="button"
-                onClick={() => (onOpenDrawer ? onOpenDrawer() : onNavigate('stores'))}
-                data-testid="drawer-trigger"
-                className="header-location-btn"
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  padding: '4px 6px',
-                  color: theme.text,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  gap: '6px',
-                  fontSize: '13.5px',
-                  fontWeight: 600,
-                  transition: 'color 0.15s ease',
-                }}
-                aria-label="Şəhər seçimi: Bakı"
-                title="Sərgi salonları və ünvanlar"
-              >
-                <MapPin size={16} style={{ color: theme.text }} />
-                <span>Bakı</span>
-              </button>
-
-              {/* Wishlist 🤍 */}
+              {/* 1. Wishlist / Seçilmiş 🤍 */}
               <button
                 type="button"
                 onClick={() => onNavigate('favorites')}
@@ -505,8 +504,13 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  transition: 'color 0.15s ease',
+                  transition: 'color 0.15s ease, transform 0.15s ease',
                 }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#ef4444')}
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.color =
+                    currentRoute === 'favorites' || favoritesCount > 0 ? '#ef4444' : theme.text)
+                }
                 aria-label="Seçilmiş Məhsullar"
                 title="Seçilmiş Məhsullar"
                 className="header-favorites-btn"
@@ -515,7 +519,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 <Heart
                   size={20}
                   color={
-                    currentRoute === 'favorites' || favoritesCount > 0 ? '#ef4444' : theme?.text
+                    currentRoute === 'favorites' || favoritesCount > 0 ? '#ef4444' : 'currentColor'
                   }
                   fill="none"
                 />
@@ -542,7 +546,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 )}
               </button>
 
-              {/* Cart 🛒 */}
+              {/* 2. Cart / Səbət 🛒 */}
               <button
                 type="button"
                 onClick={() => onNavigate('cart')}
@@ -556,12 +560,19 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  transition: 'color 0.15s ease',
+                  transition: 'color 0.15s ease, transform 0.15s ease',
                 }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#e31e24')}
+                onMouseLeave={(e) =>
+                  (e.currentTarget.style.color = currentRoute === 'cart' ? '#e31e24' : theme.text)
+                }
                 aria-label={cartCount > 0 ? `Səbət (${cartCount})` : 'Səbət'}
                 data-cart-target
               >
-                <ShoppingCart size={20} color={currentRoute === 'cart' ? '#e31e24' : theme.text} />
+                <ShoppingCart
+                  size={20}
+                  color={currentRoute === 'cart' ? '#e31e24' : 'currentColor'}
+                />
                 {cartCount > 0 && (
                   <span
                     style={{
@@ -585,64 +596,113 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 )}
               </button>
 
-              {/* Profile 👤 / Logged-in User Pill */}
+              {/* 3. Share / Paylaş 🔗 (Qutusuz, səbət rəngində və hover effekti ilə) */}
               <button
                 type="button"
-                data-testid="header-user-btn"
                 onClick={() => {
-                  if (onOpenUserDrawer) onOpenUserDrawer();
-                  else onNavigate('account');
+                  if (onOpenCatalogShare) {
+                    onOpenCatalogShare();
+                  } else if (navigator.share) {
+                    navigator
+                      .share({
+                        title: 'Sahara Electronics Kataloq',
+                        url: window.location.href,
+                      })
+                      .catch(() => {});
+                  }
                 }}
                 style={{
-                  background: authUser
-                    ? themeMode === 'dark'
-                      ? 'rgba(220, 38, 38, 0.15)'
-                      : 'rgba(220, 38, 38, 0.08)'
-                    : 'transparent',
+                  background: 'transparent',
                   border: 'none',
-                  borderRadius: authUser ? '999px' : '8px',
-                  padding: authUser ? '4px 12px 4px 6px' : '6px',
-                  color: currentRoute === 'account' ? '#e31e24' : theme.text,
+                  padding: '6px',
+                  color: theme.text,
                   cursor: 'pointer',
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '8px',
                   justifyContent: 'center',
-                  transition: 'all 0.15s ease',
-                  maxWidth: '180px',
+                  transition: 'color 0.15s ease, transform 0.15s ease',
                 }}
-                aria-label={
-                  authUser ? `İstifadəçi: ${authUser.fullName}` : 'İstifadəçi Kabineti və Hesab'
-                }
-                title={authUser ? authUser.fullName : 'Giriş və Qeydiyyat'}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#e31e24')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = theme.text)}
+                aria-label="Kataloqu Paylaş"
+                title="Kataloqu Paylaş"
+                className="header-share-btn"
               >
-                <div
+                <Share2 size={20} color="currentColor" />
+              </button>
+
+              {/* 4. Location / Konum 📍 (Səbət rəngində və hover effekti ilə) */}
+              <button
+                type="button"
+                onClick={() => (onOpenDrawer ? onOpenDrawer() : onNavigate('stores'))}
+                data-testid="drawer-trigger"
+                className="header-location-btn"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  padding: '4px 6px',
+                  color: theme.text,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  fontSize: '13.5px',
+                  fontWeight: 600,
+                  transition: 'color 0.15s ease, transform 0.15s ease',
+                }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#e31e24')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = theme.text)}
+                aria-label="Şəhər seçimi: Bakı"
+                title="Sərgi salonları və ünvanlar"
+              >
+                <MapPin size={16} color="currentColor" />
+                <span>Bakı</span>
+              </button>
+
+              {/* Profile 👤 / Logged-in User Pill */}
+              {authUser && (
+                <button
+                  type="button"
+                  data-testid="header-user-btn"
+                  onClick={() => {
+                    if (onOpenUserDrawer) onOpenUserDrawer();
+                    else onNavigate('account');
+                  }}
                   style={{
-                    width: authUser ? '26px' : 'auto',
-                    height: authUser ? '26px' : 'auto',
-                    borderRadius: authUser ? '50%' : '0',
-                    backgroundColor: authUser ? '#dc2626' : 'transparent',
-                    color: authUser
-                      ? '#ffffff'
-                      : currentRoute === 'account'
-                        ? '#e31e24'
-                        : theme.text,
+                    background:
+                      themeMode === 'dark' ? 'rgba(220, 38, 38, 0.15)' : 'rgba(220, 38, 38, 0.08)',
+                    border: 'none',
+                    borderRadius: '999px',
+                    padding: '4px 12px 4px 6px',
+                    color: currentRoute === 'account' ? '#e31e24' : theme.text,
+                    cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
+                    gap: '8px',
                     justifyContent: 'center',
-                    fontSize: '12px',
-                    fontWeight: 900,
-                    flexShrink: 0,
+                    transition: 'all 0.15s ease',
+                    maxWidth: '180px',
                   }}
+                  aria-label={`İstifadəçi: ${authUser.fullName}`}
+                  title={authUser.fullName}
                 >
-                  {authUser ? (
-                    authUser.fullName.charAt(0).toUpperCase()
-                  ) : (
-                    <User size={20} color={currentRoute === 'account' ? '#e31e24' : theme.text} />
-                  )}
-                </div>
-
-                {authUser && (
+                  <div
+                    style={{
+                      width: '26px',
+                      height: '26px',
+                      borderRadius: '50%',
+                      backgroundColor: '#dc2626',
+                      color: '#ffffff',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '12px',
+                      fontWeight: 900,
+                      flexShrink: 0,
+                    }}
+                  >
+                    {authUser.fullName.charAt(0).toUpperCase()}
+                  </div>
                   <span
                     data-testid="header-user-name"
                     style={{
@@ -657,10 +717,10 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   >
                     {authUser.fullName.split(' ')[0]}
                   </span>
-                )}
-              </button>
+                </button>
+              )}
 
-              {/* Theme Toggle ☀️ / 🌙 */}
+              {/* 5. Theme Toggle ☀️ / 🌙 */}
               <button
                 type="button"
                 onClick={onToggleTheme}
@@ -673,11 +733,17 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  transition: 'color 0.15s ease',
+                  transition: 'color 0.15s ease, transform 0.15s ease',
                 }}
+                onMouseEnter={(e) => (e.currentTarget.style.color = '#e31e24')}
+                onMouseLeave={(e) => (e.currentTarget.style.color = theme.text)}
                 aria-label={themeMode === 'dark' ? 'İşıqlı rejimə keç' : 'Qaranlıq rejimə keç'}
               >
-                {themeMode === 'dark' ? <Sun size={19} /> : <Moon size={19} />}
+                {themeMode === 'dark' ? (
+                  <Sun size={19} color="currentColor" />
+                ) : (
+                  <Moon size={19} color="currentColor" />
+                )}
               </button>
             </div>
           </div>
@@ -770,31 +836,8 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 />
               </button>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                {/* Mobile Location Badge: 📍 Bakı */}
-                <button
-                  type="button"
-                  onClick={() => (onOpenDrawer ? onOpenDrawer() : onNavigate('stores'))}
-                  data-testid="drawer-trigger-mobile"
-                  style={{
-                    background: 'transparent',
-                    border: 'none',
-                    padding: '4px',
-                    color: theme.text,
-                    cursor: 'pointer',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: '4px',
-                    fontSize: '12px',
-                    fontWeight: 600,
-                  }}
-                  aria-label="Sərgi salonları"
-                >
-                  <MapPin size={14} />
-                  <span>Bakı</span>
-                </button>
-
-                {/* Mobile Favorites Button 🤍 */}
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                {/* 1. Mobile Favorites Button 🤍 */}
                 <button
                   type="button"
                   onClick={() => onNavigate('favorites')}
@@ -809,6 +852,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    transition: 'color 0.15s ease',
                   }}
                   aria-label="Seçilmişlər"
                   title="Seçilmişlər"
@@ -822,9 +866,30 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                     }
                     fill="none"
                   />
+                  {favoritesCount > 0 && (
+                    <span
+                      style={{
+                        position: 'absolute',
+                        top: '-2px',
+                        right: '-4px',
+                        backgroundColor: '#ef4444',
+                        color: '#ffffff',
+                        fontSize: '8px',
+                        fontWeight: 800,
+                        width: '14px',
+                        height: '14px',
+                        borderRadius: '50%',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      {favoritesCount}
+                    </span>
+                  )}
                 </button>
 
-                {/* Mobile Cart Button 🛒 */}
+                {/* 2. Mobile Cart Button 🛒 */}
                 <button
                   type="button"
                   onClick={() => onNavigate('cart')}
@@ -838,6 +903,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    transition: 'color 0.15s ease',
                   }}
                   aria-label="Səbət"
                   data-cart-target
@@ -869,7 +935,63 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   )}
                 </button>
 
-                {/* Mobile Theme Toggle */}
+                {/* 3. Mobile Share Button 🔗 */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (onOpenCatalogShare) {
+                      onOpenCatalogShare();
+                    } else if (navigator.share) {
+                      navigator
+                        .share({
+                          title: 'Sahara Electronics Kataloq',
+                          url: window.location.href,
+                        })
+                        .catch(() => {});
+                    }
+                  }}
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    padding: '4px',
+                    color: theme.text,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'color 0.15s ease',
+                  }}
+                  aria-label="Kataloqu Paylaş"
+                  title="Kataloqu Paylaş"
+                >
+                  <Share2 size={17} color={theme.text} />
+                </button>
+
+                {/* 4. Mobile Location Badge: 📍 Bakı */}
+                <button
+                  type="button"
+                  onClick={() => (onOpenDrawer ? onOpenDrawer() : onNavigate('stores'))}
+                  data-testid="drawer-trigger-mobile"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    padding: '4px',
+                    color: theme.text,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontSize: '12px',
+                    fontWeight: 600,
+                    transition: 'color 0.15s ease',
+                  }}
+                  aria-label="Sərgi salonları"
+                >
+                  <MapPin size={14} color={theme.text} />
+                  <span>Bakı</span>
+                </button>
+
+                {/* 5. Mobile Theme Toggle */}
                 <button
                   type="button"
                   onClick={onToggleTheme}
@@ -882,6 +1004,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
+                    transition: 'color 0.15s ease',
                   }}
                   aria-label={themeMode === 'dark' ? 'İşıqlı rejim' : 'Qaranlıq rejim'}
                 >

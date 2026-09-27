@@ -54,82 +54,84 @@ export const BrandShowcase: React.FC<{
           ).length;
           const soon = brand.comingSoon || count === 0;
           const backdrops = brandBackdrops[brand.id] || [];
-        return (
-          <article
-            key={brand.id}
-            role={soon ? undefined : 'button'}
-            tabIndex={soon ? undefined : 0}
-            onClick={() => {
-              if (!soon) onSelect(brand.id);
-            }}
-            onKeyDown={(e) => {
-              if (!soon && (e.key === 'Enter' || e.key === ' ')) {
-                e.preventDefault();
-                onSelect(brand.id);
+          return (
+            <article
+              key={brand.id}
+              role={soon ? undefined : 'button'}
+              tabIndex={soon ? undefined : 0}
+              onClick={() => {
+                if (!soon) onSelect(brand.id);
+              }}
+              onKeyDown={(e) => {
+                if (!soon && (e.key === 'Enter' || e.key === ' ')) {
+                  e.preventDefault();
+                  onSelect(brand.id);
+                }
+              }}
+              aria-label={
+                soon
+                  ? `${brand.name} - Tezliklə`
+                  : `${brand.name} məhsullarına bax (${count} model)`
               }
-            }}
-            aria-label={
-              soon ? `${brand.name} - Tezliklə` : `${brand.name} məhsullarına bax (${count} model)`
-            }
-            className={`brand-showcase-card brand-${brand.id} brand-tone-${index % 3} ${soon ? 'coming-soon' : 'ready'}`}
-            style={{ border: 'none', background: theme.bgCard }}
-          >
-            {backdrops.length > 0 && (
-              <div className="brand-card-backdrops" aria-hidden="true">
-                {backdrops.map((src, imageIndex) => (
-                  <ShimmerImage
-                    key={src}
-                    src={src}
-                    alt=""
-                    style={{ animationDelay: `${imageIndex * 5}s` }}
-                  />
-                ))}
+              className={`brand-showcase-card brand-${brand.id} brand-tone-${index % 3} ${soon ? 'coming-soon' : 'ready'}`}
+              style={{ border: 'none', background: theme.bgCard }}
+            >
+              {backdrops.length > 0 && (
+                <div className="brand-card-backdrops" aria-hidden="true">
+                  {backdrops.map((src, imageIndex) => (
+                    <ShimmerImage
+                      key={src}
+                      src={src}
+                      alt=""
+                      style={{ animationDelay: `${imageIndex * 5}s` }}
+                    />
+                  ))}
+                </div>
+              )}
+              <div className="brand-card-shade" aria-hidden="true" />
+              {soon && (
+                <div className="soon-atmosphere" aria-hidden="true">
+                  <i />
+                  <i />
+                  <i />
+                </div>
+              )}
+              <div className="brand-mark-shell">
+                <BrandMark brand={brand} />
               </div>
-            )}
-            <div className="brand-card-shade" aria-hidden="true" />
-            {soon && (
-              <div className="soon-atmosphere" aria-hidden="true">
-                <i />
-                <i />
-                <i />
-              </div>
-            )}
-            <div className="brand-mark-shell">
-              <BrandMark brand={brand} />
-            </div>
-            <div className="brand-card-copy">
-              <div className="brand-card-top">
-                <strong>{brand.name}</strong>
+              <div className="brand-card-copy">
+                <div className="brand-card-top">
+                  <strong>{brand.name}</strong>
+                  {soon ? (
+                    <span className="soon-badge">
+                      <Clock3 size={12} /> TEZLİKLƏ
+                    </span>
+                  ) : (
+                    <span className="ready-badge">{count} məhsul</span>
+                  )}
+                </div>
                 {soon ? (
-                  <span className="soon-badge">
-                    <Clock3 size={12} /> TEZLİKLƏ
-                  </span>
+                  <div className="soon-message">
+                    <b>Tezliklə</b>
+                    <span>
+                      <i>Hazırlanır</i>
+                      <i>Yenilənir</i>
+                      <i>Çox yaxında</i>
+                    </span>
+                  </div>
                 ) : (
-                  <span className="ready-badge">{count} məhsul</span>
+                  <p>Mövcud modellər və texniki xüsusiyyətlər.</p>
+                )}
+                {!soon && (
+                  <span className="brand-card-action" aria-hidden="true">
+                    Məhsullara bax <ArrowRight size={15} />
+                  </span>
                 )}
               </div>
-              {soon ? (
-                <div className="soon-message">
-                  <b>Tezliklə</b>
-                  <span>
-                    <i>Hazırlanır</i>
-                    <i>Yenilənir</i>
-                    <i>Çox yaxında</i>
-                  </span>
-                </div>
-              ) : (
-                <p>Mövcud modellər və texniki xüsusiyyətlər.</p>
-              )}
-              {!soon && (
-                <span className="brand-card-action" aria-hidden="true">
-                  Məhsullara bax <ArrowRight size={15} />
-                </span>
-              )}
-            </div>
-          </article>
-        );
-      })}
-    </div>
-  </section>
+            </article>
+          );
+        })}
+      </div>
+    </section>
   );
 };

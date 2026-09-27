@@ -38,6 +38,7 @@ export const CatalogCompareSidebar = ({
                 <ShimmerImage
                   src={product.image}
                   alt={product.title}
+                  cropRect={product.cropRect || product.media?.[0]?.cropRect}
                   objectFit="contain"
                   spinnerSize={12}
                   containerStyle={{ width: 46, height: 46, flex: '0 0 46px' }}

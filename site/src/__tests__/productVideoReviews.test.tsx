@@ -28,7 +28,9 @@ describe('ProductVideoReviewsSection Component', () => {
   it('renders section title and subscribe button in light theme', () => {
     render(<ProductVideoReviewsSection theme={lightTheme} />);
 
-    expect(screen.getByRole('heading', { level: 2, name: /Sahara-da məhsul icmalı/i })).toBeDefined();
+    expect(
+      screen.getByRole('heading', { level: 2, name: /Sahara-da məhsul icmalı/i })
+    ).toBeDefined();
 
     const subscribeLink = screen.getByRole('link', { name: /Kanalımıza abunə olun/i });
     expect(subscribeLink).toBeDefined();

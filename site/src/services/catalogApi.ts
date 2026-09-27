@@ -1,4 +1,4 @@
-import { CatalogAnalytics, CatalogData, ProductMedia } from '../types/product';
+import { CatalogAnalytics, CatalogData, Product, ProductMedia } from '../types/product';
 import { DEFAULT_CATALOG, normalizeCatalog } from '../data/catalog';
 import { apiClient } from './apiClient';
 import { BrandSchema, CategorySchema, ProductSchema } from '../types/schemas';
@@ -169,6 +169,15 @@ export const catalogApi = {
     } as ProductMedia;
   },
 
+  deleteUploadedMedia(url: string, csrfToken: string) {
+    if (!url.startsWith('/uploads/')) return Promise.resolve({ ok: true });
+    const fileName = url.slice('/uploads/'.length);
+    return apiClient.delete<{ ok: true; fileName?: string }>(
+      `/api/admin/media/${encodeURIComponent(fileName)}`,
+      { headers: { 'X-CSRF-Token': csrfToken } }
+    );
+  },
+
   getFilteredAnalytics(range: string, fromDate?: string, toDate?: string) {
     const params = new URLSearchParams({ range });
     if (fromDate) params.append('from', fromDate);
@@ -249,6 +258,19 @@ export const catalogApi = {
   },
 
   // Granular Product CRUD with Optimistic Concurrency & ETags
+  async createProduct(product: Product, csrfToken: string) {
+    const res = await apiClient.postWithMeta<{ ok: boolean; product: Product }>(
+      '/api/admin/products',
+      product,
+      { headers: { 'X-CSRF-Token': csrfToken } }
+    );
+    return {
+      ok: res.data.ok,
+      product: res.data.product,
+      etag: res.etag || res.headers.get('etag'),
+    };
+  },
+
   async getProduct(id: string) {
     const res = await apiClient.getWithMeta<{ ok: boolean; product: any }>(
       `/api/admin/products/${encodeURIComponent(id)}`

@@ -145,7 +145,8 @@ export const TrustHighlights: React.FC<TrustHighlightsProps> = ({ items, theme, 
                   ? '0 6px 18px -4px rgba(0, 0, 0, 0.45)'
                   : '0 4px 14px -3px rgba(0, 0, 0, 0.04)',
                 cursor: 'pointer',
-                transition: 'transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease',
+                transition:
+                  'transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease',
               }}
             >
               <div

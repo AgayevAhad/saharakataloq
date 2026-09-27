@@ -24,9 +24,10 @@ describe('Public kataloq başlanğıc modeli', () => {
     ]);
   });
 
-  it('Artel brendini Tezliklə statusunda, ARDO və LOTUS-u aktiv statusda saxlayır', () => {
+  it('Beko brendini Tezliklə statusunda, ARDO, ARTEL və LOTUS-u aktiv statusda saxlayır', () => {
     expect(DEFAULT_BRANDS.find((item) => item.id === 'lotus')?.comingSoon).toBe(false);
-    expect(DEFAULT_BRANDS.find((item) => item.id === 'artel')?.comingSoon).toBe(true);
+    expect(DEFAULT_BRANDS.find((item) => item.id === 'artel')?.comingSoon).toBe(false);
     expect(DEFAULT_BRANDS.find((item) => item.id === 'ardo')?.comingSoon).toBe(false);
+    expect(DEFAULT_BRANDS.find((item) => item.id === 'beko')?.comingSoon).toBe(true);
   });
 });

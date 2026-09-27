@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Heart, ShoppingCart, Trash2, ArrowRight, ArrowLeft, LayoutGrid } from 'lucide-react';
-import { Product, CatalogSettings, CatalogCategory } from '../types/product';
+import { Product, CatalogSettings, CatalogCategory, Brand } from '../types/product';
 import { ThemeColors } from '../types/theme';
 import { ProductCard } from '../components/ProductCard';
 import { WhatsAppIcon } from '../components/WhatsAppIcon';
@@ -9,6 +9,7 @@ export interface FavoritesPageProps {
   favoriteIds: string[];
   allProducts: Product[];
   categories: CatalogCategory[];
+  brands?: Brand[];
   settings?: CatalogSettings;
   theme: ThemeColors;
   themeMode: 'light' | 'dark';
@@ -22,15 +23,18 @@ export interface FavoritesPageProps {
   onShare: (product: Product | null) => void;
   onCopyLink: (product: Product) => void;
   onNavigate: (route: string, param?: string) => void;
+  onToggleCompare?: (product: Product) => void;
+  comparisonIds?: string[];
 }
 
 export const FavoritesPage: React.FC<FavoritesPageProps> = ({
   favoriteIds,
   allProducts,
   categories,
+  brands,
   settings: _settings,
   theme,
-  themeMode,
+  themeMode = 'light',
   onToggleFavorite,
   onClearFavorites,
   onAddToCart,
@@ -41,6 +45,8 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
   onShare,
   onCopyLink,
   onNavigate,
+  onToggleCompare,
+  comparisonIds = [],
 }) => {
   const [selectedCategory, setSelectedCategory] = useState<string>('all');
 
@@ -49,6 +55,12 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
     const favSet = new Set(favoriteIds);
     return allProducts.filter((p) => favSet.has(p.id) && p.status !== 'draft');
   }, [favoriteIds, allProducts]);
+
+  // Recommended products not in favorites
+  const recommendedProducts = useMemo(() => {
+    const favSet = new Set(favoriteIds);
+    return allProducts.filter((p) => p.status !== 'draft' && !favSet.has(p.id)).slice(0, 4);
+  }, [allProducts, favoriteIds]);
 
   // Available categories within favorites
   const availableCategories = useMemo(() => {
@@ -86,23 +98,32 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '24px' }}>
           <button
             type="button"
+            className="favorites-back-btn"
             onClick={() => onNavigate('catalog')}
             style={{
               background: 'transparent',
-              border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`,
-              borderRadius: '10px',
-              padding: '8px 14px',
+              border: 'none',
+              borderRadius: '0',
+              padding: '6px 0',
               color: theme.text,
-              fontSize: '13px',
-              fontWeight: 600,
+              fontSize: '13.5px',
+              fontWeight: 650,
               cursor: 'pointer',
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px',
-              backgroundColor: themeMode === 'dark' ? '#1e293b' : '#ffffff',
+              transition: 'color 0.18s ease, transform 0.18s ease',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.color = theme.primary;
+              e.currentTarget.style.transform = 'translateX(-2px)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.color = theme.text;
+              e.currentTarget.style.transform = 'translateX(0)';
             }}
           >
-            <ArrowLeft size={15} />
+            <ArrowLeft size={16} />
             <span>Kataloqa qayıt</span>
           </button>
         </div>
@@ -371,46 +392,125 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
 
             {/* Product Grid */}
             <div className="product-grid-container">
-              {displayedProducts.map((product) => (
-                <div key={product.id} style={{ position: 'relative' }}>
+              {displayedProducts.map((product) => {
+                const prodBrand = brands?.find(
+                  (b) => b.id.toLowerCase() === (product.brandId || '').toLowerCase()
+                );
+                return (
+                  <div key={product.id} style={{ position: 'relative' }}>
+                    <ProductCard
+                      product={product}
+                      theme={theme}
+                      brand={prodBrand}
+                      brandName={prodBrand?.name || product.brandName}
+                      brandOrigin={prodBrand?.originCountry}
+                      onSelect={onSelectProduct}
+                      onShare={onShare}
+                      onWhatsApp={onWhatsApp}
+                      onCall={() => onCall()}
+                      onCopyLink={onCopyLink}
+                      onAddToCart={onAddToCart}
+                      onToggleFavorite={onToggleFavorite}
+                      isFavorite={true}
+                      onToggleCompare={onToggleCompare}
+                      isComparing={comparisonIds.includes(product.id)}
+                    />
+                    {/* Quick Remove Floating Button */}
+                    <button
+                      type="button"
+                      title="Bəyənilənlərdən çıxart"
+                      aria-label={`${product.title} bəyənilənlərdən çıxart`}
+                      onClick={() => onToggleFavorite(product)}
+                      style={{
+                        position: 'absolute',
+                        top: '12px',
+                        right: '12px',
+                        width: '32px',
+                        height: '32px',
+                        borderRadius: '50%',
+                        backgroundColor: 'rgba(239, 68, 68, 0.9)',
+                        color: '#ffffff',
+                        border: 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        cursor: 'pointer',
+                        zIndex: 8,
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                      }}
+                    >
+                      <Heart size={16} fill="#ffffff" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {/* Recommended Products Carousel / Grid */}
+        {recommendedProducts.length > 0 && (
+          <div style={{ marginTop: '64px' }}>
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                marginBottom: '20px',
+              }}
+            >
+              <div>
+                <h2 style={{ fontSize: '20px', fontWeight: 800, color: theme.text, margin: 0 }}>
+                  Tövsiyə Olunan Modellər
+                </h2>
+                <p style={{ fontSize: '13px', color: theme.textMuted, margin: '4px 0 0' }}>
+                  Kataloqda dərc edilmiş digər modellər
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => onNavigate('catalog')}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: '#e31e24',
+                  fontSize: '13px',
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '4px',
+                }}
+              >
+                <span>Hamısına bax</span>
+                <ArrowRight size={14} />
+              </button>
+            </div>
+
+            <div className="product-grid-container">
+              {recommendedProducts.map((prod) => {
+                const prodBrand = brands?.find(
+                  (b) => b.id.toLowerCase() === (prod.brandId || '').toLowerCase()
+                );
+                return (
                   <ProductCard
-                    product={product}
+                    key={prod.id}
+                    product={prod}
                     theme={theme}
+                    brand={prodBrand}
+                    brandName={prodBrand?.name || prod.brandName}
+                    brandOrigin={prodBrand?.originCountry}
                     onSelect={onSelectProduct}
+                    onAddToCart={onAddToCart}
+                    onToggleFavorite={onToggleFavorite}
+                    isFavorite={favoriteIds.includes(prod.id)}
                     onShare={onShare}
                     onWhatsApp={onWhatsApp}
                     onCall={() => onCall()}
                     onCopyLink={onCopyLink}
-                    onAddToCart={onAddToCart}
                   />
-                  {/* Quick Remove Floating Button */}
-                  <button
-                    type="button"
-                    title="Bəyənilənlərdən çıxart"
-                    aria-label={`${product.title} bəyənilənlərdən çıxart`}
-                    onClick={() => onToggleFavorite(product)}
-                    style={{
-                      position: 'absolute',
-                      top: '12px',
-                      right: '12px',
-                      width: '32px',
-                      height: '32px',
-                      borderRadius: '50%',
-                      backgroundColor: 'rgba(239, 68, 68, 0.9)',
-                      color: '#ffffff',
-                      border: 'none',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      cursor: 'pointer',
-                      zIndex: 8,
-                      boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                    }}
-                  >
-                    <Heart size={16} fill="#ffffff" />
-                  </button>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}
