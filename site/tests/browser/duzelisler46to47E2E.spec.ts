@@ -18,7 +18,9 @@ test('46: chat invitation enters at center, settles at bottom-right and clears a
   await expect(helper).toHaveCount(0);
 });
 
-test('47: homepage and catalog cards put category between brand and actions', async ({ page }) => {
+test('47: homepage keeps overlay controls while catalog actions sit below square media', async ({
+  page,
+}) => {
   await page.setViewportSize({ width: 1366, height: 900 });
   for (const [route, selector] of [
     ['/', '.featured-product-card'],
@@ -42,8 +44,15 @@ test('47: homepage and catalog cards put category between brand and actions', as
       actions.boundingBox(),
     ]);
     expect(brandBox && categoryBox && actionsBox).toBeTruthy();
-    expect(categoryBox!.x).toBeGreaterThanOrEqual(brandBox!.x + brandBox!.width - 1);
-    expect(categoryBox!.x + categoryBox!.width).toBeLessThanOrEqual(actionsBox!.x + 1);
-    expect(Math.abs(categoryBox!.y - brandBox!.y)).toBeLessThanOrEqual(2);
+    if (route === '/catalog') {
+      const mediaBox = await card.locator('.product-card-media').boundingBox();
+      expect(mediaBox).toBeTruthy();
+      expect(Math.abs(mediaBox!.width - mediaBox!.height)).toBeLessThanOrEqual(1);
+      expect(actionsBox!.y).toBeGreaterThanOrEqual(mediaBox!.y + mediaBox!.height);
+    } else {
+      expect(categoryBox!.x).toBeGreaterThanOrEqual(brandBox!.x + brandBox!.width - 1);
+      expect(categoryBox!.x + categoryBox!.width).toBeLessThanOrEqual(actionsBox!.x + 1);
+      expect(Math.abs(categoryBox!.y - brandBox!.y)).toBeLessThanOrEqual(2);
+    }
   }
 });

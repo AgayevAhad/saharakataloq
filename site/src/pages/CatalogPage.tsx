@@ -306,7 +306,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
             {/* Filter Group: Kateqoriyalar */}
             <div
               style={{
-                backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.45)' : '#ffffff',
+                backgroundColor: themeMode === 'dark' ? '#121214' : '#ffffff',
                 border: 'none',
                 borderRadius: '16px',
                 padding: '16px',
@@ -425,7 +425,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
             {/* Filter Group: Rəsmi Brendlər (with original logos) */}
             <div
               style={{
-                backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.45)' : '#ffffff',
+                backgroundColor: themeMode === 'dark' ? '#121214' : '#ffffff',
                 border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
                 borderRadius: '16px',
                 padding: '16px',
@@ -555,7 +555,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
             {/* Filter Group: Qiymət Aralığı (AZN) */}
             <div
               style={{
-                backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.45)' : '#ffffff',
+                backgroundColor: themeMode === 'dark' ? '#121214' : '#ffffff',
                 border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
                 borderRadius: '16px',
                 padding: '16px',
@@ -623,7 +623,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                           boxSizing: 'border-box',
                           padding: '6px 8px',
                           borderRadius: '8px',
-                          backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f8fafc',
+                          backgroundColor: themeMode === 'dark' ? '#18181b' : '#f8fafc',
                           border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#cbd5e1'}`,
                           color: theme.text,
                           fontSize: '13px',
@@ -654,7 +654,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                           boxSizing: 'border-box',
                           padding: '6px 8px',
                           borderRadius: '8px',
-                          backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f8fafc',
+                          backgroundColor: themeMode === 'dark' ? '#18181b' : '#f8fafc',
                           border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#cbd5e1'}`,
                           color: theme.text,
                           fontSize: '13px',
@@ -682,7 +682,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                         style={{
                           padding: '4px 8px',
                           borderRadius: '6px',
-                          backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f1f5f9',
+                          backgroundColor: themeMode === 'dark' ? '#18181b' : '#f1f5f9',
                           border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.06)' : '#e2e8f0'}`,
                           color: theme.text,
                           fontSize: '11px',
@@ -701,7 +701,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
             {/* Filter Group: Texniki Xüsusiyyətlər (Enerji sinfi, Mühərrik, Rəng) */}
             <div
               style={{
-                backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.45)' : '#ffffff',
+                backgroundColor: themeMode === 'dark' ? '#121214' : '#ffffff',
                 border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
                 borderRadius: '16px',
                 padding: '16px',
@@ -772,7 +772,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                               selectedEnergyClass === ec
                                 ? '#e31e24'
                                 : themeMode === 'dark'
-                                  ? '#1e293b'
+                                  ? '#18181b'
                                   : '#f1f5f9',
                             color: selectedEnergyClass === ec ? '#ffffff' : theme.text,
                             border: `1px solid ${selectedEnergyClass === ec ? '#e31e24' : themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
@@ -814,7 +814,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                               selectedMotorType === m
                                 ? '#e31e24'
                                 : themeMode === 'dark'
-                                  ? '#1e293b'
+                                  ? '#18181b'
                                   : '#f1f5f9',
                             color: selectedMotorType === m ? '#ffffff' : theme.text,
                             border: `1px solid ${selectedMotorType === m ? '#e31e24' : themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
@@ -855,7 +855,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                               selectedColor === c
                                 ? '#e31e24'
                                 : themeMode === 'dark'
-                                  ? '#1e293b'
+                                  ? '#18181b'
                                   : '#f1f5f9',
                             color: selectedColor === c ? '#ffffff' : theme.text,
                             border: `1px solid ${selectedColor === c ? '#e31e24' : themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
@@ -909,7 +909,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                         ? 'rgba(239, 68, 68, 0.18)'
                         : 'rgba(220, 38, 38, 0.12)'
                       : themeMode === 'dark'
-                        ? '#1e293b'
+                        ? '#18181b'
                         : '#f1f5f9',
                   color:
                     selectedCategory === 'all'
@@ -960,7 +960,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                           ? 'rgba(239, 68, 68, 0.18)'
                           : 'rgba(220, 38, 38, 0.12)'
                         : themeMode === 'dark'
-                          ? '#1e293b'
+                          ? '#18181b'
                           : '#f1f5f9',
                       color: isSelected
                         ? themeMode === 'dark'
@@ -1003,7 +1003,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                 gap: '12px',
                 padding: '10px 16px',
                 borderRadius: '14px',
-                backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.5)' : '#ffffff',
+                backgroundColor: themeMode === 'dark' ? '#121214' : '#ffffff',
                 border: 'none',
                 marginBottom: '14px',
               }}
@@ -1094,7 +1094,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                         gap: '6px',
                         padding: '4px 10px',
                         borderRadius: '8px',
-                        backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f1f5f9',
+                        backgroundColor: themeMode === 'dark' ? '#18181b' : '#f1f5f9',
                         border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`,
                         fontSize: '12px',
                         fontWeight: 600,
@@ -1148,7 +1148,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                       gap: '8px',
                       padding: '8px 14px',
                       borderRadius: '12px',
-                      backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f8fafc',
+                      backgroundColor: themeMode === 'dark' ? '#18181b' : '#f8fafc',
                       border: 'none',
                       color: theme.text,
                       fontSize: '13px',
@@ -1274,7 +1274,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                   style={{
                     display: 'flex',
                     alignItems: 'center',
-                    backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f1f5f9',
+                    backgroundColor: themeMode === 'dark' ? '#18181b' : '#f1f5f9',
                     borderRadius: '8px',
                     padding: '2px',
                     border: 'none',
@@ -1331,7 +1331,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                 style={{
                   textAlign: 'center',
                   padding: '64px 24px',
-                  backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#ffffff',
+                  backgroundColor: themeMode === 'dark' ? '#121214' : '#ffffff',
                   borderRadius: '20px',
                   border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
                 }}
@@ -1440,7 +1440,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
             maxWidth: '94vw',
             width: '680px',
             backgroundColor:
-              themeMode === 'dark' ? 'rgba(15, 23, 42, 0.94)' : 'rgba(255, 255, 255, 0.96)',
+              themeMode === 'dark' ? 'rgba(18, 18, 20, 0.96)' : 'rgba(255, 255, 255, 0.96)',
             backdropFilter: 'blur(16px)',
             WebkitBackdropFilter: 'blur(16px)',
             border: `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(226, 232, 240, 0.95)'}`,
@@ -1666,7 +1666,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                     backgroundColor: onlyDifferencesInModal
                       ? 'rgba(37, 99, 235, 0.15)'
                       : themeMode === 'dark'
-                        ? '#1e293b'
+                        ? '#18181b'
                         : '#f1f5f9',
                     color: onlyDifferencesInModal ? '#2563eb' : theme.text,
                     border: `1px solid ${onlyDifferencesInModal ? '#2563eb' : theme.border}`,
@@ -1714,7 +1714,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                     width: '32px',
                     height: '32px',
                     borderRadius: '50%',
-                    backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f1f5f9',
+                    backgroundColor: themeMode === 'dark' ? '#18181b' : '#f1f5f9',
                     border: 'none',
                     color: theme.text,
                     display: 'flex',
@@ -2235,7 +2235,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                     width: '100%',
                     padding: '10px 12px',
                     borderRadius: '10px',
-                    backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f8fafc',
+                    backgroundColor: themeMode === 'dark' ? '#18181b' : '#f8fafc',
                     border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#cbd5e1'}`,
                     color: theme.text,
                     fontSize: '13.5px',
@@ -2313,7 +2313,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                       flex: 1,
                       padding: '8px',
                       borderRadius: '8px',
-                      backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f8fafc',
+                      backgroundColor: themeMode === 'dark' ? '#18181b' : '#f8fafc',
                       border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#cbd5e1'}`,
                       color: theme.text,
                     }}
@@ -2327,7 +2327,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                       flex: 1,
                       padding: '8px',
                       borderRadius: '8px',
-                      backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f8fafc',
+                      backgroundColor: themeMode === 'dark' ? '#18181b' : '#f8fafc',
                       border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#cbd5e1'}`,
                       color: theme.text,
                     }}
@@ -2391,7 +2391,7 @@ export const CatalogPage: React.FC<CatalogPageProps> = ({
                   flex: 1,
                   padding: '12px',
                   borderRadius: '10px',
-                  backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f1f5f9',
+                  backgroundColor: themeMode === 'dark' ? '#18181b' : '#f1f5f9',
                   color: theme.text,
                   border: 'none',
                   fontSize: '13px',

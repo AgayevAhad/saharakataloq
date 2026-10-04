@@ -232,7 +232,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
           position: 'sticky',
           top: 0,
           backgroundColor:
-            themeMode === 'dark' ? 'rgba(15, 23, 42, 0.88)' : 'rgba(255, 255, 255, 0.85)',
+            themeMode === 'dark' ? 'rgba(9, 9, 11, 0.88)' : 'rgba(255, 255, 255, 0.85)',
           backdropFilter: 'blur(28px) saturate(190%)',
           WebkitBackdropFilter: 'blur(28px) saturate(190%)',
           border: 'none',
@@ -372,7 +372,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   gap: '12px',
                   padding: '0 18px',
                   borderRadius: '999px',
-                  backgroundColor: themeMode === 'dark' ? '#121824' : '#f8fafc',
+                  backgroundColor: themeMode === 'dark' ? 'var(--bg-secondary)' : '#f8fafc',
                   border: isSearchExpanded
                     ? '1px solid #e31e24'
                     : `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : '#e2e8f0'}`,
@@ -466,7 +466,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                       fontSize: '11px',
                       padding: '2px 8px',
                       borderRadius: '6px',
-                      backgroundColor: themeMode === 'dark' ? '#1f2937' : '#e2e8f0',
+                      backgroundColor: themeMode === 'dark' ? 'var(--bg-card)' : '#e2e8f0',
                       color: theme.text,
                       fontWeight: 600,
                       flexShrink: 0,
@@ -796,7 +796,9 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
           )}
 
           {/* Mobile Layout (<= 768px) matching siteUI.png */}
-          <div className="site-header-mobile-layout">
+          <div
+            className={`site-header-mobile-layout ${isSearchExpanded ? 'is-search-expanded' : ''}`}
+          >
             {/* Row 1: Logo + 📍 Bakı + 🤍 Wishlist + 🛒 Cart + Theme Toggle */}
             <div
               className="site-header-mobile-top-row"
@@ -809,6 +811,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
             >
               <button
                 type="button"
+                className="site-header-mobile-logo-btn"
                 onClick={() => onNavigate('home')}
                 style={{
                   background: 'transparent',
@@ -821,22 +824,37 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 }}
                 aria-label="Sahara Electronics Əsas Səhifə"
               >
-                <img
+                <ShimmerImage
                   src={
-                    themeMode === 'dark' ? '/media/SaharaLogo-dark.png' : '/media/SaharaLogo.png'
+                    isSearchExpanded
+                      ? '/media/SaharaAvatar.png'
+                      : themeMode === 'dark'
+                        ? '/media/SaharaLogo-dark.png'
+                        : '/media/SaharaLogo.png'
                   }
                   alt="Sahara Electronics"
+                  loading="eager"
+                  spinnerSize={12}
+                  containerClassName="site-header-mobile-logo-media"
+                  containerStyle={{
+                    width: isSearchExpanded ? '34px' : '82px',
+                    height: '34px',
+                    flexShrink: 0,
+                    transition: 'width 0.24s cubic-bezier(0.16, 1, 0.3, 1)',
+                  }}
                   style={{
-                    height: '36px',
-                    width: 'auto',
-                    maxWidth: '180px',
+                    width: '100%',
+                    height: '100%',
                     objectFit: 'contain',
                     display: 'block',
                   }}
                 />
               </button>
 
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div
+                className="site-header-mobile-actions"
+                style={{ display: 'flex', alignItems: 'center', gap: '8px' }}
+              >
                 {/* 1. Mobile Favorites Button 🤍 */}
                 <button
                   type="button"
@@ -938,6 +956,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 {/* 3. Mobile Share Button 🔗 */}
                 <button
                   type="button"
+                  className="site-header-mobile-share-btn"
                   onClick={() => {
                     if (onOpenCatalogShare) {
                       onOpenCatalogShare();
@@ -970,6 +989,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                 {/* 4. Mobile Location Badge: 📍 Bakı */}
                 <button
                   type="button"
+                  className="site-header-mobile-location-btn"
                   onClick={() => (onOpenDrawer ? onOpenDrawer() : onNavigate('stores'))}
                   data-testid="drawer-trigger-mobile"
                   style={{
@@ -1023,6 +1043,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
               }}
             >
               <div
+                className="site-header-mobile-search-trigger"
                 data-testid="header-search-trigger-mobile"
                 style={{
                   width: '100%',
@@ -1031,7 +1052,7 @@ export const SiteHeader: React.FC<SiteHeaderProps> = ({
                   gap: '8px',
                   padding: '8px 14px',
                   borderRadius: '999px',
-                  backgroundColor: themeMode === 'dark' ? '#121824' : '#f8fafc',
+                  backgroundColor: themeMode === 'dark' ? 'var(--bg-secondary)' : '#f8fafc',
                   border: isSearchExpanded
                     ? '1px solid #e31e24'
                     : `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : '#e2e8f0'}`,

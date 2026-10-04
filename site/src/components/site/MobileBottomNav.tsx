@@ -36,11 +36,11 @@ export const MobileBottomNav: React.FC<MobileBottomNavProps> = ({
         left: 0,
         right: 0,
         backgroundColor:
-          theme.mode === 'dark' ? 'rgba(11, 15, 23, 0.95)' : 'rgba(255, 255, 255, 0.96)',
+          theme.mode === 'dark' ? 'rgba(var(--bg-rgb), 0.85)' : 'rgba(255, 255, 255, 0.96)',
         backdropFilter: 'blur(16px)',
         WebkitBackdropFilter: 'blur(16px)',
         borderTop: `1px solid ${theme.border}`,
-        boxShadow: '0 -4px 20px rgba(0, 0, 0, 0.08)',
+        boxShadow: theme.mode === 'dark' ? '0 -4px 20px rgba(0, 0, 0, 0.4)' : '0 -4px 20px rgba(0, 0, 0, 0.08)',
         zIndex: DESIGN_TOKENS.zIndex.dock,
         padding: '6px 12px calc(6px + env(safe-area-inset-bottom, 0px))',
       }}

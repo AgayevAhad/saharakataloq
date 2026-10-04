@@ -56,7 +56,7 @@ export const CareersPage: React.FC<CareersPageProps> = ({
           padding: 'clamp(30px, 6vw, 64px)',
           background:
             themeMode === 'dark'
-              ? 'linear-gradient(135deg, #111827, #1e293b)'
+              ? 'linear-gradient(135deg, #09090b, #18181b)'
               : 'linear-gradient(135deg, #fff7f7, #ffffff)',
           border: `1px solid ${theme.border}`,
           boxShadow: themeMode === 'dark' ? 'none' : '0 24px 70px rgba(15, 23, 42, 0.08)',

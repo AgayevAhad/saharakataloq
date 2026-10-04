@@ -1,6 +1,7 @@
 # Dependencies & Build Output
 node_modules/
 __pycache__/
+.venv-product-media/
 dist/
 dist-ssr/
 build/
@@ -13,7 +14,9 @@ blob-report/
 # Media assets (Keep only logos and essential icons in Git; exclude heavy product photo/video archives)
 public/media/products/
 public/media/videos/
+public/media-test/
 data/media/
+scripts/website-product-images/.model-cache/
 
 # Database temporary, backup, and runtime lock/journal files
 *.sqlite

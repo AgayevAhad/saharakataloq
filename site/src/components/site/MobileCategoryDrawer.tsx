@@ -158,7 +158,7 @@ export const MobileCategoryDrawer: React.FC<MobileCategoryDrawerProps> = ({
           width: '100%',
           maxWidth: 'min(300px, 90vw)',
           height: '100%',
-          backgroundColor: themeMode === 'dark' ? '#0b0f17' : '#ffffff',
+          backgroundColor: themeMode === 'dark' ? '#09090b' : '#ffffff',
           color: theme.text,
           boxShadow: '-8px 0 32px rgba(0, 0, 0, 0.35)',
           display: 'flex',
@@ -171,13 +171,14 @@ export const MobileCategoryDrawer: React.FC<MobileCategoryDrawerProps> = ({
       >
         {/* Drawer Header */}
         <div
+          className="mobile-category-drawer-header"
           style={{
             padding: '16px 20px',
             borderBottom: `1px solid ${theme.border}`,
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'space-between',
-            backgroundColor: themeMode === 'dark' ? '#111722' : '#f8fafc',
+            backgroundColor: themeMode === 'dark' ? '#121214' : '#f8fafc',
             flexShrink: 0,
           }}
         >
@@ -253,7 +254,7 @@ export const MobileCategoryDrawer: React.FC<MobileCategoryDrawerProps> = ({
                 padding: '9px 10px',
                 borderRadius: '10px',
                 border: `1px solid ${theme.border}`,
-                background: themeMode === 'dark' ? '#161d2b' : '#f8fafc',
+                background: themeMode === 'dark' ? '#18181b' : '#f8fafc',
                 color: theme.text,
                 display: 'flex',
                 alignItems: 'center',
@@ -300,8 +301,8 @@ export const MobileCategoryDrawer: React.FC<MobileCategoryDrawerProps> = ({
                   padding: '8px 14px',
                   borderRadius: '8px',
                   border: `1px solid ${theme.border}`,
-                  backgroundColor: '#ffffff',
-                  color: '#0f172a',
+                  backgroundColor: theme.mode === 'dark' ? theme.bgSecondary : '#ffffff',
+                  color: theme.text,
                   fontSize: '13px',
                   fontWeight: 700,
                   cursor: 'pointer',
@@ -395,7 +396,7 @@ export const MobileCategoryDrawer: React.FC<MobileCategoryDrawerProps> = ({
                         style={{
                           fontSize: '11px',
                           color: theme.textMuted,
-                          backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f1f5f9',
+                          backgroundColor: themeMode === 'dark' ? '#18181b' : '#f1f5f9',
                           padding: '2px 6px',
                           borderRadius: '6px',
                           fontWeight: 500,
@@ -414,10 +415,11 @@ export const MobileCategoryDrawer: React.FC<MobileCategoryDrawerProps> = ({
 
         {/* Footer Navigation Links */}
         <div
+          className="mobile-category-drawer-footer"
           style={{
             padding: '16px 20px',
             borderTop: `1px solid ${theme.border}`,
-            backgroundColor: themeMode === 'dark' ? '#111722' : '#f8fafc',
+            backgroundColor: themeMode === 'dark' ? '#121214' : '#f8fafc',
             display: 'flex',
             flexDirection: 'column',
             gap: '8px',

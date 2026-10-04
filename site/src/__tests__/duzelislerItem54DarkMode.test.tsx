@@ -148,13 +148,13 @@ describe('Item 54 Dark Mode Refinements & Contrast Verification', () => {
 
       const stage = container.querySelector('.product-detail-image-stage') as HTMLElement;
       expect(stage).not.toBeNull();
-      expect(stage.style.backgroundColor).toMatch(/rgb\(255, 255, 255\)|#ffffff/);
+      expect(stage.style.backgroundColor).toMatch(/rgb\(255, 255, 255\)|#ffffff|transparent/);
 
       // Logo container above stage should have light/white background
       const logoImg = container.querySelector('img[alt="ARDO"]') as HTMLElement;
       expect(logoImg).not.toBeNull();
       const logoBox = logoImg.parentElement as HTMLElement;
-      expect(logoBox.style.backgroundColor).toMatch(/rgb\(255, 255, 255\)|#ffffff/);
+      expect(logoBox.style.backgroundColor).toMatch(/rgb\(255, 255, 255\)|#ffffff|transparent/);
     });
   });
 });

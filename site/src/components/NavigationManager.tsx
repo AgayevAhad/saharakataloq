@@ -322,7 +322,7 @@ export const NavigationManager: React.FC<NavigationManagerProps> = ({
                       justifyContent: 'space-between',
                       padding: '12px',
                       borderRadius: '8px',
-                      backgroundColor: theme.mode === 'dark' ? '#161d2b' : '#f8fafc',
+                      backgroundColor: theme.mode === 'dark' ? '#18181b' : '#f8fafc',
                       border: `1px solid ${theme.border}`,
                       gap: '12px',
                     }}
@@ -662,7 +662,7 @@ export const NavigationManager: React.FC<NavigationManagerProps> = ({
                     padding: '8px 12px',
                     borderRadius: '8px',
                     border: `1px solid ${theme.border}`,
-                    backgroundColor: theme.mode === 'dark' ? '#161d2b' : '#ffffff',
+                    backgroundColor: theme.mode === 'dark' ? '#18181b' : '#ffffff',
                     color: theme.text,
                     fontSize: '13px',
                   }}
@@ -692,7 +692,7 @@ export const NavigationManager: React.FC<NavigationManagerProps> = ({
                     padding: '8px 12px',
                     borderRadius: '8px',
                     border: `1px solid ${theme.border}`,
-                    backgroundColor: theme.mode === 'dark' ? '#161d2b' : '#ffffff',
+                    backgroundColor: theme.mode === 'dark' ? '#18181b' : '#ffffff',
                     color: theme.text,
                     fontSize: '13px',
                   }}
@@ -720,7 +720,7 @@ export const NavigationManager: React.FC<NavigationManagerProps> = ({
                       padding: '8px 10px',
                       borderRadius: '8px',
                       border: `1px solid ${theme.border}`,
-                      backgroundColor: theme.mode === 'dark' ? '#161d2b' : '#ffffff',
+                      backgroundColor: theme.mode === 'dark' ? '#18181b' : '#ffffff',
                       color: theme.text,
                       fontSize: '13px',
                     }}
@@ -753,7 +753,7 @@ export const NavigationManager: React.FC<NavigationManagerProps> = ({
                       padding: '8px 10px',
                       borderRadius: '8px',
                       border: `1px solid ${theme.border}`,
-                      backgroundColor: theme.mode === 'dark' ? '#161d2b' : '#ffffff',
+                      backgroundColor: theme.mode === 'dark' ? '#18181b' : '#ffffff',
                       color: theme.text,
                       fontSize: '13px',
                     }}

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useMemo } from 'react';
-import { Info, Moon, Search, Share2, Sun, X, MapPin, Heart, ShoppingCart } from 'lucide-react';
+import { Moon, Search, Share2, Sun, X, MapPin, Heart, ShoppingCart } from 'lucide-react';
 import {
   Brand,
   CatalogCategory,
@@ -9,6 +9,7 @@ import {
 } from '../types/product';
 import { ThemeColors, DESIGN_TOKENS } from '../types/theme';
 import { SaharaLogo } from './SaharaLogo';
+import { ShimmerImage } from './ShimmerImage';
 import { SocialPopoverButton } from './SocialIcons';
 import { CategoryGlyph } from './CategoryGlyph';
 
@@ -29,7 +30,8 @@ interface HeaderProps {
   searchQuery: string;
   onSearchChange: (text: string) => void;
   onSelectProduct?: (product: Product) => void;
-  onOpenInverterInfo: () => void;
+  /** Keçmiş inteqrasiyalar üçün saxlanılır; məlumat ikonu artıq header-də göstərilmir. */
+  onOpenInverterInfo?: () => void;
   onOpenCatalogShare: () => void;
   onOpenDrawer?: () => void;
   totalCount: number;
@@ -39,6 +41,7 @@ interface HeaderProps {
   onOpenFavorites?: () => void;
   onOpenCart?: () => void;
   currentView?: 'catalog' | 'cart' | 'favorites';
+  onLogoClick?: () => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
@@ -56,7 +59,6 @@ export const Header: React.FC<HeaderProps> = ({
   searchQuery,
   onSearchChange,
   onSelectProduct: _onSelectProduct,
-  onOpenInverterInfo,
   onOpenCatalogShare,
   onOpenDrawer,
   totalCount,
@@ -66,6 +68,7 @@ export const Header: React.FC<HeaderProps> = ({
   onOpenFavorites,
   onOpenCart,
   currentView = 'catalog',
+  onLogoClick,
 }) => {
   const [searchFocused, setSearchFocused] = useState(false);
   const searchInputRef = useRef<HTMLInputElement>(null);
@@ -128,18 +131,58 @@ export const Header: React.FC<HeaderProps> = ({
         position: 'sticky',
         top: 0,
         zIndex: DESIGN_TOKENS.zIndex.sticky,
-        backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.96)' : 'rgba(255, 255, 255, 0.97)',
-        backdropFilter: 'blur(20px)',
-        WebkitBackdropFilter: 'blur(20px)',
-        borderBottom: `1px solid ${theme.border}`,
+        backgroundColor: isDarkMode ? 'rgba(var(--bg-rgb), 0.85)' : 'rgba(255, 255, 255, 0.85)',
+        backdropFilter: 'blur(28px) saturate(190%)',
+        WebkitBackdropFilter: 'blur(28px) saturate(190%)',
+        borderBottom: 'none',
         boxShadow: isDarkMode ? '0 4px 24px rgba(0, 0, 0, 0.45)' : '0 4px 20px rgba(0, 0, 0, 0.06)',
       }}
     >
       <div className="catalog-header-inner">
         {/* 1. Yuxarı Sətir: Böyüdülmüş Sol Logo - Mərkəzdə Sadə Axtarış - Sağda İkonlar */}
-        <div className="header-top-row">
-          <div className="brand-lockup" aria-label="Sahara Electronics kataloqu">
-            <SaharaLogo className="header-sahara-logo" isDark={isDarkMode} />
+        <div className={`header-top-row ${searchFocused ? 'is-search-focused' : ''}`}>
+          <div
+            className="brand-lockup"
+            role={onLogoClick ? 'button' : undefined}
+            tabIndex={onLogoClick ? 0 : undefined}
+            onClick={onLogoClick}
+            onKeyDown={
+              onLogoClick
+                ? (e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      onLogoClick();
+                    }
+                  }
+                : undefined
+            }
+            style={{ cursor: onLogoClick ? 'pointer' : undefined, userSelect: 'none' }}
+            aria-label="Sahara Electronics kataloqu"
+          >
+            <SaharaLogo
+              className="header-sahara-logo header-sahara-logo-desktop"
+              isDark={isDarkMode}
+            />
+            <ShimmerImage
+              src={
+                searchFocused
+                  ? '/media/SaharaAvatar.png'
+                  : isDarkMode
+                    ? '/media/SaharaLogo-dark.png'
+                    : '/media/SaharaLogo.png'
+              }
+              alt="Sahara Electronics"
+              loading="eager"
+              spinnerSize={12}
+              containerClassName="header-sahara-logo-mobile"
+              containerStyle={{
+                width: searchFocused ? '34px' : '82px',
+                height: '34px',
+                flexShrink: 0,
+                transition: 'width 0.24s cubic-bezier(0.16, 1, 0.3, 1)',
+              }}
+              style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+            />
             {settings?.headerCaption && (
               <span className="brand-caption" style={{ color: theme.textMuted }}>
                 {settings.headerCaption}
@@ -206,7 +249,7 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={onOpenFavorites}
                 style={{
                   position: 'relative',
-                  color: currentView === 'favorites' || favoritesCount > 0 ? '#ef4444' : theme.text,
+                  color: currentView === 'favorites' ? '#ef4444' : theme.text,
                   border: 'none',
                   background: 'transparent',
                   cursor: 'pointer',
@@ -215,17 +258,15 @@ export const Header: React.FC<HeaderProps> = ({
                 onMouseEnter={(e) => (e.currentTarget.style.color = '#ef4444')}
                 onMouseLeave={(e) =>
                   (e.currentTarget.style.color =
-                    currentView === 'favorites' || favoritesCount > 0 ? '#ef4444' : theme.text)
+                    currentView === 'favorites' ? '#ef4444' : theme.text)
                 }
                 title={favoritesCount > 0 ? `Seçilmişlər (${favoritesCount})` : 'Seçilmişlər'}
                 aria-label={favoritesCount > 0 ? `Seçilmişlər (${favoritesCount})` : 'Seçilmişlər'}
               >
                 <Heart
                   size={20}
-                  fill={favoritesCount > 0 || currentView === 'favorites' ? '#ef4444' : 'none'}
-                  color={
-                    favoritesCount > 0 || currentView === 'favorites' ? '#ef4444' : 'currentColor'
-                  }
+                  fill="none"
+                  color={currentView === 'favorites' ? '#ef4444' : 'currentColor'}
                 />
                 {favoritesCount > 0 && (
                   <span
@@ -263,7 +304,7 @@ export const Header: React.FC<HeaderProps> = ({
                 onClick={onOpenCart}
                 style={{
                   position: 'relative',
-                  color: currentView === 'cart' || cartCount > 0 ? '#dc2626' : theme.text,
+                  color: currentView === 'cart' ? '#dc2626' : theme.text,
                   border: 'none',
                   background: 'transparent',
                   cursor: 'pointer',
@@ -271,15 +312,14 @@ export const Header: React.FC<HeaderProps> = ({
                 }}
                 onMouseEnter={(e) => (e.currentTarget.style.color = '#dc2626')}
                 onMouseLeave={(e) =>
-                  (e.currentTarget.style.color =
-                    currentView === 'cart' || cartCount > 0 ? '#dc2626' : theme.text)
+                  (e.currentTarget.style.color = currentView === 'cart' ? '#dc2626' : theme.text)
                 }
                 title={cartCount > 0 ? `Səbət (${cartCount})` : 'Səbət'}
                 aria-label={cartCount > 0 ? `Səbət (${cartCount})` : 'Səbət'}
               >
                 <ShoppingCart
                   size={20}
-                  color={currentView === 'cart' || cartCount > 0 ? '#dc2626' : 'currentColor'}
+                  color={currentView === 'cart' ? '#dc2626' : 'currentColor'}
                 />
                 {cartCount > 0 && (
                   <span
@@ -351,26 +391,6 @@ export const Header: React.FC<HeaderProps> = ({
               </button>
             )}
 
-            {/* Texnologiya Məlumatı / Info "i" */}
-            <button
-              type="button"
-              className="icon-action header-info-btn"
-              onClick={onOpenInverterInfo}
-              style={{
-                color: theme.text,
-                border: 'none',
-                background: 'transparent',
-                cursor: 'pointer',
-                transition: 'color 0.15s ease, transform 0.15s ease',
-              }}
-              onMouseEnter={(e) => (e.currentTarget.style.color = '#dc2626')}
-              onMouseLeave={(e) => (e.currentTarget.style.color = theme.text)}
-              title="Texnologiyalar və bələdçi haqqında"
-              aria-label="Texnologiyalar və bələdçi haqqında"
-            >
-              <Info size={20} color="currentColor" />
-            </button>
-
             {/* Sosial Popover Düymələri */}
             {settings?.instagramUrl && (
               <SocialPopoverButton
@@ -438,7 +458,7 @@ export const Header: React.FC<HeaderProps> = ({
                     ? 'rgba(227, 30, 36, 0.20)'
                     : 'rgba(220, 38, 38, 0.12)'
                   : isDarkMode
-                    ? '#1e293b'
+                    ? '#18181b'
                     : '#f1f5f9',
               color: selectedCategory === 'all' ? theme.primary : theme.text,
               border: 'none',
@@ -476,7 +496,7 @@ export const Header: React.FC<HeaderProps> = ({
                       ? 'rgba(227, 30, 36, 0.20)'
                       : 'rgba(220, 38, 38, 0.12)'
                     : isDarkMode
-                      ? '#1e293b'
+                      ? '#18181b'
                       : '#f1f5f9',
                   color: isActive ? theme.primary : theme.text,
                   border: 'none',

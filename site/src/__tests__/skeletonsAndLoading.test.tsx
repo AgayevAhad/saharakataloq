@@ -38,7 +38,14 @@ describe('Skeleton Loading & Shimmer Animation Suite', () => {
     expect(card.classList.contains('skeleton-card')).toBe(true);
 
     // Verify media box and content placeholders exist
-    expect(container.querySelector('.product-card-media')).toBeTruthy();
+    const media = container.querySelector('.product-card-media') as HTMLElement;
+    expect(media).toBeTruthy();
+    expect(media.style.aspectRatio).toBe('1 / 1');
+    expect(media.style.flex).toBe('0 0 339px');
+    expect(container.querySelector('.product-card-details')).toBeTruthy();
+    expect(container.querySelectorAll('.skeleton-mobile-contact-action')).toHaveLength(2);
+    expect(container.querySelector('.skeleton-mobile-share-action')).toBeTruthy();
+    expect(container.querySelector('.skeleton-mobile-details-action')).toBeTruthy();
     expect(container.querySelectorAll('.skeleton-box').length).toBeGreaterThan(5);
   });
 

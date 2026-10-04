@@ -37,7 +37,16 @@ export function useCatalogFilters({
   );
   const activeBrands = useMemo(() => brands.filter((brand) => brand.active), [brands]);
 
-  const [selectedCategory, setSelectedCategory] = useState(initialCategory || 'all');
+  const resolveCategory = useCallback(
+    (cat?: string | null) => {
+      if (!cat || cat === 'all') return 'all';
+      const found = categories.find((c) => c.id === cat || c.slug === cat);
+      return found ? found.id : cat;
+    },
+    [categories]
+  );
+
+  const [selectedCategory, setSelectedCategory] = useState(() => resolveCategory(initialCategory));
   const [selectedBrands, setSelectedBrands] = useState<string[]>(
     initialBrand && initialBrand !== 'all' ? [initialBrand] : []
   );
@@ -52,8 +61,8 @@ export function useCatalogFilters({
   const [maxPrice, setMaxPrice] = useState<number | null>(null);
 
   useEffect(() => {
-    if (initialCategory) setSelectedCategory(initialCategory);
-  }, [initialCategory]);
+    if (initialCategory) setSelectedCategory(resolveCategory(initialCategory));
+  }, [initialCategory, resolveCategory]);
 
   useEffect(() => {
     if (initialBrand && initialBrand !== 'all') setSelectedBrands([initialBrand]);

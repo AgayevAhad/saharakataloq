@@ -546,7 +546,8 @@
 
 .admin-card-image-wrap {
   width: 100%;
-  height: 215px;
+  height: auto;
+  aspect-ratio: 1 / 1;
   position: relative;
   background: rgba(127, 127, 127, 0.04);
   display: flex;
@@ -560,7 +561,7 @@
   width: 100%;
   height: 100%;
   object-fit: contain;
-  padding: 12px;
+  padding: 0;
   box-sizing: border-box;
   transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
@@ -1995,9 +1996,16 @@
 @media (max-width: 640px) {
   .header-top-row {
     gap: 6px !important;
-    flex-wrap: nowrap !important;
+    flex-wrap: wrap !important;
     justify-content: space-between !important;
     align-items: center !important;
+  }
+  .header-top-row .catalog-search {
+    order: 3 !important;
+    flex: 0 0 100% !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 4px 0 0 !important;
   }
   .brand-lockup {
     flex: 0 0 auto !important;

@@ -126,7 +126,7 @@ export const FloatingActions: React.FC<FloatingActionsProps> = ({
           gap: '6px',
           padding: '6px 12px',
           borderRadius: '30px',
-          backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.88)' : 'rgba(15, 23, 42, 0.86)',
+          backgroundColor: isDarkMode ? 'rgba(24, 24, 27, 0.94)' : '#18181b',
           color: '#ffffff',
           border: 'none',
           boxShadow: '0 4px 16px rgba(0, 0, 0, 0.20)',
@@ -165,7 +165,7 @@ export const FloatingActions: React.FC<FloatingActionsProps> = ({
             display: 'inline-flex',
             alignItems: 'center',
             justifyContent: 'center',
-            backgroundColor: isDarkMode ? 'rgba(30, 41, 59, 0.88)' : 'rgba(255, 255, 255, 0.88)',
+            backgroundColor: isDarkMode ? theme.bgCard : 'rgba(255, 255, 255, 0.88)',
             color: isDarkMode ? '#f8fafc' : '#1e293b',
             border: 'none',
             boxShadow: isDarkMode

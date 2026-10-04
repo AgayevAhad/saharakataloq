@@ -67,6 +67,20 @@ function parseRetryAfter(response: Response): number | null {
   return null;
 }
 
+function buildApiErrorMessage(response: Response, errorData: unknown): string {
+  if (errorData && typeof errorData === 'object') {
+    const payload = errorData as { message?: unknown; error?: unknown };
+    if (typeof payload.message === 'string' && payload.message.trim()) {
+      return payload.message.trim();
+    }
+    if (typeof payload.error === 'string' && payload.error.trim()) {
+      return payload.error.trim();
+    }
+  }
+  if (typeof errorData === 'string' && errorData.trim()) return errorData.trim();
+  return `HTTP ${response.status}: ${response.statusText || 'Sorğu uğursuz oldu'}`;
+}
+
 export async function request<T = unknown>(url: string, options: RequestOptions = {}): Promise<T> {
   const {
     method = 'GET',
@@ -143,7 +157,7 @@ export async function request<T = unknown>(url: string, options: RequestOptions 
         }
 
         throw new ApiError(
-          `HTTP ${response.status}: ${response.statusText || 'Sorğu uğursuz oldu'}`,
+          buildApiErrorMessage(response, errorData),
           response.status,
           errorData,
           response.headers
@@ -278,7 +292,7 @@ export async function requestWithMeta<T = unknown>(
         }
 
         throw new ApiError(
-          `HTTP ${response.status}: ${response.statusText || 'Sorğu uğursuz oldu'}`,
+          buildApiErrorMessage(response, errorData),
           response.status,
           errorData,
           response.headers

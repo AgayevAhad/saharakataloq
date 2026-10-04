@@ -119,7 +119,7 @@ export const SocialPopoverButton: React.FC<SocialPopoverButtonProps> = ({
         onClick={handleClick}
         style={{
           backgroundColor:
-            theme.mode === 'dark' ? 'rgba(15, 23, 42, 0.96)' : 'rgba(255, 255, 255, 0.98)',
+            theme.mode === 'dark' ? 'rgba(18, 18, 20, 0.96)' : 'rgba(255, 255, 255, 0.98)',
           border: `1px solid ${theme.mode === 'dark' ? 'rgba(255,255,255,0.15)' : theme.border}`,
           color: theme.text,
           cursor: 'pointer',

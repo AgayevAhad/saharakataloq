@@ -134,7 +134,7 @@ export const TrustHighlights: React.FC<TrustHighlightsProps> = ({ items, theme, 
               className={`trust-highlight-card trust-btn-${item.id} scroll-reveal-item`}
               title={`${item.title} — ${targetRoute} səhifəsinə keç`}
               style={{
-                backgroundColor: isDark ? '#1c2737' : '#ffffff',
+                backgroundColor: isDark ? '#121214' : '#ffffff',
                 border: `1px solid ${isDark ? 'rgba(255, 255, 255, 0.1)' : '#e2e8f0'}`,
                 borderRadius: '16px',
                 padding: '18px 20px',

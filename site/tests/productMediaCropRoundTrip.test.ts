@@ -3,6 +3,7 @@ import { existsSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createCatalogDatabase } from '../backend/catalogDatabase.mjs';
+import { applyPimV2Schema } from '../backend/pimV2Migration.mjs';
 import { ProductRepository } from '../backend/productRepository.mjs';
 
 describe('product image metadata database round-trip', () => {
@@ -101,6 +102,7 @@ describe('product image metadata database round-trip', () => {
         },
       ],
     });
+    applyPimV2Schema(catalogDatabase.db);
 
     const repository = new ProductRepository(catalogDatabase.db);
     const initial = repository.getProductById('product-roundtrip');

@@ -101,6 +101,24 @@ describe('ApiClient Centralized Network Utility Suite', () => {
     expect(callCount).toBe(1); // Strict: Mutation not retried
   });
 
+  it('shows the server conflict explanation instead of a generic HTTP 409 label', async () => {
+    global.fetch = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 409,
+      statusText: 'Conflict',
+      headers: new Headers({ 'content-type': 'application/json' }),
+      json: async () => ({
+        error: 'PUBLIC_DB_SCHEMA_NOT_READY',
+        message: 'İctimai verilənlər bazası dərc üçün hazır deyil.',
+      }),
+    });
+
+    await expect(apiClient.post('/api/admin/publish')).rejects.toThrow(
+      'İctimai verilənlər bazası dərc üçün hazır deyil.'
+    );
+    expect(global.fetch).toHaveBeenCalledTimes(1);
+  });
+
   it('times out and throws TimeoutError when request exceeds timeoutMs', async () => {
     global.fetch = vi.fn().mockImplementation((_url, { signal }: { signal: AbortSignal }) => {
       return new Promise((_resolve, reject) => {

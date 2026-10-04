@@ -264,6 +264,9 @@ export const createCatalogDatabase = (databasePath) => {
   if (!productColumns.includes('original_image')) {
     db.exec('ALTER TABLE products ADD COLUMN original_image TEXT DEFAULT NULL;');
   }
+  if (!productColumns.includes('dark_image')) {
+    db.exec('ALTER TABLE products ADD COLUMN dark_image TEXT DEFAULT NULL;');
+  }
 
   const productMediaColumns = db
     .prepare('PRAGMA table_info(product_media)')
@@ -283,6 +286,9 @@ export const createCatalogDatabase = (databasePath) => {
   }
   if (!productMediaColumns.includes('original_url')) {
     db.exec('ALTER TABLE product_media ADD COLUMN original_url TEXT DEFAULT NULL;');
+  }
+  if (!productMediaColumns.includes('dark_url')) {
+    db.exec('ALTER TABLE product_media ADD COLUMN dark_url TEXT DEFAULT NULL;');
   }
 
   const settingsColumns = db
@@ -430,6 +436,11 @@ export const createCatalogDatabase = (databasePath) => {
           id: item.id,
           type: item.media_type,
           url: item.url,
+          darkUrl:
+            item.dark_url ||
+            (typeof item.url === 'string' && item.url.includes('_light.')
+              ? item.url.replace('_light.', '_dark.')
+              : undefined),
           alt: item.alt_text || undefined,
           originalName: item.original_name || undefined,
           poster: item.poster || undefined,
@@ -451,6 +462,11 @@ export const createCatalogDatabase = (databasePath) => {
           category: row.category_id,
           categoryName: row.category_name,
           image: row.primary_image,
+          darkImage:
+            row.dark_image ||
+            (typeof row.primary_image === 'string' && row.primary_image.includes('_light.')
+              ? row.primary_image.replace('_light.', '_dark.')
+              : undefined),
           originalImage: row.original_image || undefined,
           cropRect: row.crop_rect
             ? typeof row.crop_rect === 'string'

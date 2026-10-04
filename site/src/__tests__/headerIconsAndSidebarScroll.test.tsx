@@ -8,12 +8,11 @@ import { DEFAULT_CATALOG } from '../data/catalog';
 import { lightTheme } from '../types/theme';
 
 describe('Header Action Icons Ordering & Sidebar Scroll Refinements', () => {
-  it('Header renders action icons in exact order: favorites, cart, share, location, info, theme toggle without box for share', () => {
+  it('Header renders favorites, cart, share, location and theme actions without the removed info action', () => {
     const onOpenFavorites = vi.fn();
     const onOpenCart = vi.fn();
     const onOpenCatalogShare = vi.fn();
     const onOpenDrawer = vi.fn();
-    const onOpenInverterInfo = vi.fn();
     const onToggleTheme = vi.fn();
 
     const { container } = render(
@@ -27,7 +26,6 @@ describe('Header Action Icons Ordering & Sidebar Scroll Refinements', () => {
         onSelectBrand={vi.fn()}
         searchQuery=""
         onSearchChange={vi.fn()}
-        onOpenInverterInfo={onOpenInverterInfo}
         onOpenCatalogShare={onOpenCatalogShare}
         onOpenDrawer={onOpenDrawer}
         totalCount={DEFAULT_CATALOG.products.length}
@@ -66,6 +64,7 @@ describe('Header Action Icons Ordering & Sidebar Scroll Refinements', () => {
     // 4. Fourth button is Location Drawer
     const drawerBtn = container.querySelector('.drawer-trigger-btn') as HTMLButtonElement;
     expect(drawerBtn).toBeTruthy();
+    expect(container.querySelector('.header-info-btn')).toBeNull();
 
     // Verify hover interactions trigger without errors
     fireEvent.mouseEnter(shareBtn);

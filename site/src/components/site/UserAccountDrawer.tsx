@@ -548,7 +548,7 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
                     backgroundColor:
                       authMode === 'login'
                         ? themeMode === 'dark'
-                          ? '#1e293b'
+                          ? '#18181b'
                           : '#ffffff'
                         : 'transparent',
                     color: authMode === 'login' ? '#dc2626' : theme.textMuted,
@@ -581,7 +581,7 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
                     backgroundColor:
                       authMode === 'register'
                         ? themeMode === 'dark'
-                          ? '#1e293b'
+                          ? '#18181b'
                           : '#ffffff'
                         : 'transparent',
                     color: authMode === 'register' ? '#dc2626' : theme.textMuted,
@@ -1681,7 +1681,7 @@ export const UserAccountDrawer: React.FC<UserAccountDrawerProps> = ({
                 padding: '5px 12px',
                 borderRadius: '8px',
                 border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#cbd5e1'}`,
-                backgroundColor: themeMode === 'dark' ? '#1e293b' : '#ffffff',
+                backgroundColor: themeMode === 'dark' ? '#18181b' : '#ffffff',
                 color: theme.text,
                 fontSize: '12px',
                 fontWeight: 700,

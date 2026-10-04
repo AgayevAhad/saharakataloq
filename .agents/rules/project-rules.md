@@ -4,11 +4,11 @@ trigger: always_on
 
 # Project Rules & Workflow Constraints
 
-## 1. Branch Strategy & Git Protection
-- **ALWAYS develop, test, commit, and push Sahara site changes ONLY on the `saharasitedev` branch** (`git push origin saharasitedev`).
-- **NEVER commit, push, merge, rebase, or cherry-pick Sahara site changes into catalog branches, `dev`, `main`, or any other branch.**
-- `saharasitemain` is the stable release branch and may be updated ONLY after the user explicitly approves that specific release.
-- Before changing site files, verify that the current branch is `saharasitedev`; otherwise stop. Never force-push or delete either Sahara site branch without explicit user authorization.
+## 1. User-Controlled Git Operations
+- **NEVER commit or push to any branch unless the user explicitly requests that exact Git operation.**
+- When the user explicitly requests a commit or push, execute it only for the branch or branches the user names after verifying the target refs and payload.
+- Do not infer Git permission from implementation requests, completion language, or earlier Git approvals. Each later commit or push requires a new explicit user instruction.
+- Never force-push, delete a branch, rewrite history, merge, rebase, or cherry-pick unless the user explicitly authorizes that exact operation and scope.
 
 ## 2. No Raw Sample / Example Media on GitHub
 - Raw photo source folders (`Foto/`) and raw example specification files (`File/`) are reference samples and MUST NOT be committed or pushed to GitHub. Keep them ignored in `.gitignore`.

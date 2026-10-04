@@ -308,6 +308,7 @@ test.describe('Duzelisler.md new desktop and general completion', () => {
         if (phase === 'hover') await card.hover();
         if (phase === 'after') await page.mouse.move(2, 2);
         await page.waitForTimeout(120);
+        await expect(card.locator('..')).toHaveCSS('opacity', '1');
         const state = await readVisualState(card);
         expect(state, `${index}:${phase}`).toMatchObject({
           cardOpacity: '1',

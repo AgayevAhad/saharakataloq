@@ -349,7 +349,7 @@ export const ProductVideoReviewsSection: React.FC<ProductVideoReviewsSectionProp
             height: '46px',
             borderRadius: '50%',
             backgroundColor:
-              theme.mode === 'dark' ? 'rgba(15, 23, 42, 0.88)' : 'rgba(255, 255, 255, 0.94)',
+              theme.mode === 'dark' ? 'rgba(18, 18, 20, 0.94)' : 'rgba(255, 255, 255, 0.94)',
             backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)',
             border: `1px solid ${theme.border}`,
@@ -380,7 +380,7 @@ export const ProductVideoReviewsSection: React.FC<ProductVideoReviewsSectionProp
             height: '46px',
             borderRadius: '50%',
             backgroundColor:
-              theme.mode === 'dark' ? 'rgba(15, 23, 42, 0.88)' : 'rgba(255, 255, 255, 0.94)',
+              theme.mode === 'dark' ? 'rgba(18, 18, 20, 0.94)' : 'rgba(255, 255, 255, 0.94)',
             backdropFilter: 'blur(8px)',
             WebkitBackdropFilter: 'blur(8px)',
             border: `1px solid ${theme.border}`,

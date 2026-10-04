@@ -129,12 +129,12 @@ export const lightTheme: ThemeColors = {
 
 export const darkTheme: ThemeColors = {
   mode: 'dark',
-  bg: '#17202e',
-  bgSecondary: '#1c2737',
-  bgCard: '#253247',
-  bgCardHover: '#2c3b51',
-  border: '#35465c',
-  borderHover: '#50647e',
+  bg: '#09090b',
+  bgSecondary: '#121214',
+  bgCard: '#121214',
+  bgCardHover: '#1f1f22',
+  border: '#27272a',
+  borderHover: '#3f3f46',
   text: '#f8fafc',
   textSecondary: '#cbd5e1',
   textMuted: '#94a3b8',
@@ -142,9 +142,45 @@ export const darkTheme: ThemeColors = {
   primaryHover: '#dc2626',
   primaryLight: '#450a0a',
   primaryGlow: 'rgba(239, 68, 68, 0.25)',
-  surface: '#253247',
+  surface: '#121214',
   badgeBg: '#2d0f0f',
   badgeText: '#fca5a5',
   success: '#10b981',
   cardShadow: '0 8px 30px rgba(0, 0, 0, 0.4)',
+};
+
+export const darkSlateTheme: ThemeColors = {
+  ...darkTheme,
+  mode: 'dark',
+  bg: '#09090b',
+  bgSecondary: '#18181b',
+  bgCard: '#18181b',
+  bgCardHover: '#27272a',
+  border: '#27272a',
+  borderHover: '#3f3f46',
+  surface: '#18181b',
+};
+
+export const darkGlassTheme: ThemeColors = {
+  ...darkTheme,
+  mode: 'dark',
+  bg: '#09090b',
+  bgSecondary: '#121214',
+  bgCard: '#121214',
+  bgCardHover: '#1f1f22',
+  border: '#27272a',
+  borderHover: '#3f3f46',
+  surface: '#121214',
+};
+
+export const darkOledTheme: ThemeColors = {
+  ...darkTheme,
+  mode: 'dark',
+  bg: '#000000',
+  bgSecondary: '#0a0a0a',
+  bgCard: '#0a0a0a',
+  bgCardHover: '#171717',
+  border: '#1f2937',
+  borderHover: '#374151',
+  surface: '#0a0a0a',
 };

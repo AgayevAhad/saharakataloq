@@ -101,6 +101,9 @@ export const AdminCatalogPreview: React.FC<{
                 onWhatsApp={() => {}}
                 onCall={() => {}}
                 onCopyLink={() => {}}
+                onAddToCart={() => {}}
+                onToggleFavorite={() => {}}
+                onToggleCompare={() => {}}
               />
             );
           })}

@@ -5,6 +5,7 @@ import { randomBytes } from 'node:crypto';
 import { extname, join, normalize, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { createCatalogDatabase } from './backend/catalogDatabase.mjs';
+import { ensureCatalogPublishSchema } from './backend/catalogSchemaBootstrap.mjs';
 import { validateAndResolveDataDir } from './backend/dataPathSecurity.mjs';
 import { executeStartupCrashRecovery } from './backend/shadowCutover.mjs';
 import {
@@ -205,6 +206,11 @@ let pubWorker = null;
 try {
   catalogDatabase = createCatalogDatabase(DATABASE_FILE);
   draftDatabase = createCatalogDatabase(DRAFT_DATABASE_FILE);
+
+  // Live publish requires Phase 3 on both sides. These migrations are
+  // additive/idempotent and preserve the legacy catalog and media records.
+  ensureCatalogPublishSchema(catalogDatabase.db);
+  ensureCatalogPublishSchema(draftDatabase.db);
 
   if (isPhase5BrandRailReady(draftDatabase.db)) {
     applyPhase5BrandRailSchema(draftDatabase.db);
@@ -420,7 +426,7 @@ const serveFile = async (res, pathname) => {
         res.writeHead(200, {
           ...securityHeaders,
           'Content-Type': 'text/html; charset=utf-8',
-          'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=600',
+          'Cache-Control': 'no-cache, must-revalidate',
           'X-SSR': 'isr-hit',
         });
         res.end(cached.html);
@@ -535,7 +541,7 @@ const serveFile = async (res, pathname) => {
           res.writeHead(200, {
             ...securityHeaders,
             'Content-Type': 'text/html; charset=utf-8',
-            'Cache-Control': 'public, max-age=60, s-maxage=300, stale-while-revalidate=600',
+            'Cache-Control': 'no-cache, must-revalidate',
             'X-SSR': 'rendered',
           });
           res.end(html);

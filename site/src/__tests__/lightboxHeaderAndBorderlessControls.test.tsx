@@ -113,10 +113,12 @@ describe('ProductDetailModal Lightbox White Background & Integrated Top Header C
     expect(lightboxModal).toBeTruthy();
     expect(['#ffffff', 'rgb(255, 255, 255)']).toContain(lightboxModal.style.backgroundColor);
 
-    // Top header should contain clean product title
+    // Top header should contain clean product title and have transparent background
     const topHeader = document.querySelector('.lightbox-top-header') as HTMLDivElement;
     expect(topHeader).toBeTruthy();
     expect(topHeader.textContent).toContain('Aspirator Ardo AR6120 White');
+    expect(['transparent', 'none', '']).toContain(topHeader.style.background);
+    expect(['none', '']).toContain(topHeader.style.backdropFilter);
 
     // Zoom controls should be integrated INSIDE the top header panel
     const zoomControls = topHeader.querySelector('.zoom-floating-controls');
@@ -209,7 +211,7 @@ describe('ProductDetailModal Lightbox White Background & Integrated Top Header C
     expect(screen.getByText('100%')).toBeTruthy();
   });
 
-  it('renders fullscreen lightbox in dark mode with white background surround and light aesthetics', () => {
+  it('renders fullscreen lightbox in dark mode with background matching detail view and transparent header', () => {
     const darkTheme: ThemeColors = {
       ...baseDarkTheme,
       primary: '#dc2626',
@@ -231,7 +233,7 @@ describe('ProductDetailModal Lightbox White Background & Integrated Top Header C
 
     const stage = document.querySelector('.product-detail-image-stage') as HTMLDivElement;
     expect(stage).toBeTruthy();
-    expect(['#ffffff', 'rgb(255, 255, 255)']).toContain(stage.style.backgroundColor);
+    expect(['#ffffff', 'rgb(255, 255, 255)', 'transparent']).toContain(stage.style.backgroundColor);
 
     // Open fullscreen lightbox
     fireEvent.click(stage);
@@ -239,10 +241,11 @@ describe('ProductDetailModal Lightbox White Background & Integrated Top Header C
     const lightboxModal = document.querySelector('.zoom-pan-container')
       ?.parentElement as HTMLDivElement;
     expect(lightboxModal).toBeTruthy();
-    expect(['#ffffff', 'rgb(255, 255, 255)']).toContain(lightboxModal.style.backgroundColor);
+    // Lightbox background matches detail view background (darkTheme.bgCard)
+    expect(lightboxModal.style.backgroundColor).toBe(darkTheme.bgCard);
 
-    const zoomStage = document.querySelector('.zoom-pan-container') as HTMLDivElement;
-    expect(zoomStage).toBeTruthy();
-    expect(['#ffffff', 'rgb(255, 255, 255)']).toContain(zoomStage.style.backgroundColor);
+    const topHeader = document.querySelector('.lightbox-top-header') as HTMLDivElement;
+    expect(topHeader).toBeTruthy();
+    expect(['transparent', 'none', '']).toContain(topHeader.style.background);
   });
 });

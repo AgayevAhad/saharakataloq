@@ -99,7 +99,7 @@ export const ProductEditor = ({
 
   // Visual Crop Studio state
   const [cropStudioTarget, setCropStudioTarget] = useState<{
-    mediaIndex: number;
+    mediaId: string;
     imageUrl: string;
     originalUrl?: string;
     cropRect?: NormalizedRect;
@@ -136,6 +136,15 @@ export const ProductEditor = ({
         return { ...item, ...resetFraming, ...patch };
       });
       return syncPrimaryMediaFields(curr, list);
+    });
+  };
+
+  const updateMediaById = (mediaId: string, patch: Partial<ProductMedia>) => {
+    setProduct((current) => {
+      const list = (current.media || []).map((item) =>
+        item.id === mediaId ? { ...item, ...patch } : item
+      );
+      return syncPrimaryMediaFields(current, list);
     });
   };
 
@@ -955,7 +964,7 @@ export const ProductEditor = ({
                           className="crop-open-studio-btn"
                           onClick={() =>
                             setCropStudioTarget({
-                              mediaIndex: i,
+                              mediaId: m.id,
                               imageUrl: m.originalUrl || m.url,
                               originalUrl: m.originalUrl || m.url,
                               cropRect: m.cropRect || (i === 0 ? product.cropRect : undefined),
@@ -1137,21 +1146,18 @@ export const ProductEditor = ({
             originalImageUrl={cropStudioTarget.originalUrl}
             initialCropRect={cropStudioTarget.cropRect}
             initialObjectPosition={cropStudioTarget.objectPosition || 'center'}
-            initialFitMode={cropStudioTarget.fitMode || 'contain'}
             productTitle={product.title}
             theme={theme}
             onClose={() => setCropStudioTarget(null)}
-            onSavePosition={(pos, fit) => {
-              updateMedia(cropStudioTarget.mediaIndex, { objectPosition: pos, fitMode: fit });
-            }}
             onSaveCroppedImage={(_newUrl, pos, cropRect, origUrl) => {
               const originalUrlToSave =
                 origUrl || cropStudioTarget.originalUrl || cropStudioTarget.imageUrl;
-              updateMedia(cropStudioTarget.mediaIndex, {
+              updateMediaById(cropStudioTarget.mediaId, {
                 url: originalUrlToSave,
                 originalUrl: originalUrlToSave,
-                cropRect: cropRect,
+                cropRect,
                 objectPosition: pos || 'center',
+                fitMode: cropStudioTarget.fitMode || 'contain',
               });
             }}
           />

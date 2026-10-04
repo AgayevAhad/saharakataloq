@@ -59,7 +59,7 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
   // Recommended products not in favorites
   const recommendedProducts = useMemo(() => {
     const favSet = new Set(favoriteIds);
-    return allProducts.filter((p) => p.status !== 'draft' && !favSet.has(p.id)).slice(0, 4);
+    return allProducts.filter((p) => p.status !== 'draft' && !favSet.has(p.id)).slice(0, 3);
   }, [allProducts, favoriteIds]);
 
   // Available categories within favorites
@@ -251,7 +251,7 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
               textAlign: 'center',
               padding: '64px 24px',
               borderRadius: '24px',
-              backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#ffffff',
+              backgroundColor: themeMode === 'dark' ? '#121214' : '#ffffff',
               border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
               maxWidth: '680px',
               margin: '0 auto',
@@ -286,10 +286,22 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
                 maxWidth: '440px',
                 margin: '0 auto 28px',
                 lineHeight: 1.5,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexWrap: 'wrap',
+                gap: '4px',
               }}
             >
-              Məhsul kartlarında olan qəlb ❤️ ikonuna toxunaraq sevdiyiniz modelləri bu siyahıya
-              əlavə edə bilərsiniz.
+              <span>Məhsul kartlarında olan qəlb</span>
+              <Heart
+                className="empty-favorites-inline-heart"
+                size={16}
+                fill="none"
+                strokeWidth={2}
+                aria-hidden="true"
+              />
+              <span>ikonuna toxunaraq sevdiyiniz modelləri bu siyahıya əlavə edə bilərsiniz.</span>
             </p>
 
             <button
@@ -339,7 +351,7 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
                       selectedCategory === 'all'
                         ? '#e31e24'
                         : themeMode === 'dark'
-                          ? '#1e293b'
+                          ? '#18181b'
                           : '#ffffff',
                     color: selectedCategory === 'all' ? '#ffffff' : theme.text,
                     border: `1px solid ${selectedCategory === 'all' ? '#e31e24' : themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`,
@@ -371,7 +383,7 @@ export const FavoritesPage: React.FC<FavoritesPageProps> = ({
                         backgroundColor: isSelected
                           ? '#e31e24'
                           : themeMode === 'dark'
-                            ? '#1e293b'
+                            ? '#18181b'
                             : '#ffffff',
                         color: isSelected ? '#ffffff' : theme.text,
                         border: `1px solid ${isSelected ? '#e31e24' : themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`,

@@ -47,11 +47,11 @@ export const CatalogProductGrid: React.FC<CatalogProductGridProps> = ({
       className={`catalog-products-container ${viewMode === 'list' ? 'is-list-view' : 'is-grid-view'}`}
       style={{
         display: 'grid',
-        gridTemplateColumns:
-          viewMode === 'list' ? '1fr' : 'repeat(auto-fill, minmax(339px, 339px))',
-        gap: '16px',
+        gridTemplateColumns: viewMode === 'list' ? '1fr' : 'repeat(auto-fit, 559px)',
+        columnGap: '32px',
+        rowGap: '36px',
         width: '100%',
-        justifyItems: 'start',
+        justifyItems: 'stretch',
         justifyContent: 'flex-start',
       }}
     >

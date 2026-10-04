@@ -4,6 +4,7 @@ import { Brand, CatalogCategory, Product } from '../types/product';
 import { ThemeColors } from '../types/theme';
 import { ShimmerImage } from './ShimmerImage';
 import { CategoryGlyph } from './CategoryGlyph';
+import { getBrandLogo, getBrandLogoFilter } from '../utils/brandLogos';
 
 import { useHorizontalScroll } from '../hooks/useHorizontalScroll';
 
@@ -123,33 +124,40 @@ export const BrandCategoryFilter: React.FC<BrandCategoryFilterProps> = ({
             className="brand-title-badge"
             style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap' }}
           >
-            {activeBrandsList.map((b) => (
-              <div
-                key={b.id}
-                style={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  padding: '3px 8px',
-                  borderRadius: '8px',
-                  backgroundColor: '#ffffff',
-                  boxShadow: '0 1px 4px rgba(0, 0, 0, 0.08)',
-                }}
-              >
-                {b.logo ? (
-                  <ShimmerImage
-                    src={b.logo}
-                    alt={b.name}
-                    spinnerSize={14}
-                    className="brand-filter-logo"
-                    containerStyle={{ width: '80px', height: '32px' }}
-                  />
-                ) : (
-                  <span className="brand-filter-name-text" style={{ color: '#0f172a' }}>
-                    {b.name}
-                  </span>
-                )}
-              </div>
-            ))}
+            {activeBrandsList.map((b) => {
+              const isDark = theme.mode === 'dark';
+              const logoSrc = getBrandLogo(b.id, isDark, b.logo);
+              const logoFilter = getBrandLogoFilter(b.id, isDark);
+              return (
+                <div
+                  key={b.id}
+                  style={{
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    padding: '3px 8px',
+                    borderRadius: '8px',
+                    backgroundColor: 'transparent',
+                  }}
+                >
+                  {logoSrc ? (
+                    <ShimmerImage
+                      src={logoSrc}
+                      alt={b.name}
+                      spinnerSize={14}
+                      className="brand-filter-logo"
+                      containerStyle={{ width: '80px', height: '32px' }}
+                      style={{
+                        filter: logoFilter,
+                      }}
+                    />
+                  ) : (
+                    <span className="brand-filter-name-text" style={{ color: theme.text }}>
+                      {b.name}
+                    </span>
+                  )}
+                </div>
+              );
+            })}
             <span
               className="brand-filter-count-badge"
               style={{

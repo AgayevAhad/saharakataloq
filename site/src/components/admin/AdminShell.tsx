@@ -980,7 +980,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
     ['categories', 'Kateqoriyalar', <FolderPlus size={17} />],
     ['brands', 'Brendlər', <Building2 size={17} />],
     ['appearance', 'Görünüş & Mətnlər', <Palette size={17} />],
-    ['articles', 'Texnologiyalar (i)', <Zap size={17} />],
+    ['articles', 'Texnologiyalar', <Zap size={17} />],
     ['contact', 'Əlaqə & Filiallar', <Phone size={17} />],
     ['snapshots', 'Bərpa & Nüsxələr', <RotateCcw size={17} />],
     ['logs', 'Loglama (Audit)', <FileText size={17} />],
@@ -1005,7 +1005,7 @@ export const AdminShell: React.FC<AdminShellProps> = ({
     ['categories', 'Kateqoriyalar', <FolderPlus size={17} />],
     ['navigation', 'Naviqasiya (CMS)', <Compass size={17} />],
     ['appearance', 'Görünüş & Mətnlər', <Palette size={17} />],
-    ['articles', 'Texnologiyalar (i)', <Zap size={17} />],
+    ['articles', 'Texnologiyalar', <Zap size={17} />],
     ['contact', 'Əlaqə & Filiallar', <Phone size={17} />],
     ['support_chat', 'Müştəri Çatı', <MessageCircle size={17} />],
     ['snapshots', 'Bərpa & Nüsxələr', <RotateCcw size={17} />],
@@ -1315,10 +1315,21 @@ export const AdminShell: React.FC<AdminShellProps> = ({
             theme={theme}
             catalog={modeCatalog}
             onUpdateBrands={(updater) =>
-              setCatalog((p) => ({
-                ...p,
-                brands: typeof updater === 'function' ? updater(p.brands) : updater,
-              }))
+              setCatalog((p) => {
+                const nextBrands = typeof updater === 'function' ? updater(p.brands) : updater;
+                const countries = new Set(p.settings?.countries || DEFAULT_COUNTRIES);
+                nextBrands.forEach((brand) => {
+                  if (brand.originCountry?.trim()) countries.add(brand.originCountry.trim());
+                  (brand.manufacturingCountries || []).forEach((country) => {
+                    if (country.trim()) countries.add(country.trim());
+                  });
+                });
+                return {
+                  ...p,
+                  brands: nextBrands,
+                  settings: { ...p.settings, countries: Array.from(countries) },
+                };
+              })
             }
             mode={activeMode}
             csrfToken={initial.csrfToken}

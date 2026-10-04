@@ -1,7 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { X, Check, Crop, RefreshCw, Eye, Wand2 } from 'lucide-react';
 import { ThemeColors } from '../types/theme';
-import { ShimmerImage } from './ShimmerImage';
+import { calculateCropFrameTransform, ShimmerImage } from './ShimmerImage';
 
 export interface NormalizedRect {
   x: number; // 0 to 1
@@ -16,11 +16,9 @@ export interface ImageCropStudioModalProps {
   originalImageUrl?: string;
   initialCropRect?: NormalizedRect;
   initialObjectPosition?: string;
-  initialFitMode?: 'contain' | 'cover';
   productTitle?: string;
   theme: ThemeColors;
   onClose: () => void;
-  onSavePosition?: (objectPosition: string, fitMode: 'contain' | 'cover') => void;
   onSaveCroppedImage: (
     newImageUrl: string,
     objectPosition?: string,
@@ -31,6 +29,8 @@ export interface ImageCropStudioModalProps {
 }
 
 type AspectRatioPreset = 'free' | '1:1' | '4:3' | '3:4' | '16:9';
+
+export const CATALOG_CARD_PREVIEW_SIZE = { width: 339, height: 339 } as const;
 
 const clampCropRect = (value?: NormalizedRect): NormalizedRect => {
   if (!value) return { x: 0, y: 0, w: 1, h: 1 };
@@ -47,11 +47,9 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
   originalImageUrl,
   initialCropRect,
   initialObjectPosition = 'center',
-  initialFitMode = 'contain',
   productTitle = 'Məhsul Şəkli',
   theme,
   onClose,
-  onSavePosition: _onSavePosition,
   onSaveCroppedImage,
 }) => {
   const [aspectRatio, setAspectRatio] = useState<AspectRatioPreset>('free');
@@ -97,33 +95,11 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
       const h = img.naturalHeight || 600;
       setImageSize({ width: w, height: h });
       setLoaded(true);
-      if (initialCropRect && initialCropRect.w > 0 && initialCropRect.h > 0) {
-        setCrop(clampCropRect(initialCropRect));
-      } else if (initialObjectPosition && initialObjectPosition !== 'center') {
-        let fx = 0.5;
-        let fy = 0.5;
-        const parts = initialObjectPosition.split(' ');
-        if (parts.length === 2) {
-          const px = parseFloat(parts[0]);
-          const py = parseFloat(parts[1]);
-          if (!isNaN(px)) fx = px / 100;
-          if (!isNaN(py)) fy = py / 100;
-        } else if (initialObjectPosition === 'top') {
-          fy = 0.2;
-        } else if (initialObjectPosition === 'bottom') {
-          fy = 0.8;
-        }
-        const bw = 0.75;
-        const bh = 0.75;
-        setCrop({
-          x: Math.max(0, Math.min(1 - bw, fx - bw / 2)),
-          y: Math.max(0, Math.min(1 - bh, fy - bh / 2)),
-          w: bw,
-          h: bh,
-        });
-      } else {
-        setCrop({ x: 0, y: 0, w: 1, h: 1 });
-      }
+      setCrop(
+        initialCropRect && initialCropRect.w > 0 && initialCropRect.h > 0
+          ? clampCropRect(initialCropRect)
+          : { x: 0, y: 0, w: 1, h: 1 }
+      );
     };
   }, [imageUrl, originalImageUrl, initialCropRect, initialObjectPosition]);
 
@@ -261,11 +237,6 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
     const natW = img.naturalWidth || imageSize.width;
     const natH = img.naturalHeight || imageSize.height;
 
-    const cropX = Math.max(0, Math.round(crop.x * natW));
-    const cropY = Math.max(0, Math.round(crop.y * natH));
-    const cropW = Math.max(10, Math.round(crop.w * natW));
-    const cropH = Math.max(10, Math.round(crop.h * natH));
-
     const renderPreview = (
       canvas: HTMLCanvasElement | null,
       targetWidth: number,
@@ -281,15 +252,21 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
       if (!context) return;
       context.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0);
       context.clearRect(0, 0, targetWidth, targetHeight);
-      const scale = Math.min(targetWidth / cropW, targetHeight / cropH);
-      const drawWidth = cropW * scale;
-      const drawHeight = cropH * scale;
-      const offsetX = (targetWidth - drawWidth) / 2;
-      const offsetY = (targetHeight - drawHeight) / 2;
-      context.drawImage(img, cropX, cropY, cropW, cropH, offsetX, offsetY, drawWidth, drawHeight);
+      const transform = calculateCropFrameTransform(crop, natW, natH, targetWidth, targetHeight);
+      if (!transform) return;
+      context.save();
+      context.beginPath();
+      context.rect(0, 0, targetWidth, targetHeight);
+      context.clip();
+      context.drawImage(img, transform.left, transform.top, transform.width, transform.height);
+      context.restore();
     };
 
-    renderPreview(previewCanvasRef.current, 280, 144);
+    renderPreview(
+      previewCanvasRef.current,
+      CATALOG_CARD_PREVIEW_SIZE.width,
+      CATALOG_CARD_PREVIEW_SIZE.height
+    );
     renderPreview(modalPreviewCanvasRef.current, 280, 104);
   }, [crop, loaded, imageSize]);
 
@@ -392,10 +369,6 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
       const focalY = Math.round((crop.y + crop.h / 2) * 100);
       const computedPosition = `${focalX}% ${focalY}%`;
 
-      if (_onSavePosition) {
-        _onSavePosition(computedPosition, initialFitMode);
-      }
-
       const originalSourceUrl = originalImageUrl || imageUrl;
 
       if (onSaveCroppedImage) {
@@ -431,6 +404,7 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
     >
       <div
         className="crop-studio-modal"
+        data-crop-rect={JSON.stringify(crop)}
         style={{
           background: theme.bgCard,
           borderColor: theme.border,
@@ -596,7 +570,7 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
                       cursor: 'ns-resize',
                     }}
                     onPointerDown={(e) => handleHandlePointerDown('n', e)}
-                    title="Üst ağ sahəni aşağı çəkərək kəsin"
+                    title="Üstdən görünməyəcək sahəni seçin"
                   />
                   <div
                     style={{
@@ -611,7 +585,7 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
                       cursor: 'ns-resize',
                     }}
                     onPointerDown={(e) => handleHandlePointerDown('s', e)}
-                    title="Alt tərəfi kəsin"
+                    title="Altdan görünməyəcək sahəni seçin"
                   />
                   <div
                     style={{
@@ -626,7 +600,7 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
                       cursor: 'ew-resize',
                     }}
                     onPointerDown={(e) => handleHandlePointerDown('w', e)}
-                    title="Sol tərəfi kəsin"
+                    title="Soldan görünməyəcək sahəni seçin"
                   />
                   <div
                     style={{
@@ -641,11 +615,11 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
                       cursor: 'ew-resize',
                     }}
                     onPointerDown={(e) => handleHandlePointerDown('e', e)}
-                    title="Sağ tərəfi kəsin"
+                    title="Sağdan görünməyəcək sahəni seçin"
                   />
 
                   <div className="crop-box-badge">
-                    ✂️ {cropPixelDimensions.w} × {cropPixelDimensions.h} px
+                    👁 {cropPixelDimensions.w} × {cropPixelDimensions.h} px
                   </div>
                 </div>
               )}
@@ -682,7 +656,7 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
                     setCrop({ x: 0, y: 0, w: 1, h: 1 });
                     setAspectRatio('free');
                   }}
-                  title="Kəsimi tam orijinal şəkildə sıfırla"
+                  title="Görünüş sahəsini tam orijinal ölçüyə qaytar"
                 >
                   <RefreshCw size={13} /> Sıfırla (Bütün Şəkil)
                 </button>
@@ -714,9 +688,10 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
               <div
                 className="crop-preview-card-frame"
                 style={{
-                  background: theme.mode === 'dark' ? '#0c101a' : '#f8fafc',
-                  height: '160px',
-                  padding: '8px',
+                  background: '#ffffff',
+                  height: 'auto',
+                  aspectRatio: `${CATALOG_CARD_PREVIEW_SIZE.width} / ${CATALOG_CARD_PREVIEW_SIZE.height}`,
+                  padding: 0,
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
@@ -725,10 +700,9 @@ export const ImageCropStudioModal: React.FC<ImageCropStudioModalProps> = ({
                 <canvas
                   ref={previewCanvasRef}
                   style={{
-                    maxWidth: '100%',
-                    maxHeight: '100%',
-                    objectFit: 'contain',
-                    filter: 'drop-shadow(0 4px 10px rgba(0,0,0,0.15))',
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'fill',
                   }}
                 />
               </div>

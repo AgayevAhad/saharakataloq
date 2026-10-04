@@ -10,6 +10,24 @@ import { validateAndContainDataPath } from './dataPathSecurity.mjs';
 export const PIM_V2_MIGRATION_VERSION = 8;
 export const PIM_V2_MIGRATION_NAME = '0008_pim_v2_additive_architecture';
 
+export function ensurePimMediaFramingColumns(db) {
+  const table = db
+    .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='product_media_variants'")
+    .get();
+  if (!table) return;
+
+  const columns = db
+    .prepare("PRAGMA table_info('product_media_variants')")
+    .all()
+    .map((column) => column.name);
+  if (!columns.includes('crop_rect')) {
+    db.exec('ALTER TABLE product_media_variants ADD COLUMN crop_rect TEXT DEFAULT NULL;');
+  }
+  if (!columns.includes('original_url')) {
+    db.exec('ALTER TABLE product_media_variants ADD COLUMN original_url TEXT DEFAULT NULL;');
+  }
+}
+
 // Server secret for HMAC token signing (no hardcoded fallback)
 export const PIM_TOKEN_SECRET = process.env.PIM_TOKEN_SECRET || '';
 
@@ -315,7 +333,9 @@ export const CANONICAL_SCHEMA_MANIFEST = {
         verification_status: { type: 'TEXT', notnull: 1, dflt_value: 'candidate' },
       },
       foreignKeys: [{ table: 'brands', from: 'brand_id', to: 'id' }],
-      checkKeywords: ["verification_status IN ('candidate', 'verified', 'content_ready', 'published')"],
+      checkKeywords: [
+        "verification_status IN ('candidate', 'verified', 'content_ready', 'published')",
+      ],
     },
     category_translations: {
       columns: {
@@ -344,9 +364,9 @@ export const CANONICAL_SCHEMA_MANIFEST = {
       foreignKeys: [],
       checkKeywords: [
         "data_type IN ('text', 'number', 'boolean')",
-        "filterable IN (0, 1)",
-        "comparable IN (0, 1)",
-        "required IN (0, 1)",
+        'filterable IN (0, 1)',
+        'comparable IN (0, 1)',
+        'required IN (0, 1)',
       ],
     },
     category_spec_templates: {
@@ -590,9 +610,7 @@ export function validateCanonicalSchemaManifest(db) {
   const missingChecks = [];
 
   // Table schemas for CHECK constraint checking
-  const tableSchemas = db
-    .prepare("SELECT name, sql FROM sqlite_master WHERE type='table'")
-    .all();
+  const tableSchemas = db.prepare("SELECT name, sql FROM sqlite_master WHERE type='table'").all();
 
   for (const [tableName, tableDef] of Object.entries(CANONICAL_SCHEMA_MANIFEST.tables)) {
     if (!existingTables.includes(tableName)) continue;
@@ -603,7 +621,15 @@ export function validateCanonicalSchemaManifest(db) {
 
     // Phase 3 support: if category_spec_templates has been migrated to Phase 3 format (has spec_key)
     if (tableName === 'category_spec_templates' && actualColMap.has('spec_key')) {
-      const p3RequiredCols = ['id', 'category_id', 'spec_key', 'label', 'unit', 'required', 'sort_order'];
+      const p3RequiredCols = [
+        'id',
+        'category_id',
+        'spec_key',
+        'label',
+        'unit',
+        'required',
+        'sort_order',
+      ];
       for (const colName of p3RequiredCols) {
         if (!actualColMap.has(colName)) {
           columnMismatches.push(`${tableName}.${colName}: missing column`);
@@ -628,7 +654,11 @@ export function validateCanonicalSchemaManifest(db) {
 
       // Nullability (notnull constraint)
       const expectedNotNull = expectedDef.notnull ? 1 : 0;
-      if (expectedDef.notnull !== undefined && actualCol.notnull !== expectedNotNull && actualCol.pk === 0) {
+      if (
+        expectedDef.notnull !== undefined &&
+        actualCol.notnull !== expectedNotNull &&
+        actualCol.pk === 0
+      ) {
         columnMismatches.push(
           `${tableName}.${colName}: expected ${expectedNotNull ? 'NOT NULL' : 'nullable (notnull=0)'}, got notnull=${actualCol.notnull}`
         );
@@ -665,7 +695,8 @@ export function validateCanonicalSchemaManifest(db) {
       const actualFks = db.prepare(`PRAGMA foreign_key_list('${tableName}')`).all();
       for (const expectedFk of tableDef.foreignKeys) {
         const found = actualFks.find(
-          (fk) => fk.table === expectedFk.table && fk.from === expectedFk.from && fk.to === expectedFk.to
+          (fk) =>
+            fk.table === expectedFk.table && fk.from === expectedFk.from && fk.to === expectedFk.to
         );
         if (!found) {
           foreignKeyMismatches.push(
@@ -700,14 +731,25 @@ export function validateCanonicalSchemaManifest(db) {
 
   // Additive columns on existing tables
   if (existingTables.includes('brands')) {
-    const cols = db.prepare("PRAGMA table_info('brands')").all().map((c) => c.name);
+    const cols = db
+      .prepare("PRAGMA table_info('brands')")
+      .all()
+      .map((c) => c.name);
     if (!cols.includes('verification_status')) {
       columnMismatches.push('brands.verification_status: missing column');
     }
   }
   if (existingTables.includes('products')) {
-    const cols = db.prepare("PRAGMA table_info('products')").all().map((c) => c.name);
-    for (const addCol of ['version', 'publication_status', 'scheduled_publish_at', 'completeness_score']) {
+    const cols = db
+      .prepare("PRAGMA table_info('products')")
+      .all()
+      .map((c) => c.name);
+    for (const addCol of [
+      'version',
+      'publication_status',
+      'scheduled_publish_at',
+      'completeness_score',
+    ]) {
       if (!cols.includes(addCol)) {
         columnMismatches.push(`products.${addCol}: missing column`);
       }
@@ -762,7 +804,14 @@ export function validateCanonicalSchemaManifest(db) {
  * Generates a stable, canonical field-level SHA-256 manifest of database contents.
  */
 export function generateDatabaseSemanticManifest(db) {
-  const tables = ['brands', 'categories', 'products', 'product_specs', 'product_media', 'catalog_settings'];
+  const tables = [
+    'brands',
+    'categories',
+    'products',
+    'product_specs',
+    'product_media',
+    'catalog_settings',
+  ];
   const manifestObj = {};
 
   for (const table of tables) {
@@ -839,7 +888,9 @@ export function generateDryRunToken(arg1, arg2) {
     }
     const rawPayload = JSON.stringify(tokenPayload);
     const hmacSig = createHmac('sha256', secret).update(rawPayload).digest('hex');
-    const dryRunToken = Buffer.from(JSON.stringify({ ...tokenPayload, signature: hmacSig })).toString('base64');
+    const dryRunToken = Buffer.from(
+      JSON.stringify({ ...tokenPayload, signature: hmacSig })
+    ).toString('base64');
 
     return {
       dryRunToken,
@@ -848,8 +899,12 @@ export function generateDryRunToken(arg1, arg2) {
     };
   } finally {
     if (closeAfter) {
-      try { mainDb?.close(); } catch {}
-      try { draftDb?.close(); } catch {}
+      try {
+        mainDb?.close();
+      } catch {}
+      try {
+        draftDb?.close();
+      } catch {}
     }
   }
 }
@@ -908,7 +963,11 @@ export function validateDryRunToken(arg1, arg2, options = {}) {
     }
 
     // Session binding check
-    if (expectedSessionId && payload.adminSessionId && payload.adminSessionId !== expectedSessionId) {
+    if (
+      expectedSessionId &&
+      payload.adminSessionId &&
+      payload.adminSessionId !== expectedSessionId
+    ) {
       return { valid: false, reason: 'TOKEN_SESSION_MISMATCH', error: 'TOKEN_SESSION_MISMATCH' };
     }
 
@@ -920,7 +979,11 @@ export function validateDryRunToken(arg1, arg2, options = {}) {
     // HMAC Signature check
     const secret = PIM_TOKEN_SECRET || process.env.PIM_TOKEN_SECRET;
     if (!secret) {
-      return { valid: false, reason: 'PIM_TOKEN_SECRET_MISSING', error: 'PIM_TOKEN_SECRET_MISSING' };
+      return {
+        valid: false,
+        reason: 'PIM_TOKEN_SECRET_MISSING',
+        error: 'PIM_TOKEN_SECRET_MISSING',
+      };
     }
     const rawPayload = JSON.stringify(payload);
     const expectedSig = createHmac('sha256', secret).update(rawPayload).digest('hex');
@@ -962,8 +1025,12 @@ export function validateDryRunToken(arg1, arg2, options = {}) {
     };
   } finally {
     if (closeAfter) {
-      try { mainDb?.close(); } catch {}
-      try { draftDb?.close(); } catch {}
+      try {
+        mainDb?.close();
+      } catch {}
+      try {
+        draftDb?.close();
+      } catch {}
     }
   }
 }
@@ -973,6 +1040,10 @@ export function validateDryRunToken(arg1, arg2, options = {}) {
  * `schema_migrations` success is recorded ONLY after all DDL/DML and integrity checks pass.
  */
 export function applyPimV2Schema(db) {
+  // Framing metadata is a backward-compatible PIM v2 extension. Keep it
+  // outside the immutable v8 checksum while upgrading existing databases.
+  ensurePimMediaFramingColumns(db);
+
   // Check if Version 8 already cleanly exists
   try {
     const existingMig = db
@@ -984,7 +1055,11 @@ export function applyPimV2Schema(db) {
         .get(PIM_V2_MIGRATION_VERSION);
       if (mig) {
         const schemaCheck = validateCanonicalSchemaManifest(db);
-        if (schemaCheck.isValid && mig.checksum === MIGRATION_CHECKSUM && mig.status === 'success') {
+        if (
+          schemaCheck.isValid &&
+          mig.checksum === MIGRATION_CHECKSUM &&
+          mig.status === 'success'
+        ) {
           return { status: 'no-op', version: PIM_V2_MIGRATION_VERSION, appliedAt: mig.applied_at };
         }
         throw new Error(
@@ -1008,21 +1083,36 @@ export function applyPimV2Schema(db) {
         status TEXT NOT NULL DEFAULT 'success'
       );
     `);
-    const migCols = db.prepare("PRAGMA table_info('schema_migrations')").all().map((c) => c.name);
-    if (!migCols.includes('name')) db.exec("ALTER TABLE schema_migrations ADD COLUMN name TEXT NOT NULL DEFAULT '';");
-    if (!migCols.includes('checksum')) db.exec("ALTER TABLE schema_migrations ADD COLUMN checksum TEXT NOT NULL DEFAULT '';");
-    if (!migCols.includes('status')) db.exec("ALTER TABLE schema_migrations ADD COLUMN status TEXT NOT NULL DEFAULT 'success';");
+    const migCols = db
+      .prepare("PRAGMA table_info('schema_migrations')")
+      .all()
+      .map((c) => c.name);
+    if (!migCols.includes('name'))
+      db.exec("ALTER TABLE schema_migrations ADD COLUMN name TEXT NOT NULL DEFAULT '';");
+    if (!migCols.includes('checksum'))
+      db.exec("ALTER TABLE schema_migrations ADD COLUMN checksum TEXT NOT NULL DEFAULT '';");
+    if (!migCols.includes('status'))
+      db.exec("ALTER TABLE schema_migrations ADD COLUMN status TEXT NOT NULL DEFAULT 'success';");
 
     // 2. Apply canonical additive DDL
     db.exec(PIM_V2_CANONICAL_DDL);
+    ensurePimMediaFramingColumns(db);
 
     // 3. Add additive columns to existing tables
-    const brandCols = db.prepare("PRAGMA table_info('brands')").all().map((c) => c.name);
+    const brandCols = db
+      .prepare("PRAGMA table_info('brands')")
+      .all()
+      .map((c) => c.name);
     if (!brandCols.includes('verification_status')) {
-      db.exec("ALTER TABLE brands ADD COLUMN verification_status TEXT NOT NULL DEFAULT 'unverified';");
+      db.exec(
+        "ALTER TABLE brands ADD COLUMN verification_status TEXT NOT NULL DEFAULT 'unverified';"
+      );
     }
 
-    const prodCols = db.prepare("PRAGMA table_info('products')").all().map((c) => c.name);
+    const prodCols = db
+      .prepare("PRAGMA table_info('products')")
+      .all()
+      .map((c) => c.name);
     if (!prodCols.includes('version')) {
       db.exec('ALTER TABLE products ADD COLUMN version INTEGER NOT NULL DEFAULT 1;');
     }
@@ -1047,15 +1137,19 @@ export function applyPimV2Schema(db) {
     const fkErrors = db.prepare('PRAGMA foreign_key_check').all();
 
     if (integrityRes[0]?.integrity_check !== 'ok' || fkErrors.length > 0) {
-      throw new Error(`Integrity check failed: ${JSON.stringify(integrityRes)} or FK errors: ${JSON.stringify(fkErrors)}`);
+      throw new Error(
+        `Integrity check failed: ${JSON.stringify(integrityRes)} or FK errors: ${JSON.stringify(fkErrors)}`
+      );
     }
 
     // 6. Record immutable migration metadata
     const appliedAt = new Date().toISOString();
-    db.prepare(`
+    db.prepare(
+      `
       INSERT INTO schema_migrations (version, name, checksum, applied_at, status)
       VALUES (?, ?, ?, ?, 'success')
-    `).run(PIM_V2_MIGRATION_VERSION, PIM_V2_MIGRATION_NAME, MIGRATION_CHECKSUM, appliedAt);
+    `
+    ).run(PIM_V2_MIGRATION_VERSION, PIM_V2_MIGRATION_NAME, MIGRATION_CHECKSUM, appliedAt);
 
     db.exec('COMMIT');
     return { status: 'applied', version: PIM_V2_MIGRATION_VERSION, appliedAt };
@@ -1070,10 +1164,14 @@ export function applyPimV2Schema(db) {
  */
 export function migrateDataToPimV2(db) {
   const existingProducts = db.prepare('SELECT * FROM products').all();
-  const existingSpecs = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='product_specs'").get()
+  const existingSpecs = db
+    .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='product_specs'")
+    .get()
     ? db.prepare('SELECT * FROM product_specs').all()
     : [];
-  const existingMedia = db.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='product_media'").get()
+  const existingMedia = db
+    .prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='product_media'")
+    .get()
     ? db.prepare('SELECT * FROM product_media').all()
     : [];
 
@@ -1156,7 +1254,12 @@ export function migrateDataToPimV2(db) {
     const specDefId = `sdef_${createHash('sha256').update(keyInfo.key).digest('hex').slice(0, 12)}`;
 
     const norm = normalizeSpecValue(rawName, rawValue);
-    const dataType = norm.normalizedValueBoolean !== null ? 'boolean' : norm.normalizedValueNumber !== null ? 'number' : 'text';
+    const dataType =
+      norm.normalizedValueBoolean !== null
+        ? 'boolean'
+        : norm.normalizedValueNumber !== null
+          ? 'number'
+          : 'text';
 
     insertSpecDef.run(specDefId, keyInfo.key, rawName, dataType, norm.unit || '');
 
@@ -1173,7 +1276,11 @@ export function migrateDataToPimV2(db) {
       rawValue,
       norm.normalizedValueText ?? null,
       norm.normalizedValueNumber ?? null,
-      norm.normalizedValueBoolean !== null && norm.normalizedValueBoolean !== undefined ? (norm.normalizedValueBoolean ? 1 : 0) : null,
+      norm.normalizedValueBoolean !== null && norm.normalizedValueBoolean !== undefined
+        ? norm.normalizedValueBoolean
+          ? 1
+          : 0
+        : null,
       norm.unit ?? null,
       keyInfo.isCollision ? 'needs_review' : norm.normalizationStatus,
       new Date().toISOString()
@@ -1189,20 +1296,29 @@ export function migrateDataToPimV2(db) {
   const insertMediaVariant = db.prepare(`
     INSERT OR IGNORE INTO product_media_variants (
       id, product_id, variant_id, media_id, legacy_media_id, is_primary, sort_order,
-      object_position, fit_mode, alt_text, poster_url
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      object_position, fit_mode, alt_text, poster_url, crop_rect, original_url
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `);
 
   for (let i = 0; i < existingMedia.length; i++) {
     const m = existingMedia[i];
-    const assetId = `asset_${createHash('sha256').update(m.url || String(i)).digest('hex').slice(0, 12)}`;
+    const assetId = `asset_${createHash('sha256')
+      .update(m.url || String(i))
+      .digest('hex')
+      .slice(0, 12)}`;
     const mediaType = (m.media_type || m.type) === 'video' ? 'video' : 'image';
     const altText = m.alt_text || m.alt || '';
     const posterUrl = m.poster || m.poster_url || null;
     const objectPos = m.object_position || m.objectPosition || 'center';
     const fitMode = (m.fit_mode || m.fitMode) === 'cover' ? 'cover' : 'contain';
 
-    insertAsset.run(assetId, mediaType, m.url, m.original_name || m.originalName || altText, new Date().toISOString());
+    insertAsset.run(
+      assetId,
+      mediaType,
+      m.url,
+      m.original_name || m.originalName || altText,
+      new Date().toISOString()
+    );
 
     const pmvId = `pmv_${m.product_id}_${m.id || randomUUID()}`;
     const isPrimary = i === 0 || m.is_primary || m.isPrimary ? 1 : 0;
@@ -1219,7 +1335,9 @@ export function migrateDataToPimV2(db) {
       objectPos,
       fitMode,
       altText,
-      posterUrl
+      posterUrl,
+      m.crop_rect || (m.cropRect ? JSON.stringify(m.cropRect) : null),
+      m.original_url || m.originalUrl || m.url || null
     );
   }
 
@@ -1260,7 +1378,11 @@ export function executeDualDatabaseMigration(dataDir) {
  * Runs a complete dry-run simulation on /tmp clones without touching real files.
  * Validates integrity check and foreign key check before reporting verification.
  */
-export function dryRunPimV2Migration(dataDir, sessionInfo = 'session_default', maybeIp = '127.0.0.1') {
+export function dryRunPimV2Migration(
+  dataDir,
+  sessionInfo = 'session_default',
+  maybeIp = '127.0.0.1'
+) {
   const safeDataDir = validateAndContainDataPath(dataDir);
   const snapshotManifest = createSnapshotSet(safeDataDir);
 
@@ -1314,26 +1436,59 @@ export function dryRunPimV2Migration(dataDir, sessionInfo = 'session_default', m
 
     const mainProdCount = mainDb.prepare('SELECT count(*) as c FROM products').get().c;
     const mainSpecCount = mainDb.prepare('SELECT count(*) as c FROM product_spec_values').get().c;
-    const mainMediaCount = mainDb.prepare('SELECT count(*) as c FROM product_media_variants').get().c;
-    const mainPubCount = mainDb.prepare("SELECT count(*) as c FROM products WHERE publication_status = 'published'").get().c;
+    const mainMediaCount = mainDb
+      .prepare('SELECT count(*) as c FROM product_media_variants')
+      .get().c;
+    const mainPubCount = mainDb
+      .prepare("SELECT count(*) as c FROM products WHERE publication_status = 'published'")
+      .get().c;
 
     const draftProdCount = draftDb.prepare('SELECT count(*) as c FROM products').get().c;
     const draftSpecCount = draftDb.prepare('SELECT count(*) as c FROM product_spec_values').get().c;
-    const draftMediaCount = draftDb.prepare('SELECT count(*) as c FROM product_media_variants').get().c;
-    const draftPubCount = draftDb.prepare("SELECT count(*) as c FROM products WHERE publication_status = 'published'").get().c;
+    const draftMediaCount = draftDb
+      .prepare('SELECT count(*) as c FROM product_media_variants')
+      .get().c;
+    const draftPubCount = draftDb
+      .prepare("SELECT count(*) as c FROM products WHERE publication_status = 'published'")
+      .get().c;
 
     return {
       ok: true,
       plan: [
-        { step: 'CREATE_CONSISTENT_SNAPSHOTS', description: 'VACUUM INTO ilə aktiv bazaların atomik nüsxələri çıxarılır' },
-        { step: 'VALIDATE_VERSION_8', description: '0008_pim_v2_additive_architecture unikal versiyası yoxlanılır' },
-        { step: 'APPLY_ADDITIVE_SCHEMA', description: '12 yeni cədvəl və indekslər təhlükəsiz əlavə edilir' },
-        { step: 'MIGRATE_SPECS_AND_MEDIA', description: `${mainSpecCount} spec və ${mainMediaCount} media sətri 1:1 köçürülür` },
-        { step: 'INTEGRITY_CHECK', description: 'PRAGMA integrity_check və foreign_key_check təsdiqlənir' },
+        {
+          step: 'CREATE_CONSISTENT_SNAPSHOTS',
+          description: 'VACUUM INTO ilə aktiv bazaların atomik nüsxələri çıxarılır',
+        },
+        {
+          step: 'VALIDATE_VERSION_8',
+          description: '0008_pim_v2_additive_architecture unikal versiyası yoxlanılır',
+        },
+        {
+          step: 'APPLY_ADDITIVE_SCHEMA',
+          description: '12 yeni cədvəl və indekslər təhlükəsiz əlavə edilir',
+        },
+        {
+          step: 'MIGRATE_SPECS_AND_MEDIA',
+          description: `${mainSpecCount} spec və ${mainMediaCount} media sətri 1:1 köçürülür`,
+        },
+        {
+          step: 'INTEGRITY_CHECK',
+          description: 'PRAGMA integrity_check və foreign_key_check təsdiqlənir',
+        },
       ],
       report: {
-        mainDb: { productCount: mainProdCount, specCount: mainSpecCount, mediaCount: mainMediaCount, publishedCount: mainPubCount },
-        draftDb: { productCount: draftProdCount, specCount: draftSpecCount, mediaCount: draftMediaCount, publishedCount: draftPubCount },
+        mainDb: {
+          productCount: mainProdCount,
+          specCount: mainSpecCount,
+          mediaCount: mainMediaCount,
+          publishedCount: mainPubCount,
+        },
+        draftDb: {
+          productCount: draftProdCount,
+          specCount: draftSpecCount,
+          mediaCount: draftMediaCount,
+          publishedCount: draftPubCount,
+        },
       },
       dryRunToken: tokenResult.dryRunToken,
       tokenExpiresAt: tokenResult.tokenExpiresAt,

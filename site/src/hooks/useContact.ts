@@ -10,7 +10,11 @@ interface UseContactOptions {
   showToast: (message: string, type?: 'success' | 'warning') => void;
 }
 
-export function useContact({ settings, brands = [], getProductUrl, showToast }: UseContactOptions) {
+export function buildProductWhatsAppMessage(product: Product, productUrl: string) {
+  return `🔗 Məhsulun linki:\n${productUrl}\n\n🏷 Məhsulun adı:\n${product.title}\n\nSalam, bu məhsul haqqında ətraflı məlumat almaq istəyirəm.`;
+}
+
+export function useContact({ settings, getProductUrl, showToast }: UseContactOptions) {
   const getUrl = useCallback(
     (product: Product) => {
       if (getProductUrl) return getProductUrl(product);
@@ -24,19 +28,19 @@ export function useContact({ settings, brands = [], getProductUrl, showToast }: 
 
   const openWhatsApp = useCallback(
     (product?: Product | null) => {
+      const whatsappNumber =
+        settings?.whatsappNumber || settings?.phoneNumber || settings?.phoneNumbers?.[0];
+
       if (product) {
-        const brand = brands.find((item) => item.id === product.brandId)?.name || '';
-        const brandLine = brand ? `\n🏢 Brend: ${brand}` : '';
-        const categoryLine = product.categoryName ? `\n🗂 Kateqoriya: ${product.categoryName}` : '';
-        const text = `Salam, Sahara Electronics! Bu məhsul haqqında məlumat almaq istəyirəm:\n\n📌 Model: ${product.code}\n🏷 Məhsul: ${product.title}${brandLine}${categoryLine}\n\n🔗 ${getUrl(product)}`;
-        const href = whatsappHref(settings?.whatsappNumber, text);
+        const text = buildProductWhatsAppMessage(product, getUrl(product));
+        const href = whatsappHref(whatsappNumber, text);
         if (!href)
           return showToast('WhatsApp nömrəsi admin paneldə hələ əlavə edilməyib.', 'warning');
         catalogApi.track('contact_whatsapp', product.id);
         window.open(href, '_blank', 'noopener,noreferrer');
       } else {
         const href = whatsappHref(
-          settings?.whatsappNumber,
+          whatsappNumber,
           'Salam, Sahara Electronics! Saytınızdan yazıram, məsləhət almaq istərdim.'
         );
         if (!href)
@@ -44,7 +48,7 @@ export function useContact({ settings, brands = [], getProductUrl, showToast }: 
         window.open(href, '_blank', 'noopener,noreferrer');
       }
     },
-    [brands, getUrl, settings?.whatsappNumber, showToast]
+    [getUrl, settings?.phoneNumber, settings?.phoneNumbers, settings?.whatsappNumber, showToast]
   );
 
   const openCall = useCallback(

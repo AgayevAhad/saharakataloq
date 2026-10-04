@@ -65,8 +65,8 @@ describe('Responsive Layout & Visual Integrity Tests (Desktop & Mobile)', () => 
     expect(cardEl).toBeTruthy();
     expect(cardEl.classList.contains('scroll-reveal-item')).toBe(false);
     expect(cardEl.style.display).toBe('flex');
-    expect(cardEl.style.flexDirection).toBe('column');
-    expect(cardEl.style.height).toBe('100%');
+    expect(cardEl.style.flexDirection).toBe('row');
+    expect(cardEl.style.height).toBe('339px');
 
     // 2. Image container must have product-card-img-wrap for responsive height constraints
     const imgWrap = container.querySelector(
@@ -74,6 +74,14 @@ describe('Responsive Layout & Visual Integrity Tests (Desktop & Mobile)', () => 
     ) as HTMLElement;
     expect(imgWrap).toBeTruthy();
     expect(imgWrap.style.position).toBe('relative');
+    expect(imgWrap.style.aspectRatio).toBe('1 / 1');
+    expect(imgWrap.style.flex).toBe('0 0 339px');
+    expect(imgWrap.style.width).toBe('339px');
+    expect(imgWrap.style.height).toBe('339px');
+
+    const details = container.querySelector('.product-card-details') as HTMLElement;
+    const utilityActions = container.querySelector('.product-card-top-actions') as HTMLElement;
+    expect(details.contains(utilityActions)).toBe(true);
 
     // 3. Action buttons must have responsive flex layout
     const waBtn = container.querySelector('.card-action-btn-wa') as HTMLElement;

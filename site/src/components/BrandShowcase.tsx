@@ -5,19 +5,55 @@ import { ThemeColors } from '../types/theme';
 import { BrandMark } from './BrandMark';
 import { ShimmerImage } from './ShimmerImage';
 
-const brandBackdrops: Record<string, string[]> = {
-  ardo: [
-    '/media/products/ardo-6331-gb.jpg',
-    '/media/products/ardo-ar6120-black.jpg',
-    '/media/products/ardo-6032-b.jpg',
-    '/media/products/ardo-604b.jpg',
-  ],
-  lotus: [
-    '/media/products/lotus-oven-lt-829-full-touch-black.jpg',
-    '/media/products/lotus-cooktop-lt-941-cmw.jpg',
-    '/media/products/lotus-airfryer-5-5-black.jpg',
-    '/media/products/lotus-oven-lt-615-full-black.jpg',
-  ],
+interface BrandBackdrop {
+  key: string;
+  src: string;
+  objectPosition?: string;
+  fitMode?: 'contain' | 'cover';
+  cropRect?: { x: number; y: number; w: number; h: number };
+}
+
+export const buildBrandBackdrops = (
+  brandId: string,
+  products: Product[],
+  limit = 4
+): BrandBackdrop[] => {
+  const seen = new Set<string>();
+  const backdrops: BrandBackdrop[] = [];
+
+  for (const product of products) {
+    if (
+      product.status === 'draft' ||
+      (product.brandId || '').toLocaleLowerCase('az') !== brandId.toLocaleLowerCase('az')
+    ) {
+      continue;
+    }
+
+    const imageMedia = (product.media || []).filter(
+      (item) => item.type === 'image' && Boolean(item.url?.trim())
+    );
+    const candidateUrls = [
+      imageMedia[0]?.url,
+      product.image,
+      product.images?.[0],
+      product.gallery?.[0],
+    ].filter((url): url is string => Boolean(url?.trim()));
+    const src = candidateUrls.find((url) => !seen.has(url));
+    if (!src) continue;
+
+    const mediaItem = imageMedia.find((item) => item.url === src) || imageMedia[0];
+    seen.add(src);
+    backdrops.push({
+      key: `${product.id}:${src}`,
+      src,
+      objectPosition: mediaItem?.objectPosition || product.imagePosition || 'center',
+      fitMode: mediaItem?.fitMode || product.imageFit || 'contain',
+      cropRect: mediaItem?.cropRect || product.cropRect,
+    });
+    if (backdrops.length >= limit) break;
+  }
+
+  return backdrops;
 };
 
 export const BrandShowcase: React.FC<{
@@ -26,6 +62,7 @@ export const BrandShowcase: React.FC<{
   theme: ThemeColors;
   onSelect: (id: string) => void;
 }> = ({ brands, products, theme, onSelect }) => {
+  const [failedBackdropUrls, setFailedBackdropUrls] = React.useState<Set<string>>(() => new Set());
   const displayBrands = React.useMemo(() => {
     const coreIds = ['ardo', 'lotus', 'artel'];
     const matched = brands.filter((b) => coreIds.includes(b.id));
@@ -53,7 +90,9 @@ export const BrandShowcase: React.FC<{
             (product) => product.brandId === brand.id && product.status !== 'draft'
           ).length;
           const soon = brand.comingSoon || count === 0;
-          const backdrops = brandBackdrops[brand.id] || [];
+          const backdrops = buildBrandBackdrops(brand.id, products).filter(
+            (item) => !failedBackdropUrls.has(item.src)
+          );
           return (
             <article
               key={brand.id}
@@ -74,16 +113,34 @@ export const BrandShowcase: React.FC<{
                   : `${brand.name} məhsullarına bax (${count} model)`
               }
               className={`brand-showcase-card brand-${brand.id} brand-tone-${index % 3} ${soon ? 'coming-soon' : 'ready'}`}
-              style={{ border: 'none', background: theme.bgCard }}
+              style={{
+                border: `1px solid ${theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(226, 232, 240, 0.8)'}`,
+                background: theme.bgCard,
+                color: theme.text,
+              }}
             >
               {backdrops.length > 0 && (
                 <div className="brand-card-backdrops" aria-hidden="true">
                   {backdrops.map((src, imageIndex) => (
                     <ShimmerImage
-                      key={src}
-                      src={src}
+                      key={src.key}
+                      src={src.src}
                       alt=""
-                      style={{ animationDelay: `${imageIndex * 5}s` }}
+                      objectFit={src.fitMode}
+                      objectPosition={src.objectPosition}
+                      cropRect={src.cropRect}
+                      containerClassName="brand-card-backdrop-item"
+                      containerStyle={{ animationDelay: `${imageIndex * 12}s` }}
+                      spinnerSize={18}
+                      fallback={<span className="brand-backdrop-fallback" aria-hidden="true" />}
+                      onError={() => {
+                        setFailedBackdropUrls((current) => {
+                          if (current.has(src.src)) return current;
+                          const next = new Set(current);
+                          next.add(src.src);
+                          return next;
+                        });
+                      }}
                     />
                   ))}
                 </div>
@@ -97,11 +154,11 @@ export const BrandShowcase: React.FC<{
                 </div>
               )}
               <div className="brand-mark-shell">
-                <BrandMark brand={brand} />
+                <BrandMark brand={brand} isDarkMode={theme.mode === 'dark'} />
               </div>
               <div className="brand-card-copy">
                 <div className="brand-card-top">
-                  <strong>{brand.name}</strong>
+                  <strong style={{ color: theme.text }}>{brand.name}</strong>
                   {soon ? (
                     <span className="soon-badge">
                       <Clock3 size={12} /> TEZLİKLƏ

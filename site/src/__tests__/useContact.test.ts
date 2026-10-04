@@ -1,6 +1,6 @@
 import { renderHook, act } from '@testing-library/react';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { useContact } from '../hooks/useContact';
+import { buildProductWhatsAppMessage, useContact } from '../hooks/useContact';
 import type { CatalogSettings } from '../types/product';
 
 const mockSettings: Partial<CatalogSettings> = {
@@ -32,25 +32,64 @@ describe('useContact', () => {
     expect(windowOpenSpy.mock.calls[0][0]).toContain('wa.me');
   });
 
-  it('openWhatsApp məhsul məlumatlarını mesaja daxil edir', () => {
+  it('openWhatsApp admin nömrəsini və link-ad-müştəri mesajı sırasını qoruyur', () => {
     const { result } = renderHook(() =>
       useContact({ settings: mockSettings as CatalogSettings, getProductUrl, showToast })
     );
     const product = { id: 'p1', code: 'ARDO-WS60S', title: 'Ardo Paltaryuyan' } as any;
     result.current.openWhatsApp(product);
     expect(windowOpenSpy).toHaveBeenCalledOnce();
-    const url = windowOpenSpy.mock.calls[0][0] as string;
-    expect(url).toContain('ARDO-WS60S');
+    const openedUrl = new URL(windowOpenSpy.mock.calls[0][0] as string);
+    expect(openedUrl.origin + openedUrl.pathname).toBe('https://wa.me/994501234567');
+    expect(openedUrl.searchParams.get('text')).toBe(
+      '🔗 Məhsulun linki:\n' +
+        'https://saharaelectronics.az/product/test\n\n' +
+        '🏷 Məhsulun adı:\n' +
+        'Ardo Paltaryuyan\n\n' +
+        'Salam, bu məhsul haqqında ətraflı məlumat almaq istəyirəm.'
+    );
+  });
+
+  it('məhsul WhatsApp mesajını Azərbaycan hərfləri ilə səliqəli qurur', () => {
+    const product = { id: 'p1', title: 'Plitə Ardo 201GC' } as any;
+
+    expect(buildProductWhatsAppMessage(product, 'https://sahara.az/catalog?product=p1')).toBe(
+      '🔗 Məhsulun linki:\n' +
+        'https://sahara.az/catalog?product=p1\n\n' +
+        '🏷 Məhsulun adı:\n' +
+        'Plitə Ardo 201GC\n\n' +
+        'Salam, bu məhsul haqqında ətraflı məlumat almaq istəyirəm.'
+    );
   });
 
   it('openWhatsApp nömrə yoxdursa toast göstərir', () => {
-    const emptySettings = { ...mockSettings, whatsappNumber: '' } as CatalogSettings;
+    const emptySettings = {
+      ...mockSettings,
+      whatsappNumber: '',
+      phoneNumber: '',
+      phoneNumbers: [],
+    } as CatalogSettings;
     const { result } = renderHook(() =>
       useContact({ settings: emptySettings, getProductUrl, showToast })
     );
     result.current.openWhatsApp();
     expect(showToast).toHaveBeenCalledOnce();
     expect(windowOpenSpy).not.toHaveBeenCalled();
+  });
+
+  it('ayrıca WhatsApp nömrəsi yoxdursa əsas əlaqə nömrəsindən istifadə edir', () => {
+    const settingsWithPhoneFallback = {
+      ...mockSettings,
+      whatsappNumber: '',
+      phoneNumber: '+994 50 261 30 41',
+    } as CatalogSettings;
+    const { result } = renderHook(() =>
+      useContact({ settings: settingsWithPhoneFallback, getProductUrl, showToast })
+    );
+
+    result.current.openWhatsApp({ id: 'p1', title: 'Plitə Ardo 201GC' } as any);
+
+    expect(windowOpenSpy.mock.calls[0][0]).toContain('https://wa.me/994502613041?text=');
   });
 
   it('openCall window.open tel: URL ilə çağırır', () => {

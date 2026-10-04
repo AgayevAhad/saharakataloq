@@ -809,7 +809,7 @@ export const ProductsSection = ({
                 className="admin-product-card"
                 style={{ background: theme.bgCard, borderColor: theme.border }}
               >
-                {/* 1. Card Media Stage (215px Crisp Containment with ShimmerImage & Badges) */}
+                {/* 1. Square card media stage with ShimmerImage & non-layout badges */}
                 <div
                   className="admin-card-image-wrap"
                   onClick={() => onOpenLightbox(product)}

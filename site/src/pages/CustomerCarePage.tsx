@@ -193,7 +193,7 @@ export const CustomerCarePage: React.FC<CustomerCarePageProps> = ({
           <div
             className="customer-care-note scroll-reveal-item"
             style={{
-              backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.7)' : '#f8fafc',
+              backgroundColor: themeMode === 'dark' ? '#18181b' : '#f8fafc',
               borderColor: theme.border,
             }}
           >

@@ -46,8 +46,8 @@ const headerProps = {
 };
 
 describe('Duzelisler Items 35 to 45 Requirements Verification', () => {
-  // Item 40: Sticky SiteHeader elevated dark mode background
-  it('Item 40: SiteHeader in dark mode has elevated glassmorphism background rgba(15, 23, 42, 0.88)', () => {
+  // Item 40 & Item 6: Sticky SiteHeader elevated neutral black dark mode background
+  it('Item 40 & 6: SiteHeader in dark mode has elevated glassmorphism background rgba(9, 9, 11, 0.88)', () => {
     const { container } = render(
       <SiteHeader
         theme={darkTheme}
@@ -61,7 +61,7 @@ describe('Duzelisler Items 35 to 45 Requirements Verification', () => {
     );
     const header = container.querySelector('header');
     expect(header).toBeTruthy();
-    expect(header?.style.backgroundColor).toBe('rgba(15, 23, 42, 0.88)');
+    expect(header?.style.backgroundColor).toBe('rgba(9, 9, 11, 0.88)');
   });
 
   // Item 42: Favorites icon red highlight on route or favoritesCount > 0
@@ -296,8 +296,8 @@ describe('Duzelisler Items 35 to 45 Requirements Verification', () => {
     });
   });
 
-  // Item 39: ProductCard and FeaturedProductCard hover actions soft tinted styling
-  it('Item 39: ProductCard and FeaturedProductCard hover actions use soft tinted boxes and colored icons', () => {
+  // Item 39: ProductCard uses a strong permanent cart CTA; compact featured cards retain soft actions.
+  it('Item 39: ProductCard and FeaturedProductCard actions keep intentional high-contrast styling', () => {
     const { container: prodContainer } = render(
       <ProductCard
         product={mockProduct}
@@ -314,7 +314,8 @@ describe('Duzelisler Items 35 to 45 Requirements Verification', () => {
 
     expect(waAction.style.backgroundColor).toContain('rgba(34, 197, 94, 0.12');
     expect(callAction.style.backgroundColor).toContain('rgba(220, 38, 38, 0.1');
-    expect(cartAction.style.backgroundColor).toContain('rgba(220, 38, 38, 0.1');
+    expect(cartAction.style.backgroundColor).toBe('#dc2626');
+    expect(cartAction.style.color).toBe('#ffffff');
 
     const { container: featContainer } = render(
       <FeaturedProductCard

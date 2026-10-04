@@ -192,6 +192,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     const list: Array<{
       id: string;
       url: string;
+      darkUrl?: string;
       type: 'image' | 'video';
       poster?: string;
       alt?: string;
@@ -209,6 +210,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
           list.push({
             id: m.id || `media-${idx}`,
             url: m.url,
+            darkUrl: m.darkUrl || (idx === 0 ? product.darkImage : undefined),
             type: m.type || 'image',
             poster: m.poster,
             alt: m.alt || `${product.title} - ${idx + 1}`,
@@ -225,6 +227,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
       list.unshift({
         id: 'cover-image',
         url: product.image,
+        darkUrl: product.darkImage,
         type: 'image',
         alt: product.title,
         objectPosition: product.imagePosition,
@@ -288,6 +291,18 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [isFullscreenGallery, nextMedia, prevMedia]);
+
+  // Lock body scroll while Lightbox is open to avoid background touch bleed
+  useEffect(() => {
+    if (typeof document === 'undefined') return;
+    if (isFullscreenGallery) {
+      const prevOverflow = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prevOverflow;
+      };
+    }
+  }, [isFullscreenGallery]);
 
   const activeMedia = mediaList[activeMediaIndex] || mediaList[0];
   const overviewVideo = useMemo(() => mediaList.find((m) => m.type === 'video'), [mediaList]);
@@ -596,7 +611,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               backgroundColor: isCopied
                 ? '#16a34a'
                 : themeMode === 'dark'
-                  ? 'rgba(30, 41, 59, 0.6)'
+                  ? '#18181b'
                   : '#ffffff',
               color: isCopied ? '#ffffff' : theme.text,
               border: `1px solid ${isCopied ? '#16a34a' : theme.border}`,
@@ -620,7 +635,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 gap: '6px',
                 padding: '7px 14px',
                 borderRadius: '10px',
-                backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.6)' : '#ffffff',
+                backgroundColor: themeMode === 'dark' ? '#18181b' : '#ffffff',
                 color: theme.text,
                 border: `1px solid ${theme.border}`,
                 fontSize: '12.5px',
@@ -664,8 +679,9 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               width: '100%',
               height: '520px',
               borderRadius: '24px',
-              backgroundColor: '#ffffff',
-              border: `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : 'rgba(226, 232, 240, 0.8)'}`,
+              background:
+                'radial-gradient(ellipse 78% 66% at 50% 36%, #ffffff 0%, #f5f8fa 46%, #e1e7ed 100%)',
+              border: `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(226, 232, 240, 0.8)'}`,
               boxShadow:
                 themeMode === 'dark'
                   ? '0 16px 40px rgba(0, 0, 0, 0.4)'
@@ -698,10 +714,11 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     display: 'flex',
                     alignItems: 'center',
                     gap: '6px',
-                    backgroundColor: 'rgba(255, 255, 255, 0.95)',
+                    backgroundColor:
+                      themeMode === 'dark' ? theme.bgCard : 'rgba(255, 255, 255, 0.95)',
                     padding: '5px 12px',
                     borderRadius: '8px',
-                    border: '1px solid rgba(226, 232, 240, 0.9)',
+                    border: `1px solid ${themeMode === 'dark' ? theme.border : 'rgba(226, 232, 240, 0.9)'}`,
                     boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
                     backdropFilter: 'blur(8px)',
                   }}
@@ -842,6 +859,8 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               >
                 <ShimmerImage
                   src={activeMedia.url}
+                  darkUrl={activeMedia.darkUrl}
+                  isDarkMode={themeMode === 'dark'}
                   alt={activeMedia.alt || product.title}
                   cropRect={activeMedia.cropRect}
                   objectFit={(activeMedia.fitMode as any) || 'contain'}
@@ -878,9 +897,10 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     width: '40px',
                     height: '40px',
                     borderRadius: '50%',
-                    backgroundColor: 'rgba(255, 255, 255, 0.92)',
-                    border: '1px solid rgba(226, 232, 240, 0.9)',
-                    color: '#0f172a',
+                    backgroundColor:
+                      themeMode === 'dark' ? theme.bgCard : 'rgba(255, 255, 255, 0.92)',
+                    border: `1px solid ${themeMode === 'dark' ? theme.border : 'rgba(226, 232, 240, 0.9)'}`,
+                    color: theme.text,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -906,9 +926,10 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     width: '40px',
                     height: '40px',
                     borderRadius: '50%',
-                    backgroundColor: 'rgba(255, 255, 255, 0.92)',
-                    border: '1px solid rgba(226, 232, 240, 0.9)',
-                    color: '#0f172a',
+                    backgroundColor:
+                      themeMode === 'dark' ? theme.bgCard : 'rgba(255, 255, 255, 0.92)',
+                    border: `1px solid ${themeMode === 'dark' ? theme.border : 'rgba(226, 232, 240, 0.9)'}`,
+                    color: theme.text,
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
@@ -949,7 +970,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                       flexShrink: 0,
                       borderRadius: '14px',
                       backgroundColor: '#ffffff',
-                      border: `2px solid ${isActive ? '#dc2626' : themeMode === 'dark' ? 'rgba(255,255,255,0.1)' : '#e2e8f0'}`,
+                      border: `2px solid ${isActive ? '#dc2626' : themeMode === 'dark' ? 'rgba(255,255,255,0.2)' : '#e2e8f0'}`,
                       padding: '4px',
                       cursor: 'pointer',
                       position: 'relative',
@@ -974,9 +995,12 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                         <PlayCircle size={24} color="#dc2626" />
                       </div>
                     ) : (
-                      <img
+                      <ShimmerImage
                         src={m.url}
+                        darkUrl={m.darkUrl}
+                        isDarkMode={themeMode === 'dark'}
                         alt={m.alt || ''}
+                        spinnerSize={14}
                         style={{
                           width: '100%',
                           height: '100%',
@@ -1012,7 +1036,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     fontSize: '12.5px',
                     fontWeight: 700,
                     color: theme.textSecondary,
-                    backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f1f5f9',
+                    backgroundColor: themeMode === 'dark' ? '#18181b' : '#f1f5f9',
                     padding: '4px 10px',
                     borderRadius: '8px',
                   }}
@@ -1107,7 +1131,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 margin: '2px 0 12px 0',
                 padding: '16px',
                 borderRadius: '16px',
-                backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.45)' : '#f8fafc',
+                backgroundColor: themeMode === 'dark' ? 'rgba(18, 18, 20, 0.85)' : '#f8fafc',
                 border: `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0'}`,
                 display: 'flex',
                 flexDirection: 'column',
@@ -1198,7 +1222,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                       height: '48px',
                       borderRadius: '8px',
                       overflow: 'hidden',
-                      backgroundColor: '#1e293b',
+                      backgroundColor: themeMode === 'dark' ? '#121214' : '#f1f5f9',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -1393,7 +1417,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                       gap: '8px',
                       padding: '8px 12px',
                       borderRadius: '10px',
-                      backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#f8fafc',
+                      backgroundColor: themeMode === 'dark' ? '#18181b' : '#f8fafc',
                       border: 'none',
                     }}
                   >
@@ -1511,7 +1535,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     backgroundColor: isFavorite
                       ? '#dc2626'
                       : themeMode === 'dark'
-                        ? '#1e293b'
+                        ? '#18181b'
                         : '#f1f5f9',
                     color: isFavorite ? '#ffffff' : theme.text,
                     border: 'none',
@@ -1543,7 +1567,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     backgroundColor: isComparing
                       ? '#2563eb'
                       : themeMode === 'dark'
-                        ? '#1e293b'
+                        ? '#18181b'
                         : '#f1f5f9',
                     color: isComparing ? '#ffffff' : theme.text,
                     border: 'none',
@@ -1579,7 +1603,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 gap: '10px',
                 padding: '12px 14px',
                 borderRadius: '14px',
-                backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#f8fafc',
+                backgroundColor: themeMode === 'dark' ? '#18181b' : '#f8fafc',
                 border: 'none',
               }}
             >
@@ -1601,7 +1625,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 gap: '10px',
                 padding: '12px 14px',
                 borderRadius: '14px',
-                backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#f8fafc',
+                backgroundColor: themeMode === 'dark' ? '#18181b' : '#f8fafc',
                 border: 'none',
               }}
             >
@@ -1623,7 +1647,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 gap: '10px',
                 padding: '12px 14px',
                 borderRadius: '14px',
-                backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#f8fafc',
+                backgroundColor: themeMode === 'dark' ? '#18181b' : '#f8fafc',
                 border: 'none',
               }}
             >
@@ -1645,7 +1669,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 gap: '10px',
                 padding: '12px 14px',
                 borderRadius: '14px',
-                backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#f8fafc',
+                backgroundColor: themeMode === 'dark' ? '#18181b' : '#f8fafc',
                 border: 'none',
               }}
             >
@@ -1860,7 +1884,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
         {activeTab === 'description' && (
           <div
             style={{
-              backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#ffffff',
+              backgroundColor: themeMode === 'dark' ? '#121214' : '#ffffff',
               borderRadius: '20px',
               border: `1px solid ${theme.border}`,
               padding: '28px',
@@ -1903,7 +1927,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     whiteSpace: 'pre-line',
                     padding: '16px 20px',
                     borderRadius: '14px',
-                    backgroundColor: themeMode === 'dark' ? 'rgba(15, 23, 42, 0.4)' : '#f8fafc',
+                    backgroundColor: themeMode === 'dark' ? '#18181b' : '#f8fafc',
                     borderLeft: '4px solid #dc2626',
                   }}
                 >
@@ -1917,7 +1941,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     lineHeight: 1.6,
                     padding: '16px 20px',
                     borderRadius: '14px',
-                    backgroundColor: themeMode === 'dark' ? 'rgba(15, 23, 42, 0.4)' : '#f8fafc',
+                    backgroundColor: themeMode === 'dark' ? '#18181b' : '#f8fafc',
                     borderLeft: `4px solid ${theme.border}`,
                   }}
                 >
@@ -1955,7 +1979,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                         gap: '10px',
                         padding: '12px 16px',
                         borderRadius: '12px',
-                        backgroundColor: themeMode === 'dark' ? 'rgba(15, 23, 42, 0.5)' : '#f8fafc',
+                        backgroundColor: themeMode === 'dark' ? '#18181b' : '#f8fafc',
                         border: `1px solid ${theme.border}`,
                       }}
                     >
@@ -2020,7 +2044,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
         {activeTab === 'specs' && (
           <div
             style={{
-              backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#ffffff',
+              backgroundColor: themeMode === 'dark' ? '#121214' : '#ffffff',
               borderRadius: '20px',
               border: `1px solid ${theme.border}`,
               padding: '24px',
@@ -2073,7 +2097,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                             backgroundColor:
                               index % 2 === 0
                                 ? themeMode === 'dark'
-                                  ? 'rgba(15, 23, 42, 0.5)'
+                                  ? '#18181b'
                                   : '#f8fafc'
                                 : 'transparent',
                             borderBottom:
@@ -2142,7 +2166,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 style={{
                   padding: '24px',
                   borderRadius: '20px',
-                  backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#ffffff',
+                  backgroundColor: themeMode === 'dark' ? '#121214' : '#ffffff',
                   border: `1px solid ${theme.border}`,
                   boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
                   display: 'flex',
@@ -2282,7 +2306,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 style={{
                   padding: '24px',
                   borderRadius: '20px',
-                  backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#ffffff',
+                  backgroundColor: themeMode === 'dark' ? '#121214' : '#ffffff',
                   border: `1px solid ${theme.border}`,
                   boxShadow: '0 4px 20px rgba(0,0,0,0.04)',
                 }}
@@ -2304,7 +2328,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     style={{
                       padding: '20px',
                       borderRadius: '14px',
-                      backgroundColor: themeMode === 'dark' ? 'rgba(15, 23, 42, 0.6)' : '#f8fafc',
+                      backgroundColor: themeMode === 'dark' ? '#18181b' : '#f8fafc',
                       border: `1px solid ${theme.border}`,
                       textAlign: 'center',
                       display: 'flex',
@@ -2409,7 +2433,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                         justifyContent: 'space-between',
                         padding: '8px 12px',
                         borderRadius: '8px',
-                        backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f1f5f9',
+                        backgroundColor: themeMode === 'dark' ? '#18181b' : '#f1f5f9',
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -2501,7 +2525,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                           padding: '10px 14px',
                           borderRadius: '10px',
                           border: `1px solid ${theme.border}`,
-                          backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f8fafc',
+                          backgroundColor: themeMode === 'dark' ? '#18181b' : '#f8fafc',
                           color: theme.text,
                           fontSize: '13.5px',
                           boxSizing: 'border-box',
@@ -2551,7 +2575,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                     style={{
                       padding: '18px 22px',
                       borderRadius: '16px',
-                      backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#ffffff',
+                      backgroundColor: themeMode === 'dark' ? '#121214' : '#ffffff',
                       border: `1px solid ${theme.border}`,
                       display: 'flex',
                       flexDirection: 'column',
@@ -2623,7 +2647,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                   style={{
                     padding: '28px',
                     borderRadius: '16px',
-                    backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.2)' : '#f8fafc',
+                    backgroundColor: themeMode === 'dark' ? 'rgba(18, 18, 20, 0.5)' : '#f8fafc',
                     border: `1px dashed ${theme.border}`,
                     textAlign: 'center',
                     color: theme.textMuted,
@@ -2963,7 +2987,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 gap: '6px',
                 padding: '8px 16px',
                 borderRadius: '12px',
-                backgroundColor: themeMode === 'dark' ? '#1e293b' : '#f1f5f9',
+                backgroundColor: themeMode === 'dark' ? '#18181b' : '#f1f5f9',
                 color: theme.text,
                 border: 'none',
                 fontSize: '13px',
@@ -2979,8 +3003,9 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
           <div
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 339px))',
-              gap: '20px',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 620px), 720px))',
+              columnGap: '32px',
+              rowGap: '36px',
               justifyContent: 'start',
             }}
           >
@@ -3020,8 +3045,8 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
           style={{
             position: 'fixed',
             inset: 0,
-            zIndex: 120,
-            backgroundColor: '#ffffff',
+            zIndex: 240,
+            backgroundColor: themeMode === 'dark' ? '#09090b' : '#ffffff',
             display: 'flex',
             flexDirection: 'column',
             justifyContent: 'space-between',
@@ -3042,13 +3067,13 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               justifyContent: 'space-between',
               flexWrap: 'wrap',
               gap: '12px',
-              color: '#0f172a',
+              color: theme.text,
               zIndex: 30,
               padding: '12px 20px',
-              backgroundColor: 'rgba(255, 255, 255, 0.95)',
+              backgroundColor: 'transparent',
               border: 'none',
               boxShadow: 'none',
-              backdropFilter: 'blur(12px)',
+              backdropFilter: 'none',
             }}
             onClick={(e) => e.stopPropagation()}
           >
@@ -3072,7 +3097,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                background: 'rgba(0, 0, 0, 0.04)',
+                background: 'transparent',
                 padding: '4px 8px',
                 borderRadius: '10px',
                 border: 'none',
@@ -3089,7 +3114,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 style={{
                   border: 'none',
                   background: 'transparent',
-                  color: '#0f172a',
+                  color: theme.text,
                   cursor: 'pointer',
                 }}
               >
@@ -3105,7 +3130,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 style={{
                   border: 'none',
                   background: 'transparent',
-                  color: '#0f172a',
+                  color: theme.text,
                   cursor: 'pointer',
                 }}
               >
@@ -3126,7 +3151,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 style={{
                   border: 'none',
                   background: 'transparent',
-                  color: '#0f172a',
+                  color: theme.text,
                   cursor: zoomScale <= 1 ? 'not-allowed' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -3160,7 +3185,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
                 style={{
                   border: 'none',
                   background: 'transparent',
-                  color: '#0f172a',
+                  color: theme.text,
                   cursor: zoomScale >= 4 ? 'not-allowed' : 'pointer',
                   display: 'flex',
                   alignItems: 'center',
@@ -3257,7 +3282,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               overflow: 'hidden',
               position: 'relative',
               cursor: zoomScale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
-              backgroundColor: '#ffffff',
+              backgroundColor: 'transparent',
             }}
             onDoubleClick={activeMedia?.type === 'image' ? toggleZoom : undefined}
             onMouseDown={handleMouseDown}
@@ -3280,7 +3305,9 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               />
             ) : (
               <ShimmerImage
-                src={activeMedia?.url}
+                src={activeMedia?.url || product.image}
+                darkUrl={activeMedia?.darkUrl || product.darkImage}
+                isDarkMode={themeMode === 'dark'}
                 alt={activeMedia?.alt || product.title}
                 draggable={false}
                 data-testid="product-lightbox-image"
@@ -3303,7 +3330,7 @@ export const ProductDetailPage: React.FC<ProductDetailPageProps> = ({
               className="fs-lightbox-bottom-bar"
               style={{
                 backgroundColor:
-                  themeMode === 'dark' ? 'rgba(15, 23, 42, 0.85)' : 'rgba(241, 245, 249, 0.95)',
+                  themeMode === 'dark' ? 'rgba(18, 18, 20, 0.94)' : 'rgba(241, 245, 249, 0.95)',
                 border: 'none',
                 boxShadow:
                   themeMode === 'dark'

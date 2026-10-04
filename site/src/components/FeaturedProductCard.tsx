@@ -147,7 +147,7 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
         }
       }}
     >
-      {!hideBrandAndCategoryMeta && <ProductBrandBadge brand={brand} />}
+      {!hideBrandAndCategoryMeta && <ProductBrandBadge brand={brand} isDarkMode={_theme.mode === 'dark'} />}
       {!hideBrandAndCategoryMeta && (
         <div
           className="product-card-category-top"
@@ -199,7 +199,7 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
         {onToggleCompare && (
           <button
             type="button"
-            className={isComparing ? 'sahara-soft-blue-action' : undefined}
+            className={`featured-card-icon-button featured-card-compare-button ${isComparing ? 'sahara-soft-blue-action is-active' : ''}`}
             onClick={handleCompareClick}
             style={{
               width: '32px',
@@ -226,7 +226,7 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
         {/* Heart/Favorite Button */}
         <button
           type="button"
-          className={isFavorite ? 'sahara-soft-red-action' : undefined}
+          className={`featured-card-icon-button featured-card-favorite-button ${isFavorite ? 'sahara-soft-red-action is-active' : ''}`}
           onClick={handleFavoriteClick}
           style={{
             width: '32px',
@@ -285,6 +285,8 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
           {coverImage ? (
             <ShimmerImage
               src={coverImage}
+              darkUrl={product.darkImage || product.media?.[0]?.darkUrl}
+              isDarkMode={_theme.mode === 'dark'}
               alt={product.title}
               cropRect={product.cropRect || product.media?.[0]?.cropRect}
               objectPosition={
@@ -316,6 +318,7 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
 
       {/* Product Title and Price Row */}
       <div
+        className="featured-product-copy"
         style={{
           marginTop: 'auto',
           paddingTop: '2px',
@@ -326,6 +329,7 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
         }}
       >
         <div
+          className="featured-product-title"
           style={{
             fontSize: '13px',
             fontWeight: 700,
@@ -342,6 +346,7 @@ export const FeaturedProductCard: React.FC<FeaturedProductCardProps> = ({
 
         {displayPrice && (
           <div
+            className="featured-product-price"
             style={{
               fontSize: '14.5px',
               fontWeight: 900,

@@ -27,6 +27,7 @@ export interface ProductMedia {
   id: string;
   type: 'image' | 'video';
   url: string;
+  darkUrl?: string;
   alt?: string;
   originalName?: string;
   poster?: string;
@@ -62,6 +63,7 @@ export interface Product {
   category: ProductCategory;
   categoryName: string;
   image: string;
+  darkImage?: string;
   originalImage?: string;
   cropRect?: { x: number; y: number; w: number; h: number };
   imagePosition?: 'center' | 'top' | 'bottom' | 'left' | 'right' | string;

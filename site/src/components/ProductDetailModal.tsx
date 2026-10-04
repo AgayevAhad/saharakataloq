@@ -31,6 +31,7 @@ import { pushOverlay, popOverlay, isTopOverlay } from '../utils/backgroundIsolat
 import { getVisibleBadgeText } from './productCardVisuals';
 import { animateProductToCart, animateProductToFavorites } from '../utils/cartFlight';
 import { CategoryGlyph } from './CategoryGlyph';
+import { getBrandLogo, getBrandLogoFilter } from '../utils/brandLogos';
 
 interface ProductDetailModalProps {
   product: Product | null;
@@ -254,6 +255,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
       const items: Array<{
         id: string;
         url: string;
+        darkUrl?: string;
         type?: 'image' | 'video';
         alt?: string;
         poster?: string;
@@ -270,6 +272,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
             items.push({
               id: m.id || `media-${idx}`,
               url: m.url,
+              darkUrl: m.darkUrl || (idx === 0 ? product.darkImage : undefined),
               type: m.type || 'image',
               alt: m.alt || product.title,
               poster: m.poster,
@@ -287,6 +290,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
         items.push({
           id: `main-${product.id}`,
           url: product.image,
+          darkUrl: product.darkImage,
           type: 'image',
           alt: product.title,
           objectPosition: product.imagePosition || 'center',
@@ -344,15 +348,16 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
       return '';
     }, [product]);
 
+    const isDark = theme.mode === 'dark';
+    const brandId = (brand?.id || product?.brandId || (product as any)?.brand || '').toLowerCase();
+
     const brandLogoSrc = useMemo(() => {
-      if (brand?.logo) return brand.logo;
-      const bId = (product?.brandId || (product as any)?.brand || '').toLowerCase();
-      if (bId === 'ardo') return '/media/brands/ardo-logo.png';
-      if (bId === 'lotus') return '/media/brands/lotus-logo.png';
-      if (bId === 'artel') return '/media/brands/artel-logo.svg';
-      if (bId === 'yoshiro') return '/media/brands/yoshiro-logo.png';
-      return bId ? `/media/brands/${bId}-logo.svg` : '';
-    }, [brand?.logo, product]);
+      return getBrandLogo(brandId, isDark, brand?.logo);
+    }, [brandId, isDark, brand?.logo]);
+
+    const brandLogoFilter = useMemo(() => {
+      return getBrandLogoFilter(brandId, isDark);
+    }, [brandId, isDark]);
 
     const activeObjectPosition =
       (activeMedia as any)?.objectPosition || (product as any)?.imagePosition || 'center';
@@ -570,6 +575,9 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
         <div
           ref={backdropRef}
           className="modal-overlay-wrap modal-backdrop-anim product-detail-modal-overlay"
+          style={{
+            overflowY: isFullscreenImage ? 'hidden' : 'auto',
+          }}
           onClick={(e) => {
             if (e.target === e.currentTarget) onClose();
           }}
@@ -579,6 +587,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
             tabIndex={-1}
             className="modal-content-card modal-dialog-anim"
             style={{
+              display: isFullscreenImage ? 'none' : 'flex',
               backgroundColor: theme.bgCard,
               borderColor: theme.border,
               boxShadow:
@@ -712,12 +721,9 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                         style={{
                           display: 'inline-flex',
                           alignItems: 'center',
-                          backgroundColor: '#ffffff',
-                          border: '1px solid rgba(226, 232, 240, 0.9)',
-                          padding: '6px 14px',
-                          borderRadius: '10px',
+                          backgroundColor: 'transparent',
+                          padding: '6px 0px',
                           minHeight: '36px',
-                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.04)',
                         }}
                       >
                         <img
@@ -727,6 +733,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                             maxHeight: '26px',
                             maxWidth: '110px',
                             objectFit: 'contain',
+                            filter: brandLogoFilter,
                           }}
                         />
                       </div>
@@ -744,7 +751,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                     onTouchMove={handleStageTouchMove}
                     onTouchEnd={handleStageTouchEnd}
                     style={{
-                      backgroundColor: activeMedia?.type === 'video' ? '#000000' : '#ffffff',
+                      backgroundColor: activeMedia?.type === 'video' ? '#000000' : 'transparent',
                       border: 'none',
                       boxShadow: 'none',
                       cursor: activeMedia?.type === 'image' ? 'zoom-in' : 'default',
@@ -809,7 +816,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                             bottom: '50px',
                             left: '12px',
                             zIndex: 12,
-                            background: isVideoMuted ? 'rgba(15, 23, 42, 0.88)' : theme.primary,
+                            background: isVideoMuted ? 'rgba(18, 18, 20, 0.92)' : theme.primary,
                             color: '#ffffff',
                             border: '1px solid rgba(255, 255, 255, 0.3)',
                             padding: '6px 12px',
@@ -848,7 +855,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                             bottom: '50px',
                             right: '12px',
                             zIndex: 12,
-                            background: 'rgba(15, 23, 42, 0.88)',
+                            background: 'rgba(18, 18, 20, 0.92)',
                             color: '#ffffff',
                             border: '1px solid rgba(255, 255, 255, 0.3)',
                             padding: '6px 12px',
@@ -871,6 +878,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                     ) : activeMedia?.url ? (
                       <ShimmerImage
                         src={activeMedia.url}
+                        darkUrl={activeMedia.darkUrl}
+                        isDarkMode={theme.mode === 'dark'}
                         alt={activeMedia.alt || product.title}
                         cropRect={activeMedia.cropRect}
                         objectFit={activeFitMode as any}
@@ -948,6 +957,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                           ) : (
                             <ShimmerImage
                               src={media.url}
+                              darkUrl={media.darkUrl}
+                              isDarkMode={theme.mode === 'dark'}
                               alt={media.alt || `${product.title} ${index + 1}`}
                               objectFit={(media as any).fitMode || 'contain'}
                               objectPosition={(media as any).objectPosition || 'center'}
@@ -1072,7 +1083,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                                 height: '42px',
                                 borderRadius: '6px',
                                 overflow: 'hidden',
-                                backgroundColor: '#1e293b',
+                                backgroundColor: '#121214',
                                 display: 'flex',
                                 alignItems: 'center',
                                 justifyContent: 'center',
@@ -1499,7 +1510,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                       </div>
                       <div
                         style={{
-                          backgroundColor: theme.bgSecondary,
+                          backgroundColor: 'transparent',
                           border: `1px solid ${theme.border}`,
                           borderRadius: '10px',
                           overflow: 'hidden',
@@ -1516,12 +1527,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                               padding: '8px 12px',
                               borderBottom:
                                 idx < items.length - 1 ? `1px solid ${theme.border}` : 'none',
-                              backgroundColor:
-                                idx % 2 === 0
-                                  ? 'transparent'
-                                  : theme.mode === 'dark'
-                                    ? '#101726'
-                                    : '#ffffff',
+                              backgroundColor: 'transparent',
                             }}
                           >
                             <div style={{ flex: '1.2', paddingRight: '8px' }}>
@@ -1572,8 +1578,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
             style={{
               position: 'fixed',
               inset: 0,
-              zIndex: 120,
-              backgroundColor: '#ffffff',
+              zIndex: 240,
+              backgroundColor: theme.bgCard,
               display: 'flex',
               flexDirection: 'column',
               boxSizing: 'border-box',
@@ -1593,8 +1599,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                 gap: '12px',
                 padding: '12px 20px',
                 border: 'none',
-                background: 'rgba(255, 255, 255, 0.95)',
-                backdropFilter: 'blur(12px)',
+                background: 'transparent',
+                backdropFilter: 'none',
                 zIndex: 30,
               }}
               onClick={(e) => e.stopPropagation()}
@@ -1608,7 +1614,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
               >
                 <span
                   style={{
-                    color: '#0f172a',
+                    color: theme.text,
                     fontSize: '15px',
                     fontWeight: 800,
                     whiteSpace: 'nowrap',
@@ -1629,7 +1635,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  background: 'rgba(0, 0, 0, 0.04)',
+                  background: 'transparent',
                   padding: '4px 8px',
                   borderRadius: '10px',
                   border: 'none',
@@ -1645,7 +1651,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                   style={{
                     border: 'none',
                     background: 'transparent',
-                    color: '#0f172a',
+                    color: theme.text,
                     cursor: 'pointer',
                   }}
                 >
@@ -1660,7 +1666,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                   style={{
                     border: 'none',
                     background: 'transparent',
-                    color: '#0f172a',
+                    color: theme.text,
                     cursor: 'pointer',
                   }}
                 >
@@ -1675,7 +1681,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                   style={{
                     border: 'none',
                     background: 'transparent',
-                    color: '#0f172a',
+                    color: theme.text,
                     cursor: zoomScale <= 1 ? 'not-allowed' : 'pointer',
                   }}
                 >
@@ -1701,7 +1707,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                   style={{
                     border: 'none',
                     background: 'transparent',
-                    color: '#0f172a',
+                    color: theme.text,
                     cursor: zoomScale >= 4 ? 'not-allowed' : 'pointer',
                   }}
                 >
@@ -1793,7 +1799,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                 alignItems: 'center',
                 justifyContent: 'center',
                 overflow: 'hidden',
-                backgroundColor: '#ffffff',
+                backgroundColor: 'transparent',
                 cursor: zoomScale > 1 ? (isDragging ? 'grabbing' : 'grab') : 'default',
               }}
             >
@@ -1830,7 +1836,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                       bottom: '60px',
                       left: '16px',
                       zIndex: 50,
-                      background: isVideoMuted ? 'rgba(15, 23, 42, 0.9)' : theme.primary,
+                      background: isVideoMuted ? 'rgba(18, 18, 20, 0.94)' : theme.primary,
                       color: '#ffffff',
                       border: '1px solid rgba(255, 255, 255, 0.3)',
                       padding: '8px 16px',
@@ -1853,6 +1859,8 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
               ) : (
                 <ShimmerImage
                   src={activeMedia?.url || product.image}
+                  darkUrl={activeMedia?.darkUrl || product.darkImage}
+                  isDarkMode={theme.mode === 'dark'}
                   alt={activeMedia?.alt || product.title}
                   draggable={false}
                   style={{
@@ -1875,9 +1883,10 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
               <div
                 className="fs-lightbox-bottom-bar"
                 style={{
-                  backgroundColor: 'rgba(241, 245, 249, 0.95)',
-                  border: 'none',
-                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.08)',
+                  backgroundColor:
+                    theme.mode === 'dark' ? 'rgba(18, 18, 20, 0.94)' : 'rgba(255, 255, 255, 0.92)',
+                  border: `1px solid ${theme.border}`,
+                  boxShadow: '0 4px 16px rgba(0, 0, 0, 0.12)',
                 }}
               >
                 <div className="fs-lightbox-dots">
@@ -1894,7 +1903,11 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                       }}
                       style={{
                         backgroundColor:
-                          activeMediaIndex === idx ? theme.primary : 'rgba(0, 0, 0, 0.2)',
+                          activeMediaIndex === idx
+                            ? theme.primary
+                            : theme.mode === 'dark'
+                              ? 'rgba(255,255,255,0.25)'
+                              : 'rgba(0,0,0,0.2)',
                       }}
                       aria-label={`Şəkil ${idx + 1}`}
                     />
@@ -1903,7 +1916,7 @@ export const ProductDetailModal: React.FC<ProductDetailModalProps> = React.memo(
                 <span
                   className="fs-lightbox-counter-text"
                   style={{
-                    color: '#0f172a',
+                    color: theme.text,
                     fontWeight: 800,
                   }}
                 >

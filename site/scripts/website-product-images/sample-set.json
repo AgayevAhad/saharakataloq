@@ -1,0 +1,74 @@
+{
+  "items": [
+    {
+      "productId": "lotus-lt615-full-black",
+      "modelCode": "LT615 Full Black",
+      "matchKey": "LT615 Full Black",
+      "label": "Qara soba / ağ fon",
+      "sourceImage": "/media/products/LOTUS/LOTUS_SOBALAR/Soba Lotus LT615 Full Black/Soba Lotus LT615 Full Black (2).jpg"
+    },
+    {
+      "productId": "ardo-ar09ws",
+      "modelCode": "AR09WS",
+      "matchKey": "AR09WS",
+      "label": "Ağ kondisioner / ağ fon",
+      "sourceImage": "/media/products/ARDO/ARDO_KONDISONER/Kondisioner Ardo AR09WS/Kondisioner Ardo AR09WS.jpg"
+    },
+    {
+      "productId": "artel-a43puch010-black-google-tv-4k",
+      "modelCode": "A43PUCH010",
+      "matchKey": "A43PUCH010",
+      "label": "Qara televizor və incə ayaqlar",
+      "sourceImage": "/media/products/ARTEL/ARTEL_TELEVIZOR/TV Artel A43PUCH010 Black Google TV 4K/TV Artel A43PUCH010 Black Google TV 4K.jpg"
+    },
+    {
+      "productId": "lotus-55-black",
+      "modelCode": "5.5 Black",
+      "matchKey": "5.5 Black",
+      "label": "Parlaq qara kiçik məişət texnikası",
+      "sourceImage": "/media/products/LOTUS/LOTUS_ARFIYER/Airfryer Lotus 5.5 Black/Airfryer Lotus 5.5 Black (2).JPG"
+    },
+    {
+      "productId": "ardo-6440-black",
+      "modelCode": "6440 Black",
+      "matchKey": "6440 Black",
+      "label": "Mürəkkəb kənarlı qara bişirmə paneli",
+      "sourceImage": "/media/products/ARDO/ARDO_BISIRME_PANELI/Plite Ardo 6440 Black/Plite Ardo 6440 Black.jpg"
+    },
+    {
+      "productId": "lotus-lt-18-orange",
+      "modelCode": "LT 18 Orange",
+      "matchKey": "LT 18 Orange",
+      "label": "Rəngli məhsul / off-white fon",
+      "sourceImage": "/media/products/LOTUS/LOTUS_TOZSORAN/Tozsoran Lotus LT 18 Orange/Tozsoran Lotus LT 18 Orange.JPG"
+    },
+    {
+      "productId": "lotus-lt-8800",
+      "modelCode": "LT-8800",
+      "matchKey": "LT-8800",
+      "label": "Kabel və incə konturlu ütü",
+      "sourceImage": "/media/products/LOTUS/LOTUS_UTU/Utu Lotus LT-8800/Utu Lotus LT-8800.jpg"
+    },
+    {
+      "productId": "lotus-lt02003",
+      "modelCode": "LT02003",
+      "matchKey": "LT02003",
+      "label": "Metal və ağ səthli ətçəkən",
+      "sourceImage": "/media/products/LOTUS/LOTUS_ETCEKEN/Ətçəkən Lotus LT02003/Ətçəkən Lotus LT02003 (2).JPG"
+    },
+    {
+      "productId": "ardo-602-white",
+      "modelCode": "602 white",
+      "matchKey": "602 white",
+      "label": "Ağ məhsul / zəif fon kontrastı",
+      "sourceImage": "/media/products/ARDO/ARDO_HAVACEKEN/Aspirator Ardo 602 white/Aspirator Ardo 602 white.jpg"
+    },
+    {
+      "productId": "ardo-ar20ss",
+      "modelCode": "AR20SS",
+      "matchKey": "AR20SS",
+      "label": "Qara şüşə və metal çərçivə",
+      "sourceImage": "/media/products/ARDO/ARDO_MIKRODALGALI_SOBA/Mikrodalga Ardo AR20SS/Mikrodalga Ardo AR20SS.jpg"
+    }
+  ]
+}

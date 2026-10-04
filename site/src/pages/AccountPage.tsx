@@ -422,7 +422,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
           <div
             className="account-auth-card"
             style={{
-              backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.5)' : '#ffffff',
+              backgroundColor: themeMode === 'dark' ? '#121214' : '#ffffff',
               borderRadius: '24px',
               border: `1px solid ${theme.border}`,
               padding: 'clamp(24px, 3.5vw, 40px)',
@@ -1097,7 +1097,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
             <div
               className="account-auth-benefits-card"
               style={{
-                backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#ffffff',
+                backgroundColor: themeMode === 'dark' ? '#121214' : '#ffffff',
                 borderRadius: '24px',
                 border: `1px solid ${theme.border}`,
                 padding: 'clamp(24px, 3.5vw, 36px)',
@@ -1258,7 +1258,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                 style={{
                   padding: '14px 16px',
                   borderRadius: '14px',
-                  backgroundColor: themeMode === 'dark' ? 'rgba(15, 23, 42, 0.6)' : '#f8fafc',
+                  backgroundColor: themeMode === 'dark' ? '#18181b' : '#f8fafc',
                   border: `1px solid ${theme.border}`,
                   display: 'flex',
                   alignItems: 'center',
@@ -1284,7 +1284,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
             style={{
               padding: 'clamp(20px, 3vw, 32px)',
               borderRadius: '24px',
-              backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.6)' : '#ffffff',
+              backgroundColor: themeMode === 'dark' ? '#121214' : '#ffffff',
               border: `1px solid ${theme.border}`,
               boxShadow: '0 12px 36px rgba(0,0,0,0.05)',
               display: 'flex',
@@ -1425,7 +1425,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
               style={{
                 padding: '20px 24px',
                 borderRadius: '18px',
-                backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#ffffff',
+                backgroundColor: themeMode === 'dark' ? '#121214' : '#ffffff',
                 border: `1px solid ${theme.border}`,
                 boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
                 cursor: 'pointer',
@@ -1473,7 +1473,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
               style={{
                 padding: '20px 24px',
                 borderRadius: '18px',
-                backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#ffffff',
+                backgroundColor: themeMode === 'dark' ? '#121214' : '#ffffff',
                 border: `1px solid ${theme.border}`,
                 boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
                 cursor: 'pointer',
@@ -1521,7 +1521,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
               style={{
                 padding: '20px 24px',
                 borderRadius: '18px',
-                backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#ffffff',
+                backgroundColor: themeMode === 'dark' ? '#121214' : '#ffffff',
                 border: `1px solid ${theme.border}`,
                 boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
                 cursor: 'pointer',
@@ -1569,7 +1569,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
               style={{
                 padding: '20px 24px',
                 borderRadius: '18px',
-                backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#ffffff',
+                backgroundColor: themeMode === 'dark' ? '#121214' : '#ffffff',
                 border: `1px solid ${theme.border}`,
                 boxShadow: '0 4px 16px rgba(0,0,0,0.03)',
                 cursor: 'pointer',
@@ -1803,7 +1803,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
           {activeDashboardTab === 'profile' && (
             <div
               style={{
-                backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#ffffff',
+                backgroundColor: themeMode === 'dark' ? '#121214' : '#ffffff',
                 borderRadius: '20px',
                 border: `1px solid ${theme.border}`,
                 padding: '28px',
@@ -2193,7 +2193,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
               {/* Sifariş İzləmə Axtarış Qutusu */}
               <div
                 style={{
-                  backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#ffffff',
+                  backgroundColor: themeMode === 'dark' ? '#121214' : '#ffffff',
                   borderRadius: '20px',
                   border: `1px solid ${theme.border}`,
                   padding: '24px',
@@ -2286,7 +2286,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                       style={{
                         padding: '20px 24px',
                         borderRadius: '16px',
-                        backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#ffffff',
+                        backgroundColor: themeMode === 'dark' ? '#121214' : '#ffffff',
                         border: `1px solid ${theme.border}`,
                         display: 'flex',
                         alignItems: 'center',
@@ -2330,7 +2330,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                     style={{
                       padding: '36px',
                       borderRadius: '16px',
-                      backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.2)' : '#f8fafc',
+                      backgroundColor: themeMode === 'dark' ? 'rgba(18, 18, 20, 0.5)' : '#f8fafc',
                       border: `1px dashed ${theme.border}`,
                       textAlign: 'center',
                       color: theme.textMuted,
@@ -2558,7 +2558,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                     style={{
                       padding: '20px',
                       borderRadius: '16px',
-                      backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#ffffff',
+                      backgroundColor: themeMode === 'dark' ? '#121214' : '#ffffff',
                       border: `1px solid ${theme.border}`,
                       display: 'flex',
                       flexDirection: 'column',
@@ -2637,7 +2637,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
           {activeDashboardTab === 'security' && (
             <div
               style={{
-                backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#ffffff',
+                backgroundColor: themeMode === 'dark' ? '#121214' : '#ffffff',
                 borderRadius: '20px',
                 border: `1px solid ${theme.border}`,
                 padding: '28px',
@@ -2821,7 +2821,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                 style={{
                   padding: '24px',
                   borderRadius: '20px',
-                  backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#ffffff',
+                  backgroundColor: themeMode === 'dark' ? '#121214' : '#ffffff',
                   border: `1px solid ${theme.border}`,
                   display: 'flex',
                   flexDirection: 'column',
@@ -2884,7 +2884,7 @@ export const AccountPage: React.FC<AccountPageProps> = ({
                 style={{
                   padding: '24px',
                   borderRadius: '20px',
-                  backgroundColor: themeMode === 'dark' ? 'rgba(30, 41, 59, 0.4)' : '#ffffff',
+                  backgroundColor: themeMode === 'dark' ? '#121214' : '#ffffff',
                   border: `1px solid ${theme.border}`,
                   display: 'flex',
                   flexDirection: 'column',

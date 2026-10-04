@@ -1,8 +1,11 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { existsSync, readdirSync, mkdtempSync, copyFileSync, rmSync } from 'node:fs';
+import { existsSync, readdirSync, mkdtempSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
-import { createCatalogDatabase, createConsistentDatabaseSnapshot } from '../../backend/catalogDatabase.mjs';
+import {
+  createCatalogDatabase,
+  createConsistentDatabaseSnapshot,
+} from '../../backend/catalogDatabase.mjs';
 
 const ROOT = process.cwd();
 
@@ -67,8 +70,8 @@ describe('Lotus Brand & 190 Products Import & 43 Media Audit Tests', () => {
   const publicLotusMediaDir = path.join(ROOT, 'public/media/products/lotus');
   const hasSampleMedia =
     existsSync(publicLotusMediaDir) &&
-    readdirSync(publicLotusMediaDir).filter((f) => f.endsWith('.jpg') || f.endsWith('.png')).length >=
-      43;
+    readdirSync(publicLotusMediaDir).filter((f) => f.endsWith('.jpg') || f.endsWith('.png'))
+      .length >= 43;
 
   it.skipIf(!hasSampleMedia)(
     'audits all 43 product photos exist on physical disk (Opt-in sample media check)',

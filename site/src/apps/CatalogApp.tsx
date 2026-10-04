@@ -8,6 +8,11 @@ import {
   sortCatalogPageProducts,
 } from '../features/catalog/catalogSelection';
 import {
+  CatalogUrlState,
+  readCatalogUrlState,
+  writeCatalogUrlState,
+} from '../features/catalog/catalogUrlState';
+import {
   ArrowDownNarrowWide,
   ArrowLeft,
   ArrowUpNarrowWide,
@@ -30,6 +35,7 @@ import { Header } from '../components/Header';
 import { SaharaLogo } from '../components/SaharaLogo';
 import { BrandShowcase } from '../components/BrandShowcase';
 import { ProductCard } from '../components/ProductCard';
+import { CategoryGlyph } from '../components/CategoryGlyph';
 import { BrandCategoryFilter } from '../components/BrandCategoryFilter';
 import { CatalogSidebarFilter } from '../components/CatalogSidebarFilter';
 import { FloatingActions } from '../components/FloatingActions';
@@ -39,6 +45,7 @@ import { Footer } from '../components/Footer';
 import { ProductGridSkeleton } from '../components/Skeletons';
 import type { CartItem } from '../pages/CartPage';
 import { useTheme, useToast, useCatalog, useContact, useFavorites } from '../hooks';
+import { useWebsiteProductImageCatalog } from '../components/site/product-media/useWebsiteProductImageCatalog';
 
 // Lazy Loaded Pages & Modals
 const CatalogAdmin = lazy(() =>
@@ -82,6 +89,9 @@ const isAdminPath = () => {
 };
 
 export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = false }) => {
+  const [initialUrlState] = useState<CatalogUrlState>(() =>
+    readCatalogUrlState(typeof window === 'undefined' ? '' : window.location.search)
+  );
   const [adminChecked, setAdminChecked] = useState(false);
   const [adminData, setAdminData] = useState<AdminPayload | null>(null);
 
@@ -122,19 +132,23 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
     }
   }, []);
 
-  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
-  const [selectedBrand, setSelectedBrand] = useState<string | null>(null);
-  const [selectedBrands, setSelectedBrands] = useState<string[]>([]);
-  const [searchQuery, setSearchQuery] = useState('');
-  const [minPrice, setMinPrice] = useState<number | null>(null);
-  const [maxPrice, setMaxPrice] = useState<number | null>(null);
-  const [onlyDiscounted, setOnlyDiscounted] = useState(false);
-  const [onlyWithVideo, setOnlyWithVideo] = useState(false);
-  const [selectedEnergyClass, setSelectedEnergyClass] = useState('all');
-  const [selectedMotorType, setSelectedMotorType] = useState('all');
-  const [selectedColor, setSelectedColor] = useState('all');
-  const [sortBy, setSortBy] = useState<CatalogSortOption>('all');
-  const [comparisonIds, setComparisonIds] = useState<string[]>([]);
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(
+    initialUrlState.category
+  );
+  const [selectedBrand, setSelectedBrand] = useState<string | null>(
+    initialUrlState.brands.length === 1 ? initialUrlState.brands[0] : null
+  );
+  const [selectedBrands, setSelectedBrands] = useState<string[]>(initialUrlState.brands);
+  const [searchQuery, setSearchQuery] = useState(initialUrlState.query);
+  const [minPrice, setMinPrice] = useState<number | null>(initialUrlState.minPrice);
+  const [maxPrice, setMaxPrice] = useState<number | null>(initialUrlState.maxPrice);
+  const [onlyDiscounted, setOnlyDiscounted] = useState(initialUrlState.onlyDiscounted);
+  const [onlyWithVideo, setOnlyWithVideo] = useState(initialUrlState.onlyWithVideo);
+  const [selectedEnergyClass, setSelectedEnergyClass] = useState(initialUrlState.energyClass);
+  const [selectedMotorType, setSelectedMotorType] = useState(initialUrlState.motorType);
+  const [selectedColor, setSelectedColor] = useState(initialUrlState.color);
+  const [sortBy, setSortBy] = useState<CatalogSortOption>(initialUrlState.sortBy);
+  const [comparisonIds, setComparisonIds] = useState<string[]>(initialUrlState.comparisonIds);
   const [isSortDropdownOpen, setIsSortDropdownOpen] = useState(false);
   const sortDropdownRef = React.useRef<HTMLDivElement>(null);
 
@@ -181,7 +195,75 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
   const [shareTargetProduct, setShareTargetProduct] = useState<Product | null>(null);
   const [infoModalTab, setInfoModalTab] = useState<CatalogInfoTab | null>(null);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
-  const [activeView, setActiveView] = useState<'catalog' | 'cart' | 'favorites'>('catalog');
+  const [activeView, setActiveView] = useState<'catalog' | 'cart' | 'favorites'>(
+    initialUrlState.view
+  );
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || isAdminPath()) return;
+    const brands =
+      selectedBrands.length > 0
+        ? selectedBrands
+        : selectedBrand && selectedBrand !== 'all'
+          ? [selectedBrand]
+          : [];
+    const nextUrl = writeCatalogUrlState(new URL(window.location.href), {
+      brands,
+      category: selectedCategory,
+      query: searchQuery,
+      minPrice,
+      maxPrice,
+      onlyDiscounted,
+      onlyWithVideo,
+      energyClass: selectedEnergyClass,
+      motorType: selectedMotorType,
+      color: selectedColor,
+      sortBy,
+      comparisonIds,
+      view: activeView,
+    });
+    if (nextUrl.toString() !== window.location.href) {
+      window.history.replaceState(window.history.state, '', nextUrl.toString());
+    }
+  }, [
+    activeView,
+    comparisonIds,
+    maxPrice,
+    minPrice,
+    onlyDiscounted,
+    onlyWithVideo,
+    searchQuery,
+    selectedBrand,
+    selectedBrands,
+    selectedCategory,
+    selectedColor,
+    selectedEnergyClass,
+    selectedMotorType,
+    sortBy,
+  ]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || isAdminPath()) return;
+    const restoreFromUrl = () => {
+      const restored = readCatalogUrlState(window.location.search);
+      setSelectedBrands(restored.brands);
+      setSelectedBrand(restored.brands.length === 1 ? restored.brands[0] : null);
+      setSelectedCategory(restored.category);
+      setSearchQuery(restored.query);
+      setMinPrice(restored.minPrice);
+      setMaxPrice(restored.maxPrice);
+      setOnlyDiscounted(restored.onlyDiscounted);
+      setOnlyWithVideo(restored.onlyWithVideo);
+      setSelectedEnergyClass(restored.energyClass);
+      setSelectedMotorType(restored.motorType);
+      setSelectedColor(restored.color);
+      setSortBy(restored.sortBy);
+      setComparisonIds(restored.comparisonIds);
+      setActiveView(restored.view);
+    };
+    window.addEventListener('popstate', restoreFromUrl);
+    return () => window.removeEventListener('popstate', restoreFromUrl);
+  }, []);
   const [cartItems, setCartItems] = useState<CartItem[]>(() => {
     if (typeof window === 'undefined') return [];
     try {
@@ -297,10 +379,18 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
     }
   }, []);
 
-  const { catalog, setCatalog, isLoadingCatalog } = useCatalog({
+  const {
+    catalog: sourceCatalog,
+    setCatalog,
+    isLoadingCatalog,
+  } = useCatalog({
     initialCatalog: initialData?.catalog,
     isSsr,
     onLoaded: parseDeepLink,
+  });
+
+  const { catalog } = useWebsiteProductImageCatalog(sourceCatalog, {
+    enabled: true,
   });
 
   // Theme Hook
@@ -308,8 +398,12 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
 
   // Product URL generator
   const productUrl = useCallback(
-    (product: Product) =>
-      `${window.location.origin}${window.location.pathname}?product=${encodeURIComponent(product.id)}`,
+    (product: Product) => {
+      const url = new URL(window.location.href);
+      url.searchParams.set('mode', 'catalog');
+      url.searchParams.set('product', product.id);
+      return url.toString();
+    },
     []
   );
 
@@ -367,7 +461,7 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
   const shareWhatsApp = () => {
     const text = shareTargetProduct
       ? `${shareTargetProduct.code} — ${shareTargetProduct.title}\n${productUrl(shareTargetProduct)}`
-      : `Sahara Electronics məhsul kataloqu:\n${window.location.origin}${window.location.pathname}`;
+      : `Sahara Electronics məhsul kataloqu:\n${window.location.href}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank', 'noopener,noreferrer');
   };
 
@@ -544,6 +638,54 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
   }, [catalog.categories, activeCatalogProducts]);
 
   useEffect(() => {
+    if (isLoadingCatalog) return;
+
+    const validBrandIds = new Set(supportedBrands.map((brand) => brand.id.toLowerCase()));
+    const validBrands = selectedBrands.filter((brandId) =>
+      validBrandIds.has(brandId.toLowerCase())
+    );
+    if (
+      validBrands.length !== selectedBrands.length ||
+      validBrands.some((brandId, index) => brandId !== selectedBrands[index])
+    ) {
+      setSelectedBrands(validBrands);
+    }
+
+    const nextSelectedBrand = validBrands.length === 1 ? validBrands[0] : null;
+    if (selectedBrand !== nextSelectedBrand) {
+      setSelectedBrand(nextSelectedBrand);
+    }
+
+    if (
+      selectedCategory &&
+      selectedCategory !== 'all' &&
+      !catalog.categories.some((category) => category.id === selectedCategory)
+    ) {
+      setSelectedCategory(null);
+    }
+
+    const validProductIds = new Set(activeCatalogProducts.map((product) => product.id));
+    const validComparisonIds = comparisonIds.filter((productId) =>
+      validProductIds.has(productId)
+    );
+    if (
+      validComparisonIds.length !== comparisonIds.length ||
+      validComparisonIds.some((productId, index) => productId !== comparisonIds[index])
+    ) {
+      setComparisonIds(validComparisonIds);
+    }
+  }, [
+    activeCatalogProducts,
+    catalog.categories,
+    comparisonIds,
+    isLoadingCatalog,
+    selectedBrand,
+    selectedBrands,
+    selectedCategory,
+    supportedBrands,
+  ]);
+
+  useEffect(() => {
     if (catalog.settings?.siteTitle) {
       document.title = catalog.settings.siteTitle;
     }
@@ -714,9 +856,26 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
     ? catalog.brands.find((brand) => brand.id === selectedProduct.brandId)
     : undefined;
 
+  const handleLogoClick = () => {
+    setActiveView('catalog');
+    setSearchQuery('');
+    setSelectedCategory(null);
+    setSelectedBrand(null);
+    setSelectedBrands([]);
+    setMinPrice(null);
+    setMaxPrice(null);
+    setOnlyDiscounted(false);
+    setOnlyWithVideo(false);
+    setSelectedEnergyClass(null);
+    setSelectedMotorType(null);
+    setSelectedColor(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
   return (
-    <div className="catalog-shell" style={{ backgroundColor: activeTheme.bg, minHeight: '100vh' }}>
+    <div className="catalog-shell" style={{ backgroundColor: activeTheme.bg, color: activeTheme.text, minHeight: '100vh' }}>
       <Header
+        onLogoClick={handleLogoClick}
         categories={catalog.categories}
         brands={supportedBrands}
         products={activeCatalogProducts}
@@ -899,17 +1058,34 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                 ) : (
                   <div className="catalog-section-heading">
                     <div>
-                      <h1 style={{ color: activeTheme.text }}>
-                        {searchQuery
-                          ? `"${searchQuery}" axtarış nəticələri`
-                          : selectedCategory === 'all'
-                            ? catalog.settings?.catalogHeading || 'Bütün məhsullar (Bütün brendlər)'
-                            : `${catalog.categories.find((item) => item.id === selectedCategory)?.name || 'Məhsullar'} (Bütün brendlər)`}
+                      <h1
+                        className="catalog-category-heading-title"
+                        style={{ color: activeTheme.text }}
+                      >
+                        {searchQuery ? (
+                          <Search size={20} aria-hidden="true" />
+                        ) : (
+                          <CategoryGlyph
+                            id={selectedCategory === 'all' ? 'all' : selectedCategory || 'all'}
+                            slug={
+                              catalog.categories.find((item) => item.id === selectedCategory)?.slug
+                            }
+                            compact
+                            plain
+                          />
+                        )}
+                        <span>
+                          {searchQuery
+                            ? `"${searchQuery}" axtarış nəticələri`
+                            : selectedCategory === 'all'
+                              ? (catalog.settings?.catalogHeading || 'Bütün məhsullar').replace(
+                                  /\s*\(Bütün brendlər\)\s*/gi,
+                                  ''
+                                )
+                              : catalog.categories.find((item) => item.id === selectedCategory)
+                                  ?.name || 'Məhsullar'}
+                        </span>
                       </h1>
-                      <p style={{ color: activeTheme.textMuted }}>
-                        {catalog.settings?.catalogSubheading ||
-                          'Modellərə və texniki xüsusiyyət sahələrinə baxın'}
-                      </p>
                     </div>
                     <button
                       type="button"
@@ -990,7 +1166,10 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                   </aside>
 
                   {/* Right Area: Products Grid & Controls */}
-                  <div style={{ flex: 1, minWidth: 0, width: '100%' }}>
+                  <div
+                    className="catalog-products-panel"
+                    style={{ flex: 1, minWidth: 0, width: '100%' }}
+                  >
                     {/* Top Controls Toolbar */}
                     <div
                       className="catalog-top-controls"
@@ -1002,7 +1181,9 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                         gap: '12px',
                         padding: '10px 16px',
                         borderRadius: '14px',
-                        backgroundColor: activeTheme.bgCard,
+                        backgroundColor: themeMode === 'dark' ? 'rgba(var(--bg-rgb), 0.85)' : 'rgba(255, 255, 255, 0.85)',
+                        backdropFilter: 'blur(12px)',
+                        WebkitBackdropFilter: 'blur(12px)',
                         border: 'none',
                         marginBottom: '16px',
                       }}
@@ -1064,7 +1245,7 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                             display: 'flex',
                             alignItems: 'center',
                             gap: '6px',
-                            backgroundColor: activeTheme.bgSecondary,
+                            backgroundColor: activeTheme.bgCard,
                             borderRadius: '10px',
                             padding: '0 10px',
                             height: '36px',
@@ -1181,7 +1362,7 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                             borderRadius: '10px',
                             backgroundColor:
                               themeMode === 'dark'
-                                ? 'rgba(30, 41, 59, 0.7)'
+                                ? '#18181b'
                                 : 'rgba(241, 245, 249, 0.95)',
                             border: `1px solid ${
                               isSortDropdownOpen
@@ -1238,7 +1419,7 @@ export const CatalogApp: React.FC<CatalogAppProps> = ({ initialData, isSsr = fal
                               top: 'calc(100% + 6px)',
                               right: 0,
                               minWidth: '220px',
-                              backgroundColor: themeMode === 'dark' ? '#0f172a' : '#ffffff',
+                              backgroundColor: themeMode === 'dark' ? 'var(--bg-card)' : '#ffffff',
                               border: `1px solid ${themeMode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : '#e2e8f0'}`,
                               borderRadius: '14px',
                               boxShadow: '0 12px 32px rgba(0, 0, 0, 0.18)',

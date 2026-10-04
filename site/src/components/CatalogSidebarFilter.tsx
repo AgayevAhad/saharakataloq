@@ -16,6 +16,7 @@ import { Brand, CatalogCategory, Product } from '../types/product';
 import { ThemeColors } from '../types/theme';
 import { CategoryGlyph } from './CategoryGlyph';
 import { ShimmerImage } from './ShimmerImage';
+import { getBrandLogo, getBrandLogoFilter } from '../utils/brandLogos';
 
 export interface CatalogSidebarFilterProps {
   categories: CatalogCategory[];
@@ -101,9 +102,9 @@ export const CatalogSidebarFilter: React.FC<CatalogSidebarFilterProps> = ({
     setOpenSections((prev) => ({ ...prev, [section]: !prev[section] }));
   };
 
-  const cardBg = isDarkMode ? 'rgba(30, 41, 59, 0.45)' : '#ffffff';
+  const cardBg = isDarkMode ? theme.bgCard : 'rgba(255, 255, 255, 0.85)';
   const cardBorder = 'transparent';
-  const inputBg = isDarkMode ? '#1e293b' : '#f8fafc';
+  const inputBg = isDarkMode ? '#18181b' : '#f8fafc';
   const inputBorder = isDarkMode ? 'rgba(255, 255, 255, 0.08)' : '#e2e8f0';
 
   return (
@@ -216,6 +217,8 @@ export const CatalogSidebarFilter: React.FC<CatalogSidebarFilterProps> = ({
       <div
         style={{
           backgroundColor: cardBg,
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
           border: `1px solid ${cardBorder}`,
           borderRadius: '16px',
           padding: '14px 16px',
@@ -340,6 +343,8 @@ export const CatalogSidebarFilter: React.FC<CatalogSidebarFilterProps> = ({
         <div
           style={{
             backgroundColor: cardBg,
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
             border: `1px solid ${cardBorder}`,
             borderRadius: '16px',
             padding: '14px 16px',
@@ -392,7 +397,9 @@ export const CatalogSidebarFilter: React.FC<CatalogSidebarFilterProps> = ({
                 const isChecked = selectedBrands
                   .map((b) => b.toLowerCase())
                   .includes(brand.id.toLowerCase());
-                const logoSrc = BRAND_LOGOS[brand.id.toLowerCase()] || brand.logo;
+                const defaultLogo = BRAND_LOGOS[brand.id.toLowerCase()] || brand.logo;
+                const logoSrc = getBrandLogo(brand.id, isDarkMode, defaultLogo);
+                const logoFilter = getBrandLogoFilter(brand.id, isDarkMode);
                 return (
                   <div
                     key={brand.id}
@@ -447,10 +454,7 @@ export const CatalogSidebarFilter: React.FC<CatalogSidebarFilterProps> = ({
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            backgroundColor: '#ffffff',
-                            borderRadius: '5px',
-                            padding: '2px 4px',
-                            boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+                            backgroundColor: 'transparent',
                             flexShrink: 0,
                           }}
                         >
@@ -459,7 +463,12 @@ export const CatalogSidebarFilter: React.FC<CatalogSidebarFilterProps> = ({
                             alt={brand.name}
                             spinnerSize={8}
                             containerStyle={{ width: '100%', height: '100%' }}
-                            style={{ objectFit: 'contain', width: '100%', height: '100%' }}
+                            style={{ 
+                              objectFit: 'contain', 
+                              width: '100%', 
+                              height: '100%',
+                              filter: logoFilter,
+                            }}
                           />
                         </div>
                       ) : null}
@@ -501,6 +510,8 @@ export const CatalogSidebarFilter: React.FC<CatalogSidebarFilterProps> = ({
       <div
         style={{
           backgroundColor: cardBg,
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
           border: `1px solid ${cardBorder}`,
           borderRadius: '16px',
           padding: '14px 16px',
@@ -627,7 +638,7 @@ export const CatalogSidebarFilter: React.FC<CatalogSidebarFilterProps> = ({
                   style={{
                     padding: '4px 7px',
                     borderRadius: '6px',
-                    backgroundColor: isDarkMode ? '#1e293b' : '#f1f5f9',
+                    backgroundColor: isDarkMode ? '#18181b' : '#f1f5f9',
                     border: 'none',
                     color: theme.text,
                     fontSize: '11px',
@@ -647,6 +658,8 @@ export const CatalogSidebarFilter: React.FC<CatalogSidebarFilterProps> = ({
       <div
         style={{
           backgroundColor: cardBg,
+          backdropFilter: 'blur(12px)',
+          WebkitBackdropFilter: 'blur(12px)',
           border: `1px solid ${cardBorder}`,
           borderRadius: '16px',
           padding: '14px 16px',
@@ -717,7 +730,7 @@ export const CatalogSidebarFilter: React.FC<CatalogSidebarFilterProps> = ({
                         selectedEnergyClass === cls
                           ? theme.primary
                           : isDarkMode
-                            ? '#1e293b'
+                            ? '#18181b'
                             : '#f1f5f9',
                       color: selectedEnergyClass === cls ? '#ffffff' : theme.text,
                       border: 'none',
@@ -762,7 +775,7 @@ export const CatalogSidebarFilter: React.FC<CatalogSidebarFilterProps> = ({
                         selectedMotorType === motor.id
                           ? theme.primary
                           : isDarkMode
-                            ? '#1e293b'
+                            ? '#18181b'
                             : '#f1f5f9',
                       color: selectedMotorType === motor.id ? '#ffffff' : theme.text,
                       border: 'none',
@@ -809,7 +822,7 @@ export const CatalogSidebarFilter: React.FC<CatalogSidebarFilterProps> = ({
                         selectedColor === col.id
                           ? theme.primary
                           : isDarkMode
-                            ? '#1e293b'
+                            ? '#18181b'
                             : '#f1f5f9',
                       color: selectedColor === col.id ? '#ffffff' : theme.text,
                       border: 'none',

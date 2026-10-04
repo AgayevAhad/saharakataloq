@@ -1309,10 +1309,10 @@ export const ArticleManager = ({ theme, articles, onChange }: ArticleManagerProp
       >
         <div>
           <h2 style={{ fontSize: '18px', fontWeight: 800, margin: '0 0 4px 0' }}>
-            Texnologiyalar və "i" Məlumat Bələdçisi
+            Texnologiyalar Məlumat Bələdçisi
           </h2>
           <p style={{ color: theme.textMuted, margin: 0, fontSize: '13px' }}>
-            Kataloqun karuselində və başlıqdakı "i" pəncərəsində görünəcək texnologiya məqalələri.
+            Kataloqun texnologiya karuselində və məlumat pəncərəsində görünəcək məqalələr.
           </p>
         </div>
         <button

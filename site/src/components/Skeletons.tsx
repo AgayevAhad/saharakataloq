@@ -36,12 +36,12 @@ export const ProductCardSkeleton: React.FC<SkeletonProps> = ({ theme }) => {
       className="product-card skeleton-card"
       style={{
         backgroundColor: theme.bgCard,
-        border: `1px solid ${theme.border}`,
-        borderRadius: '14px',
+        border: 0,
+        borderRadius: '16px',
         display: 'flex',
-        flexDirection: 'column',
-        height: '100%',
-        boxShadow: `0 2px 8px -2px ${theme.mode === 'dark' ? 'rgba(0,0,0,0.4)' : 'rgba(0,0,0,0.06)'}`,
+        flexDirection: 'row',
+        height: '339px',
+        boxShadow: `0 8px 28px ${theme.mode === 'dark' ? 'rgba(0,0,0,0.32)' : 'rgba(15,23,42,0.08)'}`,
       }}
       aria-busy="true"
       aria-label="Məhsul yüklənir..."
@@ -50,89 +50,84 @@ export const ProductCardSkeleton: React.FC<SkeletonProps> = ({ theme }) => {
       <div
         className="product-card-img-wrap product-card-media"
         style={{
-          backgroundColor: theme.mode === 'dark' ? '#0c101a' : '#f8fafc',
+          backgroundColor: '#f8fafc',
           position: 'relative',
-          height: '220px',
+          flex: '0 0 339px',
+          width: '339px',
+          height: '339px',
+          minHeight: '339px',
+          maxHeight: '339px',
+          aspectRatio: '1 / 1',
+          borderRadius: '16px 0 0 16px',
         }}
-      >
-        <div
-          style={{
-            position: 'absolute',
-            top: '10px',
-            left: '10px',
-            right: '10px',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            zIndex: 4,
-          }}
-        >
-          <SkeletonBox width="90px" height="24px" borderRadius="6px" />
-          <SkeletonBox width="70px" height="22px" borderRadius="6px" />
-        </div>
-      </div>
+      ></div>
 
       {/* Product Content Details */}
       <div
+        className="product-card-details"
         style={{
-          padding: '16px',
+          padding: '10px 12px 14px',
+          marginTop: 0,
           flex: 1,
           display: 'flex',
           flexDirection: 'column',
-          justifyContent: 'space-between',
+          justifyContent: 'flex-start',
+          gap: '6px',
+          borderRadius: '0 16px 16px 0',
+          backgroundColor: theme.bgCard,
+          boxShadow: 'none',
         }}
       >
-        <div>
-          {/* Code & Origin Row */}
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'space-between',
-              marginBottom: '6px',
-            }}
-          >
-            <SkeletonBox width="85px" height="16px" borderRadius="6px" />
-            <SkeletonBox width="75px" height="14px" borderRadius="6px" />
-          </div>
-
-          {/* Product Title (2 lines) */}
-          <SkeletonBox
-            width="100%"
-            height="18px"
-            borderRadius="6px"
-            style={{ marginBottom: '6px' }}
-          />
-          <SkeletonBox
-            width="65%"
-            height="18px"
-            borderRadius="6px"
-            style={{ marginBottom: '10px' }}
-          />
-
-          {/* Highlights Checklist */}
-          <div
-            style={{ display: 'flex', flexDirection: 'column', gap: '6px', margin: '6px 0 10px' }}
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <SkeletonBox width="14px" height="14px" borderRadius="4px" />
-              <SkeletonBox width="80%" height="12px" borderRadius="4px" />
-            </div>
-            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <SkeletonBox width="14px" height="14px" borderRadius="4px" />
-              <SkeletonBox width="65%" height="12px" borderRadius="4px" />
-            </div>
-          </div>
+        <div className="product-card-identity-top">
+          <SkeletonBox width="72px" height="28px" borderRadius="8px" />
+          <SkeletonBox width="96px" height="28px" borderRadius="8px" />
         </div>
 
-        {/* Action Buttons Row: "Ətraflı bax" + WA/Call */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '12px' }}>
-          <SkeletonBox width="100%" height="36px" borderRadius="8px" />
-          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-            <SkeletonBox width="100%" height="32px" borderRadius="8px" style={{ flex: 1 }} />
-            <SkeletonBox width="100%" height="32px" borderRadius="8px" style={{ flex: 1 }} />
-            <SkeletonBox width="34px" height="32px" borderRadius="8px" style={{ flexShrink: 0 }} />
+        <div className="product-card-full-title" style={{ display: 'grid', gap: '6px' }}>
+          <SkeletonBox width="100%" height="18px" borderRadius="6px" />
+          <SkeletonBox width="68%" height="18px" borderRadius="6px" />
+        </div>
+
+        <div className="product-card-price-compare-row">
+          <div className="product-card-price-row">
+            <SkeletonBox width="112px" height="18px" borderRadius="6px" />
           </div>
+          <SkeletonBox width="88px" height="32px" borderRadius="9px" />
+        </div>
+
+        <div className="product-card-contact-actions">
+          <SkeletonBox
+            className="skeleton-mobile-contact-action"
+            width="100%"
+            height="36px"
+            borderRadius="10px"
+          />
+          <SkeletonBox
+            className="skeleton-mobile-contact-action"
+            width="100%"
+            height="36px"
+            borderRadius="10px"
+          />
+        </div>
+
+        <div className="product-card-primary-actions">
+          <SkeletonBox width="100%" height="36px" borderRadius="10px" />
+          <SkeletonBox width="100%" height="36px" borderRadius="10px" />
+        </div>
+
+        <div className="product-card-top-actions">
+          <SkeletonBox
+            className="skeleton-mobile-share-action"
+            width="100%"
+            height="28px"
+            borderRadius="8px"
+          />
+          <SkeletonBox
+            className="skeleton-mobile-details-action"
+            width="100%"
+            height="28px"
+            borderRadius="8px"
+          />
         </div>
       </div>
     </div>
@@ -319,7 +314,7 @@ export const BannerHeroSkeleton: React.FC<SkeletonProps> = ({ theme }) => {
                 padding: '10px 16px',
                 marginTop: 20,
                 borderRadius: 14,
-                backgroundColor: 'rgba(15, 23, 42, 0.72)',
+                backgroundColor: 'rgba(18, 18, 20, 0.88)',
               }}
             >
               <SkeletonBox width="34px" height="34px" borderRadius="8px" />

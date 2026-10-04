@@ -6,11 +6,14 @@ import { ProductEditor } from '../components/CatalogAdmin';
 import { ProductDetailModal } from '../components/ProductDetailModal';
 import { ProductCard } from '../components/ProductCard';
 import { ImageCropStudioModal } from '../components/ImageCropStudioModal';
-import { ShimmerImage } from '../components/ShimmerImage';
+import { calculateCropFrameTransform, ShimmerImage } from '../components/ShimmerImage';
 import { lightTheme } from '../types/theme';
 import { Product, Brand, CatalogCategory } from '../types/product';
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.unstubAllGlobals();
+});
 
 describe('Image Positioning (Focal Point / Alignment) & Pan-Zoom & Visual Crop Studio', () => {
   const mockProduct: Product = {
@@ -186,11 +189,9 @@ describe('Image Positioning (Focal Point / Alignment) & Pan-Zoom & Visual Crop S
         isOpen={true}
         imageUrl="/media/products/ardo-ar6120-white.jpg"
         initialObjectPosition="50% 50%"
-        initialFitMode="contain"
         productTitle="ARDO Aspirator"
         theme={lightTheme}
         onClose={vi.fn()}
-        onSavePosition={vi.fn()}
         onSaveCroppedImage={handleSaveCropped}
       />
     );
@@ -204,6 +205,58 @@ describe('Image Positioning (Focal Point / Alignment) & Pan-Zoom & Visual Crop S
     fireEvent.click(autoTrimBtn);
 
     expect(screen.getByText(/✓ Düzənləməni Saxla & Məhsula Tətbiq Et/i)).toBeTruthy();
+  });
+
+  it('atomically saves framing to the selected media id without changing the original file', async () => {
+    class AutoLoadingImage {
+      naturalWidth = 1000;
+      naturalHeight = 800;
+      onload: null | (() => void) = null;
+
+      set src(_value: string) {
+        queueMicrotask(() => this.onload?.());
+      }
+    }
+    vi.stubGlobal('Image', AutoLoadingImage);
+
+    const handleSave = vi.fn().mockResolvedValue(undefined);
+    render(
+      <ProductEditor
+        product={mockProduct}
+        brands={mockBrands}
+        categories={mockCategories}
+        availableCountries={['İtaliya']}
+        theme={lightTheme}
+        onUpload={vi.fn()}
+        onClose={vi.fn()}
+        onSave={handleSave}
+      />
+    );
+
+    const cropButtons = screen.getAllByTitle(
+      /Şəkildə görünəcək hissəni və fokus sahəsini interaktiv studiyada düzənləyin/i
+    );
+    fireEvent.click(cropButtons[1]);
+    await waitFor(() => expect(screen.getByRole('button', { name: '1:1' })).toBeTruthy());
+
+    fireEvent.click(screen.getByRole('button', { name: '1:1' }));
+    fireEvent.click(screen.getByRole('button', { name: /Düzənləməni Saxla/i }));
+    await waitFor(() =>
+      expect(screen.queryByRole('button', { name: /Düzənləməni Saxla/i })).toBeNull()
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Yadda saxla' }));
+    await waitFor(() => expect(handleSave).toHaveBeenCalledTimes(1));
+
+    const savedProduct = handleSave.mock.calls[0][0] as Product;
+    expect(savedProduct.media?.[0].cropRect).toBeUndefined();
+    expect(savedProduct.media?.[1]).toMatchObject({
+      id: 'm2',
+      url: '/media/products/ardo-ar6120-white-2.jpg',
+      originalUrl: '/media/products/ardo-ar6120-white-2.jpg',
+      cropRect: { x: 0, y: 0, w: 0.8, h: 1 },
+    });
+    expect(savedProduct.cropRect).toBeUndefined();
   });
 
   it('renders ProductCard with custom objectPosition and fitMode styling', () => {
@@ -432,7 +485,18 @@ describe('Image Positioning (Focal Point / Alignment) & Pan-Zoom & Visual Crop S
     expect(fsImg.src).toContain('ardo-ar6120-white-2.jpg');
   });
 
-  it('renders ShimmerImage with accurate CSS transform/offsets when cropRect is provided', () => {
+  it('calculates a fixed-frame crop transform without stretching the source image', () => {
+    const customCrop = { x: 0.2, y: 0.1, w: 0.5, h: 0.4 };
+    const transform = calculateCropFrameTransform(customCrop, 1000, 800, 300, 200);
+
+    expect(transform?.left).toBeCloseTo(-131.25);
+    expect(transform?.top).toBeCloseTo(-50);
+    expect(transform?.width).toBeCloseTo(625);
+    expect(transform?.height).toBeCloseTo(500);
+    expect(transform!.width / transform!.height).toBe(1000 / 800);
+  });
+
+  it('keeps the card frame fixed and marks ShimmerImage as source-framed', () => {
     const customCrop = { x: 0.2, y: 0.1, w: 0.5, h: 0.4 };
     const { container } = render(
       <ProductCard
@@ -457,13 +521,11 @@ describe('Image Positioning (Focal Point / Alignment) & Pan-Zoom & Visual Crop S
 
     const img = container.querySelector('.shimmer-img') as HTMLImageElement;
     expect(img).toBeTruthy();
-    // width: (1/0.5)*100% = 200%, height: (1/0.4)*100% = 250%
-    // left: -(0.2/0.5)*100% = -40%, top: -(0.1/0.4)*100% = -25%
+    expect(img.classList.contains('crop-framed-img')).toBe(true);
+    expect(img.dataset.cropRect).toBe(JSON.stringify(customCrop));
     expect(img.style.position).toBe('absolute');
-    expect(img.style.width).toBe('200%');
-    expect(img.style.height).toBe('250%');
-    expect(img.style.left).toBe('-40%');
-    expect(img.style.top).toBe('-25%');
+    expect(img.style.padding).toBe('0px');
+    expect(container.querySelector('.crop-inner-viewport')).toBeNull();
   });
 
   it('preserves initial cropRect when re-opening ImageCropStudioModal', () => {
@@ -474,21 +536,20 @@ describe('Image Positioning (Focal Point / Alignment) & Pan-Zoom & Visual Crop S
         imageUrl="/media/products/ardo-ar6120-white.jpg"
         initialCropRect={savedCrop}
         initialObjectPosition="45% 50%"
-        initialFitMode="cover"
         productTitle="ARDO Aspirator"
         theme={lightTheme}
         onClose={vi.fn()}
-        onSavePosition={vi.fn()}
         onSaveCroppedImage={vi.fn()}
       />
     );
 
-    const studioModal = container.querySelector('.crop-studio-modal');
+    const studioModal = container.querySelector('.crop-studio-modal') as HTMLElement;
     expect(studioModal).toBeTruthy();
+    expect(JSON.parse(studioModal.dataset.cropRect || '{}')).toEqual(savedCrop);
     expect(screen.getByText('ARDO Aspirator')).toBeTruthy();
   });
 
-  it('renders crop-inner-viewport wrapper with aspect-ratio to prevent distortion and clipping', () => {
+  it('does not create a crop-sized inner viewport that changes the card anatomy', () => {
     const wideCrop = { x: 0.1, y: 0.2, w: 0.8, h: 0.4 };
     const { container } = render(
       <ShimmerImage
@@ -498,17 +559,11 @@ describe('Image Positioning (Focal Point / Alignment) & Pan-Zoom & Visual Crop S
       />
     );
 
-    const viewport = container.querySelector('.crop-inner-viewport') as HTMLElement;
-    expect(viewport).toBeTruthy();
-    expect(viewport.style.position).toBe('relative');
-    expect(viewport.style.aspectRatio).toBeTruthy();
-    expect(viewport.style.overflow).toBe('hidden');
+    expect(container.querySelector('.crop-inner-viewport')).toBeNull();
 
     const img = container.querySelector('.shimmer-img') as HTMLImageElement;
     expect(img).toBeTruthy();
     expect(img.style.position).toBe('absolute');
-    // width: (1/0.8)*100% = 125%, height: (1/0.4)*100% = 250%
-    expect(img.style.width).toBe('125%');
-    expect(img.style.height).toBe('250%');
+    expect(img.dataset.cropRect).toBe(JSON.stringify(wideCrop));
   });
 });

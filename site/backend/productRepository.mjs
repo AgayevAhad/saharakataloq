@@ -122,6 +122,115 @@ export class ProductRepository {
       });
     }
 
+    if (
+      Array.isArray(productData.media) &&
+      this.hasTable('product_media_variants') &&
+      this.hasTable('media_assets')
+    ) {
+      const variantColumns = this.tableColumns('product_media_variants');
+      const supportsCrop = variantColumns.includes('crop_rect');
+      const supportsOriginalUrl = variantColumns.includes('original_url');
+      const existingRows = this.db
+        .prepare(
+          `
+          SELECT pmv.*, ma.url AS asset_url
+          FROM product_media_variants pmv
+          JOIN media_assets ma ON ma.id = pmv.media_id
+          WHERE pmv.product_id = ?
+        `
+        )
+        .all(productId);
+      const existingByLegacyId = new Map(
+        existingRows.filter((row) => row.legacy_media_id).map((row) => [row.legacy_media_id, row])
+      );
+      const existingByMediaId = new Map(existingRows.map((row) => [row.media_id, row]));
+      const existingByUrl = new Map(existingRows.map((row) => [row.asset_url, row]));
+      const defaultVariant = this.hasTable('product_variants')
+        ? this.db
+            .prepare(
+              'SELECT id FROM product_variants WHERE product_id = ? ORDER BY is_default DESC, sort_order ASC, id ASC LIMIT 1'
+            )
+            .get(productId)
+        : null;
+      const findAssetByUrl = this.db.prepare('SELECT id FROM media_assets WHERE url = ?');
+      const insertAsset = this.db.prepare(`
+        INSERT OR IGNORE INTO media_assets (
+          id, type, url, original_name, mime_type, byte_size, width, height,
+          duration_seconds, checksum_sha256, verification_status, created_at
+        ) VALUES (?, ?, ?, ?, '', 0, NULL, NULL, NULL, NULL, 'legacy_unverified', ?)
+      `);
+
+      this.db.prepare('DELETE FROM product_media_variants WHERE product_id = ?').run(productId);
+
+      const columns = [
+        'id',
+        'product_id',
+        'variant_id',
+        'media_id',
+        'legacy_media_id',
+        'is_primary',
+        'sort_order',
+        'object_position',
+        'fit_mode',
+        'alt_text',
+        'poster_url',
+        ...(supportsCrop ? ['crop_rect'] : []),
+        ...(supportsOriginalUrl ? ['original_url'] : []),
+      ];
+      const insertVariant = this.db.prepare(
+        `INSERT INTO product_media_variants (${columns.join(', ')}) VALUES (${columns.map(() => '?').join(', ')})`
+      );
+      const insertedAssetIds = new Set();
+
+      productData.media.forEach((media, index) => {
+        if (!media?.url) return;
+        const previous =
+          existingByLegacyId.get(media.id) ||
+          existingByMediaId.get(media.mediaId) ||
+          existingByUrl.get(media.url);
+        let asset = findAssetByUrl.get(media.url);
+        if (!asset) {
+          const assetId =
+            media.mediaId ||
+            (previous?.asset_url === media.url ? previous.media_id : null) ||
+            `asset_${createHash('sha256').update(media.url).digest('hex').slice(0, 12)}`;
+          insertAsset.run(
+            assetId,
+            media.type === 'video' ? 'video' : 'image',
+            media.url,
+            media.originalName || media.alt || productData.title || '',
+            new Date().toISOString()
+          );
+          asset = findAssetByUrl.get(media.url);
+        }
+        if (!asset || insertedAssetIds.has(asset.id)) return;
+        insertedAssetIds.add(asset.id);
+
+        const relationId =
+          previous?.id ||
+          `pmv_${createHash('sha256')
+            .update(`${productId}|${media.id || asset.id}`)
+            .digest('hex')
+            .slice(0, 16)}`;
+        const values = [
+          relationId,
+          productId,
+          previous?.variant_id || defaultVariant?.id || null,
+          asset.id,
+          media.id || previous?.legacy_media_id || relationId,
+          index === 0 ? 1 : 0,
+          index,
+          media.objectPosition || 'center',
+          media.fitMode || 'contain',
+          media.alt || productData.title || '',
+          media.poster || null,
+          ...(supportsCrop ? [media.cropRect ? JSON.stringify(media.cropRect) : null] : []),
+          ...(supportsOriginalUrl ? [media.originalUrl || media.url || null] : []),
+        ];
+        insertVariant.run(...values);
+      });
+    }
+
     if (Array.isArray(productData.specs) && this.hasTable('product_specs')) {
       this.db.prepare('DELETE FROM product_specs WHERE product_id = ?').run(productId);
       const insertSpec = this.db.prepare(`
@@ -213,6 +322,8 @@ export class ProductRepository {
         isPrimary: Boolean(m.is_primary),
         alt: m.alt_text,
         poster: m.poster_url,
+        cropRect: parseCropRect(m.crop_rect),
+        originalUrl: m.original_url || m.url || undefined,
       }));
     } else if (this.hasTable('product_media')) {
       const pmRows = this.db

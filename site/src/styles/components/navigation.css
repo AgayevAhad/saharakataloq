@@ -187,7 +187,7 @@
   gap: 4px;
   padding: 5px 8px;
   color: #fff;
-  background: rgba(15, 23, 42, 0.78);
+  background: rgba(18, 18, 20, 0.85);
   border-radius: 7px;
   font-size: 10px;
 }
@@ -955,7 +955,7 @@
   }
 }
 
-@media (max-width: 720px) {
+@media (max-width: 600px) {
   .brand-detail-products-grid {
     grid-template-columns: minmax(0, 339px);
     max-width: 339px;
@@ -1059,7 +1059,6 @@
 
 /* Keep reveal transforms outside the interactive product card. This prevents
    hover transforms from restoring the reveal layer's hidden/blurred state. */
-.catalog-product-reveal,
 .featured-product-reveal {
   width: 339px !important;
   max-width: 339px !important;
@@ -1071,11 +1070,29 @@
   box-sizing: border-box !important;
 }
 
-.featured-product-reveal > .product-card,
-.catalog-product-reveal > .product-card {
+.catalog-product-reveal {
+  width: 100% !important;
+  max-width: 559px !important;
+  min-width: 0 !important;
+  height: 339px !important;
+  min-height: 339px !important;
+  max-height: 339px !important;
+  flex: 1 1 auto !important;
+  box-sizing: border-box !important;
+}
+
+.featured-product-reveal > .product-card {
   width: 100% !important;
   height: 100% !important;
   max-width: 339px !important;
+  max-height: 339px !important;
+}
+
+.catalog-product-reveal > .product-card {
+  width: 100% !important;
+  height: 339px !important;
+  min-height: 339px !important;
+  max-width: 559px !important;
   max-height: 339px !important;
 }
 
@@ -1127,9 +1144,9 @@
 .product-card-category-top {
   position: absolute;
   top: 10px;
-  left: 88px;
-  right: auto;
-  max-width: calc(100% - 176px);
+  left: auto;
+  right: 10px;
+  max-width: 150px;
   z-index: 7;
   min-width: 0;
   height: 28px;
@@ -1154,7 +1171,8 @@
 .product-card-country-flag {
   position: absolute;
   top: 52px;
-  right: -14px;
+  left: 324px;
+  right: auto;
   z-index: 12;
   display: grid;
   place-items: center;
@@ -1166,6 +1184,13 @@
   box-shadow: 0 4px 12px rgba(15, 23, 42, 0.12);
   font-size: 18px;
   line-height: 1;
+}
+
+@media (max-width: 720px) {
+  .product-card-country-flag {
+    left: auto;
+    right: -14px;
+  }
 }
 
 .featured-product-badge {
@@ -1349,9 +1374,11 @@
   }
 }
 
-.theme-dark .product-brand-badge {
-  background: rgba(255, 255, 255, 0.96);
-  border-color: rgba(255, 255, 255, 0.7);
+.theme-dark .product-brand-badge,
+[data-theme^='dark'] .product-brand-badge {
+  background: rgba(18, 18, 20, 0.88);
+  border-color: rgba(255, 255, 255, 0.16);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.35);
 }
 
 @media (prefers-reduced-motion: reduce) {

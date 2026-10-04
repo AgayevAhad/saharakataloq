@@ -110,8 +110,8 @@ export const Footer: React.FC<FooterProps> = ({
     <footer
       className={`catalog-footer-enhanced site-footer-v2 ${isCatalogMode ? 'footer-mode-catalog' : 'footer-mode-site'}`}
       style={{
-        backgroundColor: theme.mode === 'dark' ? '#090d13' : '#ffffff',
-        borderTop: `1px solid ${theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.08)' : '#eaecf0'}`,
+        backgroundColor: theme.bgCard,
+        borderTop: `1px solid ${theme.border}`,
         color: theme.text,
         padding: '56px 20px 24px 20px',
         marginTop: '40px',
@@ -356,7 +356,7 @@ export const Footer: React.FC<FooterProps> = ({
                   height: '40px',
                   borderRadius: '8px',
                   border: `1px solid ${theme.mode === 'dark' ? 'rgba(255, 255, 255, 0.12)' : '#cbd5e1'}`,
-                  backgroundColor: theme.mode === 'dark' ? '#161d2b' : '#f8fafc',
+                  backgroundColor: theme.mode === 'dark' ? '#18181b' : '#f8fafc',
                   color: theme.text,
                   padding: '0 12px',
                   fontSize: '13px',

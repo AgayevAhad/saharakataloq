@@ -48,6 +48,11 @@ media/
 File/
 Logo/
 Video/
+scratch/
+__pycache__/
+*.pyc
+*:memory:.ses
+site/:memory:.ses
 site/docs/ozum/*.mp4
 site/docs/ozum/*.mov
 site/docs/ozum/*.avi

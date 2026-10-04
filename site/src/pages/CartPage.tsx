@@ -6,7 +6,6 @@ import {
   Minus,
   ArrowRight,
   ShieldCheck,
-  CheckCircle2,
   Phone,
   ArrowLeft,
 } from 'lucide-react';
@@ -74,7 +73,7 @@ export const CartPage: React.FC<CartPageProps> = ({
 
   const recommendedProducts = useMemo(() => {
     const inCartIds = new Set(cartItems.map((i) => i.product.id));
-    return allProducts.filter((p) => p.status !== 'draft' && !inCartIds.has(p.id)).slice(0, 4);
+    return allProducts.filter((p) => p.status !== 'draft' && !inCartIds.has(p.id)).slice(0, 3);
   }, [allProducts, cartItems]);
 
   const formatPrice = (amount: number) =>
@@ -301,7 +300,7 @@ export const CartPage: React.FC<CartPageProps> = ({
                       gap: '18px',
                       padding: '16px 20px',
                       borderRadius: '16px',
-                      backgroundColor: themeMode === 'dark' ? '#1e293b' : '#ffffff',
+                      backgroundColor: themeMode === 'dark' ? '#121214' : '#ffffff',
                       border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
                       boxShadow: themeMode === 'dark' ? 'none' : '0 4px 16px rgba(0,0,0,0.03)',
                       flexWrap: 'wrap',
@@ -383,33 +382,6 @@ export const CartPage: React.FC<CartPageProps> = ({
                       >
                         {product.title}
                       </h3>
-
-                      <div
-                        style={{
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '10px',
-                          flexWrap: 'wrap',
-                        }}
-                      >
-                        <span
-                          style={{
-                            fontSize: '11px',
-                            fontWeight: 700,
-                            color: '#16a34a',
-                            backgroundColor:
-                              themeMode === 'dark' ? 'rgba(22, 163, 74, 0.15)' : '#dcfce7',
-                            padding: '2px 8px',
-                            borderRadius: '6px',
-                            display: 'inline-flex',
-                            alignItems: 'center',
-                            gap: '4px',
-                          }}
-                        >
-                          <CheckCircle2 size={12} />
-                          <span>Məhsul məlumatı kataloqdan götürülüb</span>
-                        </span>
-                      </div>
                     </div>
 
                     {/* Quantity Stepper */}
@@ -418,7 +390,7 @@ export const CartPage: React.FC<CartPageProps> = ({
                         display: 'flex',
                         alignItems: 'center',
                         gap: '6px',
-                        backgroundColor: themeMode === 'dark' ? '#0f172a' : '#f1f5f9',
+                        backgroundColor: themeMode === 'dark' ? '#18181b' : '#f1f5f9',
                         padding: '4px 8px',
                         borderRadius: '10px',
                         border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
@@ -543,7 +515,7 @@ export const CartPage: React.FC<CartPageProps> = ({
                 style={{
                   padding: '24px',
                   borderRadius: '20px',
-                  backgroundColor: themeMode === 'dark' ? '#1e293b' : '#ffffff',
+                  backgroundColor: themeMode === 'dark' ? '#121214' : '#ffffff',
                   border: `1px solid ${themeMode === 'dark' ? 'rgba(255,255,255,0.08)' : '#e2e8f0'}`,
                   boxShadow: themeMode === 'dark' ? 'none' : '0 8px 24px rgba(0,0,0,0.04)',
                 }}

@@ -23,6 +23,7 @@ export const DEFAULT_COUNTRIES: string[] = [
   'Türkiyə',
   'Çin',
   'İtaliya',
+  'İngiltərə',
   'Almaniya',
   'Polşa',
   'Özbəkistan',

@@ -122,6 +122,7 @@ const frontendEnv = {
   ...process.env,
   PATH: runtimePath,
   BACKEND_URL: `http://127.0.0.1:${BACKEND_PORT}`,
+  VITE_ENABLE_SITE_PRODUCT_IMAGE_ENHANCEMENT: 'true',
   PORT: FRONTEND_PORT,
   NODE_ENV: 'test',
   ALLOW_TEMP_DATA_DIR: '1',

@@ -22,6 +22,10 @@
     "test:browser": "playwright test",
     "test:browser:production": "npm run build && playwright test --config=playwright.prod.config.ts",
     "test:repo-boundary": "node scripts/check-boundary.mjs",
+    "media:enhance:test": "python3 scripts/website-product-images/process_product_images.py --test-mode",
+    "media:enhance:brands:manifest": "python3 scripts/website-product-images/build_brand_rollout_manifest.py",
+    "media:enhance:brands": "nice -n 15 ionice -c 3 taskset -c 0-1 env OMP_NUM_THREADS=2 OMP_WAIT_POLICY=PASSIVE python3 scripts/website-product-images/process_product_images.py --manifest scripts/website-product-images/brand-rollout.json --output public/media/site-product-image-enhancement --production --resume",
+    "test:media-enhancement-processor": "python3 -m unittest scripts/website-product-images/test_processor.py",
     "test:all": "npm test && npm run test:browser && npm run test:browser:production && npm run test:repo-boundary",
     "check:quality": "npm run check:syntax && npm run typecheck && npm run format:check && npm run lint && npm test && npm run test:a11y && npm run test:browser && npm run test:browser:production && npm run build:stories && npm run build && npm run test:repo-boundary"
   },

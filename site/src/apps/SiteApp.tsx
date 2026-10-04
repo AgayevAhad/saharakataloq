@@ -26,6 +26,8 @@ import { AuthUser, LoginCredentials, RegisterCredentials } from '../types/auth';
 import { customerSupportApi } from '../services/customerSupportApi';
 import { Breadcrumbs } from '../components/Breadcrumbs';
 import { featureFlags } from '../utils/featureFlags';
+import { useWebsiteProductImageCatalog } from '../components/site/product-media/useWebsiteProductImageCatalog';
+import '../styles/components/website-product-media.css';
 import {
   useTheme,
   useToast,
@@ -78,6 +80,11 @@ const SmartSearchOverlay = lazy(() =>
 const SaharaMatchModal = lazy(() =>
   import('../components/site/SaharaMatchModal').then((m) => ({ default: m.SaharaMatchModal }))
 );
+const WebsiteProductImagePreview = lazy(() =>
+  import('../components/site/product-media/WebsiteProductImagePreview').then((m) => ({
+    default: m.WebsiteProductImagePreview,
+  }))
+);
 
 import { useNavigate, useLocation } from 'react-router-dom';
 import { RouteName, resolveRouteFromPath, ROUTE_TO_PATH } from '../types/routes';
@@ -127,6 +134,9 @@ export const SiteApp: React.FC<SiteAppProps> = ({
   const currentPath = location.pathname;
   const resolved = useMemo(() => resolveRouteFromPath(currentPath), [currentPath]);
   const currentRoute: RouteName = resolved.route;
+  const showWebsiteProductImagePreview =
+    import.meta.env.VITE_ENABLE_SITE_PRODUCT_IMAGE_ENHANCEMENT === 'true' &&
+    new URLSearchParams(location.search).get('image-enhancement-preview') === '1';
 
   const [selectedCategory, setSelectedCategory] = useState<string | null>(
     resolved.category || null
@@ -180,10 +190,13 @@ export const SiteApp: React.FC<SiteAppProps> = ({
     [navigate]
   );
 
-  const { catalog, setCatalog } = useCatalog({
+  const { catalog: sourceCatalog, setCatalog } = useCatalog({
     initialCatalog: initialData?.catalog,
     isSsr,
     onLoaded: parseDeepLink,
+  });
+  const { catalog } = useWebsiteProductImageCatalog(sourceCatalog, {
+    enabled: !isAdminPath(),
   });
 
   // Sync route parameters (category, brand, productId) from URL location
@@ -980,6 +993,11 @@ export const SiteApp: React.FC<SiteAppProps> = ({
       />
 
       <main className="site-main-content">
+        {showWebsiteProductImagePreview && (
+          <Suspense fallback={<div style={{ minHeight: '320px' }} />}>
+            <WebsiteProductImagePreview themeMode={themeMode} />
+          </Suspense>
+        )}
         <div className="site-page-container">
           <Breadcrumbs items={breadcrumbsList} />
 

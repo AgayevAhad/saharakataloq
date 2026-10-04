@@ -269,25 +269,18 @@ def main():
 
         for idx, img in enumerate(p["images"], 1):
             src_path = os.path.join(p["folder_path"], img)
-            ext = os.path.splitext(img)[1].lower()
-            if ext == ".jpeg":
-                ext = ".jpg"
-
-            if idx == 1:
-                clean_filename = f"{pid}{ext}"
-            else:
-                clean_filename = f"{pid}_{idx:02d}{ext}"
-
-            dst_public = f"public/media/products/{brand}/{clean_filename}"
-            dst_site_public = f"site/public/media/products/{brand}/{clean_filename}"
-            dst_data_media = f"data/media/{clean_filename}"
-            dst_site_data_media = f"site/data/media/{clean_filename}"
+            original_rel_path = os.path.relpath(src_path, base)
+            
+            dst_public = f"public/media/products/{original_rel_path}"
+            dst_site_public = f"site/public/media/products/{original_rel_path}"
+            dst_data_media = f"data/media/{original_rel_path}"
+            dst_site_data_media = f"site/data/media/{original_rel_path}"
 
             for dst in [dst_public, dst_site_public, dst_data_media, dst_site_data_media]:
                 os.makedirs(os.path.dirname(dst), exist_ok=True)
                 shutil.copy2(src_path, dst)
 
-            media_url = f"/media/products/{brand}/{clean_filename}"
+            media_url = f"/media/products/{original_rel_path}"
             if idx == 1:
                 p["primary_image"] = media_url
 

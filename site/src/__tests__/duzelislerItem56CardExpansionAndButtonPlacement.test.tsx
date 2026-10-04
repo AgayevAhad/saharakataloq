@@ -55,10 +55,12 @@ describe('Duzelisler Item 56: Product Card High Contrast & Netflix Hover Bottom 
       />
     );
 
-    // Card background must be clean white canvas for optimal product display
+    // Card background in dark mode reflects darkTheme.bgCard (#121214)
     const card = container.querySelector('.product-card') as HTMLElement;
     expect(card).toBeDefined();
-    expect(card.style.backgroundColor).toBe('#ffffff');
+    expect(card.style.backgroundColor).toBe(darkTheme.bgCard || '#121214');
+    const detailsPanel = container.querySelector('.product-card-details') as HTMLElement;
+    expect(detailsPanel).toBeDefined();
 
     // "Ətraflı" button text must be high-contrast red/dark, NOT white (#ffffff)
     const detailsBtn = container.querySelector('.card-action-btn-details') as HTMLElement;
@@ -66,14 +68,14 @@ describe('Duzelisler Item 56: Product Card High Contrast & Netflix Hover Bottom 
     expect(detailsBtn.textContent).toContain('Ətraflı');
     expect(detailsBtn.style.color).toBe('#dc2626');
 
-    // Compare and Favorite buttons maintain crisp light mode background (rgba(255,255,255,0.95))
+    // Compare and Favorite buttons remain high contrast in the permanent side panel.
     const compareBtn = container.querySelector('.card-action-btn-compare') as HTMLElement;
     expect(compareBtn).toBeDefined();
-    expect(compareBtn.style.backgroundColor).toBe('rgba(255, 255, 255, 0.95)');
+    expect(compareBtn.style.backgroundColor).toBe('rgba(37, 99, 235, 0.1)');
 
     const heartBtn = container.querySelector('.card-action-btn-heart') as HTMLElement;
     expect(heartBtn).toBeDefined();
-    expect(heartBtn.style.backgroundColor).toBe('rgba(255, 255, 255, 0.95)');
+    expect(heartBtn.style.backgroundColor).toBe('rgba(220, 38, 38, 0.1)');
     expect(heartBtn.style.color).toBe('#dc2626');
   });
 
@@ -102,7 +104,7 @@ describe('Duzelisler Item 56: Product Card High Contrast & Netflix Hover Bottom 
     expect(details.contains(cluster)).toBe(true);
   });
 
-  it('3. On hover, ProductCard smoothly activates Netflix expansion and expands bottom action tray', () => {
+  it('3. ProductCard keeps its external action tray visible while hover only lifts the item', () => {
     const { container } = render(
       <ProductCard
         product={mockProduct}
@@ -117,22 +119,26 @@ describe('Duzelisler Item 56: Product Card High Contrast & Netflix Hover Bottom 
     const card = container.querySelector('.product-card') as HTMLElement;
     const cluster = container.querySelector('.card-hover-actions-cluster') as HTMLElement;
 
-    // Hover card
+    expect(cluster).toBeDefined();
+    expect(cluster.textContent).toContain('WhatsApp');
+    expect(cluster.textContent).toContain('Zəng et');
+    expect(cluster.textContent).not.toContain('Ətraflı');
+    expect(container.querySelector('.product-card-top-actions')?.textContent).toContain('Ətraflı');
+    expect(container.querySelector('.product-card-details')?.lastElementChild).toBe(
+      container.querySelector('.product-card-top-actions')
+    );
+    expect(container.textContent).toContain('Bəyən');
+    expect(container.textContent).toContain('Səbətə əlavə et');
+
     fireEvent.mouseEnter(card);
 
-    // Verify card pop class & transform
     expect(card.classList.contains('hovered')).toBe(true);
-    expect(card.style.transform).toContain('scale(1.03)');
+    expect(card.style.transform).toContain('scale(1.015)');
     expect(card.style.zIndex).toBe('20');
+    expect(cluster).toBeDefined();
 
-    // Cluster should be expanded
-    expect(cluster.style.opacity).toBe('1');
-    expect(cluster.style.maxHeight).toBe('42px');
-
-    // Mouse leave collapses
     fireEvent.mouseLeave(card);
-    expect(cluster.style.opacity).toBe('0');
-    expect(cluster.style.maxHeight).toBe('0px');
+    expect(cluster).toBeDefined();
   });
 
   it('4. FeaturedProductCard also positions action cluster in details tray with light mode high contrast', () => {

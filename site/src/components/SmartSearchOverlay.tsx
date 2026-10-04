@@ -635,14 +635,16 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
                   }}
                   onMouseEnter={(event) => revealNextProductOnHover(event.currentTarget)}
                   style={{
-                    backgroundColor: '#ffffff',
-                    borderColor: '#e2e8f0',
+                    backgroundColor: theme.mode === 'dark' ? theme.bgCard : '#ffffff',
+                    borderColor: theme.mode === 'dark' ? 'rgba(255,255,255,0.08)' : '#e2e8f0',
                   }}
                 >
-                  <div className="smart-search-img-box" style={{ backgroundColor: '#ffffff' }}>
+                  <div className="smart-search-img-box" style={{ backgroundColor: 'transparent' }}>
                     {prodImg ? (
                       <ShimmerImage
                         src={prodImg}
+                        darkUrl={prod.darkImage || prod.media?.[0]?.darkUrl}
+                        isDarkMode={isDarkMode}
                         alt={prod.title}
                         cropRect={prod.cropRect || prod.media?.[0]?.cropRect}
                         loading="lazy"
@@ -862,7 +864,7 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
           width: '100%',
           maxWidth: '100%',
           zIndex: DESIGN_TOKENS.zIndex.modal + 2,
-          backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.88)' : 'rgba(255, 255, 255, 0.90)',
+          backgroundColor: isDarkMode ? 'rgba(18, 18, 20, 0.94)' : 'rgba(255, 255, 255, 0.90)',
           backdropFilter: 'blur(28px) saturate(190%)',
           WebkitBackdropFilter: 'blur(28px) saturate(190%)',
           borderRadius: '0 0 20px 20px',
@@ -913,7 +915,7 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
         style={{
           width: '100%',
           maxWidth: '920px',
-          backgroundColor: isDarkMode ? 'rgba(15, 23, 42, 0.94)' : 'rgba(255, 255, 255, 0.94)',
+          backgroundColor: isDarkMode ? 'rgba(18, 18, 20, 0.96)' : 'rgba(255, 255, 255, 0.94)',
           backdropFilter: 'blur(24px)',
           WebkitBackdropFilter: 'blur(24px)',
           borderRadius: '20px',
@@ -1028,7 +1030,7 @@ export const SmartSearchOverlay: React.FC<SmartSearchOverlayProps> = ({
             aria-label="Axtarış pəncərəsini bağla"
             className="smart-search-close-btn"
             style={{
-              background: isDarkMode ? '#1e293b' : '#f1f5f9',
+              background: isDarkMode ? '#18181b' : '#f1f5f9',
               border: `1px solid ${theme.border}`,
               borderRadius: '8px',
               padding: '8px 12px',

@@ -321,7 +321,7 @@ describe('Item 20: Catalog Refinements & Comparison System Tests', () => {
     expect(handleSelect).toHaveBeenCalledWith(mockProducts[0]);
   });
 
-  it('8. Hover action cluster contains staggered animation items (.card-action-btn-item)', () => {
+  it('8. Permanent contact and primary action rows keep every card action visible', () => {
     const { container } = render(
       <ProductCard
         product={mockProducts[0]}
@@ -337,7 +337,17 @@ describe('Item 20: Catalog Refinements & Comparison System Tests', () => {
     const cluster = container.querySelector('.card-hover-actions-cluster') as HTMLElement;
     expect(cluster).toBeDefined();
 
-    const staggeredItems = cluster.querySelectorAll('.card-action-btn-item');
-    expect(staggeredItems.length).toBeGreaterThanOrEqual(4); // WhatsApp, Call, Cart, Details, Share
+    const contactItems = cluster.querySelectorAll('.card-action-btn-item');
+    expect(contactItems.length).toBe(2); // WhatsApp, Call
+
+    const primaryActions = container.querySelector('.product-card-primary-actions') as HTMLElement;
+    expect(primaryActions).toBeDefined();
+    expect(primaryActions.querySelector('.card-action-btn-cart')).toBeDefined();
+
+    const topActions = container.querySelector('.product-card-top-actions') as HTMLElement;
+    const details = container.querySelector('.product-card-details') as HTMLElement;
+    expect(topActions.querySelector('.card-action-btn-details')).toBeDefined();
+    expect(topActions.querySelector('.card-action-btn-share')).toBeDefined();
+    expect(details.lastElementChild).toBe(topActions);
   });
 });

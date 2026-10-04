@@ -34,11 +34,12 @@ export const MediaSection = ({
       imageUrl={imageUrl}
       productTitle={productTitle}
       initialObjectPosition={initialObjectPosition}
-      initialFitMode={initialFitMode}
       theme={theme}
       onClose={onClose}
-      onSavePosition={onSavePosition}
-      onSaveCroppedImage={onSaveCroppedImage}
+      onSaveCroppedImage={(newUrl, position) => {
+        onSavePosition(position || 'center', initialFitMode || 'contain');
+        onSaveCroppedImage(newUrl, position);
+      }}
       onUpload={async (file) => {
         const res = await onUpload(file);
         return typeof res === 'string' ? res : res.url;

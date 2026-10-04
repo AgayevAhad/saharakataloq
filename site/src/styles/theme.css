@@ -2,7 +2,7 @@
 
 /* Dark Theme Overrides - ZERO RED BORDER */
 .theme-dark .visual-category-card {
-  background: #ffffff !important;
+  background: var(--bg-card) !important;
   border: none !important;
   box-shadow: 0 6px 24px rgba(0, 0, 0, 0.4) !important;
 }
@@ -12,11 +12,11 @@
 }
 
 .theme-dark .visual-category-icon-pill {
-  background: #1e293b;
+  background: #18181b;
 }
 
 .theme-dark .visual-category-card:hover .visual-category-icon-pill {
-  background: #334155;
+  background: #27272a;
 }
 
 .theme-dark .visual-categories-title,
@@ -25,7 +25,7 @@
 }
 
 .theme-dark .visual-category-title {
-  color: #0f172a !important;
+  color: #f8fafc !important;
 }
 
 .theme-dark .visual-category-card-footer {
@@ -33,30 +33,30 @@
 }
 
 .theme-dark .visual-category-count-badge {
-  background: #1e293b;
+  background: #18181b;
   color: #94a3b8;
   border: none;
 }
 
 .theme-dark .visual-category-explore {
-  color: #64748b;
+  color: #94a3b8;
 }
 
 .theme-dark .visual-category-card:hover .visual-category-explore {
-  color: #0f172a;
+  color: #f8fafc;
 }
 
 .theme-dark .visual-category-card-style-facet {
-  background: #ffffff !important;
+  background: var(--bg-card) !important;
 }
 
 .theme-dark .visual-category-card-style-frames {
-  background: #ffffff !important;
+  background: var(--bg-card) !important;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.45) !important;
 }
 
 .theme-dark .visual-category-card-style-cluster {
-  background: #ffffff !important;
+  background: var(--bg-card) !important;
 }
 
 @media (min-width: 769px) {

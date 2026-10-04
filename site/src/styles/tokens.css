@@ -67,16 +67,112 @@
   --text: #f8fafc;
   --text-secondary: #cbd5e1;
   --text-muted: #94a3b8;
-  --bg: #17202e;
-  --bg-secondary: #1c2737;
-  --bg-card: #253247;
-  --bg-card-hover: #2c3b51;
-  --border: #35465c;
-  --border-hover: #50647e;
+  --bg: #09090b;
+  --bg-rgb: 9, 9, 11;
+  --bg-secondary: #121214;
+  --bg-card: #121214;
+  --bg-card-hover: #1f1f22;
+  --border: #27272a;
+  --border-hover: #3f3f46;
   --sahara-red: #ef4444;
   --sahara-red-hover: #dc2626;
   --sahara-red-light: rgba(239, 68, 68, 0.18);
   --sahara-dark-red: #b91c1c;
   --admin-primary: #ef4444;
   --admin-primary-hover: #dc2626;
+}
+
+/* 1. Modern Minimalist (Qüsursuz Tünd Boz / Slate) */
+[data-theme='dark-slate'] {
+  --text: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --bg: #09090b; 
+  --bg-rgb: 9, 9, 11;
+  --bg-secondary: #121214; 
+  --bg-card: #121214; 
+  --bg-card-hover: #1f1f22;
+  --border: #27272a;
+  --border-hover: #3f3f46;
+  --sahara-red: #ef4444;
+  --sahara-red-hover: #dc2626;
+  --sahara-red-light: rgba(239, 68, 68, 0.18);
+  --sahara-dark-red: #b91c1c;
+  --admin-primary: #ef4444;
+  --admin-primary-hover: #dc2626;
+}
+
+/* 2. Premium Neutral Slate (Vahid Qüsursuz Tünd Boz) */
+[data-theme='dark-glass'] {
+  --text: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --bg: #09090b; 
+  --bg-rgb: 9, 9, 11;
+  --bg-secondary: #121214; 
+  --bg-card: #121214; 
+  --bg-card-hover: #1f1f22;
+  --border: #27272a;
+  --border-hover: #3f3f46;
+  --sahara-red: #ef4444;
+  --sahara-red-hover: #dc2626;
+  --sahara-red-light: rgba(239, 68, 68, 0.18);
+  --sahara-dark-red: #b91c1c;
+  --admin-primary: #ef4444;
+  --admin-primary-hover: #dc2626;
+}
+
+[data-theme='dark-glass'] .product-card,
+[data-theme='dark-glass'] .visual-category-card,
+[data-theme='dark-glass'] .brand-rail-card {
+  background: #121214;
+  border-color: #27272a;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme='dark-glass'] .product-card:hover,
+[data-theme='dark-glass'] .visual-category-card:hover {
+  transform: translateY(-4px);
+  box-shadow: inset 0 1px 2px rgba(255,255,255,0.2), 0 12px 40px rgba(0,0,0,0.5), 0 0 20px rgba(255,46,85,0.1);
+  border-color: rgba(255,255,255,0.3);
+}
+
+/* 3. OLED Cyberpunk (Neon Qara) */
+[data-theme='dark-oled'] {
+  --text: #ffffff;
+  --text-secondary: #a1a1aa;
+  --text-muted: #52525b;
+  --bg: #000000;
+  --bg-rgb: 0, 0, 0;
+  --bg-secondary: #050505;
+  --bg-card: #09090b;
+  --bg-card-hover: #121214;
+  --border: #18181b;
+  --border-hover: #3f3f46;
+  --sahara-red: #ff1a1a;
+  --sahara-red-hover: #ff4d4d;
+  --sahara-red-light: rgba(255, 26, 26, 0.15);
+  --sahara-dark-red: #cc0000;
+  --admin-primary: #ff1a1a;
+  --admin-primary-hover: #ff4d4d;
+}
+
+[data-theme='dark-oled'] .product-card,
+[data-theme='dark-oled'] .visual-category-card {
+  box-shadow: none !important;
+  border: 1px solid #18181b;
+  transition: all 0.3s ease;
+}
+
+[data-theme='dark-oled'] .product-card:hover,
+[data-theme='dark-oled'] .visual-category-card:hover {
+  border-color: #ff1a1a;
+  box-shadow: 0 0 15px rgba(255, 26, 26, 0.25) !important;
+  transform: scale(1.01);
+}
+
+[data-theme='dark-oled'] .catalog-header-enhanced,
+[data-theme='dark-oled'] .mobile-bottom-nav {
+  border-bottom-color: #18181b !important;
+  border-top-color: #18181b !important;
 }

@@ -169,6 +169,20 @@ const CatalogBrandsManager: React.FC<CatalogBrandsManagerProps> = ({
 
   const productsList = useMemo(() => catalog?.products || [], [catalog?.products]);
 
+  const countryOptions = useMemo(() => {
+    const countries = new Set<string>(DEFAULT_COUNTRIES);
+    (catalog?.settings?.countries || []).forEach((country) => {
+      if (country.trim()) countries.add(country.trim());
+    });
+    brandsList.forEach((brand) => {
+      if (brand.originCountry?.trim()) countries.add(brand.originCountry.trim());
+      (brand.manufacturingCountries || []).forEach((country) => {
+        if (country.trim()) countries.add(country.trim());
+      });
+    });
+    return Array.from(countries);
+  }, [brandsList, catalog?.settings?.countries]);
+
   const [searchQuery, setSearchQuery] = useState('');
   const [editingBrand, setEditingBrand] = useState<Brand | null>(null);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
@@ -775,6 +789,7 @@ const CatalogBrandsManager: React.FC<CatalogBrandsManagerProps> = ({
           theme={theme}
           brand={editingBrand}
           isNew={isCreatingNew}
+          countries={countryOptions}
           onSave={handleSaveBrandForm}
           onClose={() => {
             setEditingBrand(null);
@@ -794,6 +809,7 @@ interface BrandEditModalProps {
   theme: ThemeColors;
   brand: Brand;
   isNew: boolean;
+  countries: string[];
   onSave: (brand: Brand) => void;
   onClose: () => void;
 }
@@ -802,6 +818,7 @@ const BrandEditModal: React.FC<BrandEditModalProps> = ({
   theme,
   brand,
   isNew,
+  countries,
   onSave,
   onClose,
 }) => {
@@ -837,6 +854,7 @@ const BrandEditModal: React.FC<BrandEditModalProps> = ({
 
     onSave({
       ...form,
+      originCountry: form.originCountry.trim(),
       manufacturingCountries: mfgArray,
       sortOrder: Number(form.sortOrder) || 1,
     });
@@ -978,9 +996,14 @@ const BrandEditModal: React.FC<BrandEditModalProps> = ({
               >
                 Mənşə Ölkəsi *
               </label>
-              <select
+              <input
+                type="text"
+                list="brand-origin-country-options"
+                required
                 value={form.originCountry}
                 onChange={(e) => setForm((p) => ({ ...p, originCountry: e.target.value }))}
+                placeholder="Ölkəni seçin və ya yeni ölkə yazın"
+                aria-label="Mənşə ölkəsi"
                 style={{
                   width: '100%',
                   padding: '9px 12px',
@@ -990,16 +1013,15 @@ const BrandEditModal: React.FC<BrandEditModalProps> = ({
                   color: theme.text,
                   fontSize: '13px',
                 }}
-              >
-                {DEFAULT_COUNTRIES.map((country) => (
-                  <option key={country} value={country}>
-                    {country}
-                  </option>
+              />
+              <datalist id="brand-origin-country-options">
+                {countries.map((country) => (
+                  <option key={country} value={country} />
                 ))}
-                {!DEFAULT_COUNTRIES.includes(form.originCountry) && form.originCountry && (
-                  <option value={form.originCountry}>{form.originCountry}</option>
-                )}
-              </select>
+              </datalist>
+              <small style={{ display: 'block', marginTop: 5, color: theme.textMuted }}>
+                Siyahıdan seçə və ya yeni ölkə adını əl ilə yaza bilərsiniz.
+              </small>
             </div>
 
             <div>
